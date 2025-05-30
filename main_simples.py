@@ -75,18 +75,20 @@ async def llamadas_en_progreso():
         "llamadas": [
             {
                 "id": 1,
-                "numero": "+55 11 99999-0001",
-                "nombre": "Cliente Teste 1",
+                "telefono": "+55 11 99999-0001",
+                "usuario": "Cliente Teste 1",
                 "estado": "en_progreso",
-                "inicio": "2025-01-30T15:30:00",
+                "fecha_inicio": "2025-01-30T15:30:00Z",
+                "duracion_segundos": 165,
                 "duracion": "00:02:45"
             },
             {
                 "id": 2,
-                "numero": "+55 11 99999-0002", 
-                "nombre": "Cliente Teste 2",
+                "telefono": "+55 11 99999-0002",
+                "usuario": "Cliente Teste 2",
                 "estado": "en_progreso",
-                "inicio": "2025-01-30T15:28:15",
+                "fecha_inicio": "2025-01-30T15:28:15Z",
+                "duracion_segundos": 312,
                 "duracion": "00:05:12"
             }
         ],
@@ -101,12 +103,13 @@ async def historico_llamadas():
         "llamadas": [
             {
                 "id": 3,
-                "numero": "+55 11 99999-0003",
-                "nombre": "Cliente Teste 3", 
+                "telefono": "+55 11 99999-0003",
+                "usuario": "Cliente Teste 3",
                 "estado": "finalizada",
                 "resultado": "contacto_efectivo",
-                "inicio": "2025-01-30T14:30:00",
-                "fin": "2025-01-30T14:32:30",
+                "fecha_inicio": "2025-01-30T14:30:00Z",
+                "fecha_fin": "2025-01-30T14:32:30Z",
+                "duracion_segundos": 150,
                 "duracion": "00:02:30"
             }
         ],
