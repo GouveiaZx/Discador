@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import MonitorLlamadasEnProgreso from './components/MonitorLlamadasEnProgreso';
 import HistoricoLlamadas from './components/HistoricoLlamadas';
+import GestionCampanhas from './components/GestionCampanhas';
 
 /**
  * Componente principal da aplicação
@@ -39,6 +40,18 @@ function App() {
               </li>
               <li>
                 <button 
+                  onClick={() => setActiveTab('campanhas')}
+                  className={`px-4 py-2 rounded-t-lg transition-colors ${
+                    activeTab === 'campanhas' 
+                      ? 'bg-gray-900 text-white' 
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  Campañas
+                </button>
+              </li>
+              <li>
+                <button 
                   onClick={() => setActiveTab('historico')}
                   className={`px-4 py-2 rounded-t-lg transition-colors ${
                     activeTab === 'historico' 
@@ -56,6 +69,7 @@ function App() {
       
       <main>
         {activeTab === 'monitor' && <MonitorLlamadasEnProgreso />}
+        {activeTab === 'campanhas' && <GestionCampanhas />}
         {activeTab === 'historico' && <HistoricoLlamadas />}
       </main>
       
