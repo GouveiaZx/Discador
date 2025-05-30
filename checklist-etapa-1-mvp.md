@@ -18,8 +18,8 @@ Implementar MVP funcional com discador preditivo, modo "Pressione 1", gerenciame
 - [x] **Estrutura de upload implementada** (models Contact)
 - [x] **Validação e parsing preparados** (schemas Pydantic)
 - [x] **Armazenamento em banco preparado** (SQLAlchemy models)
-- [ ] Interface frontend para upload
-- [ ] Sistema funcional de processamento CSV/TXT
+- [x] **🎉 Interface frontend para upload** 
+- [x] **🎉 Sistema funcional de processamento CSV/TXT**
 
 ### 🚫 Blacklist
 - [x] **Model de blacklist implementado** (SQLAlchemy)
@@ -33,13 +33,15 @@ Implementar MVP funcional com discador preditivo, modo "Pressione 1", gerenciame
 - [x] **API REST com endpoints reais** (/api/v1/campaigns)
 - [x] **Schemas de validação** (Pydantic)
 - [x] **Sistema de migração** (Alembic preparado)
-- [ ] Migração completa para PostgreSQL em produção
+- [x] **🎉 Endpoints de upload funcionando** (/upload-contacts)
+- [ ] Migração completa para Supabase em produção
 
 ### 📈 Painel
 - [x] Interface React responsiva
 - [x] Dashboard com chamadas simuladas
 - [x] **Novos endpoints integrados** (campanhas funcionando)
 - [x] **🎉 Interface completa de gestão de campanhas** 
+- [x] **🎉 Interface completa de upload de listas**
 - [ ] Dashboard alimentado por dados reais 100%
 - [ ] Logs reais de chamadas
 
@@ -48,7 +50,7 @@ Implementar MVP funcional com discador preditivo, modo "Pressione 1", gerenciame
 ## ✅ Critérios de Aceitação do MVP
 - [ ] Sistema realiza chamadas reais via Asterisk
 - [ ] Reprodução de áudio e captura de DTMF
-- [x] **Estrutura para upload de listas CSV preparada** 
+- [x] **✅ Sistema completo de upload de listas CSV** 
 - [x] **Estrutura de blacklist implementada**
 - [x] **✅ Painel com gestão completa de campanhas**
 - [ ] Integração VoIP funcional
@@ -68,12 +70,14 @@ Implementar MVP funcional com discador preditivo, modo "Pressione 1", gerenciame
 - **✅ Estrutura completa de banco de dados**
   - Models SQLAlchemy: User, Campaign, Contact, Blacklist, CallLog
   - Schemas Pydantic para todas as entidades
-  - Sistema de conexão flexível (SQLite dev / PostgreSQL prod)
+  - Sistema de conexão flexível (SQLite dev / Supabase prod)
   
 - **✅ Novos endpoints funcionando**
   - `GET /api/v1/campaigns` - Lista campanhas (testado e funcionando)
   - `GET /api/v1/campaigns/{id}` - Detalhes da campanha
   - `POST /api/v1/campaigns` - Criar campanha
+  - `POST /api/v1/campaigns/{id}/upload-contacts` - Upload de listas
+  - `GET /api/v1/campaigns/{id}/contacts` - Listar contatos da campanha
   
 - **✅ Backend evoluído**
   - Deploy no Railway com novos endpoints ativos
@@ -87,6 +91,15 @@ Implementar MVP funcional com discador preditivo, modo "Pressione 1", gerenciame
   - Integração em tempo real com API
   - Design responsivo com tema dark
 
+- **🎉 ✅ Sistema completo de upload de listas**
+  - Nova aba "Listas" no frontend
+  - Upload drag-and-drop para CSV/TXT
+  - Preview automático com detecção de telefone/nome
+  - Validação de formato e tamanho
+  - Processamento em tempo real com progress bar
+  - Associação automática com campanhas
+  - Suporte múltiplos separadores (,;|\t)
+
 ### ✅ Já Implementado (Anteriormente)
 - Interface React responsiva e funcional
 - Frontend deploy no Vercel (https://discador.vercel.app)
@@ -96,42 +109,41 @@ Implementar MVP funcional com discador preditivo, modo "Pressione 1", gerenciame
 - Interface em espanhol argentino
 
 ### ❌ Pendente para MVP Real
-- **Upload de listas funcional**: Interface + processamento CSV
 - **Integração VoIP/Asterisk**: Implementação total  
-- **Banco PostgreSQL**: Migração de SQLite para PostgreSQL
+- **Migração para Supabase**: Configuração quando tiver acesso
 - **Discador funcional**: Engine de chamadas reais
 - **Modo "Pressione 1"**: Captura DTMF e transferência
+- **Interface de Blacklist**: Gestão de números bloqueados
 
 ### 🔧 **PRÓXIMOS PASSOS PRIORIZADOS**
-1. **📂 Sistema de Upload** (Frontend + Backend)
-   - Interface para upload de arquivos CSV/TXT
-   - Processamento e validação de contatos
-   - Associação de listas às campanhas
-
-2. **🗄️ Migração para PostgreSQL**
-   - Configurar PostgreSQL no Railway
+1. **🗄️ Migração para Supabase** (aguardando acesso)
+   - Configurar Supabase no Railway
    - Migrar dados mock para banco real
    - Testes de integração
 
-3. **📞 Integração VoIP** (Próxima etapa)
+2. **📞 Integração VoIP** (Próxima etapa principal)
    - Configurar Asterisk ou provider VoIP
    - Sistema de discagem automática
    - Captura DTMF e transferência
 
-4. **🎯 Gestão de Blacklist**
+3. **🎯 Gestão de Blacklist**
    - Interface para adicionar/remover números
    - Validação automática na discagem
+
+4. **🔒 Sistema de Autenticação**
+   - Login/logout de usuários
+   - Controle de acesso às campanhas
 
 ---
 
 ## 📊 **PROGRESSO DO MVP**
-- **✅ Concluído**: 15/27 itens (56%)
-- **🔄 Em progresso**: 3/27 itens (11%) 
-- **❌ Pendente**: 9/27 itens (33%)
+- **✅ Concluído**: 18/27 itens (67%)
+- **🔄 Em progresso**: 2/27 itens (7%) 
+- **❌ Pendente**: 7/27 itens (26%)
 
 ## 🎉 **MARCO ALCANÇADO**
-**Sistema agora possui gestão completa de campanhas funcional!**
-- Frontend: https://discador.vercel.app (aba "Campañas")
-- Backend: Endpoints /api/v1/campaigns ativos
-- CRUD completo: Listar, criar, visualizar campanhas
-- Próximo: Upload de listas e integração VoIP 
+**Sistema agora possui gestão completa de campanhas + upload de listas!**
+- Frontend: https://discador.vercel.app (3 abas funcionais)
+- Backend: Endpoints de campanhas e upload ativos
+- Funcionalidades: Monitoreo + Campañas + Upload de Listas + Histórico
+- **67% do MVP concluído** - Faltam principalmente VoIP e Supabase! 
