@@ -3,21 +3,21 @@ import PropTypes from 'prop-types';
 import Timer from './Timer';
 
 /**
- * Tabela que exibe as chamadas em andamento
+ * Tabla que muestra las llamadas en progreso
  * 
- * @param {Array} llamadas - Lista de chamadas a serem exibidas
- * @param {Function} onFinalizarLlamada - Função para finalizar chamada
+ * @param {Array} llamadas - Lista de llamadas a ser mostradas
+ * @param {Function} onFinalizarLlamada - Función para finalizar llamada
  * @returns {JSX.Element} Componente JSX
  */
 const LlamadasEnProgresoTable = ({ llamadas, onFinalizarLlamada }) => {
   const handleFinalizar = (llamadaId) => {
-    // Confirmação antes de finalizar
+    // Confirmación antes de finalizar
     if (window.confirm('¿Está seguro que desea finalizar esta llamada manualmente?')) {
       onFinalizarLlamada(llamadaId);
     }
   };
 
-  // Se não houver chamadas, exibe mensagem
+  // Si no hay llamadas, muestra mensaje
   if (!llamadas || llamadas.length === 0) {
     return (
       <div className="text-center py-8 text-gray-400">
@@ -35,22 +35,22 @@ const LlamadasEnProgresoTable = ({ llamadas, onFinalizarLlamada }) => {
               ID
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-              Teléfono
+              TELÉFONO
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-              Usuario
+              USUARIO
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-              Inicio
+              INICIO
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-              Duración
+              DURACIÓN
             </th>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-              Estado
+              ESTADO
             </th>
             <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-              Acciones
+              ACCIONES
             </th>
           </tr>
         </thead>
@@ -61,20 +61,20 @@ const LlamadasEnProgresoTable = ({ llamadas, onFinalizarLlamada }) => {
                 {llamada.id}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {llamada.numero_destino}
+                {llamada.telefono}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {llamada.usuario_email || 'Sin asignar'}
+                {llamada.usuario || 'Sin asignar'}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                {new Date(llamada.fecha_asignacion).toLocaleString()}
+                {new Date(llamada.fecha_inicio).toLocaleString('es-AR')}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm">
-                <Timer startTime={llamada.fecha_asignacion} />
+                <Timer startTime={llamada.fecha_inicio} />
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                  {llamada.estado}
+                  en progreso
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -97,9 +97,9 @@ LlamadasEnProgresoTable.propTypes = {
   llamadas: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.number.isRequired,
-      numero_destino: PropTypes.string.isRequired,
-      usuario_email: PropTypes.string,
-      fecha_asignacion: PropTypes.string.isRequired,
+      telefono: PropTypes.string.isRequired,
+      usuario: PropTypes.string,
+      fecha_inicio: PropTypes.string.isRequired,
       estado: PropTypes.string.isRequired
     })
   ).isRequired,

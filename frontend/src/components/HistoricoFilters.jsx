@@ -5,9 +5,9 @@ import DateRangePicker from './DateRangePicker';
 import Select from './Select';
 
 /**
- * Componente de filtros para histórico de chamadas
+ * Componente de filtros para historial de llamadas
  * 
- * @param {Object} props - Propriedades do componente
+ * @param {Object} props - Propiedades del componente
  * @returns {JSX.Element} Componente JSX
  */
 const HistoricoFilters = ({ 
@@ -18,24 +18,24 @@ const HistoricoFilters = ({
   isExporting = false,
   onReset
 }) => {
-  // Opções para filtro de estados
+  // Opciones para filtro de estados
   const estadosOptions = [
-    { value: 'en_progreso', label: 'Em andamento' },
-    { value: 'pendiente', label: 'Pendente' },
+    { value: 'en_progreso', label: 'En curso' },
+    { value: 'pendiente', label: 'Pendiente' },
     { value: 'finalizada', label: 'Finalizada' }
   ];
 
-  // Opções para filtro de resultados
+  // Opciones para filtro de resultados
   const resultadosOptions = [
-    { value: 'finalizada_exito', label: 'Finalizada com sucesso' },
-    { value: 'finalizada_por_admin', label: 'Finalizada pelo admin' },
+    { value: 'finalizada_exito', label: 'Finalizada con éxito' },
+    { value: 'finalizada_por_admin', label: 'Finalizada por admin' },
     { value: 'ocupado', label: 'Ocupado' },
-    { value: 'no_responde', label: 'Não responde' },
-    { value: 'error', label: 'Erro' },
-    { value: 'fallida', label: 'Falha' }
+    { value: 'no_responde', label: 'No responde' },
+    { value: 'error', label: 'Error' },
+    { value: 'fallida', label: 'Fallida' }
   ];
 
-  // Atualizar estado dos filtros
+  // Actualizar estado de los filtros
   const handleFilterChange = (name, value) => {
     setFilters(prev => ({
       ...prev,
@@ -43,7 +43,7 @@ const HistoricoFilters = ({
     }));
   };
 
-  // Atualizar datas
+  // Actualizar fechas
   const handleFechaInicioChange = (value) => {
     setFilters(prev => ({
       ...prev,
@@ -58,12 +58,12 @@ const HistoricoFilters = ({
     }));
   };
 
-  // Exportar resultados para CSV
+  // Exportar resultados a CSV
   const handleExport = () => {
     onExportCSV();
   };
 
-  // Resetar todos os filtros
+  // Resetear todos los filtros
   const handleReset = () => {
     onReset();
   };
@@ -79,7 +79,7 @@ const HistoricoFilters = ({
             options={estadosOptions}
             selectedValues={filters.estados || []}
             onChange={(values) => handleFilterChange('estados', values)}
-            placeholder="Todos os estados"
+            placeholder="Todos los estados"
           />
         </div>
         
@@ -91,19 +91,19 @@ const HistoricoFilters = ({
             options={resultadosOptions}
             selectedValues={filters.resultados || []}
             onChange={(values) => handleFilterChange('resultados', values)}
-            placeholder="Todos os resultados"
+            placeholder="Todos los resultados"
           />
         </div>
         
         <div>
           <label htmlFor="usuario" className="block text-sm font-medium text-gray-300 mb-1">
-            Usuário
+            Usuario
           </label>
           <Select
             options={usuarios}
             value={filters.usuario || ''}
             onChange={(value) => handleFilterChange('usuario', value)}
-            placeholder="Todos os usuários"
+            placeholder="Todos los usuarios"
           />
         </div>
         
@@ -125,7 +125,7 @@ const HistoricoFilters = ({
           onClick={handleReset}
           className="px-4 py-2 text-gray-300 border border-gray-600 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
         >
-          Limpar filtros
+          Limpiar filtros
         </button>
         
         <button

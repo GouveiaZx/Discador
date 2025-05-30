@@ -6,12 +6,12 @@ import SpinnerLoading from './SpinnerLoading';
 import { obtenerHistoricoLlamadas, exportarHistoricoCSV } from '../services/llamadasService';
 
 /**
- * Componente principal para página de histórico de chamadas
+ * Componente principal para página de historial de llamadas
  * 
  * @returns {JSX.Element} Componente JSX
  */
 const HistoricoLlamadas = () => {
-  // Estados para armazenar dados e estado da UI
+  // Estados para almacenar datos y estado de la UI
   const [llamadas, setLlamadas] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -21,7 +21,7 @@ const HistoricoLlamadas = () => {
   const [error, setError] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
   
-  // Estados para modal de detalhes
+  // Estados para modal de detalles
   const [selectedLlamadaId, setSelectedLlamadaId] = useState(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   
@@ -34,10 +34,10 @@ const HistoricoLlamadas = () => {
     fecha_fin: ''
   });
   
-  // Lista de usuários para o filtro
+  // Lista de usuarios para el filtro
   const [usuarios, setUsuarios] = useState([]);
   
-  // Preparar parâmetros de filtro para a API
+  // Preparar parámetros de filtro para la API
   const prepareApiFilters = useCallback(() => {
     const apiFilters = {};
     
@@ -64,7 +64,7 @@ const HistoricoLlamadas = () => {
     return apiFilters;
   }, [filters]);
   
-  // Carregar dados da API
+  // Cargar datos de la API
   const cargarHistorico = useCallback(async () => {
     setLoading(true);
     try {
@@ -75,7 +75,7 @@ const HistoricoLlamadas = () => {
       setTotalItems(data.total || 0);
       setTotalPages(Math.ceil((data.total || 0) / pageSize));
       
-      // Extrair lista de usuários únicos para o filtro
+      // Extraer lista de usuarios únicos para el filtro
       if (data.usuarios && !usuarios.length) {
         const usuariosOptions = data.usuarios.map(usuario => ({
           value: usuario.email,
@@ -86,65 +86,65 @@ const HistoricoLlamadas = () => {
       
       setError(null);
     } catch (err) {
-      console.error('Erro ao obter histórico de chamadas:', err);
-      setError('Erro ao carregar histórico de chamadas. Por favor, tente novamente.');
+      console.error('Error al obtener historial de llamadas:', err);
+      setError('Error al cargar historial de llamadas. Por favor, intentá nuevamente.');
     } finally {
       setLoading(false);
     }
   }, [currentPage, pageSize, prepareApiFilters, usuarios.length]);
   
-  // Efeito para carregar dados quando a página ou filtros mudarem
+  // Efecto para cargar datos cuando la página o filtros cambien
   useEffect(() => {
     cargarHistorico();
   }, [cargarHistorico, currentPage, filters]);
   
-  // Handler para mudança de página
+  // Handler para cambio de página
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
   };
   
-  // Handler para abrir modal de detalhes
+  // Handler para abrir modal de detalles
   const handleViewDetails = (llamadaId) => {
     setSelectedLlamadaId(llamadaId);
     setDetailModalOpen(true);
   };
   
-  // Handler para fechar modal de detalhes
+  // Handler para cerrar modal de detalles
   const handleCloseDetails = () => {
     setDetailModalOpen(false);
   };
   
-  // Exportar dados para CSV
+  // Exportar datos a CSV
   const handleExportCSV = async () => {
     setIsExporting(true);
     try {
       const apiFilters = prepareApiFilters();
       const blob = await exportarHistoricoCSV(apiFilters);
       
-      // Criar URL para download
+      // Crear URL para descarga
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
       
-      // Nome do arquivo com data atual
+      // Nombre del archivo con fecha actual
       const date = new Date().toISOString().split('T')[0];
-      a.download = `historico-chamadas-${date}.csv`;
+      a.download = `historial-llamadas-${date}.csv`;
       
-      // Acionar download e limpar
+      // Activar descarga y limpiar
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
-      console.error('Erro ao exportar CSV:', err);
-      alert('Erro ao exportar dados para CSV. Por favor, tente novamente.');
+      console.error('Error al exportar CSV:', err);
+      alert('Error al exportar datos a CSV. Por favor, intentá nuevamente.');
     } finally {
       setIsExporting(false);
     }
   };
   
-  // Resetar filtros
+  // Resetear filtros
   const handleResetFilters = () => {
     setFilters({
       estados: [],
@@ -160,7 +160,7 @@ const HistoricoLlamadas = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col space-y-4">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-6">Histórico de Chamadas</h1>
+          <h1 className="text-2xl font-bold text-white mb-6">Historial de Llamadas</h1>
           
           <HistoricoFilters
             filters={filters}

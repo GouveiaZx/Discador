@@ -2,9 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 /**
- * Tabela para exibir histórico de chamadas
+ * Tabla para mostrar historial de llamadas
  * 
- * @param {Object} props - Propriedades do componente
+ * @param {Object} props - Propiedades del componente
  * @returns {JSX.Element} Componente JSX
  */
 const HistoricoLlamadasTable = ({ 
@@ -15,13 +15,13 @@ const HistoricoLlamadasTable = ({
   onChangePage,
   onViewDetails
 }) => {
-  // Formatar data para exibição
+  // Formatear fecha para visualización
   const formatarData = (dateString) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleString('pt-BR');
+    return new Date(dateString).toLocaleString('es-AR');
   };
 
-  // Formatar duração de chamada
+  // Formatear duración de llamada
   const formatarDuracion = (inicio, fin) => {
     if (!inicio || !fin) return '-';
     
@@ -40,7 +40,7 @@ const HistoricoLlamadasTable = ({
     ].join(':');
   };
 
-  // Renderizar estado com cores diferentes
+  // Renderizar estado con colores diferentes
   const renderizarEstado = (estado) => {
     let bgColorClass = 'bg-gray-100 text-gray-800';
     
@@ -59,7 +59,7 @@ const HistoricoLlamadasTable = ({
     );
   };
 
-  // Renderizar resultado com cores diferentes
+  // Renderizar resultado con colores diferentes
   const renderizarResultado = (resultado) => {
     if (!resultado) return '-';
     
@@ -80,28 +80,28 @@ const HistoricoLlamadasTable = ({
     );
   };
 
-  // Renderizar paginação
+  // Renderizar paginación
   const renderPagination = () => {
-    // Determinar quais botões de página mostrar
+    // Determinar qué botones de página mostrar
     const pageButtons = [];
     const maxVisiblePages = 5;
     
     let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
     
-    // Ajustar startPage se estamos no final
+    // Ajustar startPage si estamos al final
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
     
-    // Botão para primeira página
+    // Botón para primera página
     if (startPage > 1) {
       pageButtons.push(
         <button
           key="first"
           onClick={() => onChangePage(1)}
           className="px-3 py-1 rounded-md bg-gray-700 text-white hover:bg-gray-600"
-          aria-label="Primeira página"
+          aria-label="Primera página"
         >
           1
         </button>
@@ -114,7 +114,7 @@ const HistoricoLlamadasTable = ({
       }
     }
     
-    // Botões para páginas principais
+    // Botones para páginas principales
     for (let i = startPage; i <= endPage; i++) {
       pageButtons.push(
         <button
@@ -131,7 +131,7 @@ const HistoricoLlamadasTable = ({
       );
     }
     
-    // Botão para última página
+    // Botón para última página
     if (endPage < totalPages) {
       if (endPage < totalPages - 1) {
         pageButtons.push(
@@ -178,19 +178,19 @@ const HistoricoLlamadasTable = ({
               ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
               : 'bg-gray-700 text-white hover:bg-gray-600'
           }`}
-          aria-label="Próxima página"
+          aria-label="Siguiente página"
         >
-          Próxima
+          Siguiente
         </button>
       </div>
     );
   };
 
-  // Se não houver chamadas, exibir mensagem
+  // Si no hay llamadas, mostrar mensaje
   if (!llamadas || llamadas.length === 0) {
     return (
       <div className="text-center py-8 text-gray-400">
-        <p className="text-xl">Nenhuma chamada encontrada</p>
+        <p className="text-xl">No se encontraron llamadas</p>
       </div>
     );
   }
@@ -205,25 +205,25 @@ const HistoricoLlamadasTable = ({
                 ID
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                Telefone
+                TELÉFONO
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                Usuário
+                USUARIO
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                Estado
+                ESTADO
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                Resultado
+                RESULTADO
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                Início
+                INICIO
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                Fim
+                FIN
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                Duração
+                DURACIÓN
               </th>
             </tr>
           </thead>
@@ -266,7 +266,7 @@ const HistoricoLlamadasTable = ({
       
       <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
         <div className="text-sm text-gray-400">
-          Mostrando <span className="font-semibold">{llamadas.length}</span> de <span className="font-semibold">{totalItems}</span> chamadas
+          Mostrando <span className="font-semibold">{llamadas.length}</span> de <span className="font-semibold">{totalItems}</span> llamadas
         </div>
         
         {totalPages > 1 && renderPagination()}
