@@ -2,7 +2,7 @@
  * Serviço para interagir com a API de chamadas
  */
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 /**
  * Obtém todas as chamadas com estado 'en_progreso'
@@ -95,7 +95,7 @@ export const obtenerHistoricoLlamadas = async (filters = {}, page = 1, pageSize 
 };
 
 /**
- * Obtém os detalhes de uma chamada específica pelo ID
+ * Obtém os detalhes de una chamada específica pelo ID
  * @param {number} llamadaId - ID da chamada
  * @returns {Promise} Promessa com os detalhes da chamada
  */
