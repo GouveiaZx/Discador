@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 """
-Main simplificado para deploy no Railway
+Main simplificado para deploy no Railway - TOTALMENTE INDEPENDENTE
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
 
-# Importações básicas
-from app.config import configuracion
-
-# Criar aplicação FastAPI simples
+# Criar aplicação FastAPI simples SEM dependências externas
 app = FastAPI(
     title="Discador Predictivo - Railway",
     description="Sistema de discado predictivo (deploy Railway)",
@@ -48,9 +45,9 @@ async def status():
         "versao": "1.0.0",
         "ambiente": "Railway",
         "configuracao": {
-            "host": configuracion.HOST,
-            "puerto": configuracion.PUERTO,
-            "debug": configuracion.DEBUG
+            "host": "0.0.0.0",
+            "puerto": os.environ.get("PORT", 8000),
+            "debug": False
         }
     }
 
