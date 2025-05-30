@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discador Predictivo - Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .status-card {
+            text-align: center;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            background: #4caf50;
+            color: white;
+            margin-bottom: 20px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature {
+            text-align: center;
+        }
+        
+        .feature h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .feature p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: background 0.3s ease;
+            margin: 10px;
+        }
+        
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .api-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .api-info h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .api-info code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Discador Predictivo</h1>
+            <p>Sistema de discado predictivo com tecnologia avançada</p>
+        </div>
+        
+        <div class="card status-card">
+            <div class="status" id="status">🟢 Sistema Ativo</div>
+            <h2>Sistema funcionando corretamente!</h2>
+            <p>O servidor está rodando em <strong>localhost:8000</strong></p>
+            
+            <div style="margin-top: 20px;">
+                <a href="http://localhost:8000/docs" class="btn" target="_blank">📖 Documentação da API</a>
+                <a href="http://localhost:8000/redoc" class="btn" target="_blank">📚 Redoc</a>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <div class="card feature">
+                <div class="icon">📞</div>
+                <h3>Gestão de Chamadas</h3>
+                <p>Sistema completo para gerenciar campanhas de chamadas com algoritmos preditivos avançados.</p>
+            </div>
+            
+            <div class="card feature">
+                <div class="icon">📋</div>
+                <h3>Listas de Contatos</h3>
+                <p>Organize e gerencie suas listas de contatos de forma eficiente e inteligente.</p>
+            </div>
+            
+            <div class="card feature">
+                <div class="icon">🎤</div>
+                <h3>Reconhecimento de Voz</h3>
+                <p>Tecnologia de STT (Speech-to-Text) para análise automática de chamadas.</p>
+            </div>
+            
+            <div class="card feature">
+                <div class="icon">📊</div>
+                <h3>Relatórios</h3>
+                <p>Relatórios detalhados e análises em tempo real das suas campanhas.</p>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>🛠️ Endpoints da API</h3>
+            <div class="api-info">
+                <h4>Principais endpoints disponíveis:</h4>
+                <ul>
+                    <li><code>GET /</code> - Página inicial da API</li>
+                    <li><code>GET /api/v1/status</code> - Status do sistema</li>
+                    <li><code>GET /api/v1/test</code> - Endpoint de teste</li>
+                    <li><code>GET /docs</code> - Documentação interativa</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Verificar status da API a cada 30 segundos
+        async function verificarStatus() {
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/status');
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    document.getElementById('status').textContent = '🟢 Sistema Ativo';
+                    document.getElementById('status').style.background = '#4caf50';
+                } else {
+                    document.getElementById('status').textContent = '🟡 Sistema com Problemas';
+                    document.getElementById('status').style.background = '#ff9800';
+                }
+            } catch (error) {
+                document.getElementById('status').textContent = '🔴 Sistema Offline';
+                document.getElementById('status').style.background = '#f44336';
+            }
+        }
+        
+        // Verificar status na carga da página e depois a cada 30 segundos
+        verificarStatus();
+        setInterval(verificarStatus, 30000);
+    </script>
+</body>
+</html> 
