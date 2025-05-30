@@ -4,8 +4,11 @@ Main simplificado para deploy no Railway - TOTALMENTE INDEPENDENTE
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 import uvicorn
 import os
+import io
+import csv
 
 # Criar aplicação FastAPI simples SEM dependências externas
 app = FastAPI(
@@ -117,6 +120,49 @@ async def historico_llamadas():
         "page": 1,
         "page_size": 10
     }
+
+@app.get("/api/v1/llamadas/historico/export")
+async def exportar_historico_csv():
+    """Exportar histórico para CSV"""
+    # Dados mock para exportação
+    datos = [
+        {
+            "ID": 3,
+            "Teléfono": "+55 11 99999-0003",
+            "Usuario": "Cliente Teste 3",
+            "Estado": "finalizada",
+            "Resultado": "contacto_efectivo",
+            "Inicio": "2025-01-30T14:30:00Z",
+            "Fin": "2025-01-30T14:32:30Z",
+            "Duración": "00:02:30"
+        },
+        {
+            "ID": 4,
+            "Teléfono": "+55 11 99999-0004",
+            "Usuario": "Cliente Teste 4",
+            "Estado": "finalizada",
+            "Resultado": "ocupado",
+            "Inicio": "2025-01-30T13:30:00Z",
+            "Fin": "2025-01-30T13:30:15Z",
+            "Duración": "00:00:15"
+        }
+    ]
+    
+    # Crear CSV en memoria
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=datos[0].keys())
+    writer.writeheader()
+    writer.writerows(datos)
+    
+    csv_content = output.getvalue()
+    output.close()
+    
+    # Retornar como archivo CSV
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=historial-llamadas.csv"}
+    )
 
 @app.post("/api/v1/llamadas/finalizar")
 async def finalizar_llamada():
