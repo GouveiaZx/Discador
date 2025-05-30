@@ -122,7 +122,7 @@ async def historico_llamadas():
     }
 
 @app.get("/api/v1/llamadas/historico/export")
-async def exportar_historico_csv():
+async def exportar_historico_csv(export: str = None):
     """Exportar histórico para CSV"""
     # Dados mock para exportação
     datos = [
