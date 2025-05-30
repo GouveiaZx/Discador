@@ -3,6 +3,7 @@ import MonitorLlamadasEnProgreso from './components/MonitorLlamadasEnProgreso';
 import HistoricoLlamadas from './components/HistoricoLlamadas';
 import GestionCampanhas from './components/GestionCampanhas';
 import UploadListas from './components/UploadListas';
+import GestionBlacklist from './components/GestionBlacklist';
 
 /**
  * Componente principal da aplicação
@@ -65,6 +66,18 @@ function App() {
               </li>
               <li>
                 <button 
+                  onClick={() => setActiveTab('blacklist')}
+                  className={`px-4 py-2 rounded-t-lg transition-colors ${
+                    activeTab === 'blacklist' 
+                      ? 'bg-gray-900 text-white' 
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                >
+                  Blacklist
+                </button>
+              </li>
+              <li>
+                <button 
                   onClick={() => setActiveTab('historico')}
                   className={`px-4 py-2 rounded-t-lg transition-colors ${
                     activeTab === 'historico' 
@@ -84,6 +97,7 @@ function App() {
         {activeTab === 'monitor' && <MonitorLlamadasEnProgreso />}
         {activeTab === 'campanhas' && <GestionCampanhas />}
         {activeTab === 'listas' && <UploadListas />}
+        {activeTab === 'blacklist' && <GestionBlacklist />}
         {activeTab === 'historico' && <HistoricoLlamadas />}
       </main>
       

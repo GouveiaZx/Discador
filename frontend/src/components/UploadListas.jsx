@@ -291,13 +291,49 @@ function UploadListas() {
 
           {/* Resultado do upload */}
           {uploadResult && (
-            <div className="mt-4 p-3 bg-green-900 border border-green-700 rounded">
-              <p className="text-green-100 text-sm">
-                ✅ Lista subida con éxito!
-              </p>
-              <p className="text-green-200 text-xs mt-1">
-                {uploadResult.total_contacts} contactos procesados, {uploadResult.valid_contacts} válidos
-              </p>
+            <div className="mt-4 space-y-3">
+              <div className="p-3 bg-green-900 border border-green-700 rounded">
+                <p className="text-green-100 text-sm">
+                  ✅ Lista subida con éxito!
+                </p>
+                <p className="text-green-200 text-xs mt-1">
+                  {uploadResult.total_contacts} contactos procesados, {uploadResult.valid_contacts} válidos
+                </p>
+              </div>
+              
+              {/* Alertas de blacklist */}
+              {uploadResult.blacklisted_contacts > 0 && (
+                <div className="p-3 bg-yellow-900 border border-yellow-700 rounded">
+                  <p className="text-yellow-100 text-sm">
+                    ⚠️ {uploadResult.blacklisted_contacts} números están en la blacklist
+                  </p>
+                  {uploadResult.blacklist_details && uploadResult.blacklist_details.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-yellow-200 text-xs mb-1">Números bloqueados:</p>
+                      <div className="max-h-24 overflow-y-auto">
+                        {uploadResult.blacklist_details.map((blocked, index) => (
+                          <div key={index} className="text-xs text-yellow-300 font-mono">
+                            • {blocked.phone} - {blocked.reason}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Resumo detalhado */}
+              <div className="p-3 bg-gray-700 rounded">
+                <p className="text-gray-200 text-xs">
+                  <strong>Resumen:</strong> {uploadResult.total_lines} líneas procesadas
+                </p>
+                <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                  <div className="text-green-300">✅ Válidos: {uploadResult.valid_contacts}</div>
+                  <div className="text-red-300">❌ Inválidos: {uploadResult.invalid_contacts}</div>
+                  <div className="text-yellow-300">🚫 Blacklist: {uploadResult.blacklisted_contacts || 0}</div>
+                  <div className="text-blue-300">📋 Campaña: {uploadResult.campaign_name}</div>
+                </div>
+              </div>
             </div>
           )}
 

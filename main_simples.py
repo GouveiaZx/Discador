@@ -55,6 +55,28 @@ MOCK_CAMPAIGNS = [
     }
 ]
 
+# Mock data para blacklist
+MOCK_BLACKLIST = [
+    {
+        "id": 1,
+        "phone_number": "+54 11 9999-0000",
+        "reason": "Cliente solicitó no ser contactado - manual",
+        "created_at": "2025-01-29T10:00:00Z"
+    },
+    {
+        "id": 2,
+        "phone_number": "+54 11 8888-0000",
+        "reason": "Número reportado como spam - automático",
+        "created_at": "2025-01-28T15:30:00Z"
+    },
+    {
+        "id": 3,
+        "phone_number": "+54 11 7777-0000",
+        "reason": "Múltiples intentos fallidos - automático",
+        "created_at": "2025-01-27T09:15:00Z"
+    }
+]
+
 @app.get("/")
 async def inicio():
     """Página inicial"""
@@ -255,6 +277,7 @@ async def upload_contacts(campaign_id: int, file: UploadFile = File(...)):
         contacts_processed = []
         valid_contacts = 0
         invalid_contacts = 0
+        blacklisted_contacts = 0
         
         for line_num, line in enumerate(lines, 1):
             line = line.strip()
@@ -280,22 +303,30 @@ async def upload_contacts(campaign_id: int, file: UploadFile = File(...)):
             # Validar telefone (regex básica)
             phone_cleaned = re.sub(r'[^\d\+]', '', phone)
             if len(phone_cleaned) >= 8 and len(phone_cleaned) <= 20:
+                # Verificar se está na blacklist
+                blocked_item = next((item for item in MOCK_BLACKLIST if item["phone_number"] == phone), None)
+                
                 contact = {
                     "line": line_num,
                     "phone": phone,
                     "name": name,
-                    "status": "pending",
-                    "campaign_id": campaign_id
+                    "status": "blacklisted" if blocked_item else "pending",
+                    "campaign_id": campaign_id,
+                    "blacklist_reason": blocked_item["reason"] if blocked_item else None
                 }
                 contacts_processed.append(contact)
-                valid_contacts += 1
+                
+                if blocked_item:
+                    blacklisted_contacts += 1
+                else:
+                    valid_contacts += 1
             else:
                 invalid_contacts += 1
         
         # Simular salvamento no banco (quando tiver Supabase será real)
         # Por enquanto só retornamos estatísticas
         
-        # Atualizar contador da campanha
+        # Atualizar contador da campanha (apenas contatos válidos)
         campaign["total_contacts"] = campaign.get("total_contacts", 0) + valid_contacts
         
         return {
@@ -306,8 +337,17 @@ async def upload_contacts(campaign_id: int, file: UploadFile = File(...)):
             "total_contacts": len(contacts_processed),
             "valid_contacts": valid_contacts,
             "invalid_contacts": invalid_contacts,
+            "blacklisted_contacts": blacklisted_contacts,
             "campaign_id": campaign_id,
-            "campaign_name": campaign["name"]
+            "campaign_name": campaign["name"],
+            "blacklist_details": [
+                {
+                    "phone": contact["phone"],
+                    "reason": contact["blacklist_reason"]
+                }
+                for contact in contacts_processed 
+                if contact["status"] == "blacklisted"
+            ]
         }
         
     except Exception as e:
@@ -345,6 +385,140 @@ async def get_campaign_contacts(campaign_id: int):
         "total": len(mock_contacts),
         "campaign": campaign
     }
+
+@app.get("/api/v1/blacklist")
+async def list_blacklist():
+    """Listar todos os números na blacklist"""
+    return {
+        "blacklist": MOCK_BLACKLIST,
+        "total": len(MOCK_BLACKLIST)
+    }
+
+@app.post("/api/v1/blacklist")
+async def add_to_blacklist(blacklist_data: dict):
+    """Adicionar número à blacklist"""
+    try:
+        phone_number = blacklist_data.get("phone_number", "").strip()
+        reason = blacklist_data.get("reason", "Bloqueado manualmente").strip()
+        
+        if not phone_number:
+            return {"error": "Número de telefone é obrigatório"}, 400
+        
+        # Validar formato do telefone
+        phone_cleaned = re.sub(r'[^\d\+]', '', phone_number)
+        if len(phone_cleaned) < 8 or len(phone_cleaned) > 20:
+            return {"error": "Formato de telefone inválido"}, 400
+        
+        # Verificar se já existe
+        existing = next((item for item in MOCK_BLACKLIST if item["phone_number"] == phone_number), None)
+        if existing:
+            return {"error": "Número já está na blacklist"}, 409
+        
+        # Adicionar novo item
+        new_id = max([item["id"] for item in MOCK_BLACKLIST]) + 1 if MOCK_BLACKLIST else 1
+        new_item = {
+            "id": new_id,
+            "phone_number": phone_number,
+            "reason": reason,
+            "created_at": datetime.now().isoformat() + "Z"
+        }
+        
+        MOCK_BLACKLIST.insert(0, new_item)  # Adicionar no início
+        
+        return new_item
+        
+    except Exception as e:
+        return {"error": f"Erro ao adicionar à blacklist: {str(e)}"}, 500
+
+@app.delete("/api/v1/blacklist/{blacklist_id}")
+async def remove_from_blacklist(blacklist_id: int):
+    """Remover número da blacklist"""
+    try:
+        # Encontrar item
+        item = next((item for item in MOCK_BLACKLIST if item["id"] == blacklist_id), None)
+        if not item:
+            return {"error": "Número não encontrado na blacklist"}, 404
+        
+        # Remover da lista
+        MOCK_BLACKLIST.remove(item)
+        
+        return {
+            "status": "success",
+            "message": f"Número {item['phone_number']} removido da blacklist",
+            "removed_item": item
+        }
+        
+    except Exception as e:
+        return {"error": f"Erro ao remover da blacklist: {str(e)}"}, 500
+
+@app.post("/api/v1/blacklist/check")
+async def check_blacklist(check_data: dict):
+    """Verificar se número está na blacklist"""
+    try:
+        phone_number = check_data.get("phone_number", "").strip()
+        
+        if not phone_number:
+            return {"error": "Número de telefone é obrigatório"}, 400
+        
+        # Buscar na blacklist
+        blocked_item = next((item for item in MOCK_BLACKLIST if item["phone_number"] == phone_number), None)
+        
+        if blocked_item:
+            return {
+                "is_blacklisted": True,
+                "phone_number": phone_number,
+                "reason": blocked_item["reason"],
+                "created_at": blocked_item["created_at"],
+                "blacklist_id": blocked_item["id"]
+            }
+        else:
+            return {
+                "is_blacklisted": False,
+                "phone_number": phone_number,
+                "message": "Número permitido"
+            }
+            
+    except Exception as e:
+        return {"error": f"Erro na verificação: {str(e)}"}, 500
+
+@app.post("/api/v1/blacklist/bulk-check")
+async def bulk_check_blacklist(bulk_data: dict):
+    """Verificar múltiplos números contra blacklist"""
+    try:
+        phone_numbers = bulk_data.get("phone_numbers", [])
+        
+        if not phone_numbers or not isinstance(phone_numbers, list):
+            return {"error": "Lista de números é obrigatória"}, 400
+        
+        results = []
+        blocked_count = 0
+        
+        for phone in phone_numbers:
+            phone = phone.strip()
+            blocked_item = next((item for item in MOCK_BLACKLIST if item["phone_number"] == phone), None)
+            
+            if blocked_item:
+                results.append({
+                    "phone_number": phone,
+                    "is_blacklisted": True,
+                    "reason": blocked_item["reason"]
+                })
+                blocked_count += 1
+            else:
+                results.append({
+                    "phone_number": phone,
+                    "is_blacklisted": False
+                })
+        
+        return {
+            "total_checked": len(phone_numbers),
+            "blocked_count": blocked_count,
+            "allowed_count": len(phone_numbers) - blocked_count,
+            "results": results
+        }
+        
+    except Exception as e:
+        return {"error": f"Erro na verificação em lote: {str(e)}"}, 500
 
 if __name__ == "__main__":
     uvicorn.run(
