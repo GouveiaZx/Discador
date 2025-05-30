@@ -9,6 +9,7 @@ import uvicorn
 import os
 import io
 import csv
+from datetime import datetime
 
 # Criar aplicação FastAPI simples SEM dependências externas
 app = FastAPI(
@@ -171,6 +172,41 @@ async def finalizar_llamada():
         "status": "success",
         "mensaje": "Llamada finalizada correctamente"
     }
+
+@app.get("/api/v1/campaigns")
+async def list_campaigns():
+    """Lista todas as campanhas"""
+    return {
+        "campaigns": MOCK_CAMPAIGNS,
+        "total": len(MOCK_CAMPAIGNS),
+        "page": 1,
+        "page_size": 10
+    }
+
+@app.get("/api/v1/campaigns/{campaign_id}")
+async def get_campaign(campaign_id: int):
+    """Obter detalhes de uma campanha específica"""
+    campaign = next((c for c in MOCK_CAMPAIGNS if c["id"] == campaign_id), None)
+    if not campaign:
+        return {"error": "Campanha não encontrada"}, 404
+    return campaign
+
+@app.post("/api/v1/campaigns")
+async def create_campaign(campaign_data: dict):
+    """Criar nova campanha"""
+    new_id = max([c["id"] for c in MOCK_CAMPAIGNS]) + 1
+    new_campaign = {
+        "id": new_id,
+        "name": campaign_data.get("name", "Nova Campanha"),
+        "status": "draft",
+        "cli_number": campaign_data.get("cli_number", "+54 11 0000-0000"),
+        "created_at": datetime.now().isoformat() + "Z",
+        "total_contacts": 0,
+        "contacted_count": 0,
+        "success_count": 0
+    }
+    MOCK_CAMPAIGNS.append(new_campaign)
+    return new_campaign
 
 if __name__ == "__main__":
     uvicorn.run(

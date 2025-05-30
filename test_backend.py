@@ -19,6 +19,7 @@ def test_backend():
             data = response.json()
             print(f"Message: {data.get('message', 'N/A')}")
             print(f"Version: {data.get('version', 'N/A')}")
+            print(f"Features: {data.get('features', [])}")
         
         # Teste endpoint health
         print(f"\n2️⃣ Testando {backend_url}/health")
@@ -35,6 +36,9 @@ def test_backend():
         if response.status_code == 200:
             data = response.json()
             print(f"Campanhas: {data.get('total', 0)} encontradas")
+            print(f"Lista: {data.get('campaigns', [])}")
+        else:
+            print(f"Erro: {response.text}")
         
         # Teste endpoint chamadas em progresso (compatibilidade)
         print(f"\n4️⃣ Testando {backend_url}/api/v1/llamadas/en-progreso")
