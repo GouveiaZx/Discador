@@ -19,7 +19,7 @@ function App() {
               Discador - Panel de Control
             </h1>
             <div className="text-sm text-gray-400">
-              Sistema de monitoramento de chamadas
+              Sistema de monitoreo de llamadas
             </div>
           </div>
           
@@ -34,7 +34,7 @@ function App() {
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
                 >
-                  Monitoramento
+                  Monitoreo
                 </button>
               </li>
               <li>
@@ -46,7 +46,7 @@ function App() {
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
                 >
-                  Histórico
+                  Historial
                 </button>
               </li>
             </ul>

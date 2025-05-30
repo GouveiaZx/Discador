@@ -4,8 +4,8 @@ import SpinnerLoading from './SpinnerLoading';
 import { obtenerLlamadasEnProgreso, finalizarLlamadaManualmente } from '../services/llamadasService';
 
 /**
- * Componente principal para monitoramento de chamadas em andamento
- * com atualização automática
+ * Componente principal para monitoreo de llamadas en curso
+ * con actualización automática
  * 
  * @returns {JSX.Element} Componente JSX
  */
@@ -15,11 +15,11 @@ const MonitorLlamadasEnProgreso = () => {
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
 
-  // Intervalo de atualização (5 segundos)
+  // Intervalo de actualización (5 segundos)
   const POLLING_INTERVAL = 5000;
 
   /**
-   * Carrega as chamadas em andamento da API
+   * Carga las llamadas en curso desde la API
    */
   const cargarLlamadas = useCallback(async () => {
     setLoading(true);
@@ -30,22 +30,22 @@ const MonitorLlamadasEnProgreso = () => {
       setError(null);
     } catch (err) {
       console.error('Error al cargar las llamadas:', err);
-      setError('Error al cargar las llamadas. Intente nuevamente.');
+      setError('Error al cargar las llamadas. Intentá nuevamente.');
     } finally {
       setLoading(false);
     }
   }, []);
 
   /**
-   * Finaliza uma chamada manualmente
+   * Finaliza una llamada manualmente
    * 
-   * @param {number} llamadaId - ID da chamada a finalizar
+   * @param {number} llamadaId - ID de la llamada a finalizar
    */
   const handleFinalizarLlamada = async (llamadaId) => {
     try {
       await finalizarLlamadaManualmente(llamadaId);
       
-      // Atualiza a lista removendo a chamada finalizada
+      // Actualiza la lista removiendo la llamada finalizada
       setLlamadas(llamadas.filter(llamada => llamada.id !== llamadaId));
     } catch (err) {
       console.error(`Error al finalizar la llamada ID ${llamadaId}:`, err);
@@ -53,17 +53,17 @@ const MonitorLlamadasEnProgreso = () => {
     }
   };
 
-  // Efeito para carregar as chamadas inicialmente e configurar o polling
+  // Efecto para cargar las llamadas inicialmente y configurar el polling
   useEffect(() => {
-    // Carrega as chamadas imediatamente ao montar o componente
+    // Carga las llamadas inmediatamente al montar el componente
     cargarLlamadas();
     
-    // Configura o intervalo para atualização automática
+    // Configura el intervalo para actualización automática
     const intervalId = setInterval(() => {
       cargarLlamadas();
     }, POLLING_INTERVAL);
     
-    // Limpa o intervalo quando o componente é desmontado
+    // Limpia el intervalo cuando el componente se desmonta
     return () => clearInterval(intervalId);
   }, [cargarLlamadas]);
 
@@ -71,12 +71,12 @@ const MonitorLlamadasEnProgreso = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col space-y-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-white">Monitoramento de Chamadas em Andamento</h1>
+          <h1 className="text-2xl font-bold text-white">Monitoreo de Llamadas en Curso</h1>
           <div className="flex items-center space-x-4">
             <SpinnerLoading isLoading={loading} />
             {lastUpdated && (
               <span className="text-xs text-gray-400">
-                Última atualização: {lastUpdated.toLocaleTimeString()}
+                Última actualización: {lastUpdated.toLocaleTimeString()}
               </span>
             )}
           </div>
