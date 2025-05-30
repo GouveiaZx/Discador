@@ -2,7 +2,7 @@
 """
 Main simplificado para deploy no Railway - TOTALMENTE INDEPENDENTE
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 import uvicorn
@@ -10,6 +10,7 @@ import os
 import io
 import csv
 from datetime import datetime
+import re
 
 # Criar aplicação FastAPI simples SEM dependências externas
 app = FastAPI(
@@ -231,6 +232,119 @@ async def create_campaign(campaign_data: dict):
     }
     MOCK_CAMPAIGNS.append(new_campaign)
     return new_campaign
+
+@app.post("/api/v1/campaigns/{campaign_id}/upload-contacts")
+async def upload_contacts(campaign_id: int, file: UploadFile = File(...)):
+    """Upload e processamento de lista de contatos"""
+    try:
+        # Verificar se campanha existe
+        campaign = next((c for c in MOCK_CAMPAIGNS if c["id"] == campaign_id), None)
+        if not campaign:
+            return {"error": "Campanha não encontrada"}, 404
+        
+        # Verificar tipo de arquivo
+        if not file.filename.lower().endswith(('.csv', '.txt')):
+            return {"error": "Formato de arquivo não suportado. Use CSV ou TXT."}, 400
+        
+        # Ler conteúdo do arquivo
+        content = await file.read()
+        text = content.decode('utf-8')
+        
+        # Processar linhas
+        lines = text.strip().split('\n')
+        contacts_processed = []
+        valid_contacts = 0
+        invalid_contacts = 0
+        
+        for line_num, line in enumerate(lines, 1):
+            line = line.strip()
+            if not line:
+                continue
+                
+            # Detectar separador e dividir colunas
+            if ',' in line:
+                columns = [col.strip() for col in line.split(',')]
+            elif ';' in line:
+                columns = [col.strip() for col in line.split(';')]
+            elif '|' in line:
+                columns = [col.strip() for col in line.split('|')]
+            elif '\t' in line:
+                columns = [col.strip() for col in line.split('\t')]
+            else:
+                columns = [line.strip()]
+            
+            # Extrair telefone e nome
+            phone = columns[0] if columns else ''
+            name = columns[1] if len(columns) > 1 else ''
+            
+            # Validar telefone (regex básica)
+            phone_cleaned = re.sub(r'[^\d\+]', '', phone)
+            if len(phone_cleaned) >= 8 and len(phone_cleaned) <= 20:
+                contact = {
+                    "line": line_num,
+                    "phone": phone,
+                    "name": name,
+                    "status": "pending",
+                    "campaign_id": campaign_id
+                }
+                contacts_processed.append(contact)
+                valid_contacts += 1
+            else:
+                invalid_contacts += 1
+        
+        # Simular salvamento no banco (quando tiver Supabase será real)
+        # Por enquanto só retornamos estatísticas
+        
+        # Atualizar contador da campanha
+        campaign["total_contacts"] = campaign.get("total_contacts", 0) + valid_contacts
+        
+        return {
+            "status": "success",
+            "message": "Lista processada com sucesso",
+            "filename": file.filename,
+            "total_lines": len(lines),
+            "total_contacts": len(contacts_processed),
+            "valid_contacts": valid_contacts,
+            "invalid_contacts": invalid_contacts,
+            "campaign_id": campaign_id,
+            "campaign_name": campaign["name"]
+        }
+        
+    except Exception as e:
+        return {"error": f"Erro no processamento: {str(e)}"}, 500
+
+@app.get("/api/v1/campaigns/{campaign_id}/contacts")
+async def get_campaign_contacts(campaign_id: int):
+    """Listar contatos de uma campanha"""
+    campaign = next((c for c in MOCK_CAMPAIGNS if c["id"] == campaign_id), None)
+    if not campaign:
+        return {"error": "Campanha não encontrada"}, 404
+    
+    # Mock de contatos (quando tiver Supabase será consulta real)
+    mock_contacts = [
+        {
+            "id": 1,
+            "phone": "+54 11 1234-5678",
+            "name": "Juan Pérez",
+            "status": "pending",
+            "attempts": 0,
+            "created_at": "2025-01-30T10:00:00Z"
+        },
+        {
+            "id": 2,
+            "phone": "+54 11 8765-4321", 
+            "name": "María García",
+            "status": "contacted",
+            "attempts": 1,
+            "created_at": "2025-01-30T10:05:00Z"
+        }
+    ]
+    
+    return {
+        "contacts": mock_contacts,
+        "total": len(mock_contacts),
+        "campaign": campaign
+    }
 
 if __name__ == "__main__":
     uvicorn.run(

@@ -1,0 +1,388 @@
+import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
+
+/**
+ * Componente para upload e gestão de listas de contatos
+ */
+function UploadListas() {
+  const [campaigns, setCampaigns] = useState([]);
+  const [selectedCampaign, setSelectedCampaign] = useState('');
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadResult, setUploadResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [lists, setLists] = useState([]);
+  const [previewData, setPreviewData] = useState([]);
+
+  // Carregar campanhas disponíveis
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
+
+  /**
+   * Buscar campanhas da API
+   */
+  const fetchCampaigns = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/campaigns`);
+      if (!response.ok) throw new Error('Erro ao carregar campanhas');
+      
+      const data = await response.json();
+      setCampaigns(data.campaigns || []);
+    } catch (err) {
+      setError('Erro ao carregar campanhas: ' + err.message);
+    }
+  };
+
+  /**
+   * Processar arquivo selecionado
+   */
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validar tipo de arquivo
+    const allowedTypes = ['.csv', '.txt'];
+    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    
+    if (!allowedTypes.includes(fileExtension)) {
+      setError('Tipo de arquivo não suportado. Use apenas CSV ou TXT.');
+      return;
+    }
+
+    // Validar tamanho (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Arquivo muito grande. Máximo 5MB permitido.');
+      return;
+    }
+
+    setUploadFile(file);
+    setError(null);
+    
+    // Preview do arquivo
+    previewFile(file);
+  };
+
+  /**
+   * Preview do conteúdo do arquivo
+   */
+  const previewFile = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const lines = text.split('\n').slice(0, 10); // Primeiras 10 linhas
+      
+      const preview = lines.map((line, index) => {
+        const columns = line.split(/[,;|\t]/).map(col => col.trim());
+        return {
+          line: index + 1,
+          raw: line,
+          columns: columns,
+          phone: detectPhoneNumber(columns),
+          name: detectName(columns)
+        };
+      }).filter(item => item.raw.trim());
+
+      setPreviewData(preview);
+    };
+    reader.readAsText(file);
+  };
+
+  /**
+   * Detectar número de telefone na linha
+   */
+  const detectPhoneNumber = (columns) => {
+    for (const col of columns) {
+      // Regex para números de telefone (vários formatos)
+      if (/^[\+]?[0-9\s\-\(\)]{8,20}$/.test(col.trim())) {
+        return col.trim();
+      }
+    }
+    return columns[0] || ''; // Assume primeira coluna se não detectar
+  };
+
+  /**
+   * Detectar nome na linha
+   */
+  const detectName = (columns) => {
+    if (columns.length > 1) {
+      return columns[1].trim();
+    }
+    return '';
+  };
+
+  /**
+   * Fazer upload do arquivo
+   */
+  const handleUpload = async () => {
+    if (!uploadFile || !selectedCampaign) {
+      setError('Selecione um arquivo e uma campanha.');
+      return;
+    }
+
+    setUploading(true);
+    setUploadProgress(0);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', uploadFile);
+      formData.append('campaign_id', selectedCampaign);
+
+      // Simular progresso
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90));
+      }, 200);
+
+      const response = await fetch(`${API_BASE_URL}/api/v1/campaigns/${selectedCampaign}/upload-contacts`, {
+        method: 'POST',
+        body: formData
+      });
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Erro no upload');
+      }
+
+      const result = await response.json();
+      setUploadResult(result);
+      
+      // Reset form
+      setUploadFile(null);
+      setSelectedCampaign('');
+      setPreviewData([]);
+      
+      // Reset file input
+      const fileInput = document.getElementById('file-upload');
+      if (fileInput) fileInput.value = '';
+
+    } catch (err) {
+      setError('Erro no upload: ' + err.message);
+    } finally {
+      setUploading(false);
+      setTimeout(() => {
+        setUploadProgress(0);
+        setUploadResult(null);
+      }, 3000);
+    }
+  };
+
+  /**
+   * Formatar tamanho do arquivo
+   */
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-6">
+      {/* Header */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white">Upload de Listas</h2>
+        <p className="text-gray-400 mt-1">Subí tus listas de contactos en formato CSV o TXT</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Panel de Upload */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Subir Lista</h3>
+
+          {/* Seleção de campanha */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Campaña destino *
+            </label>
+            <select
+              value={selectedCampaign}
+              onChange={(e) => setSelectedCampaign(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
+              required
+            >
+              <option value="">Seleccionar campaña...</option>
+              {campaigns.map(campaign => (
+                <option key={campaign.id} value={campaign.id}>
+                  {campaign.name} ({campaign.status})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Upload de arquivo */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Archivo de contactos *
+            </label>
+            <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-gray-500 transition-colors">
+              <input
+                id="file-upload"
+                type="file"
+                accept=".csv,.txt"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <label htmlFor="file-upload" className="cursor-pointer">
+                <div className="text-gray-400">
+                  <svg className="mx-auto h-12 w-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                  </svg>
+                  <p className="text-sm">Clicá para seleccionar archivo</p>
+                  <p className="text-xs text-gray-500 mt-1">CSV o TXT, máximo 5MB</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Informações do arquivo selecionado */}
+          {uploadFile && (
+            <div className="mb-4 p-3 bg-gray-700 rounded">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white">{uploadFile.name}</p>
+                  <p className="text-xs text-gray-400">{formatFileSize(uploadFile.size)}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setUploadFile(null);
+                    setPreviewData([]);
+                    document.getElementById('file-upload').value = '';
+                  }}
+                  className="text-red-400 hover:text-red-300"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Progress bar */}
+          {uploading && (
+            <div className="mb-4">
+              <div className="flex justify-between text-sm text-gray-300 mb-1">
+                <span>Procesando...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+
+          {/* Botão de upload */}
+          <button
+            onClick={handleUpload}
+            disabled={!uploadFile || !selectedCampaign || uploading}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-2 px-4 rounded font-semibold transition-colors"
+          >
+            {uploading ? 'Procesando...' : 'Subir Lista'}
+          </button>
+
+          {/* Resultado do upload */}
+          {uploadResult && (
+            <div className="mt-4 p-3 bg-green-900 border border-green-700 rounded">
+              <p className="text-green-100 text-sm">
+                ✅ Lista subida con éxito!
+              </p>
+              <p className="text-green-200 text-xs mt-1">
+                {uploadResult.total_contacts} contactos procesados, {uploadResult.valid_contacts} válidos
+              </p>
+            </div>
+          )}
+
+          {/* Error message */}
+          {error && (
+            <div className="mt-4 p-3 bg-red-900 border border-red-700 rounded">
+              <p className="text-red-100 text-sm">{error}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Preview dos dados */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Preview de Datos</h3>
+          
+          {previewData.length > 0 ? (
+            <div>
+              <p className="text-sm text-gray-400 mb-3">
+                Mostrando primeras {previewData.length} líneas:
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-700">
+                      <th className="text-left text-gray-300 pb-2">Línea</th>
+                      <th className="text-left text-gray-300 pb-2">Teléfono</th>
+                      <th className="text-left text-gray-300 pb-2">Nombre</th>
+                      <th className="text-left text-gray-300 pb-2">Datos Raw</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewData.map((item, index) => (
+                      <tr key={index} className="border-b border-gray-700">
+                        <td className="py-2 text-gray-400">{item.line}</td>
+                        <td className="py-2 text-white font-mono">{item.phone}</td>
+                        <td className="py-2 text-gray-300">{item.name}</td>
+                        <td className="py-2 text-gray-500 truncate max-w-xs">{item.raw}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div className="mt-4 p-3 bg-blue-900 border border-blue-700 rounded">
+                <p className="text-blue-100 text-xs">
+                  💡 El sistema detecta automáticamente números de teléfono y nombres. 
+                  Revisá que la detección sea correcta antes de subir.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <svg className="mx-auto h-12 w-12 text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <p className="text-gray-400">Seleccioná un archivo para ver el preview</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Formato esperado */}
+      <div className="mt-6 bg-gray-800 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Formato Esperado</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h4 className="text-sm font-medium text-gray-300 mb-2">CSV:</h4>
+            <pre className="text-xs bg-gray-900 p-3 rounded text-gray-300 overflow-x-auto">
+{`+5411987654321,Juan Pérez
++5411123456789,María García  
++5411555666777,Carlos López`}
+            </pre>
+          </div>
+          <div>
+            <h4 className="text-sm font-medium text-gray-300 mb-2">TXT (separado por |):</h4>
+            <pre className="text-xs bg-gray-900 p-3 rounded text-gray-300 overflow-x-auto">
+{`+5411987654321|Juan Pérez
++5411123456789|María García
++5411555666777|Carlos López`}
+            </pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default UploadListas; 
