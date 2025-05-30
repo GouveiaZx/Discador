@@ -30,6 +30,30 @@ app.add_middleware(
     expose_headers=["*"]  # Expor todos os headers
 )
 
+# Mock data para campanhas
+MOCK_CAMPAIGNS = [
+    {
+        "id": 1,
+        "name": "Campanha Teste 1",
+        "status": "active",
+        "cli_number": "+54 11 4567-8900",
+        "created_at": "2024-01-15T09:00:00Z",
+        "total_contacts": 150,
+        "contacted_count": 45,
+        "success_count": 12
+    },
+    {
+        "id": 2,
+        "name": "Campanha Teste 2", 
+        "status": "paused",
+        "cli_number": "+54 11 4567-8901",
+        "created_at": "2024-01-14T14:30:00Z",
+        "total_contacts": 200,
+        "contacted_count": 80,
+        "success_count": 25
+    }
+]
+
 @app.get("/")
 async def inicio():
     """Página inicial"""
