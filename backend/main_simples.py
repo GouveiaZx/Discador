@@ -49,8 +49,8 @@ async def status():
         "ambiente": "Railway",
         "configuracao": {
             "host": configuracion.HOST,
-            "puerto": configuracao.PUERTO,
-            "debug": configuracao.DEBUG
+            "puerto": configuracion.PUERTO,
+            "debug": configuracion.DEBUG
         }
     }
 
@@ -67,6 +67,63 @@ async def teste():
 async def health_check():
     """Health check para Railway"""
     return {"status": "healthy"}
+
+# Endpoints mock para o frontend
+@app.get("/api/v1/llamadas/en-progreso")
+async def llamadas_en_progreso():
+    """Mock: Chamadas em progresso"""
+    return {
+        "status": "success",
+        "llamadas": [
+            {
+                "id": 1,
+                "numero": "+55 11 99999-0001",
+                "nombre": "Cliente Teste 1",
+                "estado": "en_progreso",
+                "inicio": "2025-01-30T15:30:00",
+                "duracion": "00:02:45"
+            },
+            {
+                "id": 2,
+                "numero": "+55 11 99999-0002", 
+                "nombre": "Cliente Teste 2",
+                "estado": "en_progreso",
+                "inicio": "2025-01-30T15:28:15",
+                "duracion": "00:05:12"
+            }
+        ],
+        "total": 2
+    }
+
+@app.get("/api/v1/llamadas/historico")
+async def historico_llamadas():
+    """Mock: Histórico de chamadas"""
+    return {
+        "status": "success",
+        "llamadas": [
+            {
+                "id": 3,
+                "numero": "+55 11 99999-0003",
+                "nombre": "Cliente Teste 3", 
+                "estado": "finalizada",
+                "resultado": "contacto_efectivo",
+                "inicio": "2025-01-30T14:30:00",
+                "fin": "2025-01-30T14:32:30",
+                "duracion": "00:02:30"
+            }
+        ],
+        "total": 1,
+        "page": 1,
+        "page_size": 10
+    }
+
+@app.post("/api/v1/llamadas/finalizar")
+async def finalizar_llamada():
+    """Mock: Finalizar chamada"""
+    return {
+        "status": "success",
+        "mensaje": "Llamada finalizada correctamente"
+    }
 
 if __name__ == "__main__":
     uvicorn.run(
