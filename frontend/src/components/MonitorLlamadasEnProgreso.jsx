@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import LlamadasEnProgresoTable from './LlamadasEnProgresoTable';
+import DashboardAvanzado from './DashboardAvanzado';
 import SpinnerLoading from './SpinnerLoading';
 import { obtenerLlamadasEnProgreso, finalizarLlamadaManualmente } from '../services/llamadasService';
 
 /**
  * Componente principal para monitoreo de llamadas en curso
- * con actualización automática
+ * con actualización automática y dashboard avanzado
  * 
  * @returns {JSX.Element} Componente JSX
  */
@@ -14,6 +15,7 @@ const MonitorLlamadasEnProgreso = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [viewMode, setViewMode] = useState('dashboard'); // 'dashboard' ou 'table'
 
   // Intervalo de actualización (5 segundos)
   const POLLING_INTERVAL = 5000;
@@ -67,12 +69,74 @@ const MonitorLlamadasEnProgreso = () => {
     return () => clearInterval(intervalId);
   }, [cargarLlamadas]);
 
+  // Se está no modo dashboard, renderizar dashboard avanzado
+  if (viewMode === 'dashboard') {
+    return (
+      <div>
+        {/* Toggle de visualização */}
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex space-x-1 bg-gray-800 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('dashboard')}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  viewMode === 'dashboard'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  viewMode === 'table'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Tabla Detallada
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <DashboardAvanzado />
+      </div>
+    );
+  }
+
+  // Modo tabela clássico
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col space-y-4">
+        {/* Toggle de visualização */}
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-white">Monitoreo de Llamadas en Curso</h1>
           <div className="flex items-center space-x-4">
+            <div className="flex space-x-1 bg-gray-800 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('dashboard')}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  viewMode === 'dashboard'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  viewMode === 'table'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Tabla Detallada
+              </button>
+            </div>
+            
             <SpinnerLoading isLoading={loading} />
             {lastUpdated && (
               <span className="text-xs text-gray-400">

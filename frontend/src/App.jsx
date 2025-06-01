@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
 import Login from './components/Login';
 import MonitorLlamadasEnProgreso from './components/MonitorLlamadasEnProgreso';
 import HistoricoLlamadas from './components/HistoricoLlamadas';

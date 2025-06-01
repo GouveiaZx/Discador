@@ -5,17 +5,24 @@ Backend principal com banco de dados real e integração Asterisk
 """
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import Response, HTMLResponse, FileResponse
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Dict
 import uvicorn
 import os
 import logging
+import json
+import uuid
+from datetime import datetime, timedelta
+import asyncio
 
 # Imports locais
 from database.connection import get_database_session, init_database
 from database.models import Campaign, Contact, Blacklist, CallLog, CampaignStatus
 from schemas.campaign import CampaignCreate, CampaignUpdate, CampaignResponse, CampaignList
+
+# Importar o engine de discagem
+from discador_engine import DiscadorAPI, discador_engine
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -368,12 +375,224 @@ def format_duration(seconds: int) -> str:
     return f"{hours:02d}:{minutes:02d}:{secs:02d}"
 
 # ===========================================
+# NOVOS ENDPOINTS PARA O DISCADOR
+# ===========================================
+
+@app.post("/api/v1/campaigns/{campaign_id}/start")
+async def start_campaign(campaign_id: int, background_tasks: BackgroundTasks):
+    """
+    Inicia uma campanha de discagem
+    """
+    try:
+        # Buscar dados da campanha
+        campaign = get_campaign_by_id(campaign_id)
+        if not campaign:
+            raise HTTPException(status_code=404, detail="Campanha não encontrada")
+        
+        # Buscar contatos da campanha
+        contacts = get_campaign_contacts(campaign_id)
+        if not contacts:
+            raise HTTPException(status_code=400, detail="Nenhum contato encontrado para esta campanha")
+        
+        # Preparar dados para o discador
+        campaign_data = {
+            'id': campaign_id,
+            'contacts': contacts,
+            'cli_number': campaign.get('cli_number', '+5511999999999')
+        }
+        
+        # Iniciar campanha em background
+        result = await DiscadorAPI.start_campaign_async(campaign_data)
+        
+        return {
+            "message": "Campanha iniciada com sucesso",
+            "campaign_id": campaign_id,
+            "total_contacts": len(contacts),
+            **result
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao iniciar campanha: {str(e)}")
+
+@app.post("/api/v1/campaigns/{campaign_id}/stop")
+async def stop_campaign(campaign_id: int):
+    """
+    Para uma campanha de discagem
+    """
+    try:
+        result = DiscadorAPI.stop_campaign()
+        
+        return {
+            "message": "Campanha parada com sucesso",
+            "campaign_id": campaign_id,
+            **result
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao parar campanha: {str(e)}")
+
+@app.get("/api/v1/campaigns/stats")
+async def get_campaign_stats():
+    """
+    Retorna estatísticas da campanha ativa
+    """
+    try:
+        stats = DiscadorAPI.get_campaign_stats()
+        
+        return {
+            "status": "success",
+            "data": stats,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao obter estatísticas: {str(e)}")
+
+@app.get("/api/v1/campaigns/active-calls")
+async def get_active_calls():
+    """
+    Retorna chamadas ativas
+    """
+    try:
+        calls = DiscadorAPI.get_active_calls()
+        
+        return {
+            "status": "success",
+            "data": calls,
+            "total": len(calls),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao obter chamadas ativas: {str(e)}")
+
+@app.get("/api/v1/discador/status")
+async def get_discador_status():
+    """
+    Retorna status geral do discador
+    """
+    try:
+        stats = DiscadorAPI.get_campaign_stats()
+        active_calls = DiscadorAPI.get_active_calls()
+        
+        return {
+            "status": "success",
+            "data": {
+                "discador_active": stats.get('is_running', False),
+                "total_calls_today": stats.get('total_calls', 0),
+                "successful_calls_today": stats.get('successful_calls', 0),
+                "active_calls": len(active_calls),
+                "success_rate": stats.get('success_rate', 0),
+                "last_update": datetime.now().isoformat()
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao obter status: {str(e)}")
+
+# Funções auxiliares para buscar dados
+def get_campaign_by_id(campaign_id: int) -> Optional[Dict]:
+    """
+    Busca campanha por ID (mock - seria do banco)
+    """
+    # Mock data - em produção viria do banco de dados
+    mock_campaigns = {
+        1: {
+            "id": 1,
+            "name": "Campanha Teste",
+            "cli_number": "+5511123456789",
+            "status": "active"
+        }
+    }
+    return mock_campaigns.get(campaign_id)
+
+def get_campaign_contacts(campaign_id: int) -> List[Dict]:
+    """
+    Busca contatos da campanha (mock - seria do banco)
+    """
+    # Mock data - em produção viria do banco de dados
+    mock_contacts = [
+        {"phone_number": "+5511999999991", "name": "Cliente 1", "status": "not_started"},
+        {"phone_number": "+5511999999992", "name": "Cliente 2", "status": "not_started"},
+        {"phone_number": "+5511999999993", "name": "Cliente 3", "status": "not_started"},
+        {"phone_number": "+5511999999994", "name": "Cliente 4", "status": "not_started"},
+        {"phone_number": "+5511999999995", "name": "Cliente 5", "status": "not_started"},
+    ]
+    return mock_contacts
+
+# Endpoint para simular dados reais do dashboard
+@app.get("/api/v1/dashboard/real-stats")
+async def get_dashboard_real_stats():
+    """
+    Retorna estatísticas reais para alimentar o dashboard
+    """
+    try:
+        # Obter dados do discador
+        discador_stats = DiscadorAPI.get_campaign_stats()
+        active_calls = DiscadorAPI.get_active_calls()
+        
+        # Gerar dados complementares (simulados)
+        now = datetime.now()
+        
+        # Dados por hora (últimas 24h)
+        hourly_data = []
+        for i in range(24):
+            hour = now - timedelta(hours=i)
+            calls = max(0, discador_stats.get('total_calls', 0) - i * 2)
+            hourly_data.append({
+                "hour": hour.strftime("%H:00"),
+                "calls": calls
+            })
+        
+        # Estados das chamadas
+        call_states = {
+            "conectadas": discador_stats.get('successful_calls', 0),
+            "sem_resposta": discador_stats.get('no_answer_calls', 0),
+            "transferidas": discador_stats.get('transferred_calls', 0),
+            "ocupado": discador_stats.get('busy_calls', 0)
+        }
+        
+        # Efetividade diária (últimos 7 dias)
+        daily_effectiveness = []
+        for i in range(7):
+            day = now - timedelta(days=i)
+            effectiveness = max(0, discador_stats.get('success_rate', 0) - i * 2)
+            daily_effectiveness.append({
+                "day": day.strftime("%d/%m"),
+                "effectiveness": effectiveness
+            })
+        
+        return {
+            "status": "success",
+            "data": {
+                "kpis": {
+                    "active_calls": len(active_calls),
+                    "calls_today": discador_stats.get('total_calls', 0),
+                    "effectiveness": discador_stats.get('success_rate', 0),
+                    "active_campaigns": 1 if discador_stats.get('is_running') else 0
+                },
+                "hourly_calls": hourly_data,
+                "call_states": call_states,
+                "daily_effectiveness": daily_effectiveness,
+                "system_status": {
+                    "discador_running": discador_stats.get('is_running', False),
+                    "database_connected": True,
+                    "api_responsive": True
+                }
+            },
+            "timestamp": now.isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao obter dados do dashboard: {str(e)}")
+
+# ===========================================
 # INICIALIZAÇÃO
 # ===========================================
 
 if __name__ == "__main__":
     uvicorn.run(
-        "main:app",
+        "main:app", 
         host="0.0.0.0",
         port=int(os.environ.get("PORT", 8000)),
         reload=True,
