@@ -29,30 +29,33 @@ export const obtenerLlamadasEnProgreso = async () => {
       llamadas: [
         {
           id: 1,
-          numero: '+5411234567890',
+          numero_destino: '+5411234567890',
           estado: 'conectada',
           duracion: Math.floor(Math.random() * 300) + 60,
           operador: 'Sistema',
           campanha: 'Campanha Demo',
-          inicio: new Date(Date.now() - Math.random() * 300000).toISOString()
+          fecha_asignacion: new Date(Date.now() - Math.random() * 300000).toISOString(),
+          usuario_email: 'operador1@discador.com'
         },
         {
           id: 2,
-          numero: '+5411987654321',
+          numero_destino: '+5411987654321',
           estado: 'discando',
           duracion: Math.floor(Math.random() * 30) + 5,
           operador: 'Sistema',
           campanha: 'Campanha Demo',
-          inicio: new Date(Date.now() - Math.random() * 30000).toISOString()
+          fecha_asignacion: new Date(Date.now() - Math.random() * 30000).toISOString(),
+          usuario_email: 'operador2@discador.com'
         },
         {
           id: 3,
-          numero: '+5411555123456',
+          numero_destino: '+5411555123456',
           estado: 'en_cola',
           duracion: 0,
           operador: 'Sistema',
           campanha: 'Campanha Test',
-          inicio: new Date().toISOString()
+          fecha_asignacion: new Date().toISOString(),
+          usuario_email: 'sistema@discador.com'
         }
       ]
     };
@@ -123,14 +126,14 @@ export const obtenerHistoricoLlamadas = async (filters = {}, page = 1, pageSize 
       const id = (page - 1) * pageSize + i + 1;
       mockHistorico.push({
         id: id,
-        numero: `+5411${Math.floor(Math.random() * 900000000) + 100000000}`,
+        numero_destino: `+5411${Math.floor(Math.random() * 900000000) + 100000000}`,
         estado: 'finalizada',
-        duracion: Math.floor(Math.random() * 300) + 60,
         resultado: ['transferida', 'sin_respuesta', 'ocupado', 'conectada'][Math.floor(Math.random() * 4)],
+        usuario_email: ['operador1@discador.com', 'operador2@discador.com', 'sistema@discador.com'][Math.floor(Math.random() * 3)],
         operador: ['Operador 1', 'Operador 2', 'Sistema'][Math.floor(Math.random() * 3)],
         campanha: ['Campanha Demo', 'Campanha Test', 'Seguimiento'][Math.floor(Math.random() * 3)],
-        inicio: new Date(Date.now() - Math.random() * 86400000).toISOString(),
-        fin: new Date(Date.now() - Math.random() * 43200000).toISOString()
+        fecha_asignacion: new Date(Date.now() - Math.random() * 86400000).toISOString(),
+        fecha_finalizacion: new Date(Date.now() - Math.random() * 43200000).toISOString()
       });
     }
 
@@ -167,14 +170,15 @@ export const obtenerDetalleLlamada = async (llamadaId) => {
     // Retornar dados mock em caso de erro
     return {
       id: llamadaId,
-      numero: '+5411234567890',
+      numero_destino: '+5411234567890',
       estado: 'finalizada',
       duracion: Math.floor(Math.random() * 300) + 60,
       resultado: 'transferida',
       operador: 'Operador 1',
       campanha: 'Campanha Demo',
-      inicio: new Date(Date.now() - 3600000).toISOString(),
-      fin: new Date().toISOString(),
+      fecha_asignacion: new Date(Date.now() - 3600000).toISOString(),
+      fecha_finalizacion: new Date().toISOString(),
+      usuario_email: 'operador1@discador.com',
       notas: 'Llamada demo con datos simulados'
     };
   }
