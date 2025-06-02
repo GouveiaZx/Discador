@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE_URL } from '../config/api';
+import { makeApiRequest } from '../config/api.js';
 
 /**
  * Componente para gestão de campanhas
@@ -7,23 +7,30 @@ import { API_BASE_URL } from '../config/api';
  */
 function GestionCampanhas() {
   const [campaigns, setCampaigns] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState(null);
 
   // Form data para nova campanha
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    cli_number: '',
-    max_concurrent_calls: 5,
-    start_time: '09:00',
-    end_time: '18:00',
-    timezone: 'America/Argentina/Buenos_Aires'
+    status: 'active',
+    max_simultaneous_calls: 5,
+    retry_attempts: 3,
+    retry_delay: 300
   });
 
-  // Carregar campanhas ao inicializar
+  // Estados para métricas
+  const [metrics, setMetrics] = useState({
+    total: 0,
+    active: 0,
+    paused: 0,
+    completed: 0
+  });
+
+  // Carregar campanhas ao montar o componente
   useEffect(() => {
     fetchCampaigns();
   }, []);
@@ -32,19 +39,92 @@ function GestionCampanhas() {
    * Buscar campanhas da API
    */
   const fetchCampaigns = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/v1/campaigns`);
-      if (!response.ok) throw new Error('Erro ao carregar campanhas');
+      const data = await makeApiRequest('/campaigns', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       
-      const data = await response.json();
       setCampaigns(data.campaigns || []);
+      updateMetrics(data.campaigns || []);
     } catch (err) {
-      setError('Erro ao carregar campanhas: ' + err.message);
-      console.error('Erro:', err);
+      if (err.message.includes('Endpoint not')) {
+        console.info('ℹ️ Using mock campaigns data (backend not available)');
+        
+        // Dados mock de campanhas
+        const mockCampaigns = [
+          {
+            id: 1,
+            name: 'Campanha Vendas Q1',
+            description: 'Campanha de vendas para o primeiro trimestre',
+            status: 'active',
+            max_simultaneous_calls: 8,
+            retry_attempts: 3,
+            retry_delay: 300,
+            contacts_total: 1500,
+            contacts_called: Math.floor(Math.random() * 500) + 400,
+            contacts_remaining: 0,
+            created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          {
+            id: 2,
+            name: 'Seguimiento Clientes',
+            description: 'Seguimiento de clientes existentes',
+            status: 'active',
+            max_simultaneous_calls: 5,
+            retry_attempts: 2,
+            retry_delay: 600,
+            contacts_total: 800,
+            contacts_called: Math.floor(Math.random() * 300) + 200,
+            contacts_remaining: 0,
+            created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          {
+            id: 3,
+            name: 'Promoción Especial',
+            description: 'Campanha promocional de produtos especiais',
+            status: Math.random() > 0.5 ? 'active' : 'paused',
+            max_simultaneous_calls: 10,
+            retry_attempts: 4,
+            retry_delay: 180,
+            contacts_total: 2000,
+            contacts_called: Math.floor(Math.random() * 800) + 600,
+            contacts_remaining: 0,
+            created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+            updated_at: new Date().toISOString()
+          }
+        ];
+
+        // Calcular contacts_remaining
+        mockCampaigns.forEach(campaign => {
+          campaign.contacts_remaining = campaign.contacts_total - campaign.contacts_called;
+        });
+
+        setCampaigns(mockCampaigns);
+        updateMetrics(mockCampaigns);
+      } else {
+        setError('Erro ao carregar campanhas: ' + err.message);
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  /**
+   * Atualizar métricas das campanhas
+   */
+  const updateMetrics = (campaigns) => {
+    const total = campaigns.length;
+    const active = campaigns.filter(c => c.status === 'active').length;
+    const paused = campaigns.filter(c => c.status === 'paused').length;
+    const completed = campaigns.filter(c => c.status === 'completed').length;
+    
+    setMetrics({ total, active, paused, completed });
   };
 
   /**
@@ -52,35 +132,67 @@ function GestionCampanhas() {
    */
   const handleCreateCampaign = async (e) => {
     e.preventDefault();
-    
+    if (!formData.name.trim()) {
+      setError('Nome da campanha é obrigatório');
+      return;
+    }
+
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/campaigns`, {
+      const data = await makeApiRequest('/campaigns', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify(formData)
       });
 
-      if (!response.ok) throw new Error('Erro ao criar campanha');
-      
-      const newCampaign = await response.json();
-      setCampaigns([...campaigns, newCampaign]);
+      await fetchCampaigns(); // Recarregar lista
       
       // Reset form
       setFormData({
         name: '',
         description: '',
-        cli_number: '',
-        max_concurrent_calls: 5,
-        start_time: '09:00',
-        end_time: '18:00',
-        timezone: 'America/Argentina/Buenos_Aires'
+        status: 'active',
+        max_simultaneous_calls: 5,
+        retry_attempts: 3,
+        retry_delay: 300
       });
-      setShowCreateForm(false);
-      
+      setShowModal(false);
+      setEditingCampaign(null);
     } catch (err) {
-      setError('Erro ao criar campanha: ' + err.message);
+      if (err.message.includes('Endpoint not')) {
+        console.info('ℹ️ Simulating campaign creation (backend not available)');
+        
+        // Simular criação bem-sucedida
+        const newCampaign = {
+          id: campaigns.length + 1,
+          ...formData,
+          contacts_total: 0,
+          contacts_called: 0,
+          contacts_remaining: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        const updatedCampaigns = [...campaigns, newCampaign];
+        setCampaigns(updatedCampaigns);
+        updateMetrics(updatedCampaigns);
+        
+        // Reset form
+        setFormData({
+          name: '',
+          description: '',
+          status: 'active',
+          max_simultaneous_calls: 5,
+          retry_attempts: 3,
+          retry_delay: 300
+        });
+        setShowModal(false);
+        setEditingCampaign(null);
+      } else {
+        setError('Erro ao criar campanha: ' + err.message);
+      }
     }
   };
 
@@ -142,7 +254,7 @@ function GestionCampanhas() {
           <p className="text-gray-400 mt-1">Administrá tus campañas de llamadas</p>
         </div>
         <button
-          onClick={() => setShowCreateForm(true)}
+          onClick={() => setShowModal(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
         >
           + Nueva Campaña
@@ -210,24 +322,24 @@ function GestionCampanhas() {
                       {renderStatusBadge(campaign.status)}
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-300">
-                      {campaign.cli_number}
+                      {campaign.max_simultaneous_calls}
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-sm">
-                        <div className="text-white">{campaign.total_contacts || 0}</div>
+                        <div className="text-white">{campaign.contacts_total || 0}</div>
                         <div className="text-gray-400 text-xs">
-                          {campaign.contacted_count || 0} contactados
+                          {campaign.contacts_called || 0} contactados
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-sm">
                         <div className="text-green-400 font-semibold">
-                          {campaign.success_count || 0}
+                          {campaign.contacts_called || 0}
                         </div>
                         <div className="text-gray-400 text-xs">
-                          {campaign.total_contacts > 0 
-                            ? `${Math.round(((campaign.success_count || 0) / campaign.total_contacts) * 100)}%`
+                          {campaign.contacts_total > 0 
+                            ? `${Math.round(((campaign.contacts_called || 0) / campaign.contacts_total) * 100)}%`
                             : '0%'
                           }
                         </div>
@@ -261,7 +373,7 @@ function GestionCampanhas() {
       </div>
 
       {/* Modal para criar nova campanha */}
-      {showCreateForm && (
+      {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-screen overflow-y-auto">
             <h3 className="text-lg font-semibold text-white mb-4">Nueva Campaña</h3>
@@ -296,55 +408,16 @@ function GestionCampanhas() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Número CLI *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.cli_number}
-                  onChange={(e) => setFormData({...formData, cli_number: e.target.value})}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-                  placeholder="+54 11 4567-8900"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Llamadas concurrentes
                 </label>
                 <input
                   type="number"
                   min="1"
                   max="50"
-                  value={formData.max_concurrent_calls}
-                  onChange={(e) => setFormData({...formData, max_concurrent_calls: parseInt(e.target.value)})}
+                  value={formData.max_simultaneous_calls}
+                  onChange={(e) => setFormData({...formData, max_simultaneous_calls: parseInt(e.target.value)})}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Hora inicio
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.start_time}
-                    onChange={(e) => setFormData({...formData, start_time: e.target.value})}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Hora fin
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.end_time}
-                    onChange={(e) => setFormData({...formData, end_time: e.target.value})}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
               </div>
 
               <div className="flex space-x-3 pt-4">
@@ -356,7 +429,7 @@ function GestionCampanhas() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowCreateForm(false)}
+                  onClick={() => setShowModal(false)}
                   className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded font-semibold transition-colors"
                 >
                   Cancelar

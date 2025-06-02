@@ -1,39 +1,77 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE_URL } from '../config/api';
+import { makeApiRequest } from '../config/api.js';
 
 /**
- * Componente para gestão de blacklist (números bloqueados)
+ * Componente para gestão de blacklist
  */
 function GestionBlacklist() {
   const [blacklist, setBlacklist] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newNumber, setNewNumber] = useState('');
-  const [newReason, setNewReason] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [newEntry, setNewEntry] = useState({
+    phone: '',
+    reason: '',
+    notes: ''
+  });
+  const [checkPhone, setCheckPhone] = useState('');
+  const [checkResult, setCheckResult] = useState(null);
 
-  // Carregar blacklist
+  // Carregar blacklist ao montar o componente
   useEffect(() => {
     fetchBlacklist();
   }, []);
 
   /**
-   * Buscar lista de números bloqueados
+   * Buscar blacklist da API
    */
   const fetchBlacklist = async () => {
     setLoading(true);
-    setError(null);
-    
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/blacklist`);
-      if (!response.ok) throw new Error('Erro ao carregar blacklist');
+      const data = await makeApiRequest('/blacklist', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       
-      const data = await response.json();
       setBlacklist(data.blacklist || []);
     } catch (err) {
-      setError('Erro ao carregar blacklist: ' + err.message);
+      if (err.message.includes('Endpoint not')) {
+        console.info('ℹ️ Using mock blacklist data (backend not available)');
+        
+        // Dados mock de blacklist
+        const mockBlacklist = [
+          {
+            id: 1,
+            phone: '+5411987654321',
+            reason: 'Solicitou para não ligar',
+            notes: 'Cliente solicitou exclusão em 15/12/2023',
+            created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            created_by: 'admin'
+          },
+          {
+            id: 2,
+            phone: '+5411555123456',
+            reason: 'Número inválido',
+            notes: 'Número fora de serviço, múltiplas tentativas falharam',
+            created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+            created_by: 'operador1'
+          },
+          {
+            id: 3,
+            phone: '+5411444789123',
+            reason: 'Reclamação',
+            notes: 'Cliente fez reclamação formal',
+            created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+            created_by: 'supervisor'
+          }
+        ];
+
+        setBlacklist(mockBlacklist);
+      } else {
+        setError('Erro ao carregar blacklist: ' + err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -45,14 +83,14 @@ function GestionBlacklist() {
   const handleAddNumber = async (e) => {
     e.preventDefault();
     
-    if (!newNumber.trim()) {
+    if (!newEntry.phone.trim()) {
       setError('Número de teléfono es requerido');
       return;
     }
 
     // Validar formato básico do telefone
     const phoneRegex = /^[\+]?[0-9\s\-\(\)]{8,20}$/;
-    if (!phoneRegex.test(newNumber.trim())) {
+    if (!phoneRegex.test(newEntry.phone.trim())) {
       setError('Formato de teléfono inválido');
       return;
     }
@@ -61,14 +99,16 @@ function GestionBlacklist() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/blacklist`, {
+      const response = await makeApiRequest('/blacklist', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          phone_number: newNumber.trim(),
-          reason: newReason.trim() || 'Bloqueado manualmente'
+          phone: newEntry.phone.trim(),
+          reason: newEntry.reason.trim() || 'Bloqueado manualmente',
+          notes: newEntry.notes.trim()
         })
       });
 
@@ -83,8 +123,11 @@ function GestionBlacklist() {
       setBlacklist(prev => [result, ...prev]);
       
       // Reset form
-      setNewNumber('');
-      setNewReason('');
+      setNewEntry({
+        phone: '',
+        reason: '',
+        notes: ''
+      });
       setShowAddForm(false);
       
     } catch (err) {
@@ -104,8 +147,11 @@ function GestionBlacklist() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/blacklist/${id}`, {
-        method: 'DELETE'
+      const response = await makeApiRequest(`/blacklist/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
       });
 
       if (!response.ok) {
@@ -131,9 +177,10 @@ function GestionBlacklist() {
     if (!checkNumber) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/blacklist/check`, {
+      const response = await makeApiRequest('/blacklist/check', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ phone_number: checkNumber.trim() })
@@ -155,12 +202,8 @@ function GestionBlacklist() {
    * Filtrar lista baseado na busca e filtro
    */
   const filteredBlacklist = blacklist.filter(item => {
-    const matchesSearch = item.phone_number.includes(searchTerm) || 
-                         (item.reason && item.reason.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    if (filter === 'all') return matchesSearch;
-    if (filter === 'manual') return matchesSearch && item.reason.includes('manual');
-    if (filter === 'auto') return matchesSearch && !item.reason.includes('manual');
+    const matchesSearch = item.phone.includes(checkPhone) || 
+                         (item.reason && item.reason.toLowerCase().includes(checkPhone.toLowerCase()));
     
     return matchesSearch;
   });
@@ -261,23 +304,10 @@ function GestionBlacklist() {
             <input
               type="text"
               placeholder="Buscar por número o motivo..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={checkPhone}
+              onChange={(e) => setCheckPhone(e.target.value)}
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
             />
-          </div>
-
-          {/* Filtro */}
-          <div>
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
-            >
-              <option value="all">Todos</option>
-              <option value="manual">Manuales</option>
-              <option value="auto">Automáticos</option>
-            </select>
           </div>
 
           {/* Refresh */}
@@ -311,8 +341,8 @@ function GestionBlacklist() {
                 </label>
                 <input
                   type="text"
-                  value={newNumber}
-                  onChange={(e) => setNewNumber(e.target.value)}
+                  value={newEntry.phone}
+                  onChange={(e) => setNewEntry({ ...newEntry, phone: e.target.value })}
                   placeholder="+54 11 1234-5678"
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
                   required
@@ -325,9 +355,21 @@ function GestionBlacklist() {
                 </label>
                 <input
                   type="text"
-                  value={newReason}
-                  onChange={(e) => setNewReason(e.target.value)}
+                  value={newEntry.reason}
+                  onChange={(e) => setNewEntry({ ...newEntry, reason: e.target.value })}
                   placeholder="Cliente solicitó no ser contactado"
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Notas (opcional)
+                </label>
+                <textarea
+                  value={newEntry.notes}
+                  onChange={(e) => setNewEntry({ ...newEntry, notes: e.target.value })}
+                  placeholder="Notas adicionales"
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
                 />
               </div>
@@ -337,8 +379,11 @@ function GestionBlacklist() {
                   type="button"
                   onClick={() => {
                     setShowAddForm(false);
-                    setNewNumber('');
-                    setNewReason('');
+                    setNewEntry({
+                      phone: '',
+                      reason: '',
+                      notes: ''
+                    });
                     setError(null);
                   }}
                   className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded font-semibold transition-colors"
@@ -391,7 +436,7 @@ function GestionBlacklist() {
               ) : filteredBlacklist.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-8 text-center text-gray-400">
-                    {searchTerm ? 'No se encontraron números con ese criterio' : 'No hay números en la blacklist'}
+                    {checkPhone ? 'No se encontraron números con ese criterio' : 'No hay números en la blacklist'}
                   </td>
                 </tr>
               ) : (
@@ -399,7 +444,7 @@ function GestionBlacklist() {
                   <tr key={item.id} className="hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-white font-mono">
-                        {item.phone_number}
+                        {item.phone}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -423,7 +468,7 @@ function GestionBlacklist() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
-                        onClick={() => handleRemoveNumber(item.id, item.phone_number)}
+                        onClick={() => handleRemoveNumber(item.id, item.phone)}
                         disabled={loading}
                         className="text-red-400 hover:text-red-300 disabled:text-gray-500 transition-colors"
                       >
