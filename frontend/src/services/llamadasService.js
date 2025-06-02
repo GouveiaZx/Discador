@@ -18,7 +18,7 @@ export const obtenerLlamadasEnProgreso = async () => {
     });
   } catch (error) {
     // Log apenas uma vez que estamos usando dados mock
-    if (error.message.includes('Endpoint not')) {
+    if (error.message.includes('Endpoint not implemented')) {
       console.info('ℹ️ Using mock data for llamadas en progreso (backend not available)');
     } else {
       console.error('Error al obtener las llamadas en progreso:', error.message);
@@ -77,7 +77,7 @@ export const finalizarLlamadaManualmente = async (llamadaId) => {
       })
     });
   } catch (error) {
-    if (error.message.includes('Endpoint not')) {
+    if (error.message.includes('Endpoint not implemented')) {
       console.info(`ℹ️ Mock finalization for llamada ${llamadaId} (backend not available)`);
     } else {
       console.error(`Error al finalizar la llamada ID ${llamadaId}:`, error.message);
@@ -111,7 +111,7 @@ export const obtenerHistoricoLlamadas = async (filters = {}, page = 1, pageSize 
       }
     });
   } catch (error) {
-    if (error.message.includes('Endpoint not')) {
+    if (error.message.includes('Endpoint not implemented')) {
       console.info('ℹ️ Using mock data for histórico llamadas (backend not available)');
     } else {
       console.error('Erro ao obter histórico de chamadas:', error.message);
@@ -158,7 +158,7 @@ export const obtenerDetalleLlamada = async (llamadaId) => {
       }
     });
   } catch (error) {
-    if (error.message.includes('Endpoint not')) {
+    if (error.message.includes('Endpoint not implemented')) {
       console.info(`ℹ️ Using mock data for llamada ${llamadaId} (backend not available)`);
     } else {
       console.error(`Erro ao obter detalhes da chamada ID ${llamadaId}:`, error.message);

@@ -37,7 +37,7 @@ function GestionBlacklist() {
       
       setBlacklist(data.blacklist || []);
     } catch (err) {
-      if (err.message.includes('Endpoint not')) {
+      if (err.message.includes('Endpoint not implemented')) {
         console.info('ℹ️ Using mock blacklist data (backend not available)');
         
         // Dados mock de blacklist

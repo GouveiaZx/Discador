@@ -33,7 +33,7 @@ function UploadListas() {
       });
       setCampaigns(data.campaigns || []);
     } catch (err) {
-      if (err.message.includes('Endpoint not')) {
+      if (err.message.includes('Endpoint not implemented')) {
         console.info('ℹ️ Using mock campaigns data (backend not available)');
         // Dados mock de campanhas
         setCampaigns([
@@ -182,7 +182,7 @@ function UploadListas() {
       } catch (err) {
         clearInterval(progressInterval);
         
-        if (err.message.includes('Endpoint not')) {
+        if (err.message.includes('Endpoint not implemented')) {
           console.info('ℹ️ Simulating file upload (backend not available)');
           
           // Simular upload bem-sucedido

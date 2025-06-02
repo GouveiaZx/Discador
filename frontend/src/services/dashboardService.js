@@ -17,8 +17,8 @@ export const obtenerMetricasDashboard = async () => {
       }
     });
   } catch (error) {
-    if (error.message.includes('Endpoint not')) {
-      console.info('ℹ️ Using mock metrics data (backend not available)');
+    if (error.message.includes('Endpoint not implemented')) {
+      console.info('ℹ️ Using mock data for dashboard metrics (backend not available)');
     } else {
       console.error('Error al obtener métricas del dashboard:', error.message);
     }
@@ -60,7 +60,7 @@ export const obtenerDatosGraficos = async () => {
       }
     });
   } catch (error) {
-    if (error.message.includes('Endpoint not')) {
+    if (error.message.includes('Endpoint not implemented')) {
       console.info('ℹ️ Using mock chart data (backend not available)');
     } else {
       console.error('Error al obtener datos de gráficos:', error.message);
@@ -127,7 +127,7 @@ export const obtenerEstatisticasCampanhas = async () => {
       }
     });
   } catch (error) {
-    if (error.message.includes('Endpoint not')) {
+    if (error.message.includes('Endpoint not implemented')) {
       console.info('ℹ️ Using mock campaign data (backend not available)');
     } else {
       console.error('Error al obtener estadísticas de campañas:', error.message);
@@ -200,7 +200,7 @@ export const obtenerEstatisticasOperadores = async () => {
       }
     });
   } catch (error) {
-    if (error.message.includes('Endpoint not')) {
+    if (error.message.includes('Endpoint not implemented')) {
       console.info('ℹ️ Using mock operator data (backend not available)');
     } else {
       console.error('Error al obtener estadísticas de operadores:', error.message);
