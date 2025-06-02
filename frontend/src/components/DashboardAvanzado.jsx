@@ -12,6 +12,7 @@ import {
   ArcElement
 } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import { obtenerMetricasDashboard, obtenerDatosGraficos } from '../services/dashboardService.js';
 
 // Registrar componentes do Chart.js
 ChartJS.register(
@@ -38,7 +39,10 @@ const DashboardAvanzado = () => {
     transferidas: 0,
     efectividad: 0,
     tiempoPromedioLlamada: 0,
-    campanasActivas: 0
+    campanasActivas: 0,
+    operadoresOnline: 0,
+    tiempoEsperaPromedio: 0,
+    llamadasEnCola: 0
   });
 
   const [loading, setLoading] = useState(false);
@@ -46,58 +50,28 @@ const DashboardAvanzado = () => {
 
   // Dados para gráficos
   const [chartData, setChartData] = useState({
-    llamadasPorHora: [],
-    efectividadDiaria: [],
+    llamadasPorHora: { labels: [], data: [] },
+    efectividadDiaria: { labels: [], data: [] },
     estadoLlamadas: {}
   });
 
   /**
-   * Carregar métricas do backend
+   * Carregar métricas e dados dos gráficos
    */
-  const cargarMetricas = useCallback(async () => {
+  const cargarDatos = useCallback(async () => {
     setLoading(true);
     try {
-      // Simular dados do backend (substituir por API real)
-      const mockMetrics = {
-        llamadasActivas: Math.floor(Math.random() * 50) + 10,
-        llamadasHoy: Math.floor(Math.random() * 500) + 200,
-        conectadas: Math.floor(Math.random() * 100) + 50,
-        sinRespuesta: Math.floor(Math.random() * 80) + 30,
-        transferidas: Math.floor(Math.random() * 60) + 20,
-        efectividad: Math.floor(Math.random() * 40) + 25,
-        tiempoPromedioLlamada: Math.floor(Math.random() * 180) + 60,
-        campanasActivas: Math.floor(Math.random() * 8) + 3
-      };
+      // Carregar métricas e dados de gráficos em paralelo
+      const [metricsData, chartsData] = await Promise.all([
+        obtenerMetricasDashboard(),
+        obtenerDatosGraficos()
+      ]);
 
-      // Dados para gráfico de linha (chamadas por hora)
-      const horasHoy = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
-      const llamadasPorHora = horasHoy.map(() => Math.floor(Math.random() * 50));
-
-      // Dados para gráfico de efetividade diária (últimos 7 dias)
-      const ultimosDias = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - (6 - i));
-        return date.toLocaleDateString('es-AR', { weekday: 'short' });
-      });
-      const efectividadDiaria = ultimosDias.map(() => Math.floor(Math.random() * 60) + 20);
-
-      // Dados para gráfico de rosca (estado das chamadas)
-      const estadoLlamadas = {
-        conectadas: mockMetrics.conectadas,
-        sinRespuesta: mockMetrics.sinRespuesta,
-        transferidas: mockMetrics.transferidas,
-        ocupado: Math.floor(Math.random() * 40) + 10
-      };
-
-      setMetrics(mockMetrics);
-      setChartData({
-        llamadasPorHora: { labels: horasHoy, data: llamadasPorHora },
-        efectividadDiaria: { labels: ultimosDias, data: efectividadDiaria },
-        estadoLlamadas
-      });
+      setMetrics(metricsData);
+      setChartData(chartsData);
       setLastUpdated(new Date());
     } catch (error) {
-      console.error('Error al cargar métricas:', error);
+      console.error('Error al cargar datos del dashboard:', error);
     } finally {
       setLoading(false);
     }
@@ -105,10 +79,10 @@ const DashboardAvanzado = () => {
 
   // Atualização automática a cada 10 segundos
   useEffect(() => {
-    cargarMetricas();
-    const interval = setInterval(cargarMetricas, 10000);
+    cargarDatos();
+    const interval = setInterval(cargarDatos, 10000);
     return () => clearInterval(interval);
-  }, [cargarMetricas]);
+  }, [cargarDatos]);
 
   // Configurações dos gráficos
   const lineChartOptions = {
