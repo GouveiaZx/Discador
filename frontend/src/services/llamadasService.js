@@ -10,12 +10,27 @@ import { makeApiRequest, buildApiUrl } from '../config/api.js';
  */
 export const obtenerLlamadasEnProgreso = async () => {
   try {
-    return await makeApiRequest('/llamadas/en-progreso', {
+    const data = await makeApiRequest('/llamadas/en-progreso', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     });
+
+    // Mapear dados do backend real para formato esperado pelo frontend
+    if (data.llamadas && Array.isArray(data.llamadas)) {
+      data.llamadas = data.llamadas.map(llamada => ({
+        ...llamada,
+        numero_destino: llamada.telefono || llamada.numero_destino, // Converter telefono para numero_destino
+        usuario_email: llamada.usuario || llamada.usuario_email || '',
+        fecha_asignacion: llamada.fecha_inicio || llamada.fecha_asignacion,
+        fecha_finalizacion: llamada.fecha_fin || llamada.fecha_finalizacion,
+        operador: llamada.operador || 'Sistema',
+        campanha: llamada.campanha || 'Default'
+      }));
+    }
+
+    return data;
   } catch (error) {
     // Log apenas uma vez que estamos usando dados mock
     if (error.message.includes('Endpoint not implemented')) {
@@ -107,12 +122,27 @@ export const obtenerHistoricoLlamadas = async (filters = {}, page = 1, pageSize 
       ...filters
     });
 
-    return await makeApiRequest(`/llamadas/historico?${queryParams}`, {
+    const data = await makeApiRequest(`/llamadas/historico?${queryParams}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
     });
+
+    // Mapear dados do backend real para formato esperado pelo frontend
+    if (data.llamadas && Array.isArray(data.llamadas)) {
+      data.llamadas = data.llamadas.map(llamada => ({
+        ...llamada,
+        numero_destino: llamada.telefono || llamada.numero_destino, // Converter telefono para numero_destino
+        usuario_email: llamada.usuario || llamada.usuario_email || '',
+        fecha_asignacion: llamada.fecha_inicio || llamada.fecha_asignacion,
+        fecha_finalizacion: llamada.fecha_fin || llamada.fecha_finalizacion,
+        estado: llamada.estado || 'finalizada',
+        resultado: llamada.resultado || 'sin_respuesta'
+      }));
+    }
+
+    return data;
   } catch (error) {
     if (error.message.includes('Endpoint not implemented')) {
       console.info('ℹ️ Using mock data for histórico llamadas (backend not available)');

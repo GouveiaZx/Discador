@@ -35,7 +35,20 @@ function GestionBlacklist() {
         }
       });
       
-      setBlacklist(data.blacklist || []);
+      // Mapear dados do backend real para formato esperado pelo frontend
+      let blacklistData = data.blacklist || [];
+      if (Array.isArray(blacklistData)) {
+        blacklistData = blacklistData.map(item => ({
+          ...item,
+          phone: item.phone_number || item.phone, // Converter phone_number para phone
+          reason: item.reason || 'Sin motivo especificado',
+          notes: item.notes || '',
+          created_at: item.created_at || new Date().toISOString(),
+          created_by: item.created_by || 'sistema'
+        }));
+      }
+      
+      setBlacklist(blacklistData);
     } catch (err) {
       if (err.message.includes('Endpoint not implemented')) {
         console.info('ℹ️ Using mock blacklist data (backend not available)');
