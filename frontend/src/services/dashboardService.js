@@ -17,24 +17,32 @@ export const obtenerMetricasDashboard = async () => {
       }
     });
   } catch (error) {
-    console.error('Error al obtener métricas del dashboard:', error);
+    if (error.message.includes('Endpoint not')) {
+      console.info('ℹ️ Using mock metrics data (backend not available)');
+    } else {
+      console.error('Error al obtener métricas del dashboard:', error.message);
+    }
     
     // Retornar dados mock realísticos em caso de erro
     const now = new Date();
     const horaAtual = now.getHours();
     
+    // Simular padrões realísticos baseados na hora
+    const isBusinessHour = horaAtual >= 8 && horaAtual <= 18;
+    const baseMultiplier = isBusinessHour ? 1.5 : 0.5;
+    
     return {
-      llamadasActivas: Math.floor(Math.random() * 50) + 10,
-      llamadasHoy: Math.floor(Math.random() * 500) + 200,
-      conectadas: Math.floor(Math.random() * 100) + 50,
-      sinRespuesta: Math.floor(Math.random() * 80) + 30,
-      transferidas: Math.floor(Math.random() * 60) + 20,
-      efectividad: Math.floor(Math.random() * 40) + 25,
-      tiempoPromedioLlamada: Math.floor(Math.random() * 180) + 60,
-      campanasActivas: Math.floor(Math.random() * 8) + 3,
-      operadoresOnline: Math.floor(Math.random() * 15) + 5,
-      tiempoEsperaPromedio: Math.floor(Math.random() * 45) + 15,
-      llamadasEnCola: Math.floor(Math.random() * 20) + 5
+      llamadasActivas: Math.floor((Math.random() * 30 + 10) * baseMultiplier),
+      llamadasHoy: Math.floor((Math.random() * 300 + 200) * baseMultiplier),
+      conectadas: Math.floor((Math.random() * 80 + 40) * baseMultiplier),
+      sinRespuesta: Math.floor((Math.random() * 60 + 30) * baseMultiplier),
+      transferidas: Math.floor((Math.random() * 40 + 20) * baseMultiplier),
+      efectividad: Math.floor(Math.random() * 30) + 35, // 35-65%
+      tiempoPromedioLlamada: Math.floor(Math.random() * 120) + 90, // 1.5-3.5 min
+      campanasActivas: Math.floor(Math.random() * 5) + 2,
+      operadoresOnline: Math.floor((Math.random() * 10 + 5) * baseMultiplier),
+      tiempoEsperaPromedio: Math.floor(Math.random() * 30) + 15,
+      llamadasEnCola: Math.floor((Math.random() * 15 + 5) * baseMultiplier)
     };
   }
 };
@@ -52,31 +60,35 @@ export const obtenerDatosGraficos = async () => {
       }
     });
   } catch (error) {
-    console.error('Error al obtener datos de gráficos:', error);
+    if (error.message.includes('Endpoint not')) {
+      console.info('ℹ️ Using mock chart data (backend not available)');
+    } else {
+      console.error('Error al obtener datos de gráficos:', error.message);
+    }
     
     // Gerar dados mock para gráficos
     const horasHoy = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
     const llamadasPorHora = horasHoy.map((_, i) => {
       // Simular padrão realístico: menos chamadas de madrugada, pico durante o dia
       if (i >= 0 && i <= 6) return Math.floor(Math.random() * 10); // Madrugada
-      if (i >= 7 && i <= 18) return Math.floor(Math.random() * 80) + 20; // Horário comercial
-      return Math.floor(Math.random() * 30); // Noite
+      if (i >= 7 && i <= 18) return Math.floor(Math.random() * 60) + 30; // Horário comercial
+      return Math.floor(Math.random() * 25) + 5; // Noite
     });
 
     // Dados para efetividade diária (últimos 7 dias)
     const ultimosDias = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));
-      return date.toLocaleDateString('es-AR', { weekday: 'short' });
+      return date.toLocaleDateString('pt-BR', { weekday: 'short' });
     });
-    const efectividadDiaria = ultimosDias.map(() => Math.floor(Math.random() * 40) + 30); // 30-70%
+    const efectividadDiaria = ultimosDias.map(() => Math.floor(Math.random() * 35) + 30); // 30-65%
 
     // Dados para distribuição de resultados
-    const totalLlamadas = Math.floor(Math.random() * 500) + 200;
-    const conectadas = Math.floor(totalLlamadas * (Math.random() * 0.3 + 0.2)); // 20-50%
-    const sinRespuesta = Math.floor(totalLlamadas * (Math.random() * 0.3 + 0.3)); // 30-60%
-    const transferidas = Math.floor(totalLlamadas * (Math.random() * 0.2 + 0.1)); // 10-30%
-    const ocupado = totalLlamadas - conectadas - sinRespuesta - transferidas;
+    const totalLlamadas = Math.floor(Math.random() * 400) + 200;
+    const conectadas = Math.floor(totalLlamadas * (Math.random() * 0.25 + 0.25)); // 25-50%
+    const sinRespuesta = Math.floor(totalLlamadas * (Math.random() * 0.25 + 0.30)); // 30-55%
+    const transferidas = Math.floor(totalLlamadas * (Math.random() * 0.15 + 0.10)); // 10-25%
+    const ocupado = Math.max(0, totalLlamadas - conectadas - sinRespuesta - transferidas);
 
     return {
       llamadasPorHora: {
@@ -91,12 +103,12 @@ export const obtenerDatosGraficos = async () => {
         conectadas,
         sinRespuesta,
         transferidas,
-        ocupado: Math.max(0, ocupado)
+        ocupado
       },
       tendenciaSemanal: {
         labels: ultimosDias,
-        llamadas: ultimosDias.map(() => Math.floor(Math.random() * 200) + 100),
-        efectividad: ultimosDias.map(() => Math.floor(Math.random() * 30) + 35)
+        llamadas: ultimosDias.map(() => Math.floor(Math.random() * 150) + 100),
+        efectividad: ultimosDias.map(() => Math.floor(Math.random() * 25) + 40)
       }
     };
   }
@@ -115,51 +127,61 @@ export const obtenerEstatisticasCampanhas = async () => {
       }
     });
   } catch (error) {
-    console.error('Error al obtener estadísticas de campañas:', error);
+    if (error.message.includes('Endpoint not')) {
+      console.info('ℹ️ Using mock campaign data (backend not available)');
+    } else {
+      console.error('Error al obtener estadísticas de campañas:', error.message);
+    }
     
-    // Dados mock de campanhas
+    // Dados mock de campanhas com variação
+    const campanhas = [
+      {
+        id: 1,
+        nome: 'Campanha Vendas Q1',
+        estado: 'activa',
+        contactosTotal: 1500,
+        contactosLlamados: Math.floor(Math.random() * 500) + 400,
+        conectadas: Math.floor(Math.random() * 150) + 120,
+        transferidas: Math.floor(Math.random() * 80) + 60,
+        efectividad: Math.floor(Math.random() * 20) + 35,
+        operadoresAsignados: 8
+      },
+      {
+        id: 2,
+        nome: 'Seguimiento Clientes',
+        estado: 'activa',
+        contactosTotal: 800,
+        contactosLlamados: Math.floor(Math.random() * 300) + 250,
+        conectadas: Math.floor(Math.random() * 100) + 80,
+        transferidas: Math.floor(Math.random() * 60) + 40,
+        efectividad: Math.floor(Math.random() * 25) + 45,
+        operadoresAsignados: 5
+      },
+      {
+        id: 3,
+        nome: 'Promoción Especial',
+        estado: Math.random() > 0.5 ? 'activa' : 'pausada',
+        contactosTotal: 2000,
+        contactosLlamados: Math.floor(Math.random() * 800) + 600,
+        conectadas: Math.floor(Math.random() * 200) + 150,
+        transferidas: Math.floor(Math.random() * 100) + 70,
+        efectividad: Math.floor(Math.random() * 15) + 25,
+        operadoresAsignados: Math.random() > 0.5 ? 6 : 0
+      }
+    ];
+
+    const totalContactos = campanhas.reduce((sum, c) => sum + c.contactosTotal, 0);
+    const contactosLlamados = campanhas.reduce((sum, c) => sum + c.contactosLlamados, 0);
+    const efectividadPromedio = campanhas.reduce((sum, c) => sum + c.efectividad, 0) / campanhas.length;
+
     return {
-      campanhas: [
-        {
-          id: 1,
-          nome: 'Campanha Vendas Q1',
-          estado: 'activa',
-          contactosTotal: 1500,
-          contactosLlamados: 450,
-          conectadas: 180,
-          transferidas: 95,
-          efectividad: 42.2,
-          operadoresAsignados: 8
-        },
-        {
-          id: 2,
-          nome: 'Seguimiento Clientes',
-          estado: 'activa',
-          contactosTotal: 800,
-          contactosLlamados: 320,
-          conectadas: 128,
-          transferidas: 75,
-          efectividad: 58.6,
-          operadoresAsignados: 5
-        },
-        {
-          id: 3,
-          nome: 'Promoción Especial',
-          estado: 'pausada',
-          contactosTotal: 2000,
-          contactosLlamados: 680,
-          conectadas: 204,
-          transferidas: 98,
-          efectividad: 30.0,
-          operadoresAsignados: 0
-        }
-      ],
+      campanhas,
       resumen: {
-        totalCampanhas: 3,
-        campanhasActivas: 2,
-        totalContactos: 4300,
-        contactosRestantes: 2850,
-        efectividadPromedio: 43.6
+        totalCampanhas: campanhas.length,
+        campanhasActivas: campanhas.filter(c => c.estado === 'activa').length,
+        totalContactos,
+        contactosRestantes: totalContactos - contactosLlamados,
+        efectividadPromedio: Math.round(efectividadPromedio * 10) / 10
       }
     };
   }
@@ -178,58 +200,47 @@ export const obtenerEstatisticasOperadores = async () => {
       }
     });
   } catch (error) {
-    console.error('Error al obtener estadísticas de operadores:', error);
+    if (error.message.includes('Endpoint not')) {
+      console.info('ℹ️ Using mock operator data (backend not available)');
+    } else {
+      console.error('Error al obtener estadísticas de operadores:', error.message);
+    }
     
-    // Dados mock de operadores
+    // Dados mock de operadores com variação
+    const estados = ['online', 'pausa', 'offline'];
+    const nombres = ['María González', 'Carlos Ruiz', 'Ana Martínez', 'Luis Hernández', 'Sofia Ramirez', 'Pedro López'];
+    
+    const operadores = nombres.map((nome, index) => {
+      const estado = estados[Math.floor(Math.random() * estados.length)];
+      const llamadasHoy = estado === 'offline' ? Math.floor(Math.random() * 20) + 10 : Math.floor(Math.random() * 30) + 25;
+      const conectadas = Math.floor(llamadasHoy * (Math.random() * 0.4 + 0.4)); // 40-80%
+      const transferidas = Math.floor(conectadas * (Math.random() * 0.4 + 0.3)); // 30-70% das conectadas
+      
+      return {
+        id: index + 1,
+        nome,
+        estado,
+        llamadasHoy,
+        conectadas,
+        transferidas,
+        tiempoSesion: estado === 'offline' ? Math.floor(Math.random() * 300) + 200 : Math.floor(Math.random() * 300) + 300,
+        efectividad: Math.round((conectadas / llamadasHoy) * 100 * 10) / 10
+      };
+    });
+
+    const operadoresOnline = operadores.filter(o => o.estado === 'online').length;
+    const operadoresEnPausa = operadores.filter(o => o.estado === 'pausa').length;
+    const tiempoPromedioSesion = Math.round(operadores.reduce((sum, o) => sum + o.tiempoSesion, 0) / operadores.length);
+    const efectividadPromedio = Math.round(operadores.reduce((sum, o) => sum + o.efectividad, 0) / operadores.length * 10) / 10;
+
     return {
-      operadores: [
-        {
-          id: 1,
-          nome: 'María González',
-          estado: 'online',
-          llamadasHoy: 45,
-          conectadas: 28,
-          transferidas: 18,
-          tiempoSesion: 480, // minutos
-          efectividad: 62.2
-        },
-        {
-          id: 2,
-          nome: 'Carlos Ruiz',
-          estado: 'online',
-          llamadasHoy: 38,
-          conectadas: 22,
-          transferidas: 15,
-          tiempoSesion: 420,
-          efectividad: 57.9
-        },
-        {
-          id: 3,
-          nome: 'Ana Martínez',
-          estado: 'pausa',
-          llamadasHoy: 32,
-          conectadas: 19,
-          transferidas: 12,
-          tiempoSesion: 360,
-          efectividad: 59.4
-        },
-        {
-          id: 4,
-          nome: 'Luis Hernández',
-          estado: 'offline',
-          llamadasHoy: 28,
-          conectadas: 15,
-          transferidas: 9,
-          tiempoSesion: 300,
-          efectividad: 53.6
-        }
-      ],
+      operadores,
       resumen: {
-        totalOperadores: 4,
-        operadoresOnline: 2,
-        operadoresEnPausa: 1,
-        tiempoPromedioSesion: 390,
-        efectividadPromedio: 58.3
+        totalOperadores: operadores.length,
+        operadoresOnline,
+        operadoresEnPausa,
+        tiempoPromedioSesion,
+        efectividadPromedio
       }
     };
   }

@@ -22,7 +22,7 @@ export const buildApiUrl = (endpoint) => {
   return finalUrl;
 };
 
-// Função helper para fazer requisições HTTP com tratamento de erro
+// Função helper para fazer requisições HTTP com tratamento de erro melhorado
 export const makeApiRequest = async (endpoint, options = {}) => {
   const url = buildApiUrl(endpoint);
   
@@ -43,18 +43,38 @@ export const makeApiRequest = async (endpoint, options = {}) => {
     console.log('📡 API Response:', { 
       url, 
       status: response.status, 
-      ok: response.ok 
+      ok: response.ok,
+      contentType: response.headers.get('content-type')
     });
 
     if (!response.ok) {
+      // Verificar se é uma página 404 ou erro do servidor
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        console.warn('⚠️ API returned HTML instead of JSON - endpoint may not exist:', url);
+        throw new Error(`Endpoint not implemented: ${endpoint} (HTTP ${response.status})`);
+      }
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    // Verificar se a resposta é JSON válido
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.warn('⚠️ API returned non-JSON response:', { url, contentType });
+      throw new Error(`Invalid response format from ${endpoint} - expected JSON`);
     }
 
     const data = await response.json();
     console.log('✅ API Success:', { url, dataKeys: Object.keys(data) });
     return data;
   } catch (error) {
-    console.error('❌ API Error:', { url, error: error.message });
+    // Melhor logging de erros
+    if (error.name === 'SyntaxError' && error.message.includes('JSON')) {
+      console.error('❌ API returned invalid JSON (probably HTML error page):', { url, error: error.message });
+      throw new Error(`Endpoint not available: ${endpoint}`);
+    }
+    
+    console.error('❌ API Error:', { url, error: error.message, type: error.name });
     throw error;
   }
 };

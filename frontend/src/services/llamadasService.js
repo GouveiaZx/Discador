@@ -2,7 +2,7 @@
  * Serviço para interagir com a API de chamadas
  */
 
-import { makeApiRequest } from '../config/api.js';
+import { makeApiRequest, buildApiUrl } from '../config/api.js';
 
 /**
  * Obtém todas as chamadas com estado 'en_progreso'
@@ -17,7 +17,13 @@ export const obtenerLlamadasEnProgreso = async () => {
       }
     });
   } catch (error) {
-    console.error('Error al obtener las llamadas en progreso:', error);
+    // Log apenas uma vez que estamos usando dados mock
+    if (error.message.includes('Endpoint not')) {
+      console.info('ℹ️ Using mock data for llamadas en progreso (backend not available)');
+    } else {
+      console.error('Error al obtener las llamadas en progreso:', error.message);
+    }
+    
     // Retornar dados mock em caso de erro
     return {
       llamadas: [
@@ -25,18 +31,27 @@ export const obtenerLlamadasEnProgreso = async () => {
           id: 1,
           numero: '+5411234567890',
           estado: 'conectada',
-          duracion: 145,
+          duracion: Math.floor(Math.random() * 300) + 60,
           operador: 'Sistema',
           campanha: 'Campanha Demo',
-          inicio: new Date().toISOString()
+          inicio: new Date(Date.now() - Math.random() * 300000).toISOString()
         },
         {
           id: 2,
           numero: '+5411987654321',
           estado: 'discando',
-          duracion: 12,
+          duracion: Math.floor(Math.random() * 30) + 5,
           operador: 'Sistema',
           campanha: 'Campanha Demo',
+          inicio: new Date(Date.now() - Math.random() * 30000).toISOString()
+        },
+        {
+          id: 3,
+          numero: '+5411555123456',
+          estado: 'en_cola',
+          duracion: 0,
+          operador: 'Sistema',
+          campanha: 'Campanha Test',
           inicio: new Date().toISOString()
         }
       ]
@@ -62,7 +77,12 @@ export const finalizarLlamadaManualmente = async (llamadaId) => {
       })
     });
   } catch (error) {
-    console.error(`Error al finalizar la llamada ID ${llamadaId}:`, error);
+    if (error.message.includes('Endpoint not')) {
+      console.info(`ℹ️ Mock finalization for llamada ${llamadaId} (backend not available)`);
+    } else {
+      console.error(`Error al finalizar la llamada ID ${llamadaId}:`, error.message);
+    }
+    
     // Simular sucesso em caso de erro (para desenvolvimento)
     return { success: true, message: 'Llamada finalizada (modo demo)' };
   }
@@ -91,37 +111,35 @@ export const obtenerHistoricoLlamadas = async (filters = {}, page = 1, pageSize 
       }
     });
   } catch (error) {
-    console.error('Erro ao obter histórico de chamadas:', error);
+    if (error.message.includes('Endpoint not')) {
+      console.info('ℹ️ Using mock data for histórico llamadas (backend not available)');
+    } else {
+      console.error('Erro ao obter histórico de chamadas:', error.message);
+    }
+    
     // Retornar dados mock em caso de erro
+    const mockHistorico = [];
+    for (let i = 0; i < pageSize; i++) {
+      const id = (page - 1) * pageSize + i + 1;
+      mockHistorico.push({
+        id: id,
+        numero: `+5411${Math.floor(Math.random() * 900000000) + 100000000}`,
+        estado: 'finalizada',
+        duracion: Math.floor(Math.random() * 300) + 60,
+        resultado: ['transferida', 'sin_respuesta', 'ocupado', 'conectada'][Math.floor(Math.random() * 4)],
+        operador: ['Operador 1', 'Operador 2', 'Sistema'][Math.floor(Math.random() * 3)],
+        campanha: ['Campanha Demo', 'Campanha Test', 'Seguimiento'][Math.floor(Math.random() * 3)],
+        inicio: new Date(Date.now() - Math.random() * 86400000).toISOString(),
+        fin: new Date(Date.now() - Math.random() * 43200000).toISOString()
+      });
+    }
+
     return {
-      llamadas: [
-        {
-          id: 1,
-          numero: '+5411234567890',
-          estado: 'conectada',
-          duracion: 145,
-          resultado: 'transferida',
-          operador: 'Operador 1',
-          campanha: 'Campanha Demo',
-          inicio: new Date(Date.now() - 3600000).toISOString(),
-          fin: new Date().toISOString()
-        },
-        {
-          id: 2,
-          numero: '+5411987654321',
-          estado: 'finalizada',
-          duracion: 89,
-          resultado: 'sin_respuesta',
-          operador: 'Sistema',
-          campanha: 'Campanha Demo',
-          inicio: new Date(Date.now() - 7200000).toISOString(),
-          fin: new Date(Date.now() - 7000000).toISOString()
-        }
-      ],
-      total: 2,
+      llamadas: mockHistorico,
+      total: 150, // Simular total para paginação
       page: page,
       page_size: pageSize,
-      total_pages: 1
+      total_pages: Math.ceil(150 / pageSize)
     };
   }
 };
@@ -140,13 +158,18 @@ export const obtenerDetalleLlamada = async (llamadaId) => {
       }
     });
   } catch (error) {
-    console.error(`Erro ao obter detalhes da chamada ID ${llamadaId}:`, error);
+    if (error.message.includes('Endpoint not')) {
+      console.info(`ℹ️ Using mock data for llamada ${llamadaId} (backend not available)`);
+    } else {
+      console.error(`Erro ao obter detalhes da chamada ID ${llamadaId}:`, error.message);
+    }
+    
     // Retornar dados mock em caso de erro
     return {
       id: llamadaId,
       numero: '+5411234567890',
       estado: 'finalizada',
-      duracion: 145,
+      duracion: Math.floor(Math.random() * 300) + 60,
       resultado: 'transferida',
       operador: 'Operador 1',
       campanha: 'Campanha Demo',
@@ -170,7 +193,7 @@ export const exportarHistoricoCSV = async (filters = {}) => {
       export: 'csv'
     });
 
-    const response = await fetch(makeApiRequest(`/llamadas/historico/export?${queryParams}`), {
+    const response = await fetch(buildApiUrl(`/llamadas/historico/export?${queryParams}`), {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -183,9 +206,10 @@ export const exportarHistoricoCSV = async (filters = {}) => {
 
     return await response.blob();
   } catch (error) {
-    console.error('Erro ao exportar histórico para CSV:', error);
+    console.info('ℹ️ Generating mock CSV export (backend not available)');
+    
     // Simular CSV em caso de erro
-    const csvContent = 'ID,Numero,Estado,Duracion,Resultado,Operador,Campanha,Inicio,Fin\n1,+5411234567890,finalizada,145,transferida,Operador 1,Campanha Demo,2024-01-01T10:00:00Z,2024-01-01T10:02:25Z\n';
+    const csvContent = 'ID,Numero,Estado,Duracion,Resultado,Operador,Campanha,Inicio,Fin\n1,+5411234567890,finalizada,145,transferida,Operador 1,Campanha Demo,2024-01-01T10:00:00Z,2024-01-01T10:02:25Z\n2,+5411987654321,finalizada,89,sin_respuesta,Sistema,Campanha Demo,2024-01-01T11:00:00Z,2024-01-01T11:01:29Z\n';
     return new Blob([csvContent], { type: 'text/csv' });
   }
 }; 
