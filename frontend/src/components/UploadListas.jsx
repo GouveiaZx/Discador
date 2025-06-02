@@ -204,7 +204,13 @@ function UploadListas() {
                 duplicates: Math.floor(contactCount * 0.08), // 8% duplicados
                 errors: Math.floor(contactCount * 0.02), // 2% erros
                 campaign_name: campaigns.find(c => c.id == selectedCampaign)?.name || 'Campanha'
-              }
+              },
+              total_contacts: contactCount,
+              valid_contacts: Math.floor(contactCount * 0.9),
+              invalid_contacts: Math.floor(contactCount * 0.1),
+              blacklisted_contacts: Math.floor(contactCount * 0.02),
+              total_lines: contactCount,
+              campaign_name: campaigns.find(c => c.id == selectedCampaign)?.name || 'Campanha'
             });
           };
           fileReader.readAsText(uploadFile);

@@ -53,6 +53,12 @@ export const makeApiRequest = async (endpoint, options = {}) => {
       contentType: response.headers.get('content-type')
     });
 
+    // Verificar se é erro 404 (endpoint não implementado)
+    if (response.status === 404) {
+      console.warn('⚠️ Server returned 404 - endpoint not implemented');
+      throw new Error(`Endpoint not implemented: ${endpoint}`);
+    }
+
     // Verificar se a resposta é HTML (endpoint não existe)
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('text/html')) {
