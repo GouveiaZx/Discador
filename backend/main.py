@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
 
-from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, presione1, audio_inteligente, code2base, campanha_politica, multi_sip
+from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, presione1, audio_inteligente, code2base, campanha_politica, multi_sip, monitoring
 from app.database import inicializar_bd
 from app.config import configuracion
 from app.utils.logger import logger
@@ -49,6 +49,7 @@ app.include_router(audio_inteligente.router, prefix=f"{api_prefix}")
 app.include_router(code2base.router, prefix=f"{api_prefix}/code2base")
 app.include_router(campanha_politica.router, prefix=f"{api_prefix}/campanha-politica")
 app.include_router(multi_sip.router)  # Multi-SIP tem seu próprio prefixo
+app.include_router(monitoring.router)  # Monitoramento em tempo real
 
 @app.get("/")
 async def raiz():
@@ -68,7 +69,8 @@ async def raiz():
             "Sistema de Áudio Inteligente",
             "Sistema CODE2BASE - Seleção Inteligente de CLIs",
             "Sistema de Campanhas Políticas - Conformidade Eleitoral",
-            "Sistema Multi-SIP - Múltiplos Provedores VoIP"
+            "Sistema Multi-SIP - Múltiplos Provedores VoIP",
+            "Sistema de Monitoramento em Tempo Real - Dashboard e WebSocket"
         ],
         "documentacion": "/documentacion"
     }
