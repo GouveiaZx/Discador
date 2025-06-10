@@ -20,7 +20,7 @@ USUARIOS_SIMULADOS = {
     "integrador@example.com": {
         "id": uuid.uuid4(),
         "nombre": "Integrador",
-        "apellido": "Técnico",
+        "apellido": "Tecnico",
         "email": "integrador@example.com",
         "hashed_password": "hashed_secret",
         "rol": "integrador",
@@ -42,36 +42,36 @@ async def get_current_user_simulado(
     db: Session = Depends(obtener_sesion)
 ) -> Usuario:
     """
-    Simula la obtención del usuario actual basado en el header Authorization.
+    Simula la obtencion del usuario actual basado en el header Authorization.
     
-    En un entorno real, esto validaría un token JWT, pero aquí simplemente
+    En un entorno real, esto validaria un token JWT, pero aqui simplemente
     usamos el header para identificar al usuario simulado.
     
     Args:
-        authorization: Header de autorización (debe ser el email del usuario simulado)
-        db: Sesión de base de datos
+        authorization: Header de autorizacion (debe ser el email del usuario simulado)
+        db: Sesion de base de datos
         
     Returns:
         Usuario: Objeto usuario simulado
         
     Raises:
-        HTTPException: Si la autenticación falla o el usuario no existe
+        HTTPException: Si la autenticacion falla o el usuario no existe
     """
     if not authorization:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="No se proporcionaron credenciales de autenticación",
+            detail="No se proporcionaron credenciales de autenticacion",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # En un sistema real, aquí se verificaría el token JWT
-    # Aquí simplemente usamos el email como identificador
+    # En un sistema real, aqui se verificaria el token JWT
+    # Aqui simplemente usamos el email como identificador
     email = authorization
     
     if email not in USUARIOS_SIMULADOS:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales de autenticación inválidas",
+            detail="Credenciales de autenticacion invalidas",
             headers={"WWW-Authenticate": "Bearer"},
         )
     

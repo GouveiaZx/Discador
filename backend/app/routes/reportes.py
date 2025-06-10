@@ -10,15 +10,15 @@ from app.database import obtener_sesion
 
 router = APIRouter(tags=["Reportes"])
 
-@router.get("/exportar", summary="Exportar llamadas del día en CSV")
+@router.get("/exportar", summary="Exportar llamadas del dia en CSV")
 async def exportar_llamadas(
     fecha: date = Query(None, description="Fecha de las llamadas (formato YYYY-MM-DD). Por defecto es hoy."),
     db: Session = Depends(obtener_sesion)
 ):
     """
-    Exporta las llamadas del día especificado en un archivo CSV.
+    Exporta las llamadas del dia especificado en un archivo CSV.
     
-    Parámetros:
+    Parametros:
         fecha: Fecha de las llamadas a exportar (formato YYYY-MM-DD)
         
     Retorna:
@@ -29,7 +29,7 @@ async def exportar_llamadas(
         if fecha is None:
             fecha = date.today()
             
-        # En una implementación real, aquí se consultarían las llamadas de la base de datos
+        # En una implementacion real, aqui se consultarian las llamadas de la base de datos
         # Por ahora, generamos datos de ejemplo
         llamadas = [
             {
@@ -40,7 +40,7 @@ async def exportar_llamadas(
                 "duracion": 45,
                 "estado": "completada",
                 "presiono_1": True,
-                "transcripcion": "Sí, me interesa el producto. Pueden llamarme más tarde."
+                "transcripcion": "Si, me interesa el producto. Pueden llamarme mas tarde."
             },
             {
                 "id": 2,

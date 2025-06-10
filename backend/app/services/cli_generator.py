@@ -4,14 +4,14 @@ import re
 
 def generar_cli(prefijo: Optional[str] = None, lista_prefijos: Optional[List[str]] = None) -> str:
     """
-    Genera un número CLI (Caller Line Identification) aleatorio para llamadas salientes.
+    Genera un numero CLI (Caller Line Identification) aleatorio para llamadas salientes.
     
     Args:
-        prefijo: Prefijo específico para el CLI (opcional)
+        prefijo: Prefijo especifico para el CLI (opcional)
         lista_prefijos: Lista de prefijos posibles para elegir aleatoriamente (opcional)
     
     Returns:
-        str: Número CLI generado
+        str: Numero CLI generado
     
     Ejemplo:
         >>> generar_cli(prefijo="91")
@@ -19,19 +19,19 @@ def generar_cli(prefijo: Optional[str] = None, lista_prefijos: Optional[List[str
         >>> generar_cli(lista_prefijos=["91", "93", "94"])
         "937654321"
     """
-    # Si no hay prefijo específico pero hay lista, elegir uno aleatorio
+    # Si no hay prefijo especifico pero hay lista, elegir uno aleatorio
     if prefijo is None and lista_prefijos:
         prefijo = random.choice(lista_prefijos)
     
-    # Si aún no hay prefijo, usar uno por defecto
+    # Si aun no hay prefijo, usar uno por defecto
     if prefijo is None:
         prefijo = "9" + str(random.randint(1, 9))
     
     # Asegurar que el prefijo es un string
     prefijo = str(prefijo)
     
-    # Generar el resto del número
-    # La longitud total debe ser 9 dígitos (estándar español)
+    # Generar el resto del numero
+    # La longitud total debe ser 9 digitos (estandar espanol)
     digitos_restantes = 9 - len(prefijo)
     
     # Si el prefijo es demasiado largo, truncarlo
@@ -39,7 +39,7 @@ def generar_cli(prefijo: Optional[str] = None, lista_prefijos: Optional[List[str
         prefijo = prefijo[:9]
         return prefijo
     
-    # Generar los dígitos restantes
+    # Generar los digitos restantes
     resto = ''.join(str(random.randint(0, 9)) for _ in range(digitos_restantes))
     
     # Combinar prefijo y resto
@@ -49,14 +49,14 @@ def generar_cli(prefijo: Optional[str] = None, lista_prefijos: Optional[List[str
 
 def validar_cli(numero: str) -> bool:
     """
-    Valida si un número CLI tiene el formato correcto.
+    Valida si un numero CLI tiene el formato correcto.
     
     Args:
-        numero: Número a validar
+        numero: Numero a validar
     
     Returns:
-        bool: True si el número es válido, False en caso contrario
+        bool: True si el numero es valido, False en caso contrario
     """
-    # Verificar que solo contiene dígitos y tiene la longitud correcta
+    # Verificar que solo contiene digitos y tiene la longitud correcta
     patron = re.compile(r'^\d{9}$')
     return bool(patron.match(numero)) 

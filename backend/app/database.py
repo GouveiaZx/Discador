@@ -10,29 +10,29 @@ from app.config import configuracion
 engine = create_engine(
     str(configuracion.DB_URL),
     echo=configuracion.DEBUG,  # Mostrar consultas SQL en modo debug
-    pool_pre_ping=True,  # Verificar conexión antes de usarla
-    pool_recycle=3600,  # Reciclar conexiones después de 1 hora
-    pool_size=5,  # Tamaño inicial del pool de conexiones
+    pool_pre_ping=True,  # Verificar conexion antes de usarla
+    pool_recycle=3600,  # Reciclar conexiones despues de 1 hora
+    pool_size=5,  # Tamano inicial del pool de conexiones
     max_overflow=10  # Conexiones adicionales permitidas
 )
 
 # Crear metadatos
 metadata = MetaData()
 
-# Crear clase de sesión
+# Crear clase de sesion
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Crear clase base para los modelos ORM
 Base = declarative_base(metadata=metadata)
 
-# Función para obtener una sesión de base de datos como dependency en FastAPI
+# Funcion para obtener una sesion de base de datos como dependency en FastAPI
 def obtener_sesion() -> Generator[Session, None, None]:
     """
-    Obtiene una sesión de base de datos para usar en las rutas FastAPI.
-    Esta función está diseñada para ser usada con el parámetro Depends de FastAPI.
+    Obtiene una sesion de base de datos para usar en las rutas FastAPI.
+    Esta funcion esta disenada para ser usada con el parametro Depends de FastAPI.
     
     Yields:
-        Session: Sesión de SQLAlchemy
+        Session: Sesion de SQLAlchemy
     """
     db = SessionLocal()
     try:
@@ -40,18 +40,18 @@ def obtener_sesion() -> Generator[Session, None, None]:
     finally:
         db.close()
 
-# Función para obtener una sesión como context manager
+# Funcion para obtener una sesion como context manager
 @contextmanager
 def obtener_sesion_context() -> Generator[Session, None, None]:
     """
-    Obtiene una sesión de base de datos para usar con 'with'.
+    Obtiene una sesion de base de datos para usar con 'with'.
     
     Ejemplo:
         with obtener_sesion_context() as db:
             resultado = db.query(Modelo).all()
     
     Yields:
-        Session: Sesión de SQLAlchemy
+        Session: Sesion de SQLAlchemy
     """
     db = SessionLocal()
     try:
@@ -59,17 +59,17 @@ def obtener_sesion_context() -> Generator[Session, None, None]:
     finally:
         db.close()
 
-# Función para inicializar la base de datos
+# Funcion para inicializar la base de datos
 def inicializar_bd() -> None:
     """
     Crea todas las tablas definidas en los modelos.
     """
     Base.metadata.create_all(bind=engine)
 
-# Función para cerrar la conexión a la base de datos
+# Funcion para cerrar la conexion a la base de datos
 def cerrar_conexion() -> None:
     """
-    Cierra la conexión del motor de base de datos.
+    Cierra la conexion del motor de base de datos.
     """
     if engine:
         engine.dispose() 

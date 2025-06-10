@@ -6,7 +6,7 @@ from app.database import Base
 
 class Lead(Base):
     """
-    Modelo para la tabla leads que almacena los números a llamar.
+    Modelo para la tabla leads que almacena los numeros a llamar.
     """
     __tablename__ = "leads"
     
@@ -23,7 +23,7 @@ class Lead(Base):
     # Relaciones
     campana = relationship("Campana", back_populates="leads")
     
-    # Índices adicionales
+    # Indices adicionales
     __table_args__ = (
         Index('idx_leads_numero', numero),
         Index('idx_leads_procesado', procesado),

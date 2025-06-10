@@ -1,5 +1,5 @@
 """
-Esquemas Pydantic para o Sistema CODE2BASE Avançado
+Esquemas Pydantic para o Sistema CODE2BASE Avancado
 """
 
 from pydantic import BaseModel, Field, validator
@@ -13,9 +13,9 @@ from app.models.code2base import TipoOperadora, TipoRegra, TipoNumero
 # ================== ESQUEMAS BASE ==================
 
 class PaisBase(BaseModel):
-    codigo: str = Field(..., min_length=2, max_length=5, description="Código do país (ES, FR, etc.)")
-    nome: str = Field(..., min_length=1, max_length=100, description="Nome do país")
-    codigo_telefone: str = Field(..., description="Código telefônico (+34, +33, etc.)")
+    codigo: str = Field(..., min_length=2, max_length=5, description="Codigo do pais (ES, FR, etc.)")
+    nome: str = Field(..., min_length=1, max_length=100, description="Nome do pais")
+    codigo_telefone: str = Field(..., description="Codigo telefonico (+34, +33, etc.)")
     activo: bool = True
 
 
@@ -41,9 +41,9 @@ class PaisResponse(PaisBase):
 # ================== ESTADO ==================
 
 class EstadoBase(BaseModel):
-    codigo: str = Field(..., min_length=1, max_length=10, description="Código do estado")
+    codigo: str = Field(..., min_length=1, max_length=10, description="Codigo do estado")
     nome: str = Field(..., min_length=1, max_length=100, description="Nome do estado")
-    pais_id: int = Field(..., description="ID do país")
+    pais_id: int = Field(..., description="ID do pais")
     activo: bool = True
 
 
@@ -71,7 +71,7 @@ class EstadoResponse(EstadoBase):
 
 class CidadeBase(BaseModel):
     nome: str = Field(..., min_length=1, max_length=100, description="Nome da cidade")
-    codigo_postal: Optional[str] = Field(None, max_length=10, description="Código postal")
+    codigo_postal: Optional[str] = Field(None, max_length=10, description="Codigo postal")
     estado_id: int = Field(..., description="ID do estado")
     activo: bool = True
 
@@ -99,10 +99,10 @@ class CidadeResponse(CidadeBase):
 # ================== PREFIJO ==================
 
 class PrefijoBase(BaseModel):
-    codigo: str = Field(..., min_length=1, max_length=10, description="Código do prefixo")
+    codigo: str = Field(..., min_length=1, max_length=10, description="Codigo do prefixo")
     tipo_numero: TipoNumero = TipoNumero.MOVIL
     operadora: Optional[TipoOperadora] = TipoOperadora.DESCONOCIDA
-    pais_id: int = Field(..., description="ID do país")
+    pais_id: int = Field(..., description="ID do pais")
     estado_id: Optional[int] = None
     cidade_id: Optional[int] = None
     descripcion: Optional[str] = None
@@ -112,7 +112,7 @@ class PrefijoBase(BaseModel):
     @validator('codigo')
     def validate_codigo(cls, v):
         if not v.isdigit():
-            raise ValueError('O código deve conter apenas dígitos')
+            raise ValueError('O codigo deve conter apenas digitos')
         return v
 
 
@@ -145,7 +145,7 @@ class PrefijoResponse(PrefijoBase):
 # ================== CLI GEO ==================
 
 class CliGeoBase(BaseModel):
-    numero: str = Field(..., description="Número CLI")
+    numero: str = Field(..., description="Numero CLI")
     cli_id: int = Field(..., description="ID do CLI original")
     prefijo_id: int = Field(..., description="ID do prefixo")
     tipo_numero: TipoNumero = TipoNumero.MOVIL
@@ -186,12 +186,12 @@ class ReglaCliBase(BaseModel):
     nome: str = Field(..., min_length=1, max_length=100, description="Nome da regra")
     descripcion: Optional[str] = None
     tipo_regra: TipoRegra
-    condiciones: Dict[str, Any] = Field(..., description="Condições da regra em JSON")
+    condiciones: Dict[str, Any] = Field(..., description="Condicoes da regra em JSON")
     prioridad: int = Field(1, ge=1, le=10, description="Prioridade (1=alta, 10=baixa)")
-    peso: float = Field(1.0, ge=0.0, le=10.0, description="Peso na seleção")
+    peso: float = Field(1.0, ge=0.0, le=10.0, description="Peso na selecao")
     activo: bool = True
-    aplica_a_campaña: bool = False
-    campaña_ids: Optional[List[int]] = None
+    aplica_a_campana: bool = False
+    campana_ids: Optional[List[int]] = None
 
 
 class ReglaCliCreate(ReglaCliBase):
@@ -205,8 +205,8 @@ class ReglaCliUpdate(BaseModel):
     prioridad: Optional[int] = Field(None, ge=1, le=10)
     peso: Optional[float] = Field(None, ge=0.0, le=10.0)
     activo: Optional[bool] = None
-    aplica_a_campaña: Optional[bool] = None
-    campaña_ids: Optional[List[int]] = None
+    aplica_a_campana: Optional[bool] = None
+    campana_ids: Optional[List[int]] = None
 
 
 class ReglaCliResponse(ReglaCliBase):
@@ -218,15 +218,15 @@ class ReglaCliResponse(ReglaCliBase):
         from_attributes = True
 
 
-# ================== ESQUEMAS DE SELEÇÃO ==================
+# ================== ESQUEMAS DE SELECAO ==================
 
 class SeleccionCliRequest(BaseModel):
-    numero_destino: str = Field(..., description="Número de destino")
-    campaña_id: Optional[int] = None
+    numero_destino: str = Field(..., description="Numero de destino")
+    campana_id: Optional[int] = None
     tipo_numero_preferido: Optional[TipoNumero] = None
     operadora_preferida: Optional[TipoOperadora] = None
-    excluir_clis: Optional[List[str]] = Field(None, description="CLIs a excluir da seleção")
-    contexto_adicional: Optional[Dict[str, Any]] = Field(None, description="Contexto adicional para seleção")
+    excluir_clis: Optional[List[str]] = Field(None, description="CLIs a excluir da selecao")
+    contexto_adicional: Optional[Dict[str, Any]] = Field(None, description="Contexto adicional para selecao")
 
 
 class CliSeleccionado(BaseModel):
@@ -252,10 +252,10 @@ class SeleccionCliResponse(BaseModel):
     mensaje: str
 
 
-# ================== ESQUEMAS DE ANÁLISE ==================
+# ================== ESQUEMAS DE ANALISE ==================
 
 class AnalisisDestinoRequest(BaseModel):
-    numero_destino: str = Field(..., description="Número a analisar")
+    numero_destino: str = Field(..., description="Numero a analisar")
 
 
 class AnalisisDestinoResponse(BaseModel):
@@ -270,7 +270,7 @@ class AnalisisDestinoResponse(BaseModel):
     total_clis_compatibles: int
 
 
-# ================== ESQUEMAS DE ESTATÍSTICAS ==================
+# ================== ESQUEMAS DE ESTATISTICAS ==================
 
 class EstadisticasCli(BaseModel):
     total_clis: int
@@ -295,10 +295,10 @@ class ReporteSistemaResponse(BaseModel):
     fecha_reporte: datetime
 
 
-# ================== ESQUEMAS DE IMPORTAÇÃO ==================
+# ================== ESQUEMAS DE IMPORTACAO ==================
 
 class ImportarPrefijosRequest(BaseModel):
-    archivo_csv: str = Field(..., description="Dados CSV em base64 ou conteúdo direto")
+    archivo_csv: str = Field(..., description="Dados CSV em base64 ou conteudo direto")
     formato: str = Field("csv", description="Formato do arquivo")
     sobrescribir: bool = Field(False, description="Sobrescrever dados existentes")
 
@@ -311,16 +311,16 @@ class ImportarPrefijosResponse(BaseModel):
     mensaje: str
 
 
-# ================== ESQUEMAS DE CONFIGURAÇÃO ==================
+# ================== ESQUEMAS DE CONFIGURACAO ==================
 
 class ConfiguracionSistema(BaseModel):
-    algoritmo_seleccion: str = Field("weighted_score", description="Algoritmo de seleção")
-    peso_geografia: float = Field(0.4, ge=0.0, le=1.0, description="Peso da geografia na seleção")
-    peso_calidad: float = Field(0.3, ge=0.0, le=1.0, description="Peso da qualidade na seleção")
-    peso_tasa_exito: float = Field(0.2, ge=0.0, le=1.0, description="Peso da taxa de sucesso na seleção")
-    peso_uso_reciente: float = Field(0.1, ge=0.0, le=1.0, description="Peso do uso recente na seleção")
-    limite_selecciones_por_cli: int = Field(100, ge=1, description="Limite de seleções por CLI por dia")
-    habilitar_fallback: bool = Field(True, description="Habilitar seleção de fallback")
+    algoritmo_seleccion: str = Field("weighted_score", description="Algoritmo de selecao")
+    peso_geografia: float = Field(0.4, ge=0.0, le=1.0, description="Peso da geografia na selecao")
+    peso_calidad: float = Field(0.3, ge=0.0, le=1.0, description="Peso da qualidade na selecao")
+    peso_tasa_exito: float = Field(0.2, ge=0.0, le=1.0, description="Peso da taxa de sucesso na selecao")
+    peso_uso_reciente: float = Field(0.1, ge=0.0, le=1.0, description="Peso do uso recente na selecao")
+    limite_selecciones_por_cli: int = Field(100, ge=1, description="Limite de selecoes por CLI por dia")
+    habilitar_fallback: bool = Field(True, description="Habilitar selecao de fallback")
     tiempo_cache_segundos: int = Field(300, ge=0, description="Tempo de cache em segundos")
 
 
@@ -336,8 +336,8 @@ class ConfiguracionSistemaResponse(ConfiguracionSistema):
 
 class TesteSistemaRequest(BaseModel):
     numero_destino: str
-    campaña_id: Optional[int] = None
-    simulaciones: int = Field(10, ge=1, le=100, description="Número de simulações")
+    campana_id: Optional[int] = None
+    simulaciones: int = Field(10, ge=1, le=100, description="Numero de simulacoes")
 
 
 class TesteSistemaResponse(BaseModel):

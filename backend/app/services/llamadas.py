@@ -16,13 +16,13 @@ from app.services.cli_generator import generar_cli
 # Configurar logger
 logger = logging.getLogger(__name__)
 
-# Constantes para resultados válidos
+# Constantes para resultados validos
 RESULTADOS_VALIDOS = ["contestada", "no_contesta", "buzon", "numero_invalido", "otro"]
 
-# Estados válidos para webhook
+# Estados validos para webhook
 ESTADOS_WEBHOOK_VALIDOS = ["en_progreso", "conectada", "finalizada", "fallida", "cancelada"]
 
-# Transiciones de estado válidas (estado_actual -> [estados_permitidos])
+# Transiciones de estado validas (estado_actual -> [estados_permitidos])
 TRANSICIONES_ESTADO_VALIDAS = {
     "pendiente": ["en_progreso", "cancelada", "fallida"],
     "en_progreso": ["conectada", "finalizada", "fallida", "cancelada"],
@@ -32,7 +32,7 @@ TRANSICIONES_ESTADO_VALIDAS = {
     "cancelada": []    # Estado terminal, no se puede cambiar
 }
 
-# Columnas para exportación CSV
+# Columnas para exportacion CSV
 COLUMNAS_CSV = [
     "llamada_id", "numero_destino", "estado", "resultado", 
     "fecha_asignacion", "fecha_conexion", "fecha_finalizacion", 
@@ -42,7 +42,7 @@ COLUMNAS_CSV = [
 class LlamadasService:
     """
     Servicio para gestionar las operaciones relacionadas con llamadas.
-    Encapsula la lógica de negocio separándola de las rutas.
+    Encapsula la logica de negocio separandola de las rutas.
     """
     
     @staticmethod
@@ -54,20 +54,20 @@ class LlamadasService:
         variables_adicionales: Optional[Dict[str, Any]] = None
     ) -> Tuple[Llamada, Dict[str, Any]]:
         """
-        Inicia una llamada y registra la información en la base de datos.
+        Inicia una llamada y registra la informacion en la base de datos.
         
         Args:
-            db: Sesión de base de datos
-            numero_destino: Número al que se realizará la llamada
-            campana_id: ID de la campaña a la que pertenece la llamada
-            prefijo_cli: Prefijo para el número CLI (opcional)
+            db: Sesion de base de datos
+            numero_destino: Numero al que se realizara la llamada
+            campana_id: ID de la campana a la que pertenece la llamada
+            prefijo_cli: Prefijo para el numero CLI (opcional)
             variables_adicionales: Variables adicionales para la llamada
             
         Returns:
             Tuple[Llamada, Dict]: Llamada creada y respuesta de Asterisk
             
         Raises:
-            HTTPException: Si ocurre algún error durante el proceso
+            HTTPException: Si ocurre algun error durante el proceso
         """
         try:
             # Generar CLI para la llamada
@@ -92,7 +92,7 @@ class LlamadasService:
             variables_asterisk["llamada_id"] = nueva_llamada.id
             variables_asterisk["campana_id"] = campana_id
             
-            # Iniciar llamada a través de Asterisk AMI
+            # Iniciar llamada a traves de Asterisk AMI
             respuesta_asterisk = await asterisk_service.originar_llamada(
                 numero_destino=numero_destino,
                 cli=cli_generado,
@@ -102,7 +102,7 @@ class LlamadasService:
             return nueva_llamada, respuesta_asterisk
             
         except Exception as e:
-            # En caso de error, revertir transacción
+            # En caso de error, revertir transaccion
             db.rollback()
             raise HTTPException(status_code=500, detail=f"Error al iniciar llamada: {str(e)}")
     
@@ -116,15 +116,15 @@ class LlamadasService:
         Procesa el evento cuando un usuario presiona una tecla durante una llamada.
         
         Args:
-            db: Sesión de base de datos
-            llamada_id: ID de la llamada en la que se detectó la tecla
+            db: Sesion de base de datos
+            llamada_id: ID de la llamada en la que se detecto la tecla
             tecla: Tecla DTMF detectada (por defecto "1")
             
         Returns:
             Llamada: Llamada actualizada
             
         Raises:
-            HTTPException: Si la llamada no existe o no está en el estado correcto
+            HTTPException: Si la llamada no existe o no esta en el estado correcto
         """
         # Buscar la llamada en la base de datos
         llamada = db.query(Llamada).filter(Llamada.id == llamada_id).first()
@@ -140,7 +140,7 @@ class LlamadasService:
         if llamada.estado != "en_progreso":
             raise HTTPException(
                 status_code=400, 
-                detail=f"La llamada no está en estado 'en_progreso'. Estado actual: {llamada.estado}"
+                detail=f"La llamada no esta en estado 'en_progreso'. Estado actual: {llamada.estado}"
             )
         
         # Obtener fecha y hora actual
@@ -174,23 +174,23 @@ class LlamadasService:
         Finaliza una llamada en curso y registra su resultado.
         
         Args:
-            db: Sesión de base de datos
+            db: Sesion de base de datos
             llamada_id: ID de la llamada a finalizar
             resultado: Resultado de la llamada (contestada, no_contesta, buzon, etc.)
-            usuario: Usuario que está finalizando la llamada
+            usuario: Usuario que esta finalizando la llamada
             
         Returns:
             Llamada: Llamada finalizada
             
         Raises:
-            HTTPException: Si la llamada no existe, no pertenece al usuario o ya está finalizada
+            HTTPException: Si la llamada no existe, no pertenece al usuario o ya esta finalizada
         """
-        # Verificar que el resultado sea válido
+        # Verificar que el resultado sea valido
         if resultado not in RESULTADOS_VALIDOS:
-            logger.warning(f"Intento de finalizar llamada con resultado inválido: {resultado}")
+            logger.warning(f"Intento de finalizar llamada con resultado invalido: {resultado}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"El resultado '{resultado}' no es válido. Valores permitidos: {', '.join(RESULTADOS_VALIDOS)}"
+                detail=f"El resultado '{resultado}' no es valido. Valores permitidos: {', '.join(RESULTADOS_VALIDOS)}"
             )
         
         # Buscar la llamada en la base de datos
@@ -206,13 +206,13 @@ class LlamadasService:
         
         # Verificar que la llamada pertenezca al usuario (a menos que sea administrador)
         if not usuario.es_administrador and llamada.usuario_id != usuario.id:
-            logger.warning(f"Usuario {usuario.email} intentó finalizar llamada que no le pertenece: {llamada_id}")
+            logger.warning(f"Usuario {usuario.email} intento finalizar llamada que no le pertenece: {llamada_id}")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tienes permiso para finalizar esta llamada"
             )
         
-        # Verificar que la llamada esté en progreso o conectada
+        # Verificar que la llamada este en progreso o conectada
         estados_validos = ["en_progreso", "conectada"]
         if llamada.estado not in estados_validos:
             logger.warning(f"Intento de finalizar llamada en estado incorrecto: {llamada.estado}")
@@ -229,7 +229,7 @@ class LlamadasService:
         llamada.resultado = resultado
         llamada.fecha_finalizacion = ahora
         
-        # Calcular duración si tenemos fecha de inicio
+        # Calcular duracion si tenemos fecha de inicio
         if llamada.fecha_inicio:
             duracion_segundos = int((ahora - llamada.fecha_inicio).total_seconds())
             llamada.duracion = duracion_segundos
@@ -250,25 +250,25 @@ class LlamadasService:
     @staticmethod
     def obtener_estadisticas(db: Session) -> Dict[str, Any]:
         """
-        Obtiene estadísticas agregadas sobre las llamadas en el sistema.
+        Obtiene estadisticas agregadas sobre las llamadas en el sistema.
         
-        Esta función realiza consultas optimizadas utilizando SQLAlchemy para obtener:
+        Esta funcion realiza consultas optimizadas utilizando SQLAlchemy para obtener:
         - Total de llamadas
         - Llamadas por estado
         - Llamadas por resultado
         - Llamadas en progreso por usuario
         
         Args:
-            db: Sesión de base de datos
+            db: Sesion de base de datos
             
         Returns:
-            Dict[str, Any]: Diccionario con las estadísticas calculadas
+            Dict[str, Any]: Diccionario con las estadisticas calculadas
             
         Raises:
-            HTTPException: Si ocurre algún error durante la consulta
+            HTTPException: Si ocurre algun error durante la consulta
         """
         try:
-            logger.info("Generando estadísticas de llamadas")
+            logger.info("Generando estadisticas de llamadas")
             resultado = {}
             
             # 1. Total de llamadas
@@ -330,14 +330,14 @@ class LlamadasService:
             en_progreso_por_usuario = {email: cantidad for email, cantidad in en_progreso_por_usuario_query}
             resultado["en_progreso_por_usuario"] = en_progreso_por_usuario
             
-            logger.info(f"Estadísticas generadas exitosamente: {len(en_progreso_por_usuario)} usuarios con llamadas en progreso")
+            logger.info(f"Estadisticas generadas exitosamente: {len(en_progreso_por_usuario)} usuarios con llamadas en progreso")
             return resultado
             
         except Exception as e:
-            logger.error(f"Error al obtener estadísticas: {str(e)}")
+            logger.error(f"Error al obtener estadisticas: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error al obtener estadísticas: {str(e)}"
+                detail=f"Error al obtener estadisticas: {str(e)}"
             )
 
     @staticmethod
@@ -345,23 +345,23 @@ class LlamadasService:
         """
         Exporta todas las llamadas con estado 'finalizada' a un formato CSV.
         
-        Esta función realiza las siguientes operaciones:
+        Esta funcion realiza las siguientes operaciones:
         1. Consulta todas las llamadas con estado 'finalizada'
         2. Hace join con la tabla de usuarios para obtener el email
-        3. Formatea las fechas y calcula la duración
+        3. Formatea las fechas y calcula la duracion
         4. Genera un archivo CSV en memoria
         
         Args:
-            db: Sesión de base de datos
+            db: Sesion de base de datos
         
         Returns:
             str: Contenido del CSV como string
             
         Raises:
-            HTTPException: Si ocurre algún error durante la exportación
+            HTTPException: Si ocurre algun error durante la exportacion
         """
         try:
-            logger.info("Iniciando exportación de llamadas finalizadas a CSV")
+            logger.info("Iniciando exportacion de llamadas finalizadas a CSV")
             
             # Consultamos las llamadas finalizadas con join a usuarios
             llamadas_query = (
@@ -394,7 +394,7 @@ class LlamadasService:
             
             # Escribimos los datos
             for llamada, usuario_email in llamadas_query:
-                # Formatear fechas o usar string vacío si es None
+                # Formatear fechas o usar string vacio si es None
                 fecha_asignacion = (
                     llamada.fecha_asignacion.strftime(formato_fecha) 
                     if llamada.fecha_asignacion else ""
@@ -408,7 +408,7 @@ class LlamadasService:
                     if llamada.fecha_finalizacion else ""
                 )
                 
-                # Calcular duración en segundos
+                # Calcular duracion en segundos
                 duracion_segundos = llamada.duracion or 0
                 
                 # Escribir fila
@@ -430,7 +430,7 @@ class LlamadasService:
             # Cerramos el buffer
             output.close()
             
-            logger.info(f"Exportación CSV completada. {len(llamadas_query)} llamadas exportadas.")
+            logger.info(f"Exportacion CSV completada. {len(llamadas_query)} llamadas exportadas.")
             return csv_content
             
         except Exception as e:
@@ -447,15 +447,15 @@ class LlamadasService:
         nuevo_estado: str
     ) -> Llamada:
         """
-        Actualiza el estado de una llamada a partir de una notificación webhook externa.
+        Actualiza el estado de una llamada a partir de una notificacion webhook externa.
         
-        Esta función:
+        Esta funcion:
         1. Verifica que la llamada exista
-        2. Valida que la transición de estado sea permitida
+        2. Valida que la transicion de estado sea permitida
         3. Actualiza el estado sin modificar otros campos como resultado o fecha_finalizacion
         
         Args:
-            db: Sesión de base de datos
+            db: Sesion de base de datos
             llamada_id: ID de la llamada a actualizar
             nuevo_estado: Nuevo estado para la llamada
             
@@ -463,15 +463,15 @@ class LlamadasService:
             Llamada: Llamada actualizada
             
         Raises:
-            HTTPException: Si la llamada no existe, el estado es inválido o la transición no es permitida
+            HTTPException: Si la llamada no existe, el estado es invalido o la transicion no es permitida
         """
         try:
-            # Verificar que el estado es válido
+            # Verificar que el estado es valido
             if nuevo_estado not in ESTADOS_WEBHOOK_VALIDOS:
-                logger.warning(f"Intento de actualizar llamada con estado inválido: {nuevo_estado}")
+                logger.warning(f"Intento de actualizar llamada con estado invalido: {nuevo_estado}")
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"El estado '{nuevo_estado}' no es válido para webhook. Estados válidos: {', '.join(ESTADOS_WEBHOOK_VALIDOS)}"
+                    detail=f"El estado '{nuevo_estado}' no es valido para webhook. Estados validos: {', '.join(ESTADOS_WEBHOOK_VALIDOS)}"
                 )
             
             # Buscar la llamada en la base de datos
@@ -479,19 +479,19 @@ class LlamadasService:
             
             # Verificar si la llamada existe
             if not llamada:
-                logger.warning(f"Intento de actualizar llamada inexistente vía webhook: {llamada_id}")
+                logger.warning(f"Intento de actualizar llamada inexistente via webhook: {llamada_id}")
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"La llamada con ID {llamada_id} no existe"
                 )
             
-            # Verificar que la transición de estado sea válida
+            # Verificar que la transicion de estado sea valida
             estado_actual = llamada.estado
             estados_permitidos = TRANSICIONES_ESTADO_VALIDAS.get(estado_actual, [])
             
             if nuevo_estado not in estados_permitidos:
                 logger.warning(
-                    f"Transición de estado inválida vía webhook: {estado_actual} -> {nuevo_estado}. "
+                    f"Transicion de estado invalida via webhook: {estado_actual} -> {nuevo_estado}. "
                     f"Transiciones permitidas: {estado_actual} -> {', '.join(estados_permitidos)}"
                 )
                 raise HTTPException(
@@ -506,22 +506,22 @@ class LlamadasService:
             # Actualizar estado de la llamada
             llamada.estado = nuevo_estado
             
-            # Si el estado es "finalizada" y no tiene fecha de finalización, agregarla
+            # Si el estado es "finalizada" y no tiene fecha de finalizacion, agregarla
             if nuevo_estado == "finalizada" and not llamada.fecha_finalizacion:
                 llamada.fecha_finalizacion = ahora
             
-            # Si el estado es "conectada" y no tiene fecha de conexión, agregarla
+            # Si el estado es "conectada" y no tiene fecha de conexion, agregarla
             if nuevo_estado == "conectada" and not llamada.fecha_conexion:
                 llamada.fecha_conexion = ahora
             
             # Guardar cambios en la base de datos
             try:
                 db.commit()
-                logger.info(f"Llamada {llamada_id} actualizada vía webhook. Nuevo estado: {nuevo_estado}")
+                logger.info(f"Llamada {llamada_id} actualizada via webhook. Nuevo estado: {nuevo_estado}")
                 return llamada
             except Exception as e:
                 db.rollback()
-                logger.error(f"Error al actualizar llamada vía webhook: {str(e)}")
+                logger.error(f"Error al actualizar llamada via webhook: {str(e)}")
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail=f"Error al actualizar la llamada: {str(e)}"

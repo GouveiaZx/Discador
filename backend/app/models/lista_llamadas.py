@@ -6,7 +6,7 @@ from app.database import Base
 
 class ListaLlamadas(Base):
     """
-    Modelo para la tabla listas_llamadas que almacena las listas de números para llamar.
+    Modelo para la tabla listas_llamadas que almacena las listas de numeros para llamar.
     """
     __tablename__ = "listas_llamadas"
     
@@ -25,7 +25,7 @@ class ListaLlamadas(Base):
     numeros = relationship("NumeroLlamada", back_populates="lista", cascade="all, delete-orphan")
     llamadas = relationship("Llamada", back_populates="lista_llamadas")
     
-    # Índices adicionales
+    # Indices adicionales
     __table_args__ = (
         Index('idx_listas_nombre', nombre),
         Index('idx_listas_activa', activa),
@@ -38,7 +38,7 @@ class ListaLlamadas(Base):
 
 class NumeroLlamada(Base):
     """
-    Modelo para almacenar los números individuales de cada lista.
+    Modelo para almacenar los numeros individuales de cada lista.
     """
     __tablename__ = "numeros_llamadas"
     
@@ -53,13 +53,13 @@ class NumeroLlamada(Base):
     # Relaciones - Usando string para evitar import circular
     lista = relationship("ListaLlamadas", back_populates="numeros")
     
-    # Índices adicionales
+    # Indices adicionales
     __table_args__ = (
         Index('idx_numeros_numero', numero),
         Index('idx_numeros_normalizado', numero_normalizado),
         Index('idx_numeros_lista', id_lista),
         Index('idx_numeros_valido', valido),
-        # Índice único para evitar duplicados por lista
+        # Indice unico para evitar duplicados por lista
         Index('idx_unique_numero_lista', numero_normalizado, id_lista, unique=True),
     )
     

@@ -41,21 +41,21 @@ def mock_llamada_finalizada():
 # Patch para get_current_user_simulado
 @pytest.fixture
 def patch_get_current_user(mock_usuario_autenticado):
-    """Patch para la función get_current_user_simulado"""
+    """Patch para la funcion get_current_user_simulado"""
     with patch("app.routes.llamadas.get_current_user_simulado", return_value=mock_usuario_autenticado):
         yield
 
 # Patch para finalizar_llamada del servicio
 @pytest.fixture
 def patch_finalizar_llamada(mock_llamada_finalizada):
-    """Patch para el método finalizar_llamada del servicio"""
+    """Patch para el metodo finalizar_llamada del servicio"""
     with patch.object(LlamadasService, "finalizar_llamada", return_value=mock_llamada_finalizada):
         yield
 
 # Patch para finalizar_llamada con error 404
 @pytest.fixture
 def patch_finalizar_llamada_404():
-    """Patch para el método finalizar_llamada que devuelve error 404"""
+    """Patch para el metodo finalizar_llamada que devuelve error 404"""
     with patch.object(
         LlamadasService, 
         "finalizar_llamada", 
@@ -66,7 +66,7 @@ def patch_finalizar_llamada_404():
 # Patch para finalizar_llamada con error 403
 @pytest.fixture
 def patch_finalizar_llamada_403():
-    """Patch para el método finalizar_llamada que devuelve error 403"""
+    """Patch para el metodo finalizar_llamada que devuelve error 403"""
     with patch.object(
         LlamadasService, 
         "finalizar_llamada", 
@@ -77,18 +77,18 @@ def patch_finalizar_llamada_403():
 # Patch para finalizar_llamada con error 400
 @pytest.fixture
 def patch_finalizar_llamada_400():
-    """Patch para el método finalizar_llamada que devuelve error 400"""
+    """Patch para el metodo finalizar_llamada que devuelve error 400"""
     with patch.object(
         LlamadasService, 
         "finalizar_llamada", 
-        side_effect=HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Resultado inválido")
+        side_effect=HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Resultado invalido")
     ):
         yield
 
 # Patch para finalizar_llamada con error 500
 @pytest.fixture
 def patch_finalizar_llamada_500():
-    """Patch para el método finalizar_llamada que devuelve error 500"""
+    """Patch para el metodo finalizar_llamada que devuelve error 500"""
     with patch.object(
         LlamadasService, 
         "finalizar_llamada", 
@@ -137,7 +137,7 @@ def test_finalizar_llamada_403(patch_get_current_user, patch_finalizar_llamada_4
     assert "No tienes permiso" in response.json()["error"]
 
 def test_finalizar_llamada_400(patch_get_current_user, patch_finalizar_llamada_400):
-    """Test para finalizar una llamada con resultado inválido desde la ruta"""
+    """Test para finalizar una llamada con resultado invalido desde la ruta"""
     datos = {
         "llamada_id": 123,
         "resultado": "resultado_invalido"
@@ -146,7 +146,7 @@ def test_finalizar_llamada_400(patch_get_current_user, patch_finalizar_llamada_4
     response = client.post("/api/v1/llamadas/finalizar", json=datos)
     
     assert response.status_code == 400
-    assert "Resultado inválido" in response.json()["error"]
+    assert "Resultado invalido" in response.json()["error"]
 
 def test_finalizar_llamada_500(patch_get_current_user, patch_finalizar_llamada_500):
     """Test para finalizar una llamada con error interno desde la ruta"""
@@ -161,7 +161,7 @@ def test_finalizar_llamada_500(patch_get_current_user, patch_finalizar_llamada_5
     assert "Error interno" in response.json()["error"]
 
 def test_finalizar_llamada_schema_invalido(patch_get_current_user):
-    """Test para finalizar una llamada con esquema inválido desde la ruta"""
+    """Test para finalizar una llamada con esquema invalido desde la ruta"""
     # Llamada sin resultado
     datos = {
         "llamada_id": 123

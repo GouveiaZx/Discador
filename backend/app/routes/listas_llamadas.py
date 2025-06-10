@@ -24,37 +24,37 @@ router = APIRouter(prefix="/listas-llamadas", tags=["Listas de Llamadas"])
 
 @router.post("/upload", response_model=UploadArchivoResponse)
 async def upload_archivo_numeros(
-    archivo: UploadFile = File(..., description="Archivo CSV o TXT con números de teléfono"),
+    archivo: UploadFile = File(..., description="Archivo CSV o TXT con numeros de telefono"),
     nombre_lista: str = Form(..., description="Nombre para la lista de llamadas"),
-    descripcion: Optional[str] = Form(None, description="Descripción opcional de la lista"),
+    descripcion: Optional[str] = Form(None, description="Descripcion opcional de la lista"),
     db: Session = Depends(obtener_sesion)
 ) -> UploadArchivoResponse:
     """
-    Sube un archivo CSV o TXT con números de teléfono y crea una nueva lista de llamadas.
+    Sube un archivo CSV o TXT con numeros de telefono y crea una nueva lista de llamadas.
     
     **Formato del archivo:**
-    - CSV: Primera columna debe contener los números (puede tener header)
-    - TXT: Un número por línea
+    - CSV: Primera columna debe contener los numeros (puede tener header)
+    - TXT: Un numero por linea
     
-    **Formatos de números aceptados:**
+    **Formatos de numeros aceptados:**
     - +54 9 11 1234-5678
     - 011 1234-5678  
     - 11 1234 5678
     - 1112345678
     
     **Validaciones aplicadas:**
-    - Números duplicados son removidos
-    - Números inválidos son reportados pero no guardados
-    - Solo números argentinos son procesados
+    - Numeros duplicados son removidos
+    - Numeros invalidos son reportados pero no guardados
+    - Solo numeros argentinos son procesados
     """
     logger.info(f"Inicio upload de archivo: {archivo.filename}, Lista: {nombre_lista}")
     
-    # Validar tamanho do arquivo (máximo 200MB para listas grandes)
+    # Validar tamanho do arquivo (maximo 200MB para listas grandes)
     max_size = 200 * 1024 * 1024
     if archivo.size and archivo.size > max_size:
         raise HTTPException(
             status_code=413,
-            detail="El archivo es demasiado grande. Tamaño máximo: 200MB"
+            detail="El archivo es demasiado grande. Tamano maximo: 200MB"
         )
     
     try:
@@ -63,15 +63,15 @@ async def upload_archivo_numeros(
         
         mensaje_resultado = (
             f"Archivo procesado exitosamente. "
-            f"{resultado['numeros_validos']} números válidos guardados "
-            f"de {resultado['total_numeros_archivo']} líneas procesadas."
+            f"{resultado['numeros_validos']} numeros validos guardados "
+            f"de {resultado['total_numeros_archivo']} lineas procesadas."
         )
         
         if resultado['numeros_invalidos'] > 0:
-            mensaje_resultado += f" {resultado['numeros_invalidos']} números inválidos encontrados."
+            mensaje_resultado += f" {resultado['numeros_invalidos']} numeros invalidos encontrados."
         
         if resultado['numeros_duplicados'] > 0:
-            mensaje_resultado += f" {resultado['numeros_duplicados']} números duplicados removidos."
+            mensaje_resultado += f" {resultado['numeros_duplicados']} numeros duplicados removidos."
         
         return UploadArchivoResponse(
             mensaje=mensaje_resultado,
@@ -104,9 +104,9 @@ def listar_listas(
     """
     Lista todas las listas de llamadas disponibles.
     
-    **Parámetros:**
-    - skip: Número de registros a saltar (para paginación)
-    - limit: Número máximo de registros a retornar
+    **Parametros:**
+    - skip: Numero de registros a saltar (para paginacion)
+    - limit: Numero maximo de registros a retornar
     """
     try:
         service = ListaLlamadasService(db)
@@ -129,11 +129,11 @@ def obtener_lista(
     db: Session = Depends(obtener_sesion)
 ) -> ListaLlamadasDetailResponse:
     """
-    Obtiene los detalles de una lista de llamadas específica.
+    Obtiene los detalles de una lista de llamadas especifica.
     
-    **Parámetros:**
+    **Parametros:**
     - lista_id: ID de la lista a obtener
-    - incluir_numeros: Si incluir la lista completa de números (puede ser lenta para listas grandes)
+    - incluir_numeros: Si incluir la lista completa de numeros (puede ser lenta para listas grandes)
     """
     try:
         service = ListaLlamadasService(db)
@@ -142,7 +142,7 @@ def obtener_lista(
         # Convertir a schema response
         lista_response = ListaLlamadasDetailResponse.from_orm(lista)
         
-        # Incluir números si se solicita (cuidado con listas grandes)
+        # Incluir numeros si se solicita (cuidado con listas grandes)
         if incluir_numeros:
             lista_response.numeros = [
                 NumeroLlamadaResponse.from_orm(numero) 
@@ -167,9 +167,9 @@ def eliminar_lista(
     db: Session = Depends(obtener_sesion)
 ) -> dict:
     """
-    Elimina una lista de llamadas y todos sus números asociados.
+    Elimina una lista de llamadas y todos sus numeros asociados.
     
-    **Advertencia:** Esta operación no se puede deshacer.
+    **Advertencia:** Esta operacion no se puede deshacer.
     """
     try:
         service = ListaLlamadasService(db)
@@ -199,8 +199,8 @@ def actualizar_lista(
     """
     Actualiza los metadatos de una lista de llamadas.
     
-    **Nota:** Solo se pueden actualizar nombre, descripción y estado activo.
-    Los números de la lista no se modifican por esta ruta.
+    **Nota:** Solo se pueden actualizar nombre, descripcion y estado activo.
+    Los numeros de la lista no se modifican por esta ruta.
     """
     try:
         service = ListaLlamadasService(db)

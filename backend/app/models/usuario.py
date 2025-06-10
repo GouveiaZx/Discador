@@ -8,7 +8,7 @@ from app.database import Base
 
 class Usuario(Base):
     """
-    Modelo para la tabla usuarios que almacena la información de los usuarios del sistema.
+    Modelo para la tabla usuarios que almacena la informacion de los usuarios del sistema.
     """
     __tablename__ = "usuarios"
     
@@ -25,7 +25,7 @@ class Usuario(Base):
     # Relaciones
     llamadas = relationship("Llamada", back_populates="usuario")
     
-    # Índices adicionales
+    # Indices adicionales
     __table_args__ = (
         Index('idx_usuarios_email', email),
         Index('idx_usuarios_rol', rol),

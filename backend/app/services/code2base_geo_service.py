@@ -1,6 +1,6 @@
 """
-Serviço de Gestão Geográfica do Sistema CODE2BASE
-Responsável por gerenciar países, estados, cidades, prefixos e CLIs geográficos
+Servico de Gestao Geografica do Sistema CODE2BASE
+Responsavel por gerenciar paises, estados, cidades, prefixos e CLIs geograficos
 """
 
 import csv
@@ -34,24 +34,24 @@ from app.utils.logger import logger
 
 
 class Code2BaseGeoService:
-    """Serviço para gestão de dados geográficos"""
+    """Servico para gestao de dados geograficos"""
     
     def __init__(self, db: Session):
         self.db = db
     
-    # ================== GESTÃO DE PAÍSES ==================
+    # ================== GESTAO DE PAISES ==================
     
     def criar_pais(self, pais_data: PaisCreate) -> PaisResponse:
         """
-        Cria um novo país
+        Cria um novo pais
         
         Args:
-            pais_data: Dados do país
+            pais_data: Dados do pais
             
         Returns:
-            PaisResponse com dados do país criado
+            PaisResponse com dados do pais criado
         """
-        # Verificar se já existe
+        # Verificar se ja existe
         existente = self.db.query(Pais).filter(
             Pais.codigo == pais_data.codigo.upper()
         ).first()
@@ -59,7 +59,7 @@ class Code2BaseGeoService:
         if existente:
             raise HTTPException(
                 status_code=400,
-                detail=f"País com código {pais_data.codigo} já existe"
+                detail=f"Pais com codigo {pais_data.codigo} ja existe"
             )
         
         novo_pais = Pais(
@@ -74,18 +74,18 @@ class Code2BaseGeoService:
             self.db.commit()
             self.db.refresh(novo_pais)
             
-            logger.info(f"País {novo_pais.codigo} criado")
+            logger.info(f"Pais {novo_pais.codigo} criado")
             return PaisResponse.from_orm(novo_pais)
             
         except IntegrityError:
             self.db.rollback()
             raise HTTPException(
                 status_code=400,
-                detail="Erro ao criar país"
+                detail="Erro ao criar pais"
             )
     
     def listar_paises(self, skip: int = 0, limit: int = 100, apenas_ativos: bool = True) -> List[PaisResponse]:
-        """Lista países"""
+        """Lista paises"""
         query = self.db.query(Pais)
         
         if apenas_ativos:
@@ -95,18 +95,18 @@ class Code2BaseGeoService:
         return [PaisResponse.from_orm(p) for p in paises]
     
     def obter_pais(self, pais_id: int) -> PaisResponse:
-        """Obtém país por ID"""
+        """Obtem pais por ID"""
         pais = self.db.query(Pais).filter(Pais.id == pais_id).first()
         if not pais:
-            raise HTTPException(status_code=404, detail="País não encontrado")
+            raise HTTPException(status_code=404, detail="Pais nao encontrado")
         
         return PaisResponse.from_orm(pais)
     
     def atualizar_pais(self, pais_id: int, pais_data: PaisUpdate) -> PaisResponse:
-        """Atualiza país"""
+        """Atualiza pais"""
         pais = self.db.query(Pais).filter(Pais.id == pais_id).first()
         if not pais:
-            raise HTTPException(status_code=404, detail="País não encontrado")
+            raise HTTPException(status_code=404, detail="Pais nao encontrado")
         
         for field, value in pais_data.dict(exclude_unset=True).items():
             setattr(pais, field, value)
@@ -119,18 +119,18 @@ class Code2BaseGeoService:
             return PaisResponse.from_orm(pais)
         except IntegrityError:
             self.db.rollback()
-            raise HTTPException(status_code=400, detail="Erro ao atualizar país")
+            raise HTTPException(status_code=400, detail="Erro ao atualizar pais")
     
-    # ================== GESTÃO DE ESTADOS ==================
+    # ================== GESTAO DE ESTADOS ==================
     
     def criar_estado(self, estado_data: EstadoCreate) -> EstadoResponse:
         """Cria um novo estado"""
-        # Verificar se país existe
+        # Verificar se pais existe
         pais = self.db.query(Pais).filter(Pais.id == estado_data.pais_id).first()
         if not pais:
-            raise HTTPException(status_code=404, detail="País não encontrado")
+            raise HTTPException(status_code=404, detail="Pais nao encontrado")
         
-        # Verificar se já existe
+        # Verificar se ja existe
         existente = self.db.query(Estado).filter(
             Estado.codigo == estado_data.codigo.upper(),
             Estado.pais_id == estado_data.pais_id
@@ -139,7 +139,7 @@ class Code2BaseGeoService:
         if existente:
             raise HTTPException(
                 status_code=400,
-                detail=f"Estado com código {estado_data.codigo} já existe neste país"
+                detail=f"Estado com codigo {estado_data.codigo} ja existe neste pais"
             )
         
         novo_estado = Estado(
@@ -162,7 +162,7 @@ class Code2BaseGeoService:
             raise HTTPException(status_code=400, detail="Erro ao criar estado")
     
     def listar_estados(self, pais_id: Optional[int] = None, skip: int = 0, limit: int = 100) -> List[EstadoResponse]:
-        """Lista estados, opcionalmente filtrados por país"""
+        """Lista estados, opcionalmente filtrados por pais"""
         query = self.db.query(Estado).filter(Estado.activo == True)
         
         if pais_id:
@@ -171,14 +171,14 @@ class Code2BaseGeoService:
         estados = query.offset(skip).limit(limit).all()
         return [EstadoResponse.from_orm(e) for e in estados]
     
-    # ================== GESTÃO DE CIDADES ==================
+    # ================== GESTAO DE CIDADES ==================
     
     def criar_cidade(self, cidade_data: CidadeCreate) -> CidadeResponse:
         """Cria uma nova cidade"""
         # Verificar se estado existe
         estado = self.db.query(Estado).filter(Estado.id == cidade_data.estado_id).first()
         if not estado:
-            raise HTTPException(status_code=404, detail="Estado não encontrado")
+            raise HTTPException(status_code=404, detail="Estado nao encontrado")
         
         nova_cidade = Cidade(
             nome=cidade_data.nome,
@@ -209,28 +209,28 @@ class Code2BaseGeoService:
         cidades = query.offset(skip).limit(limit).all()
         return [CidadeResponse.from_orm(c) for c in cidades]
     
-    # ================== GESTÃO DE PREFIXOS ==================
+    # ================== GESTAO DE PREFIXOS ==================
     
     def criar_prefijo(self, prefijo_data: PrefijoCreate) -> PrefijoResponse:
         """Cria um novo prefixo"""
-        # Verificar se país existe
+        # Verificar se pais existe
         pais = self.db.query(Pais).filter(Pais.id == prefijo_data.pais_id).first()
         if not pais:
-            raise HTTPException(status_code=404, detail="País não encontrado")
+            raise HTTPException(status_code=404, detail="Pais nao encontrado")
         
         # Verificar se estado existe (se especificado)
         if prefijo_data.estado_id:
             estado = self.db.query(Estado).filter(Estado.id == prefijo_data.estado_id).first()
             if not estado:
-                raise HTTPException(status_code=404, detail="Estado não encontrado")
+                raise HTTPException(status_code=404, detail="Estado nao encontrado")
         
         # Verificar se cidade existe (se especificada)
         if prefijo_data.cidade_id:
             cidade = self.db.query(Cidade).filter(Cidade.id == prefijo_data.cidade_id).first()
             if not cidade:
-                raise HTTPException(status_code=404, detail="Cidade não encontrada")
+                raise HTTPException(status_code=404, detail="Cidade nao encontrada")
         
-        # Verificar se já existe
+        # Verificar se ja existe
         existente = self.db.query(Prefijo).filter(
             Prefijo.codigo == prefijo_data.codigo
         ).first()
@@ -238,7 +238,7 @@ class Code2BaseGeoService:
         if existente:
             raise HTTPException(
                 status_code=400,
-                detail=f"Prefixo {prefijo_data.codigo} já existe"
+                detail=f"Prefixo {prefijo_data.codigo} ja existe"
             )
         
         novo_prefijo = Prefijo(
@@ -292,7 +292,7 @@ class Code2BaseGeoService:
         """Atualiza prefixo"""
         prefijo = self.db.query(Prefijo).filter(Prefijo.id == prefijo_id).first()
         if not prefijo:
-            raise HTTPException(status_code=404, detail="Prefixo não encontrado")
+            raise HTTPException(status_code=404, detail="Prefixo nao encontrado")
         
         for field, value in prefijo_data.dict(exclude_unset=True).items():
             setattr(prefijo, field, value)
@@ -307,29 +307,29 @@ class Code2BaseGeoService:
             self.db.rollback()
             raise HTTPException(status_code=400, detail="Erro ao atualizar prefixo")
     
-    # ================== GESTÃO DE CLIS GEOGRÁFICOS ==================
+    # ================== GESTAO DE CLIS GEOGRAFICOS ==================
     
     def criar_cli_geo(self, cli_geo_data: CliGeoCreate) -> CliGeoResponse:
-        """Cria um novo CLI geográfico"""
+        """Cria um novo CLI geografico"""
         # Verificar se CLI original existe
         cli_original = self.db.query(Cli).filter(Cli.id == cli_geo_data.cli_id).first()
         if not cli_original:
-            raise HTTPException(status_code=404, detail="CLI original não encontrado")
+            raise HTTPException(status_code=404, detail="CLI original nao encontrado")
         
         # Verificar se prefixo existe
         prefijo = self.db.query(Prefijo).filter(Prefijo.id == cli_geo_data.prefijo_id).first()
         if not prefijo:
-            raise HTTPException(status_code=404, detail="Prefixo não encontrado")
+            raise HTTPException(status_code=404, detail="Prefixo nao encontrado")
         
-        # Validar e normalizar número
+        # Validar e normalizar numero
         validacao = validar_numero_telefone(cli_geo_data.numero)
         if not validacao.valido:
             raise HTTPException(
                 status_code=400,
-                detail=f"Número CLI inválido: {validacao.motivo_invalido}"
+                detail=f"Numero CLI invalido: {validacao.motivo_invalido}"
             )
         
-        # Verificar se já existe
+        # Verificar se ja existe
         existente = self.db.query(CliGeo).filter(
             or_(
                 CliGeo.numero_normalizado == validacao.numero_normalizado,
@@ -340,7 +340,7 @@ class Code2BaseGeoService:
         if existente:
             raise HTTPException(
                 status_code=400,
-                detail="CLI geográfico já existe"
+                detail="CLI geografico ja existe"
             )
         
         novo_cli_geo = CliGeo(
@@ -359,12 +359,12 @@ class Code2BaseGeoService:
             self.db.commit()
             self.db.refresh(novo_cli_geo)
             
-            logger.info(f"CLI geográfico {novo_cli_geo.numero_normalizado} criado")
+            logger.info(f"CLI geografico {novo_cli_geo.numero_normalizado} criado")
             return CliGeoResponse.from_orm(novo_cli_geo)
             
         except IntegrityError:
             self.db.rollback()
-            raise HTTPException(status_code=400, detail="Erro ao criar CLI geográfico")
+            raise HTTPException(status_code=400, detail="Erro ao criar CLI geografico")
     
     def listar_clis_geo(
         self,
@@ -375,7 +375,7 @@ class Code2BaseGeoService:
         skip: int = 0,
         limit: int = 100
     ) -> List[CliGeoResponse]:
-        """Lista CLIs geográficos com filtros opcionais"""
+        """Lista CLIs geograficos com filtros opcionais"""
         query = self.db.query(CliGeo)
         
         if apenas_ativos:
@@ -395,16 +395,16 @@ class Code2BaseGeoService:
     
     def sincronizar_clis_existentes(self) -> Dict[str, int]:
         """
-        Sincroniza CLIs existentes com a estrutura geográfica
+        Sincroniza CLIs existentes com a estrutura geografica
         
         Returns:
-            Dict com estatísticas da sincronização
+            Dict com estatisticas da sincronizacao
         """
         clis_sincronizados = 0
         clis_erro = 0
         clis_sem_prefijo = 0
         
-        # Buscar CLIs que não estão na tabela geográfica
+        # Buscar CLIs que nao estao na tabela geografica
         clis_existentes = self.db.query(Cli).filter(
             Cli.activo == True,
             ~Cli.id.in_(
@@ -419,10 +419,10 @@ class Code2BaseGeoService:
                 
                 if not prefijo_detectado:
                     clis_sem_prefijo += 1
-                    logger.warning(f"Não foi possível detectar prefixo para CLI {cli.numero_normalizado}")
+                    logger.warning(f"Nao foi possivel detectar prefixo para CLI {cli.numero_normalizado}")
                     continue
                 
-                # Criar CLI geográfico
+                # Criar CLI geografico
                 novo_cli_geo = CliGeo(
                     numero=cli.numero,
                     numero_normalizado=cli.numero_normalizado,
@@ -447,7 +447,7 @@ class Code2BaseGeoService:
             self.db.commit()
         except Exception as e:
             self.db.rollback()
-            logger.error(f"Erro ao confirmar sincronização: {e}")
+            logger.error(f"Erro ao confirmar sincronizacao: {e}")
             raise HTTPException(status_code=500, detail="Erro ao sincronizar CLIs")
         
         resultado = {
@@ -457,15 +457,15 @@ class Code2BaseGeoService:
             'total_processados': len(clis_existentes)
         }
         
-        logger.info(f"Sincronização de CLIs concluída: {resultado}")
+        logger.info(f"Sincronizacao de CLIs concluida: {resultado}")
         return resultado
     
     def _detectar_prefijo_cli(self, numero_normalizado: str) -> Optional[Prefijo]:
         """
-        Detecta o prefixo de um número CLI
+        Detecta o prefixo de um numero CLI
         
         Args:
-            numero_normalizado: Número normalizado
+            numero_normalizado: Numero normalizado
             
         Returns:
             Prefijo detectado ou None
@@ -484,14 +484,14 @@ class Code2BaseGeoService:
         
         return None
     
-    # ================== IMPORTAÇÃO DE DADOS ==================
+    # ================== IMPORTACAO DE DADOS ==================
     
     def importar_prefijos_csv(self, request: ImportarPrefijosRequest) -> ImportarPrefijosResponse:
         """
         Importa prefixos de um arquivo CSV
         
         Args:
-            request: Dados da importação
+            request: Dados da importacao
             
         Returns:
             ImportarPrefijosResponse com resultados
@@ -515,19 +515,19 @@ class Code2BaseGeoService:
             
             for i, row in enumerate(csv_reader, 1):
                 try:
-                    # Validar campos obrigatórios
+                    # Validar campos obrigatorios
                     if not all(k in row for k in ['codigo', 'pais_codigo', 'tipo_numero']):
-                        errores.append(f"Linha {i}: Campos obrigatórios ausentes")
+                        errores.append(f"Linha {i}: Campos obrigatorios ausentes")
                         prefijos_errores += 1
                         continue
                     
-                    # Buscar país
+                    # Buscar pais
                     pais = self.db.query(Pais).filter(
                         Pais.codigo == row['pais_codigo'].upper()
                     ).first()
                     
                     if not pais:
-                        errores.append(f"Linha {i}: País {row['pais_codigo']} não encontrado")
+                        errores.append(f"Linha {i}: Pais {row['pais_codigo']} nao encontrado")
                         prefijos_errores += 1
                         continue
                     
@@ -553,7 +553,7 @@ class Code2BaseGeoService:
                         if cidade:
                             cidade_id = cidade.id
                     
-                    # Verificar se prefixo já existe
+                    # Verificar se prefixo ja existe
                     prefijo_existente = self.db.query(Prefijo).filter(
                         Prefijo.codigo == row['codigo']
                     ).first()
@@ -572,7 +572,7 @@ class Code2BaseGeoService:
                             
                             prefijos_actualizados += 1
                         else:
-                            errores.append(f"Linha {i}: Prefixo {row['codigo']} já existe")
+                            errores.append(f"Linha {i}: Prefixo {row['codigo']} ja existe")
                             prefijos_errores += 1
                             continue
                     else:
@@ -596,7 +596,7 @@ class Code2BaseGeoService:
                     errores.append(f"Linha {i}: {str(e)}")
                     prefijos_errores += 1
             
-            # Confirmar mudanças
+            # Confirmar mudancas
             self.db.commit()
             
         except Exception as e:
@@ -611,27 +611,27 @@ class Code2BaseGeoService:
             prefijos_actualizados=prefijos_actualizados,
             prefijos_errores=prefijos_errores,
             errores=errores[:50],  # Limitar a 50 erros
-            mensaje=f"Importação concluída: {prefijos_importados} criados, {prefijos_actualizados} atualizados, {prefijos_errores} erros"
+            mensaje=f"Importacao concluida: {prefijos_importados} criados, {prefijos_actualizados} atualizados, {prefijos_errores} erros"
         )
     
-    # ================== ANÁLISE E ESTATÍSTICAS ==================
+    # ================== ANALISE E ESTATISTICAS ==================
     
     def analisar_destino(self, request: AnalisisDestinoRequest) -> AnalisisDestinoResponse:
         """
-        Analisa um número de destino para mostrar informações geográficas e CLIs compatíveis
+        Analisa um numero de destino para mostrar informacoes geograficas e CLIs compativeis
         
         Args:
-            request: Dados da análise
+            request: Dados da analise
             
         Returns:
-            AnalisisDestinoResponse com informações detectadas
+            AnalisisDestinoResponse com informacoes detectadas
         """
-        # Validar e normalizar número
+        # Validar e normalizar numero
         validacao = validar_numero_telefone(request.numero_destino)
         if not validacao.valido:
             raise HTTPException(
                 status_code=400,
-                detail=f"Número inválido: {validacao.motivo_invalido}"
+                detail=f"Numero invalido: {validacao.motivo_invalido}"
             )
         
         numero_normalizado = validacao.numero_normalizado
@@ -639,7 +639,7 @@ class Code2BaseGeoService:
         # Detectar prefixo
         prefijo_detectado = self._detectar_prefijo_cli(numero_normalizado)
         
-        # Buscar CLIs compatíveis
+        # Buscar CLIs compativeis
         clis_compatibles = []
         if prefijo_detectado:
             # CLIs do mesmo prefixo
@@ -650,7 +650,7 @@ class Code2BaseGeoService:
             
             clis_compatibles.extend(clis_mismo_prefijo)
             
-            # CLIs do mesmo país se não houver do mesmo prefixo
+            # CLIs do mesmo pais se nao houver do mesmo prefixo
             if not clis_compatibles:
                 clis_mismo_pais = self.db.query(CliGeo).join(
                     Prefijo, CliGeo.prefijo_id == Prefijo.id
@@ -675,12 +675,12 @@ class Code2BaseGeoService:
     
     def obter_estatisticas_cli(self) -> EstadisticasCli:
         """
-        Obtém estatísticas dos CLIs geográficos
+        Obtem estatisticas dos CLIs geograficos
         
         Returns:
-            EstadisticasCli com estatísticas
+            EstadisticasCli com estatisticas
         """
-        # Contadores básicos
+        # Contadores basicos
         total_clis = self.db.query(CliGeo).count()
         clis_ativos = self.db.query(CliGeo).filter(CliGeo.activo == True).count()
         
@@ -696,7 +696,7 @@ class Code2BaseGeoService:
         for operadora, count in operadoras:
             clis_por_operadora[operadora.value if operadora else 'desconocida'] = count
         
-        # CLIs por país
+        # CLIs por pais
         clis_por_pais = {}
         paises = self.db.query(
             Pais.codigo, 
@@ -710,7 +710,7 @@ class Code2BaseGeoService:
         for pais, count in paises:
             clis_por_pais[pais] = count
         
-        # Taxa de sucesso promédio
+        # Taxa de sucesso promedio
         tasa_exito_promedio = self.db.query(func.avg(CliGeo.tasa_exito)).filter(
             CliGeo.activo == True
         ).scalar() or 0.0

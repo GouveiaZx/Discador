@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Rotas REST para o Painel de Monitoramento em Tempo Real
-Endpoints para dashboards, métricas e controle de campanhas
+Endpoints para dashboards, metricas e controle de campanhas
 """
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect, Query
@@ -33,11 +33,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/monitoring", tags=["Monitoramento"])
 
 # ================================================
-# CONEXÕES WEBSOCKET ATIVAS
+# CONEXOES WEBSOCKET ATIVAS
 # ================================================
 
 class ConnectionManager:
-    """Gerenciador de conexões WebSocket"""
+    """Gerenciador de conexoes WebSocket"""
     
     def __init__(self):
         self.active_connections: List[WebSocket] = []
@@ -63,16 +63,16 @@ class ConnectionManager:
                 del self.user_connections[user_id]
     
     async def send_to_user(self, user_id: int, message: dict):
-        """Envia mensagem para usuário específico"""
+        """Envia mensagem para usuario especifico"""
         if user_id in self.user_connections:
             for connection in self.user_connections[user_id]:
                 try:
                     await connection.send_text(json.dumps(message, default=str))
                 except Exception as e:
-                    logger.error(f"Erro ao enviar mensagem WebSocket para usuário {user_id}: {e}")
+                    logger.error(f"Erro ao enviar mensagem WebSocket para usuario {user_id}: {e}")
     
     async def broadcast(self, message: dict):
-        """Envia mensagem para todas as conexões"""
+        """Envia mensagem para todas as conexoes"""
         for connection in self.active_connections:
             try:
                 await connection.send_text(json.dumps(message, default=str))
@@ -90,9 +90,9 @@ async def obter_dashboard_resumo(
     service: MonitoringService = Depends(get_monitoring_service)
 ):
     """
-    Obtém dashboard resumido para supervisores
+    Obtem dashboard resumido para supervisores
     
-    **Dados incluídos:**
+    **Dados incluidos:**
     - Campanhas ativas
     - Chamadas em andamento
     - Status de agentes
@@ -112,10 +112,10 @@ async def obter_dashboard_detalhado(
     service: MonitoringService = Depends(get_monitoring_service)
 ):
     """
-    Obtém dashboard detalhado com todas as métricas
+    Obtem dashboard detalhado com todas as metricas
     
-    **Dados incluídos:**
-    - Todas as métricas do dashboard resumido
+    **Dados incluidos:**
+    - Todas as metricas do dashboard resumido
     - Campanhas detalhadas
     - Agentes detalhados
     - Chamadas ativas
@@ -131,7 +131,7 @@ async def obter_dashboard_detalhado(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 # ================================================
-# MÉTRICAS ESPECÍFICAS
+# METRICAS ESPECIFICAS
 # ================================================
 
 @router.get("/campanhas", response_model=List[MetricaCampanha])
@@ -140,13 +140,13 @@ async def obter_metricas_campanhas(
     service: MonitoringService = Depends(get_monitoring_service)
 ):
     """
-    Obtém métricas de campanhas
+    Obtem metricas de campanhas
     
-    **Métricas incluídas:**
+    **Metricas incluidas:**
     - Total de contatos e chamadas
     - Status das chamadas (ativas, finalizadas, erro)
     - Taxas de atendimento e sucesso
-    - Tempos médios
+    - Tempos medios
     - Provedores utilizados
     """
     try:
@@ -154,7 +154,7 @@ async def obter_metricas_campanhas(
         return campanhas
         
     except Exception as e:
-        logger.error(f"Erro ao obter métricas de campanhas: {e}")
+        logger.error(f"Erro ao obter metricas de campanhas: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 @router.get("/provedores", response_model=List[MetricaProvedor])
@@ -162,13 +162,13 @@ async def obter_metricas_provedores(
     service: MonitoringService = Depends(get_monitoring_service)
 ):
     """
-    Obtém métricas de provedores SIP
+    Obtem metricas de provedores SIP
     
-    **Métricas incluídas:**
-    - Status de conexão
+    **Metricas incluidas:**
+    - Status de conexao
     - Chamadas ativas e do dia
     - Taxa de sucesso e falhas
-    - Latência média
+    - Latencia media
     - Uptime percentual
     """
     try:
@@ -176,7 +176,7 @@ async def obter_metricas_provedores(
         return provedores
         
     except Exception as e:
-        logger.error(f"Erro ao obter métricas de provedores: {e}")
+        logger.error(f"Erro ao obter metricas de provedores: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 @router.get("/agentes", response_model=List[MetricaAgente])
@@ -184,9 +184,9 @@ async def obter_metricas_agentes(
     service: MonitoringService = Depends(get_monitoring_service)
 ):
     """
-    Obtém métricas de agentes
+    Obtem metricas de agentes
     
-    **Métricas incluídas:**
+    **Metricas incluidas:**
     - Status atual (livre, em chamada, ausente, etc.)
     - Tempo online e em chamadas
     - Chamadas atendidas no dia
@@ -197,11 +197,11 @@ async def obter_metricas_agentes(
         return agentes
         
     except Exception as e:
-        logger.error(f"Erro ao obter métricas de agentes: {e}")
+        logger.error(f"Erro ao obter metricas de agentes: {e}")
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 # ================================================
-# GESTÃO DE AGENTES
+# GESTAO DE AGENTES
 # ================================================
 
 @router.post("/agentes", response_model=AgenteResponse)
@@ -212,7 +212,7 @@ async def criar_agente(
 ):
     """Cria um novo agente para monitoramento"""
     try:
-        # Verificar se código já existe
+        # Verificar se codigo ja existe
         agente_existente = db.query(AgenteMonitoramento).filter(
             AgenteMonitoramento.codigo_agente == agente.codigo_agente
         ).first()
@@ -220,7 +220,7 @@ async def criar_agente(
         if agente_existente:
             raise HTTPException(
                 status_code=400,
-                detail="Código de agente já existe"
+                detail="Codigo de agente ja existe"
             )
         
         # Criar agente
@@ -264,7 +264,7 @@ async def atualizar_status_agente(
         ).first()
         
         if not agente:
-            raise HTTPException(status_code=404, detail="Agente não encontrado")
+            raise HTTPException(status_code=404, detail="Agente nao encontrado")
         
         # Atualizar status
         service.atualizar_agente_status(
@@ -273,7 +273,7 @@ async def atualizar_status_agente(
             chamada_id=status_update.chamada_atual_id
         )
         
-        # Enviar atualização via WebSocket
+        # Enviar atualizacao via WebSocket
         await manager.broadcast({
             "tipo": "agente_status_update",
             "dados": {
@@ -300,8 +300,8 @@ async def atualizar_status_agente(
 @router.get("/eventos", response_model=List[EventoSistemaResponse])
 async def listar_eventos(
     limit: int = Query(50, le=200, description="Limite de eventos"),
-    nivel: Optional[str] = Query(None, description="Filtrar por nível de severidade"),
-    ultimas_horas: Optional[int] = Query(24, ge=1, le=168, description="Eventos das últimas N horas"),
+    nivel: Optional[str] = Query(None, description="Filtrar por nivel de severidade"),
+    ultimas_horas: Optional[int] = Query(24, ge=1, le=168, description="Eventos das ultimas N horas"),
     db: Session = Depends(get_db)
 ):
     """Lista eventos do sistema com filtros"""
@@ -313,7 +313,7 @@ async def listar_eventos(
             data_limite = datetime.utcnow() - timedelta(hours=ultimas_horas)
             query = query.filter(EventoSistema.timestamp_evento >= data_limite)
         
-        # Filtro por nível
+        # Filtro por nivel
         if nivel:
             query = query.filter(EventoSistema.nivel_severidade == nivel)
         
@@ -335,7 +335,7 @@ async def criar_evento(
     try:
         service.registrar_evento(evento)
         
-        # Enviar via WebSocket se for crítico
+        # Enviar via WebSocket se for critico
         if evento.nivel_severidade in ["critical", "error"]:
             await manager.broadcast({
                 "tipo": "evento_critico",
@@ -356,7 +356,7 @@ async def criar_evento(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 # ================================================
-# EXPORTAÇÃO DE DADOS
+# EXPORTACAO DE DADOS
 # ================================================
 
 @router.post("/export/csv")
@@ -377,7 +377,7 @@ async def exportar_dados_csv(
                 writer.writerow([
                     "ID Campanha", "Nome", "Status", "Total Contatos",
                     "Chamadas Realizadas", "Chamadas Ativas", "Taxa Atendimento",
-                    "Taxa Sucesso", "Tempo Médio"
+                    "Taxa Sucesso", "Tempo Medio"
                 ])
             
             for campanha in campanhas:
@@ -400,7 +400,7 @@ async def exportar_dados_csv(
             writer.writerow([])  # Linha vazia
             if export_request.incluir_cabecalhos:
                 writer.writerow([
-                    "ID Agente", "Nome", "Código", "Status",
+                    "ID Agente", "Nome", "Codigo", "Status",
                     "Online Desde", "Chamadas Atendidas", "Tempo em Chamadas",
                     "Taxa Atendimento"
                 ])
@@ -432,19 +432,19 @@ async def exportar_dados_csv(
         raise HTTPException(status_code=500, detail="Erro interno do servidor")
 
 # ================================================
-# WEBSOCKET PARA ATUALIZAÇÕES EM TEMPO REAL
+# WEBSOCKET PARA ATUALIZACOES EM TEMPO REAL
 # ================================================
 
 @router.websocket("/ws/{user_id}")
 async def websocket_monitoring(websocket: WebSocket, user_id: int):
     """
-    WebSocket para atualizações em tempo real
+    WebSocket para atualizacoes em tempo real
     
     **Tipos de mensagem enviadas:**
-    - `dashboard_update`: Atualizações do dashboard
-    - `agente_status_update`: Mudanças de status de agentes
-    - `chamada_update`: Atualizações de chamadas
-    - `evento_critico`: Eventos críticos do sistema
+    - `dashboard_update`: Atualizacoes do dashboard
+    - `agente_status_update`: Mudancas de status de agentes
+    - `chamada_update`: Atualizacoes de chamadas
+    - `evento_critico`: Eventos criticos do sistema
     """
     await manager.connect(websocket, user_id)
     
@@ -475,11 +475,11 @@ async def websocket_monitoring(websocket: WebSocket, user_id: int):
     except WebSocketDisconnect:
         manager.disconnect(websocket, user_id)
     except Exception as e:
-        logger.error(f"Erro no WebSocket para usuário {user_id}: {e}")
+        logger.error(f"Erro no WebSocket para usuario {user_id}: {e}")
         manager.disconnect(websocket, user_id)
 
 # ================================================
-# TASK BACKGROUND PARA ATUALIZAÇÕES AUTOMÁTICAS
+# TASK BACKGROUND PARA ATUALIZACOES AUTOMATICAS
 # ================================================
 
 @router.post("/start-updates", response_model=ResponseSucesso)
@@ -487,10 +487,10 @@ async def iniciar_atualizacoes_automaticas(
     background_tasks: BackgroundTasks,
     intervalo_segundos: int = Query(3, ge=1, le=60, description="Intervalo em segundos")
 ):
-    """Inicia atualizações automáticas via WebSocket"""
+    """Inicia atualizacoes automaticas via WebSocket"""
     
     async def enviar_atualizacoes_periodicas():
-        """Task que envia atualizações periódicas"""
+        """Task que envia atualizacoes periodicas"""
         while True:
             try:
                 service = get_monitoring_service()
@@ -505,26 +505,26 @@ async def iniciar_atualizacoes_automaticas(
                 await asyncio.sleep(intervalo_segundos)
                 
             except Exception as e:
-                logger.error(f"Erro em atualizações periódicas: {e}")
+                logger.error(f"Erro em atualizacoes periodicas: {e}")
                 await asyncio.sleep(10)  # Aguardar antes de tentar novamente
     
     background_tasks.add_task(enviar_atualizacoes_periodicas)
     
     return ResponseSucesso(
-        mensagem=f"Atualizações automáticas iniciadas com intervalo de {intervalo_segundos}s"
+        mensagem=f"Atualizacoes automaticas iniciadas com intervalo de {intervalo_segundos}s"
     )
 
 # ================================================
-# ENDPOINTS DE SAÚDE E STATUS
+# ENDPOINTS DE SAUDE E STATUS
 # ================================================
 
 @router.get("/health")
 async def health_check():
-    """Verifica saúde do sistema de monitoramento"""
+    """Verifica saude do sistema de monitoramento"""
     try:
         service = get_monitoring_service()
         
-        # Testar conexão com banco
+        # Testar conexao com banco
         campanhas = service.obter_metricas_campanhas(apenas_ativas=True)
         
         # Testar Redis
@@ -550,7 +550,7 @@ async def health_check():
 async def limpar_cache(
     service: MonitoringService = Depends(get_monitoring_service)
 ):
-    """Força limpeza do cache de monitoramento"""
+    """Forca limpeza do cache de monitoramento"""
     try:
         service._invalidate_cache("")  # Limpar todo o cache
         

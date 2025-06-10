@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script de teste funcional para verificar a implementação completa do sistema CLI.
+Script de teste funcional para verificar a implementacao completa do sistema CLI.
 """
 
 import sys
@@ -9,15 +9,15 @@ from datetime import datetime
 
 
 def test_imports():
-    """Teste 1: Verificar importações."""
-    print("🔍 Teste 1: Verificando importações...")
+    """Teste 1: Verificar importacoes."""
+    print("🔍 Teste 1: Verificando importacoes...")
     
     try:
-        # Testar importação dos modelos
+        # Testar importacao dos modelos
         from app.models.cli import Cli
         print("✅ Modelo Cli importado com sucesso")
         
-        # Testar importação dos schemas
+        # Testar importacao dos schemas
         from app.schemas.cli import (
             CliCreate, CliUpdate, CliResponse, 
             CliBulkAddRequest, CliBulkAddResponse,
@@ -25,22 +25,22 @@ def test_imports():
         )
         print("✅ Schemas de CLI importados com sucesso")
         
-        # Testar importação do serviço
+        # Testar importacao do servico
         from app.services.cli_service import CliService
         print("✅ CliService importado com sucesso")
         
-        # Testar importação das rotas
+        # Testar importacao das rotas
         from app.routes.cli import router
         print("✅ Router de CLI importado com sucesso")
         
-        # Testar importação no discado service
+        # Testar importacao no discado service
         from app.services.discado_service import DiscadoService
-        print("✅ DiscadoService com integração CLI importado com sucesso")
+        print("✅ DiscadoService com integracao CLI importado com sucesso")
         
         return True
         
     except ImportError as e:
-        print(f"❌ Erro de importação: {e}")
+        print(f"❌ Erro de importacao: {e}")
         return False
     except Exception as e:
         print(f"❌ Erro inesperado: {e}")
@@ -54,7 +54,7 @@ def test_model_structure():
     try:
         from app.models.cli import Cli
         
-        # Verificar campos obrigatórios
+        # Verificar campos obrigatorios
         campos_obrigatorios = [
             'id', 'numero', 'numero_normalizado', 'activo', 
             'veces_usado', 'fecha_creacion', 'fecha_actualizacion'
@@ -94,9 +94,9 @@ def test_schemas():
         )
         print("✅ CliCreate criado com sucesso")
         
-        # Verificar validação
+        # Verificar validacao
         assert cli_create.numero == "+5491122334455"
-        print("✅ Validação de CLI funcionando")
+        print("✅ Validacao de CLI funcionando")
         
         # Testar CliRandomResponse
         random_response = CliRandomResponse(
@@ -115,13 +115,13 @@ def test_schemas():
 
 
 def test_service_methods():
-    """Teste 4: Verificar métodos do serviço."""
-    print("\n🔍 Teste 4: Verificando métodos do CliService...")
+    """Teste 4: Verificar metodos do servico."""
+    print("\n🔍 Teste 4: Verificando metodos do CliService...")
     
     try:
         from app.services.cli_service import CliService
         
-        # Verificar métodos principais
+        # Verificar metodos principais
         metodos_obrigatorios = [
             'generar_cli_aleatorio',
             'agregar_cli',
@@ -134,9 +134,9 @@ def test_service_methods():
         
         for metodo in metodos_obrigatorios:
             if hasattr(CliService, metodo):
-                print(f"✅ Método {metodo} presente")
+                print(f"✅ Metodo {metodo} presente")
             else:
-                print(f"❌ Método {metodo} ausente")
+                print(f"❌ Metodo {metodo} ausente")
                 return False
         
         return True
@@ -147,8 +147,8 @@ def test_service_methods():
 
 
 def test_discado_integration():
-    """Teste 5: Verificar integração com discado."""
-    print("\n🔍 Teste 5: Verificando integração com discado...")
+    """Teste 5: Verificar integracao com discado."""
+    print("\n🔍 Teste 5: Verificando integracao com discado...")
     
     try:
         from app.services.discado_service import DiscadoService
@@ -162,26 +162,26 @@ def test_discado_integration():
         llamada_signature = inspect.signature(metodo_llamada)
         
         if 'cli_personalizado' in llamada_signature.parameters:
-            print("✅ Método iniciar_llamada aceita cli_personalizado")
+            print("✅ Metodo iniciar_llamada aceita cli_personalizado")
         else:
-            print("❌ Método iniciar_llamada não aceita cli_personalizado")
+            print("❌ Metodo iniciar_llamada nao aceita cli_personalizado")
             return False
         
-        # Verificar método llamar_siguiente_de_lista
+        # Verificar metodo llamar_siguiente_de_lista
         metodo_siguiente = getattr(DiscadoService, 'llamar_siguiente_de_lista')
         siguiente_signature = inspect.signature(metodo_siguiente)
         
         if 'cli_personalizado' in siguiente_signature.parameters:
-            print("✅ Método llamar_siguiente_de_lista aceita cli_personalizado")
+            print("✅ Metodo llamar_siguiente_de_lista aceita cli_personalizado")
         else:
-            print("❌ Método llamar_siguiente_de_lista não aceita cli_personalizado")
+            print("❌ Metodo llamar_siguiente_de_lista nao aceita cli_personalizado")
             return False
         
-        print("✅ Integração com discado verificada")
+        print("✅ Integracao com discado verificada")
         return True
         
     except Exception as e:
-        print(f"❌ Erro ao verificar integração: {e}")
+        print(f"❌ Erro ao verificar integracao: {e}")
         traceback.print_exc()
         return False
 
@@ -240,15 +240,15 @@ def test_file_structure():
         if os.path.exists(arquivo):
             print(f"✅ Arquivo {arquivo} existe")
         else:
-            print(f"❌ Arquivo {arquivo} não encontrado")
+            print(f"❌ Arquivo {arquivo} nao encontrado")
             return False
     
     return True
 
 
 def test_main_integration():
-    """Teste 8: Verificar integração no main.py."""
-    print("\n🔍 Teste 8: Verificando integração no main.py...")
+    """Teste 8: Verificar integracao no main.py."""
+    print("\n🔍 Teste 8: Verificando integracao no main.py...")
     
     try:
         # Verificar se main.py importa as rotas CLI
@@ -256,15 +256,15 @@ def test_main_integration():
             conteudo = f.read()
         
         if 'from app.routes import' in conteudo and 'cli' in conteudo:
-            print("✅ Importação das rotas CLI presente no main.py")
+            print("✅ Importacao das rotas CLI presente no main.py")
         else:
-            print("❌ Importação das rotas CLI ausente no main.py")
+            print("❌ Importacao das rotas CLI ausente no main.py")
             return False
         
         if 'cli.router' in conteudo:
-            print("✅ Router CLI incluído no main.py")
+            print("✅ Router CLI incluido no main.py")
         else:
-            print("❌ Router CLI não incluído no main.py")
+            print("❌ Router CLI nao incluido no main.py")
             return False
         
         return True
@@ -275,7 +275,7 @@ def test_main_integration():
 
 
 def main():
-    """Função principal para executar todos os testes."""
+    """Funcao principal para executar todos os testes."""
     print("🚀 INICIANDO TESTES DE FUNCIONALIDADE CLI")
     print("=" * 60)
     
@@ -312,7 +312,7 @@ def main():
         print("🎉 TODOS OS TESTES PASSARAM! Sistema CLI implementado com sucesso!")
         return 0
     else:
-        print("⚠️  Alguns testes falharam. Verificar implementação.")
+        print("⚠️  Alguns testes falharam. Verificar implementacao.")
         return 1
 
 
@@ -321,7 +321,7 @@ if __name__ == "__main__":
         exit_code = main()
         sys.exit(exit_code)
     except KeyboardInterrupt:
-        print("\n\n⏹️  Testes interrompidos pelo usuário")
+        print("\n\n⏹️  Testes interrompidos pelo usuario")
         sys.exit(1)
     except Exception as e:
         print(f"\n\n💥 Erro fatal durante os testes: {e}")

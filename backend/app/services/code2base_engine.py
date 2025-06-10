@@ -1,6 +1,6 @@
 """
-Motor Principal do Sistema CODE2BASE Avançado
-Responsável pela seleção inteligente de CLIs baseada em regras geográficas e de campanha
+Motor Principal do Sistema CODE2BASE Avancado
+Responsavel pela selecao inteligente de CLIs baseada em regras geograficas e de campanha
 """
 
 import re
@@ -29,7 +29,7 @@ from app.utils.logger import logger
 
 @dataclass
 class CliScore:
-    """Estrutura para armazenar scores de CLIs durante seleção"""
+    """Estrutura para armazenar scores de CLIs durante selecao"""
     cli_geo: CliGeo
     score_geografia: float
     score_calidad: float
@@ -40,7 +40,7 @@ class CliScore:
 
 
 class Code2BaseEngine:
-    """Motor principal para seleção inteligente de CLIs"""
+    """Motor principal para selecao inteligente de CLIs"""
     
     def __init__(self, db: Session):
         self.db = db
@@ -51,24 +51,24 @@ class Code2BaseEngine:
         request: SeleccionCliRequest
     ) -> SeleccionCliResponse:
         """
-        Seleciona o melhor CLI para um número de destino baseado em regras inteligentes
+        Seleciona o melhor CLI para um numero de destino baseado em regras inteligentes
         
         Args:
-            request: Parâmetros da seleção
+            request: Parametros da selecao
             
         Returns:
             SeleccionCliResponse com CLI selecionado e metadados
         """
         inicio_tiempo = time.time()
         
-        # Validar e normalizar número de destino
+        # Validar e normalizar numero de destino
         validacao = validar_numero_telefone(request.numero_destino)
         if not validacao.valido:
-            raise ValueError(f"Número de destino inválido: {validacao.motivo_invalido}")
+            raise ValueError(f"Numero de destino invalido: {validacao.motivo_invalido}")
         
         numero_normalizado = validacao.numero_normalizado
         
-        # Analisar destino para extrair informações geográficas
+        # Analisar destino para extrair informacoes geograficas
         analisis_destino = self._analisar_destino(numero_normalizado)
         
         # Obter CLIs candidatos
@@ -79,9 +79,9 @@ class Code2BaseEngine:
         )
         
         if not clis_candidatos:
-            raise ValueError("Nenhum CLI disponível para o destino especificado")
+            raise ValueError("Nenhum CLI disponivel para o destino especificado")
         
-        # Aplicar regras de seleção
+        # Aplicar regras de selecao
         clis_com_score = self._calcular_scores(
             clis_candidatos, 
             numero_normalizado,
@@ -92,7 +92,7 @@ class Code2BaseEngine:
         # Selecionar melhor CLI
         cli_selecionado = self._selecionar_melhor_cli(clis_com_score)
         
-        # Registrar seleção no histórico
+        # Registrar selecao no historico
         historial = self._registrar_seleccion(
             cli_selecionado,
             numero_normalizado,
@@ -100,7 +100,7 @@ class Code2BaseEngine:
             analisis_destino
         )
         
-        # Atualizar estatísticas do CLI
+        # Atualizar estatisticas do CLI
         self._atualizar_estatisticas_cli(cli_selecionado.cli_geo)
         
         tempo_total = (time.time() - inicio_tiempo) * 1000
@@ -131,17 +131,17 @@ class Code2BaseEngine:
     
     def _analisar_destino(self, numero_normalizado: str) -> Dict[str, Any]:
         """
-        Analisa número de destino para extrair informações geográficas
+        Analisa numero de destino para extrair informacoes geograficas
         
         Args:
-            numero_normalizado: Número normalizado
+            numero_normalizado: Numero normalizado
             
         Returns:
-            Dict com informações geográficas detectadas
+            Dict com informacoes geograficas detectadas
         """
-        # Detectar prefixo do número
+        # Detectar prefixo do numero
         prefijo_detectado = None
-        for tam in range(4, 1, -1):  # Tentar prefixos de 4, 3, 2 dígitos
+        for tam in range(4, 1, -1):  # Tentar prefixos de 4, 3, 2 digitos
             if len(numero_normalizado) >= tam:
                 codigo_teste = numero_normalizado[:tam]
                 prefijo = self.db.query(Prefijo).filter(
@@ -163,7 +163,7 @@ class Code2BaseEngine:
             'operadora_detectada': prefijo_detectado.operadora if prefijo_detectado else None
         }
         
-        logger.info(f"Análise de destino para {numero_normalizado}: {resultado}")
+        logger.info(f"Analise de destino para {numero_normalizado}: {resultado}")
         return resultado
     
     def _obter_clis_candidatos(
@@ -173,12 +173,12 @@ class Code2BaseEngine:
         analisis_destino: Dict[str, Any]
     ) -> List[CliGeo]:
         """
-        Obtém lista de CLIs candidatos baseada em critérios iniciais
+        Obtem lista de CLIs candidatos baseada em criterios iniciais
         
         Args:
-            numero_destino: Número de destino normalizado
-            request: Parâmetros da seleção
-            analisis_destino: Informações geográficas do destino
+            numero_destino: Numero de destino normalizado
+            request: Parametros da selecao
+            analisis_destino: Informacoes geograficas do destino
             
         Returns:
             Lista de CliGeo candidatos
@@ -193,13 +193,13 @@ class Code2BaseEngine:
             Prefijo.activo == True
         )
         
-        # Excluir CLIs específicos se solicitado
+        # Excluir CLIs especificos se solicitado
         if request.excluir_clis:
             query = query.filter(
                 ~CliGeo.numero_normalizado.in_(request.excluir_clis)
             )
         
-        # Filtro por tipo de número preferido
+        # Filtro por tipo de numero preferido
         if request.tipo_numero_preferido:
             query = query.filter(
                 CliGeo.tipo_numero == request.tipo_numero_preferido
@@ -211,7 +211,7 @@ class Code2BaseEngine:
                 CliGeo.operadora == request.operadora_preferida
             )
         
-        # Aplicar limite de uso diário
+        # Aplicar limite de uso diario
         if self.config.limite_selecciones_por_cli > 0:
             hoje = datetime.now().date()
             subquery = self.db.query(
@@ -249,9 +249,9 @@ class Code2BaseEngine:
         
         Args:
             clis_candidatos: Lista de CLIs candidatos
-            numero_destino: Número de destino
-            request: Parâmetros da seleção
-            analisis_destino: Informações geográficas do destino
+            numero_destino: Numero de destino
+            request: Parametros da selecao
+            analisis_destino: Informacoes geograficas do destino
             
         Returns:
             Lista de CliScore ordenados por score total
@@ -284,9 +284,9 @@ class Code2BaseEngine:
         
         Args:
             cli_geo: CLI para calcular score
-            numero_destino: Número de destino
-            request: Parâmetros da seleção
-            analisis_destino: Informações geográficas do destino
+            numero_destino: Numero de destino
+            request: Parametros da selecao
+            analisis_destino: Informacoes geograficas do destino
             
         Returns:
             CliScore com scores detalhados
@@ -307,7 +307,7 @@ class Code2BaseEngine:
         # Score uso recente (0.0 a 1.0, penaliza uso muito recente)
         score_uso_reciente = self._calcular_score_uso_reciente(cli_geo)
         
-        # Aplicar regras específicas
+        # Aplicar regras especificas
         multiplicador_reglas = self._aplicar_reglas_especificas(
             cli_geo, request, analisis_destino, reglas_aplicadas
         )
@@ -337,11 +337,11 @@ class Code2BaseEngine:
         reglas_aplicadas: List[str]
     ) -> float:
         """
-        Calcula score baseado na proximidade geográfica
+        Calcula score baseado na proximidade geografica
         
         Args:
             cli_geo: CLI para avaliar
-            analisis_destino: Informações do destino
+            analisis_destino: Informacoes do destino
             reglas_aplicadas: Lista para adicionar regras aplicadas
             
         Returns:
@@ -352,14 +352,14 @@ class Code2BaseEngine:
         
         if not prefijo_destino:
             reglas_aplicadas.append("geografia_sin_prefijo_destino")
-            return 0.5  # Score neutro se não detectar prefixo destino
+            return 0.5  # Score neutro se nao detectar prefixo destino
         
-        # Prefixo exato = score máximo
+        # Prefixo exato = score maximo
         if prefijo_cli.codigo == prefijo_destino:
             reglas_aplicadas.append("geografia_prefijo_exacto")
             return 1.0
         
-        # Mesmo país
+        # Mesmo pais
         pais_destino = analisis_destino.get('pais_detectado')
         if pais_destino and prefijo_cli.pais.codigo == pais_destino:
             reglas_aplicadas.append("geografia_mismo_pais")
@@ -370,10 +370,10 @@ class Code2BaseEngine:
                 reglas_aplicadas.append("geografia_mismo_estado")
                 return 0.8
             
-            # Mesmo país mas estado diferente = score médio
+            # Mesmo pais mas estado diferente = score medio
             return 0.6
         
-        # Países diferentes = score baixo
+        # Paises diferentes = score baixo
         reglas_aplicadas.append("geografia_pais_diferente")
         return 0.2
     
@@ -388,21 +388,21 @@ class Code2BaseEngine:
             Score uso recente entre 0.0 e 1.0
         """
         if not cli_geo.ultima_vez_usado:
-            return 1.0  # Nunca usado = score máximo
+            return 1.0  # Nunca usado = score maximo
         
         agora = datetime.now()
         tempo_desde_uso = agora - cli_geo.ultima_vez_usado
         horas_desde_uso = tempo_desde_uso.total_seconds() / 3600
         
-        # Penalizar uso nas últimas 24 horas
+        # Penalizar uso nas ultimas 24 horas
         if horas_desde_uso < 1:
-            return 0.3  # Usado há menos de 1 hora
+            return 0.3  # Usado ha menos de 1 hora
         elif horas_desde_uso < 6:
-            return 0.6  # Usado há menos de 6 horas
+            return 0.6  # Usado ha menos de 6 horas
         elif horas_desde_uso < 24:
-            return 0.8  # Usado há menos de 24 horas
+            return 0.8  # Usado ha menos de 24 horas
         else:
-            return 1.0  # Usado há mais de 24 horas
+            return 1.0  # Usado ha mais de 24 horas
     
     def _aplicar_reglas_especificas(
         self,
@@ -412,12 +412,12 @@ class Code2BaseEngine:
         reglas_aplicadas: List[str]
     ) -> float:
         """
-        Aplica reglas específicas configuradas no sistema
+        Aplica reglas especificas configuradas no sistema
         
         Args:
             cli_geo: CLI para avaliar
-            request: Parâmetros da seleção
-            analisis_destino: Informações do destino
+            request: Parametros da selecao
+            analisis_destino: Informacoes do destino
             reglas_aplicadas: Lista para adicionar regras aplicadas
             
         Returns:
@@ -429,13 +429,13 @@ class Code2BaseEngine:
         ).order_by(ReglaCli.prioridad)
         
         # Filtrar por campanha se especificada
-        if request.campaña_id:
+        if request.campana_id:
             query = query.filter(
                 or_(
-                    ReglaCli.aplica_a_campaña == False,
+                    ReglaCli.aplica_a_campana == False,
                     and_(
-                        ReglaCli.aplica_a_campaña == True,
-                        ReglaCli.campaña_ids.contains([request.campaña_id])
+                        ReglaCli.aplica_a_campana == True,
+                        ReglaCli.campana_ids.contains([request.campana_id])
                     )
                 )
             )
@@ -463,8 +463,8 @@ class Code2BaseEngine:
         Args:
             regla: Regra a avaliar
             cli_geo: CLI para avaliar
-            request: Parâmetros da seleção
-            analisis_destino: Informações do destino
+            request: Parametros da selecao
+            analisis_destino: Informacoes do destino
             
         Returns:
             True se a regra se aplica
@@ -472,7 +472,7 @@ class Code2BaseEngine:
         try:
             condiciones = regla.condiciones
             
-            # Avaliar condições de geografia
+            # Avaliar condicoes de geografia
             if 'pais' in condiciones:
                 if cli_geo.prefijo.pais.codigo != condiciones['pais']:
                     return False
@@ -485,7 +485,7 @@ class Code2BaseEngine:
                 if cli_geo.prefijo.codigo != condiciones['prefijo']:
                     return False
             
-            # Avaliar condições de tipo
+            # Avaliar condicoes de tipo
             if 'tipo_numero' in condiciones:
                 if cli_geo.tipo_numero.value != condiciones['tipo_numero']:
                     return False
@@ -494,7 +494,7 @@ class Code2BaseEngine:
                 if cli_geo.operadora.value != condiciones['operadora']:
                     return False
             
-            # Avaliar condições de qualidade
+            # Avaliar condicoes de qualidade
             if 'calidad_minima' in condiciones:
                 if cli_geo.calidad < condiciones['calidad_minima']:
                     return False
@@ -503,7 +503,7 @@ class Code2BaseEngine:
                 if cli_geo.tasa_exito < condiciones['tasa_exito_minima']:
                     return False
             
-            # Avaliar condições de horário
+            # Avaliar condicoes de horario
             if 'horario' in condiciones:
                 agora = datetime.now()
                 hora_atual = agora.strftime('%H:%M')
@@ -530,20 +530,20 @@ class Code2BaseEngine:
             CliScore do CLI selecionado
         """
         if not clis_com_score:
-            raise ValueError("Nenhum CLI candidato disponível")
+            raise ValueError("Nenhum CLI candidato disponivel")
         
         # Usar algoritmo configurado
         if self.config.algoritmo_seleccion == "highest_score":
-            return clis_com_score[0]  # Já ordenado por score descendente
+            return clis_com_score[0]  # Ja ordenado por score descendente
         
         elif self.config.algoritmo_seleccion == "weighted_random":
-            # Seleção aleatória ponderada pelos scores
+            # Selecao aleatoria ponderada pelos scores
             scores = [cli.score_total for cli in clis_com_score]
             pesos = [max(0.1, score) for score in scores]  # Evitar pesos zero
             
             return random.choices(clis_com_score, weights=pesos, k=1)[0]
         
-        else:  # weighted_score (padrão)
+        else:  # weighted_score (padrao)
             # Combinar score mais alto com aleatoriedade
             top_10_percent = max(1, len(clis_com_score) // 10)
             candidatos_top = clis_com_score[:top_10_percent]
@@ -558,13 +558,13 @@ class Code2BaseEngine:
         analisis_destino: Dict[str, Any]
     ) -> HistorialSeleccionCli:
         """
-        Registra a seleção no histórico para auditoria
+        Registra a selecao no historico para auditoria
         
         Args:
             cli_selecionado: CLI selecionado
-            numero_destino: Número de destino
-            request: Parâmetros da seleção
-            analisis_destino: Informações do destino
+            numero_destino: Numero de destino
+            request: Parametros da selecao
+            analisis_destino: Informacoes do destino
             
         Returns:
             HistorialSeleccionCli criado
@@ -572,7 +572,7 @@ class Code2BaseEngine:
         historial = HistorialSeleccionCli(
             numero_destino=request.numero_destino,
             numero_destino_normalizado=numero_destino,
-            campaña_id=request.campaña_id,
+            campana_id=request.campana_id,
             cli_geo_id=cli_selecionado.cli_geo.id,
             cli_numero=cli_selecionado.cli_geo.numero_normalizado,
             prefijo_destino=analisis_destino.get('prefijo_detectado'),
@@ -588,7 +588,7 @@ class Code2BaseEngine:
     
     def _atualizar_estatisticas_cli(self, cli_geo: CliGeo) -> None:
         """
-        Atualiza estatísticas do CLI selecionado
+        Atualiza estatisticas do CLI selecionado
         
         Args:
             cli_geo: CLI a atualizar
@@ -596,7 +596,7 @@ class Code2BaseEngine:
         cli_geo.veces_usado += 1
         cli_geo.ultima_vez_usado = func.now()
         
-        # Atualizar CLI original também
+        # Atualizar CLI original tambem
         cli_original = self.db.query(Cli).filter(Cli.id == cli_geo.cli_id).first()
         if cli_original:
             cli_original.veces_usado += 1
@@ -615,10 +615,10 @@ class Code2BaseEngine:
         Atualiza o resultado de uma chamada para melhorar os scores futuros
         
         Args:
-            numero_destino: Número de destino da chamada
+            numero_destino: Numero de destino da chamada
             cli_numero: CLI utilizado
             exitosa: Se a chamada foi exitosa
-            duracion: Duração da chamada em segundos
+            duracion: Duracao da chamada em segundos
             
         Returns:
             True se atualizou com sucesso
@@ -630,7 +630,7 @@ class Code2BaseEngine:
             
             numero_normalizado = validacao.numero_normalizado
             
-            # Buscar histórico mais recente
+            # Buscar historico mais recente
             historial = self.db.query(HistorialSeleccionCli).filter(
                 HistorialSeleccionCli.numero_destino_normalizado == numero_normalizado,
                 HistorialSeleccionCli.cli_numero == cli_numero,
@@ -640,7 +640,7 @@ class Code2BaseEngine:
             if not historial:
                 return False
             
-            # Atualizar histórico
+            # Atualizar historico
             historial.llamada_exitosa = exitosa
             historial.duracion_llamada = duracion
             historial.fecha_resultado = func.now()
@@ -660,12 +660,12 @@ class Code2BaseEngine:
     
     def _recalcular_tasa_exito_cli(self, cli_geo: CliGeo) -> None:
         """
-        Recalcula a taxa de sucesso de um CLI baseada no histórico
+        Recalcula a taxa de sucesso de um CLI baseada no historico
         
         Args:
             cli_geo: CLI para recalcular
         """
-        # Buscar histórico dos últimos 30 dias
+        # Buscar historico dos ultimos 30 dias
         data_limite = datetime.now() - timedelta(days=30)
         
         historiales = self.db.query(HistorialSeleccionCli).filter(

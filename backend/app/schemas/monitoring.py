@@ -50,10 +50,10 @@ class TipoEvento(str, Enum):
 
 class AgenteBase(BaseModel):
     nome_agente: str = Field(..., max_length=100, description="Nome do agente")
-    codigo_agente: str = Field(..., max_length=20, description="Código único do agente")
-    extensao_sip: Optional[str] = Field(None, max_length=50, description="Extensão SIP")
+    codigo_agente: str = Field(..., max_length=20, description="Codigo unico do agente")
+    extensao_sip: Optional[str] = Field(None, max_length=50, description="Extensao SIP")
     email: Optional[str] = Field(None, max_length=100, description="Email do agente")
-    max_chamadas_simultaneas: int = Field(1, ge=1, le=10, description="Max chamadas simultâneas")
+    max_chamadas_simultaneas: int = Field(1, ge=1, le=10, description="Max chamadas simultaneas")
     skills: Optional[Dict[str, Any]] = Field(None, description="Habilidades do agente")
 
 class AgenteCreate(AgenteBase):
@@ -94,7 +94,7 @@ class AgenteStatusUpdate(BaseModel):
 
 class ChamadaBase(BaseModel):
     numero_origem: Optional[str] = Field(None, max_length=20)
-    numero_destino: str = Field(..., max_length=20, description="Número de destino")
+    numero_destino: str = Field(..., max_length=20, description="Numero de destino")
     campanha_id: Optional[int] = Field(None, description="ID da campanha")
     provedor_sip_id: Optional[int] = Field(None, description="ID do provedor SIP")
     provedor_nome: Optional[str] = Field(None, max_length=100)
@@ -138,8 +138,8 @@ class ChamadaResponse(ChamadaBase):
     fecha_creacion: datetime
 
     # Dados calculados
-    duracao_atual: Optional[int] = Field(None, description="Duração atual em segundos")
-    tempo_desde_inicio: Optional[int] = Field(None, description="Tempo desde início em segundos")
+    duracao_atual: Optional[int] = Field(None, description="Duracao atual em segundos")
+    tempo_desde_inicio: Optional[int] = Field(None, description="Tempo desde inicio em segundos")
 
     class Config:
         from_attributes = True
@@ -150,8 +150,8 @@ class ChamadaResponse(ChamadaBase):
 
 class EventoSistemaBase(BaseModel):
     tipo_evento: TipoEvento
-    titulo: str = Field(..., max_length=200, description="Título do evento")
-    descricao: Optional[str] = Field(None, description="Descrição detalhada")
+    titulo: str = Field(..., max_length=200, description="Titulo do evento")
+    descricao: Optional[str] = Field(None, description="Descricao detalhada")
     dados_evento: Optional[Dict[str, Any]] = Field(None, description="Dados extras do evento")
     campanha_id: Optional[int] = None
     agente_id: Optional[int] = None
@@ -176,7 +176,7 @@ class EventoSistemaResponse(EventoSistemaBase):
 # ================================================
 
 class MetricaCampanha(BaseModel):
-    """Métricas de uma campanha específica"""
+    """Metricas de uma campanha especifica"""
     campanha_id: int
     nome_campanha: str
     status_campanha: str
@@ -205,7 +205,7 @@ class MetricaCampanha(BaseModel):
     provedores_utilizados: List[str] = []
 
 class MetricaProvedor(BaseModel):
-    """Métricas de um provedor SIP"""
+    """Metricas de um provedor SIP"""
     provedor_id: int
     nome_provedor: str
     status_conexao: str
@@ -220,22 +220,22 @@ class MetricaProvedor(BaseModel):
     taxa_sucesso: float = 0.0  # %
     uptime_percentual: float = 0.0  # %
     
-    # Última verificação
+    # Ultima verificacao
     ultima_verificacao: Optional[datetime] = None
     tempo_resposta: Optional[int] = None  # ms
 
 class MetricaAgente(BaseModel):
-    """Métricas de um agente"""
+    """Metricas de um agente"""
     agente_id: int
     nome_agente: str
     codigo_agente: str
     status_atual: StatusAgente
     
-    # Status da sessão
+    # Status da sessao
     online_desde: Optional[datetime] = None
     chamada_atual: Optional[str] = None
     
-    # Estatísticas do dia
+    # Estatisticas do dia
     chamadas_atendidas: int = 0
     tempo_em_chamadas: int = 0  # segundos
     tempo_em_pausa: int = 0  # segundos
@@ -250,7 +250,7 @@ class DashboardResumo(BaseModel):
     # Timestamp da consulta
     timestamp_consulta: datetime
     
-    # Métricas gerais
+    # Metricas gerais
     total_campanhas_ativas: int = 0
     total_chamadas_ativas: int = 0
     total_agentes_online: int = 0
@@ -272,7 +272,7 @@ class DashboardResumo(BaseModel):
     alertas_warning: int = 0
 
 class DashboardDetalhado(DashboardResumo):
-    """Dashboard detalhado com todas as métricas"""
+    """Dashboard detalhado com todas as metricas"""
     
     # Campanhas detalhadas
     campanhas: List[MetricaCampanha] = []
@@ -299,7 +299,7 @@ class FiltroMonitoramento(BaseModel):
     # Filtros temporais
     data_inicio: Optional[datetime] = None
     data_fim: Optional[datetime] = None
-    ultimas_horas: Optional[int] = Field(None, ge=1, le=168)  # Máximo 1 semana
+    ultimas_horas: Optional[int] = Field(None, ge=1, le=168)  # Maximo 1 semana
     
     # Filtros por entidade
     campanha_ids: Optional[List[int]] = None
@@ -314,14 +314,14 @@ class FiltroMonitoramento(BaseModel):
     niveis_severidade: Optional[List[str]] = None
     apenas_alertas: bool = False
     
-    # Paginação
+    # Paginacao
     page: int = Field(1, ge=1)
     page_size: int = Field(50, ge=1, le=500)
 
 class ExportRequest(BaseModel):
-    """Request para exportação de dados"""
+    """Request para exportacao de dados"""
     
-    # Tipo de exportação
+    # Tipo de exportacao
     tipo_export: str = Field(..., regex="^(csv|xlsx|json)$")
     
     # Dados a exportar
@@ -332,7 +332,7 @@ class ExportRequest(BaseModel):
     # Filtros
     filtros: Optional[FiltroMonitoramento] = None
     
-    # Configurações
+    # Configuracoes
     incluir_cabecalhos: bool = True
     formato_data: str = Field("iso", regex="^(iso|br|us)$")
 
@@ -357,7 +357,7 @@ class WebSocketMessage(BaseModel):
 # ================================================
 
 class ResponsePaginado(BaseModel):
-    """Response paginado genérico"""
+    """Response paginado generico"""
     items: List[Any]
     total: int
     page: int
@@ -367,14 +367,14 @@ class ResponsePaginado(BaseModel):
     has_prev: bool
 
 class ResponseSucesso(BaseModel):
-    """Response de sucesso genérico"""
+    """Response de sucesso generico"""
     sucesso: bool = True
     mensagem: str
     dados: Optional[Dict[str, Any]] = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
 class ResponseErro(BaseModel):
-    """Response de erro genérico"""
+    """Response de erro generico"""
     sucesso: bool = False
     erro: str
     detalhes: Optional[str] = None

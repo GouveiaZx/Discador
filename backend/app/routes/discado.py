@@ -1,5 +1,5 @@
 """
-Rutas para el servicio de discado integrado con blacklist, múltiples listas y CLI aleatorio.
+Rutas para el servicio de discado integrado con blacklist, multiples listas y CLI aleatorio.
 """
 
 from typing import Optional
@@ -16,19 +16,19 @@ router = APIRouter(prefix="/discado", tags=["Discado"])
 
 class IniciarLlamadaRequest(BaseModel):
     """Schema para iniciar una llamada."""
-    numero_destino: str = Field(..., description="Número de teléfono a llamar")
-    campana_id: Optional[int] = Field(None, description="ID de la campaña")
+    numero_destino: str = Field(..., description="Numero de telefono a llamar")
+    campana_id: Optional[int] = Field(None, description="ID de la campana")
     lista_llamadas_id: Optional[int] = Field(None, description="ID de la lista de llamadas")
     usuario_id: Optional[str] = Field(None, description="ID del usuario")
-    cli_personalizado: Optional[str] = Field(None, description="CLI específico a usar (opcional)")
+    cli_personalizado: Optional[str] = Field(None, description="CLI especifico a usar (opcional)")
 
 
 class LlamarSiguienteListaRequest(BaseModel):
-    """Schema para llamar al siguiente número de una lista."""
+    """Schema para llamar al siguiente numero de una lista."""
     lista_llamadas_id: int = Field(..., description="ID de la lista de llamadas")
-    campana_id: Optional[int] = Field(None, description="ID de la campaña")
+    campana_id: Optional[int] = Field(None, description="ID de la campana")
     usuario_id: Optional[str] = Field(None, description="ID del usuario")
-    cli_personalizado: Optional[str] = Field(None, description="CLI específico a usar (opcional)")
+    cli_personalizado: Optional[str] = Field(None, description="CLI especifico a usar (opcional)")
 
 
 @router.post("/iniciar-llamada")
@@ -37,24 +37,24 @@ async def iniciar_llamada(
     db: Session = Depends(obtener_sesion)
 ) -> dict:
     """
-    Inicia una llamada individual verificando blacklist automáticamente y usando CLI aleatorio.
+    Inicia una llamada individual verificando blacklist automaticamente y usando CLI aleatorio.
     
-    **Proceso automático**:
-    1. Valida el número de teléfono
-    2. Verifica si está en blacklist
+    **Proceso automatico**:
+    1. Valida el numero de telefono
+    2. Verifica si esta en blacklist
     3. Genera CLI aleatorio (o usa CLI personalizado si se proporciona)
-    4. Si no está bloqueado, inicia la llamada via Asterisk
+    4. Si no esta bloqueado, inicia la llamada via Asterisk
     5. Registra la llamada en base de datos
     
-    **Nuevas características**:
-    - **CLI aleatorio**: Selecciona automáticamente un CLI de la base de datos
-    - **CLI personalizado**: Opción para especificar un CLI específico
-    - **Seguimiento de uso**: Registra cuántas veces se usa cada CLI
+    **Nuevas caracteristicas**:
+    - **CLI aleatorio**: Selecciona automaticamente un CLI de la base de datos
+    - **CLI personalizado**: Opcion para especificar un CLI especifico
+    - **Seguimiento de uso**: Registra cuantas veces se usa cada CLI
     
     **Respuestas posibles**:
     - `estado: "iniciado"` - Llamada iniciada exitosamente
-    - `estado: "bloqueado"` - Número en blacklist
-    - `estado: "error"` - Número inválido o error del sistema
+    - `estado: "bloqueado"` - Numero en blacklist
+    - `estado: "error"` - Numero invalido o error del sistema
     """
     try:
         service = DiscadoService(db)
@@ -84,23 +84,23 @@ async def llamar_siguiente_de_lista(
     db: Session = Depends(obtener_sesion)
 ) -> dict:
     """
-    Llama al siguiente número disponible de una lista específica con CLI aleatorio.
+    Llama al siguiente numero disponible de una lista especifica con CLI aleatorio.
     
     **Funcionalidad**:
-    - Busca el próximo número no llamado en la lista
-    - Excluye automáticamente números en blacklist
+    - Busca el proximo numero no llamado en la lista
+    - Excluye automaticamente numeros en blacklist
     - Genera CLI aleatorio para la llamada
-    - Inicia la llamada si hay números disponibles
+    - Inicia la llamada si hay numeros disponibles
     
-    **Nuevas características**:
+    **Nuevas caracteristicas**:
     - **CLI aleatorio por llamada**: Cada llamada usa un CLI diferente
-    - **Distribución equitativa**: Prefiere CLIs menos usados
-    - **CLI personalizado opcional**: Permite especificar CLI específico
+    - **Distribucion equitativa**: Prefiere CLIs menos usados
+    - **CLI personalizado opcional**: Permite especificar CLI especifico
     
-    **Útil para**:
-    - Discado automático secuencial
-    - Campañas basadas en listas específicas
-    - Sistemas de discado predictivo con rotación de CLI
+    **Util para**:
+    - Discado automatico secuencial
+    - Campanas basadas en listas especificas
+    - Sistemas de discado predictivo con rotacion de CLI
     """
     try:
         service = DiscadoService(db)
@@ -126,17 +126,17 @@ async def llamar_siguiente_de_lista(
 def obtener_proximo_numero_lista(
     lista_id: int,
     usuario_id: Optional[str] = Query(None, description="ID del usuario"),
-    excluir_blacklist: bool = Query(True, description="Excluir números en blacklist"),
+    excluir_blacklist: bool = Query(True, description="Excluir numeros en blacklist"),
     db: Session = Depends(obtener_sesion)
 ) -> dict:
     """
-    Obtiene el próximo número a llamar de una lista sin iniciar la llamada.
+    Obtiene el proximo numero a llamar de una lista sin iniciar la llamada.
     
-    **Uso**: Para sistemas que quieren revisar el próximo número antes de llamar.
+    **Uso**: Para sistemas que quieren revisar el proximo numero antes de llamar.
     
     **Respuesta**:
-    - Datos del próximo número disponible
-    - `null` si no hay más números en la lista
+    - Datos del proximo numero disponible
+    - `null` si no hay mas numeros en la lista
     """
     try:
         service = DiscadoService(db)
@@ -154,17 +154,17 @@ def obtener_proximo_numero_lista(
         else:
             return {
                 "estado": "sin_numeros",
-                "mensaje": f"No hay más números disponibles en la lista {lista_id}",
+                "mensaje": f"No hay mas numeros disponibles en la lista {lista_id}",
                 "proximo_numero": None
             }
             
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error al obtener próximo número: {str(e)}")
+        logger.error(f"Error al obtener proximo numero: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail="Error interno al obtener próximo número"
+            detail="Error interno al obtener proximo numero"
         )
 
 
@@ -174,16 +174,16 @@ def obtener_estadisticas_lista(
     db: Session = Depends(obtener_sesion)
 ) -> dict:
     """
-    Obtiene estadísticas detalladas de una lista de llamadas.
+    Obtiene estadisticas detalladas de una lista de llamadas.
     
-    **Métricas incluidas**:
-    - Total de números en la lista
+    **Metricas incluidas**:
+    - Total de numeros en la lista
     - Llamadas realizadas vs pendientes  
     - Llamadas bloqueadas por blacklist
     - Llamadas exitosas
-    - Porcentajes de completado y éxito
+    - Porcentajes de completado y exito
     
-    **Útil para**: Dashboards y reportes de progreso de campañas.
+    **Util para**: Dashboards y reportes de progreso de campanas.
     """
     try:
         service = DiscadoService(db)
@@ -194,8 +194,8 @@ def obtener_estadisticas_lista(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error al obtener estadísticas: {str(e)}")
+        logger.error(f"Error al obtener estadisticas: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail="Error interno al obtener estadísticas"
+            detail="Error interno al obtener estadisticas"
         ) 

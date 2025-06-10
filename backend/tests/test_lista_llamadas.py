@@ -22,10 +22,10 @@ client = TestClient(app)
 
 
 class TestValidacionNumeros:
-    """Tests para las funciones de validación de números."""
+    """Tests para las funciones de validacion de numeros."""
     
     def test_validar_numero_argentino_valido(self):
-        """Test para número argentino válido."""
+        """Test para numero argentino valido."""
         numero = "+54 9 11 1234-5678"
         resultado = validar_numero_telefono(numero)
         
@@ -35,7 +35,7 @@ class TestValidacionNumeros:
         assert resultado.motivo_invalido is None
     
     def test_validar_numero_sin_codigo_pais(self):
-        """Test para número sin código de país."""
+        """Test para numero sin codigo de pais."""
         numero = "11 1234 5678"
         resultado = validar_numero_telefono(numero)
         
@@ -44,7 +44,7 @@ class TestValidacionNumeros:
         assert resultado.numero_original == numero
     
     def test_validar_numero_corto_buenos_aires(self):
-        """Test para número corto de Buenos Aires."""
+        """Test para numero corto de Buenos Aires."""
         numero = "12345678"
         resultado = validar_numero_telefono(numero)
         
@@ -53,46 +53,46 @@ class TestValidacionNumeros:
         assert resultado.numero_original == numero
     
     def test_validar_numero_vacio(self):
-        """Test para número vacío."""
+        """Test para numero vacio."""
         numero = ""
         resultado = validar_numero_telefono(numero)
         
         assert resultado.valido is False
         assert resultado.numero_normalizado == ""
-        assert "vacío" in resultado.motivo_invalido
+        assert "vacio" in resultado.motivo_invalido
     
     def test_validar_numero_muy_corto(self):
-        """Test para número demasiado corto."""
+        """Test para numero demasiado corto."""
         numero = "123"
         resultado = validar_numero_telefono(numero)
         
         assert resultado.valido is False
-        assert "Longitud inválida" in resultado.motivo_invalido
+        assert "Longitud invalida" in resultado.motivo_invalido
     
     def test_validar_numero_muy_largo(self):
-        """Test para número demasiado largo."""
+        """Test para numero demasiado largo."""
         numero = "+54911123456789012345"
         resultado = validar_numero_telefono(numero)
         
         assert resultado.valido is False
-        assert "Longitud inválida" in resultado.motivo_invalido
+        assert "Longitud invalida" in resultado.motivo_invalido
     
     def test_normalizar_numero_con_codigo_completo(self):
-        """Test normalización con código completo."""
+        """Test normalizacion con codigo completo."""
         numero = "5491112345678"
         resultado = normalizar_numero_argentino(numero)
         
         assert resultado == "+5491112345678"
     
     def test_normalizar_numero_con_9_sin_pais(self):
-        """Test normalización con 9 pero sin código de país."""
+        """Test normalizacion con 9 pero sin codigo de pais."""
         numero = "91112345678"
         resultado = normalizar_numero_argentino(numero)
         
         assert resultado == "+5491112345678"
     
     def test_normalizar_numero_area_code(self):
-        """Test normalización con código de área."""
+        """Test normalizacion con codigo de area."""
         numero = "1112345678"
         resultado = normalizar_numero_argentino(numero)
         
@@ -104,7 +104,7 @@ class TestListaLlamadasService:
     
     @pytest.fixture
     def mock_db(self):
-        """Mock de la sesión de base de datos."""
+        """Mock de la sesion de base de datos."""
         return Mock(spec=Session)
     
     @pytest.fixture
@@ -113,17 +113,17 @@ class TestListaLlamadasService:
         return ListaLlamadasService(mock_db)
     
     def test_validar_tipo_archivo_csv_valido(self, service):
-        """Test validación de archivo CSV válido."""
+        """Test validacion de archivo CSV valido."""
         assert service._validar_tipo_archivo("numeros.csv") is True
         assert service._validar_tipo_archivo("NUMEROS.CSV") is True
     
     def test_validar_tipo_archivo_txt_valido(self, service):
-        """Test validación de archivo TXT válido."""
+        """Test validacion de archivo TXT valido."""
         assert service._validar_tipo_archivo("numeros.txt") is True
         assert service._validar_tipo_archivo("NUMEROS.TXT") is True
     
     def test_validar_tipo_archivo_invalido(self, service):
-        """Test validación de archivo inválido."""
+        """Test validacion de archivo invalido."""
         assert service._validar_tipo_archivo("numeros.pdf") is False
         assert service._validar_tipo_archivo("numeros.doc") is False
         assert service._validar_tipo_archivo("") is False
@@ -161,16 +161,16 @@ class TestListaLlamadasService:
     
     @pytest.mark.asyncio
     async def test_procesar_numeros_validos(self, service):
-        """Test procesamiento de números válidos."""
+        """Test procesamiento de numeros validos."""
         contenido = "+5491112345678\n011 8765-4321\ninvalido\n+5491112345678"
         
         resultado = await service._procesar_numeros(contenido, "test.txt")
         
         assert resultado['total_lineas'] == 4
-        assert len(resultado['numeros_validos']) == 1  # Solo uno válido sin duplicados
+        assert len(resultado['numeros_validos']) == 1  # Solo uno valido sin duplicados
         assert resultado['numeros_invalidos'] == 1
         assert resultado['numeros_duplicados'] == 1
-        assert len(resultado['errores']) == 2  # 1 inválido + 1 duplicado
+        assert len(resultado['errores']) == 2  # 1 invalido + 1 duplicado
 
 
 class TestEndpointsListaLlamadas:
@@ -196,7 +196,7 @@ class TestEndpointsListaLlamadas:
             'numeros_validos': 2,
             'numeros_invalidos': 1,
             'numeros_duplicados': 0,
-            'errores': ['Línea 3: Formato inválido - abc123']
+            'errores': ['Linea 3: Formato invalido - abc123']
         }
         mock_service.procesar_archivo.return_value = mock_resultado
         
@@ -204,7 +204,7 @@ class TestEndpointsListaLlamadas:
         contenido_archivo = b"+5491112345678\n+5491187654321\nabc123"
         archivo = ("test.csv", contenido_archivo, "text/csv")
         
-        # Realizar petición
+        # Realizar peticion
         response = self.test_client.post(
             "/api/v1/listas-llamadas/upload",
             files={"archivo": archivo},
@@ -228,7 +228,7 @@ class TestEndpointsListaLlamadas:
     
     @patch('app.database.obtener_sesion')
     def test_upload_archivo_tipo_invalido(self, mock_db):
-        """Test upload de arquivo com tipo inválido."""
+        """Test upload de arquivo com tipo invalido."""
         archivo = ("test.pdf", b"conteudo", "application/pdf")
         
         response = self.test_client.post(
@@ -238,7 +238,7 @@ class TestEndpointsListaLlamadas:
         )
         
         assert response.status_code == 400
-        assert "Tipo de archivo no válido" in response.json()["detail"]
+        assert "Tipo de archivo no valido" in response.json()["detail"]
     
     @patch('app.database.obtener_sesion')
     @patch('app.services.lista_llamadas_service.ListaLlamadasService')
@@ -258,7 +258,7 @@ class TestEndpointsListaLlamadas:
         )
         mock_service.listar_listas.return_value = [mock_lista]
         
-        # Realizar petición
+        # Realizar peticion
         response = self.test_client.get("/api/v1/listas-llamadas/")
         
         # Verificar respuesta
@@ -272,7 +272,7 @@ class TestEndpointsListaLlamadas:
     @patch('app.database.obtener_sesion')
     @patch('app.services.lista_llamadas_service.ListaLlamadasService')
     def test_obtener_lista_por_id(self, mock_service_class, mock_db):
-        """Test obtener lista específica por ID."""
+        """Test obtener lista especifica por ID."""
         # Configurar mock
         mock_service = Mock()
         mock_service_class.return_value = mock_service
@@ -285,10 +285,10 @@ class TestEndpointsListaLlamadas:
             numeros_validos=9,
             numeros_duplicados=1
         )
-        mock_lista.numeros = []  # Lista vacía de números
+        mock_lista.numeros = []  # Lista vacia de numeros
         mock_service.obtener_lista.return_value = mock_lista
         
-        # Realizar petición
+        # Realizar peticion
         response = self.test_client.get("/api/v1/listas-llamadas/1")
         
         # Verificar respuesta
@@ -308,7 +308,7 @@ class TestEndpointsListaLlamadas:
         mock_service_class.return_value = mock_service
         mock_service.eliminar_lista.return_value = True
         
-        # Realizar petición
+        # Realizar peticion
         response = self.test_client.delete("/api/v1/listas-llamadas/1")
         
         # Verificar respuesta
@@ -329,7 +329,7 @@ class TestEndpointsListaLlamadas:
         mock_lista = ListaLlamadas(
             id=1,
             nombre="Lista Actualizada",
-            descripcion="Nueva descripción",
+            descripcion="Nueva descripcion",
             archivo_original="test.csv",
             total_numeros=10,
             numeros_validos=9,
@@ -339,10 +339,10 @@ class TestEndpointsListaLlamadas:
         mock_service.obtener_lista.return_value = mock_lista
         mock_db.query.return_value.filter.return_value.first.return_value = None
         
-        # Realizar petición
+        # Realizar peticion
         datos_actualizacion = {
             "nombre": "Lista Actualizada",
-            "descripcion": "Nueva descripción"
+            "descripcion": "Nueva descripcion"
         }
         
         response = self.test_client.put(
@@ -355,16 +355,16 @@ class TestEndpointsListaLlamadas:
         data = response.json()
         
         assert data["nombre"] == "Lista Actualizada"
-        assert data["descripcion"] == "Nueva descripción"
+        assert data["descripcion"] == "Nueva descripcion"
 
 
 class TestIntegracionCompleta:
-    """Tests de integración completa."""
+    """Tests de integracion completa."""
     
     @pytest.mark.asyncio
     async def test_flujo_completo_upload_y_consulta(self):
         """Test del flujo completo de upload y consulta."""
-        # Este test requeriría una base de datos de teste real
+        # Este test requeriria una base de datos de teste real
         # Por ahora es un placeholder para documentar la funcionalidad esperada
         pass
 

@@ -12,7 +12,7 @@ sys.path.append(os.path.dirname(__file__))
 from typing import Dict, Any
 import json
 
-# Simulação dos modelos para teste
+# Simulacao dos modelos para teste
 class MockProvedorSip:
     def __init__(self, **kwargs):
         self.id = kwargs.get('id', 1)
@@ -29,20 +29,20 @@ class MockProvedorSip:
         self.custo_base_por_minuto = kwargs.get('custo_base_por_minuto', 0.015)
         self.status = kwargs.get('status', 'ativo')
 
-# Algoritmo de seleção inteligente
+# Algoritmo de selecao inteligente
 class MultiSipAlgorithm:
-    """Algoritmos de seleção de provedores Multi-SIP"""
+    """Algoritmos de selecao de provedores Multi-SIP"""
     
     @staticmethod
     def calcular_custo_estimado(provedor: MockProvedorSip, numero_destino: str, duracao_segundos: int = 60) -> float:
         """Calcula custo estimado baseado no provedor e destino"""
-        # Regras de tarifação por prefixo
+        # Regras de tarifacao por prefixo
         numero_limpo = ''.join(filter(str.isdigit, numero_destino))
         
-        # Tarifas simuladas por país/região
+        # Tarifas simuladas por pais/regiao
         tarifas = {
             '55': {'custo_por_minuto': 0.008, 'taxa_conexao': 0.001},  # Brasil
-            '1': {'custo_por_minuto': 0.012, 'taxa_conexao': 0.002},   # EUA/Canadá
+            '1': {'custo_por_minuto': 0.012, 'taxa_conexao': 0.002},   # EUA/Canada
             '49': {'custo_por_minuto': 0.015, 'taxa_conexao': 0.003},  # Alemanha
         }
         
@@ -92,7 +92,7 @@ class MultiSipAlgorithm:
         melhor_score = -1
         
         for provedor in provedores:
-            # Score baseado em taxa de sucesso e latência
+            # Score baseado em taxa de sucesso e latencia
             score_qualidade = (provedor.taxa_sucesso / 100) - (provedor.latencia_media_ms / 1000)
             if score_qualidade > melhor_score:
                 melhor_score = score_qualidade
@@ -101,18 +101,18 @@ class MultiSipAlgorithm:
         return {
             'provedor': melhor_provedor,
             'score': melhor_score,
-            'justificativa': f'Selecionado por qualidade: {melhor_provedor.taxa_sucesso}% sucesso, {melhor_provedor.latencia_media_ms}ms latência',
+            'justificativa': f'Selecionado por qualidade: {melhor_provedor.taxa_sucesso}% sucesso, {melhor_provedor.latencia_media_ms}ms latencia',
             'metodo': 'MELHOR_QUALIDADE'
         }
     
     @staticmethod
     def selecionar_inteligente(provedores: list, numero_destino: str) -> Dict[str, Any]:
-        """Algoritmo: Inteligente (40% custo + 40% qualidade + 20% latência)"""
+        """Algoritmo: Inteligente (40% custo + 40% qualidade + 20% latencia)"""
         melhor_provedor = None
         melhor_score = -1
         melhor_justificativa = ""
         
-        # Normalizar valores para comparação
+        # Normalizar valores para comparacao
         custos = [MultiSipAlgorithm.calcular_custo_estimado(p, numero_destino) for p in provedores]
         latencias = [p.latencia_media_ms for p in provedores]
         taxas_sucesso = [p.taxa_sucesso for p in provedores]
@@ -122,13 +122,13 @@ class MultiSipAlgorithm:
         min_taxa, max_taxa = min(taxas_sucesso), max(taxas_sucesso)
         
         for i, provedor in enumerate(provedores):
-            # Normalizar custo (menor é melhor)
+            # Normalizar custo (menor e melhor)
             score_custo = 1 - ((custos[i] - min_custo) / (max_custo - min_custo + 0.001))
             
-            # Normalizar qualidade (maior é melhor)
+            # Normalizar qualidade (maior e melhor)
             score_qualidade = (taxas_sucesso[i] - min_taxa) / (max_taxa - min_taxa + 0.001)
             
-            # Normalizar latência (menor é melhor)
+            # Normalizar latencia (menor e melhor)
             score_latencia = 1 - ((latencias[i] - min_latencia) / (max_latencia - min_latencia + 0.001))
             
             # Score final ponderado
@@ -137,7 +137,7 @@ class MultiSipAlgorithm:
             if score_final > melhor_score:
                 melhor_score = score_final
                 melhor_provedor = provedor
-                melhor_justificativa = f'Score inteligente: {score_final:.3f} (Custo: ${custos[i]:.4f}, Qualidade: {taxas_sucesso[i]}%, Latência: {latencias[i]}ms)'
+                melhor_justificativa = f'Score inteligente: {score_final:.3f} (Custo: ${custos[i]:.4f}, Qualidade: {taxas_sucesso[i]}%, Latencia: {latencias[i]}ms)'
         
         return {
             'provedor': melhor_provedor,
@@ -196,8 +196,8 @@ def criar_provedores_exemplo():
     ]
 
 def testar_selecao_provedor():
-    """Testa os algoritmos de seleção"""
-    print("🔌 SISTEMA MULTI-SIP - DEMONSTRAÇÃO COMPLETA")
+    """Testa os algoritmos de selecao"""
+    print("🔌 SISTEMA MULTI-SIP - DEMONSTRACAO COMPLETA")
     print("=" * 60)
     
     # Criar provedores
@@ -209,25 +209,25 @@ def testar_selecao_provedor():
         print(f"• {p.nome} ({p.codigo})")
         print(f"  ├─ Tipo: {p.tipo_provedor}")
         print(f"  ├─ Servidor: {p.servidor_sip}")
-        print(f"  ├─ Latência: {p.latencia_media_ms}ms")
+        print(f"  ├─ Latencia: {p.latencia_media_ms}ms")
         print(f"  ├─ Taxa Sucesso: {p.taxa_sucesso}%")
         print(f"  └─ Custo Base: ${p.custo_base_por_minuto:.4f}/min")
         print()
     
-    # Números de teste
+    # Numeros de teste
     numeros_teste = [
-        ("5511999887766", "Brasil - São Paulo (Celular)"),
+        ("5511999887766", "Brasil - Sao Paulo (Celular)"),
         ("12125551234", "EUA - Nova York"),
         ("4930123456789", "Alemanha - Berlim"),
-        ("85012345678", "Número Internacional Genérico")
+        ("85012345678", "Numero Internacional Generico")
     ]
     
-    print("\n🎯 TESTES DE SELEÇÃO:")
+    print("\n🎯 TESTES DE SELECAO:")
     print("=" * 60)
     
     for numero, descricao in numeros_teste:
         print(f"\n📞 DESTINO: {descricao}")
-        print(f"   Número: {numero}")
+        print(f"   Numero: {numero}")
         print("-" * 40)
         
         # Testar cada algoritmo
@@ -249,15 +249,15 @@ def testar_selecao_provedor():
 
 def testar_roteamento_geografico():
     """Testa roteamento baseado em geografia"""
-    print("\n\n🌍 TESTE DE ROTEAMENTO GEOGRÁFICO:")
+    print("\n\n🌍 TESTE DE ROTEAMENTO GEOGRAFICO:")
     print("=" * 60)
     
-    # Regras de roteamento por região
+    # Regras de roteamento por regiao
     regras_roteamento = {
         '55': 'Brasil - Preferir provedores locais',
-        '1': 'América do Norte - Usar Twilio',
+        '1': 'America do Norte - Usar Twilio',
         '49': 'Europa - Usar provedores internacionais',
-        '86': 'Ásia - Routing especial necessário'
+        '86': 'Asia - Routing especial necessario'
     }
     
     provedores = criar_provedores_exemplo()
@@ -265,9 +265,9 @@ def testar_roteamento_geografico():
     for prefixo, descricao in regras_roteamento.items():
         numero_exemplo = prefixo + "123456789"
         print(f"\n📍 {descricao}")
-        print(f"   Número exemplo: {numero_exemplo}")
+        print(f"   Numero exemplo: {numero_exemplo}")
         
-        # Aplicar lógica de roteamento
+        # Aplicar logica de roteamento
         resultado = MultiSipAlgorithm.selecionar_inteligente(provedores, numero_exemplo)
         custo = MultiSipAlgorithm.calcular_custo_estimado(resultado['provedor'], numero_exemplo)
         
@@ -276,7 +276,7 @@ def testar_roteamento_geografico():
 
 def demonstrar_falhas_e_failover():
     """Demonstra tratamento de falhas e failover"""
-    print("\n\n⚠️  TESTE DE FAILOVER E RECUPERAÇÃO:")
+    print("\n\n⚠️  TESTE DE FAILOVER E RECUPERACAO:")
     print("=" * 60)
     
     provedores = criar_provedores_exemplo()
@@ -285,27 +285,27 @@ def demonstrar_falhas_e_failover():
     print("\n🔴 SIMULANDO FALHA:")
     provedores[0].status = 'erro'
     provedores[0].taxa_sucesso = 0.0
-    print(f"   Provedor '{provedores[0].nome}' indisponível")
+    print(f"   Provedor '{provedores[0].nome}' indisponivel")
     
-    # Filtrar apenas provedores disponíveis
+    # Filtrar apenas provedores disponiveis
     provedores_disponiveis = [p for p in provedores if p.status == 'ativo']
     
-    print(f"\n✅ PROVEDORES DISPONÍVEIS ({len(provedores_disponiveis)}):")
+    print(f"\n✅ PROVEDORES DISPONIVEIS ({len(provedores_disponiveis)}):")
     for p in provedores_disponiveis:
         print(f"   • {p.nome} - Status: {p.status}")
     
-    # Seleção com failover
+    # Selecao com failover
     numero_teste = "5511999887766"
     resultado = MultiSipAlgorithm.selecionar_inteligente(provedores_disponiveis, numero_teste)
     
-    print(f"\n🚀 FAILOVER AUTOMÁTICO:")
+    print(f"\n🚀 FAILOVER AUTOMATICO:")
     print(f"   ✅ Provedor backup: {resultado['provedor'].nome}")
     print(f"   📊 Score: {resultado['score']:.4f}")
     print(f"   💡 Justificativa: {resultado['justificativa']}")
 
 def mostrar_estatisticas():
-    """Mostra estatísticas simuladas do sistema"""
-    print("\n\n📊 ESTATÍSTICAS DO SISTEMA:")
+    """Mostra estatisticas simuladas do sistema"""
+    print("\n\n📊 ESTATISTICAS DO SISTEMA:")
     print("=" * 60)
     
     estatisticas = {
@@ -313,18 +313,18 @@ def mostrar_estatisticas():
         'Provedores ativos': 3,
         'Chamadas hoje': 1247,
         'Taxa de sucesso geral': '97.8%',
-        'Custo médio por minuto': '$0.0135',
-        'Latência média': '68.2ms',
-        'Economia vs. provedor único': '23.4%'
+        'Custo medio por minuto': '$0.0135',
+        'Latencia media': '68.2ms',
+        'Economia vs. provedor unico': '23.4%'
     }
     
     for metrica, valor in estatisticas.items():
         print(f"   {metrica:.<30} {valor}")
 
 def main():
-    """Função principal de demonstração"""
+    """Funcao principal de demonstracao"""
     try:
-        print("🚀 INICIANDO DEMONSTRAÇÃO DO SISTEMA MULTI-SIP...")
+        print("🚀 INICIANDO DEMONSTRACAO DO SISTEMA MULTI-SIP...")
         
         # Executar todos os testes
         testar_selecao_provedor()
@@ -332,20 +332,20 @@ def main():
         demonstrar_falhas_e_failover()
         mostrar_estatisticas()
         
-        print("\n\n✅ DEMONSTRAÇÃO CONCLUÍDA COM SUCESSO!")
-        print("\n🔌 O Sistema Multi-SIP está pronto para:")
-        print("   • Integração com múltiplos provedores VoIP")
-        print("   • Seleção inteligente baseada em custo e qualidade")
-        print("   • Roteamento geográfico otimizado")
-        print("   • Failover automático em caso de falhas")
+        print("\n\n✅ DEMONSTRACAO CONCLUIDA COM SUCESSO!")
+        print("\n🔌 O Sistema Multi-SIP esta pronto para:")
+        print("   • Integracao com multiplos provedores VoIP")
+        print("   • Selecao inteligente baseada em custo e qualidade")
+        print("   • Roteamento geografico otimizado")
+        print("   • Failover automatico em caso de falhas")
         print("   • Monitoramento em tempo real")
-        print("   • Integração completa com Asterisk via AGI")
+        print("   • Integracao completa com Asterisk via AGI")
         
-        print(f"\n📚 Para instalação completa, consulte:")
+        print(f"\n📚 Para instalacao completa, consulte:")
         print(f"   backend/docs/MULTI_SIP_INSTALL.md")
         
     except Exception as e:
-        print(f"❌ Erro durante demonstração: {str(e)}")
+        print(f"❌ Erro durante demonstracao: {str(e)}")
         return False
     
     return True
@@ -354,5 +354,5 @@ if __name__ == "__main__":
     sucesso = main()
     exit(0 if sucesso else 1)
 
-print("🔌 SISTEMA MULTI-SIP - DEMONSTRAÇÃO")
-print("Teste básico funcionando!") 
+print("🔌 SISTEMA MULTI-SIP - DEMONSTRACAO")
+print("Teste basico funcionando!") 

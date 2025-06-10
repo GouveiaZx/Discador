@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 class AudioContextManager:
     """
-    Gerenciador de contextos de áudio e templates pré-configurados.
-    Facilita a criação e gestão de configurações de áudio.
+    Gerenciador de contextos de audio e templates pre-configurados.
+    Facilita a criacao e gestao de configuracoes de audio.
     """
     
     def __init__(self, db: Session):
@@ -29,27 +29,27 @@ class AudioContextManager:
         audio_voicemail_url: Optional[str] = None
     ) -> AudioContexto:
         """
-        Cria um contexto básico de áudio.
+        Cria um contexto basico de audio.
         
         Args:
             nome: Nome do contexto
-            descricao: Descrição do contexto
-            audio_principal_url: URL do áudio principal
+            descricao: Descricao do contexto
+            audio_principal_url: URL do audio principal
             timeout_dtmf: Timeout para DTMF em segundos
             detectar_voicemail: Se deve detectar voicemail
-            audio_voicemail_url: URL do áudio para voicemail
+            audio_voicemail_url: URL do audio para voicemail
             
         Returns:
             AudioContexto: Contexto criado
         """
         try:
-            # Verificar se já existe contexto com esse nome
+            # Verificar se ja existe contexto com esse nome
             contexto_existente = self.db.query(AudioContexto).filter(
                 AudioContexto.nome == nome
             ).first()
             
             if contexto_existente:
-                raise ValueError(f"Já existe um contexto com o nome '{nome}'")
+                raise ValueError(f"Ja existe um contexto com o nome '{nome}'")
             
             # Criar novo contexto
             novo_contexto = AudioContexto(
@@ -65,12 +65,12 @@ class AudioContextManager:
             self.db.commit()
             self.db.refresh(novo_contexto)
             
-            logger.info(f"Contexto básico criado: {nome} (ID: {novo_contexto.id})")
+            logger.info(f"Contexto basico criado: {nome} (ID: {novo_contexto.id})")
             return novo_contexto
             
         except Exception as e:
             self.db.rollback()
-            logger.error(f"Erro ao criar contexto básico: {str(e)}")
+            logger.error(f"Erro ao criar contexto basico: {str(e)}")
             raise
     
     def criar_contexto_presione1(
@@ -83,24 +83,24 @@ class AudioContextManager:
         tentativas_maximas: int = 3
     ) -> AudioContexto:
         """
-        Cria um contexto pré-configurado para campanhas "Presione 1".
+        Cria um contexto pre-configurado para campanhas "Presione 1".
         
         Args:
             nome: Nome do contexto
-            audio_principal_url: URL do áudio principal
-            audio_voicemail_url: URL do áudio para voicemail
+            audio_principal_url: URL do audio principal
+            audio_voicemail_url: URL do audio para voicemail
             timeout_dtmf: Timeout para aguardar DTMF
             detectar_voicemail: Se deve detectar voicemail
-            tentativas_maximas: Número máximo de tentativas
+            tentativas_maximas: Numero maximo de tentativas
             
         Returns:
-            AudioContexto: Contexto criado com regras pré-configuradas
+            AudioContexto: Contexto criado com regras pre-configuradas
         """
         try:
             # Criar contexto base
             contexto = self.criar_contexto_basico(
                 nome=nome,
-                descricao="Contexto para campanhas Presione 1 com detecção de voicemail",
+                descricao="Contexto para campanhas Presione 1 com deteccao de voicemail",
                 audio_principal_url=audio_principal_url,
                 timeout_dtmf=timeout_dtmf,
                 detectar_voicemail=detectar_voicemail,
@@ -109,12 +109,12 @@ class AudioContextManager:
             
             contexto.tentativas_maximas = tentativas_maximas
             
-            # Criar regras pré-configuradas para Presione 1
+            # Criar regras pre-configuradas para Presione 1
             regras_presione1 = [
                 # Regra 1: Iniciar -> Tocando
                 {
                     "nome": "Iniciar Chamada",
-                    "descricao": "Transição inicial quando a chamada é iniciada",
+                    "descricao": "Transicao inicial quando a chamada e iniciada",
                     "prioridade": 100,
                     "estado_origem": EstadoAudio.INICIANDO,
                     "evento_disparador": TipoEvento.CHAMADA_INICIADA,
@@ -125,7 +125,7 @@ class AudioContextManager:
                 # Regra 2: Tocando -> Aguardando DTMF (quando atendeu)
                 {
                     "nome": "Atendimento Detectado",
-                    "descricao": "Quando a chamada é atendida, aguardar DTMF",
+                    "descricao": "Quando a chamada e atendida, aguardar DTMF",
                     "prioridade": 90,
                     "estado_origem": EstadoAudio.TOCANDO,
                     "evento_disparador": TipoEvento.ATENDEU,
@@ -153,7 +153,7 @@ class AudioContextManager:
                 # Regra 4: Timeout DTMF -> Detectando Voicemail
                 {
                     "nome": "Timeout DTMF",
-                    "descricao": "Timeout aguardando DTMF, verificar se é voicemail",
+                    "descricao": "Timeout aguardando DTMF, verificar se e voicemail",
                     "prioridade": 80,
                     "estado_origem": EstadoAudio.AGUARDANDO_DTMF,
                     "evento_disparador": TipoEvento.TIMEOUT_DTMF,
@@ -173,10 +173,10 @@ class AudioContextManager:
                     "condicoes": None
                 },
                 
-                # Regra 6: Humano confirmado após detecção de voicemail
+                # Regra 6: Humano confirmado apos deteccao de voicemail
                 {
-                    "nome": "Humano Após Voicemail",
-                    "descricao": "Humano detectado após análise de voicemail",
+                    "nome": "Humano Apos Voicemail",
+                    "descricao": "Humano detectado apos analise de voicemail",
                     "prioridade": 75,
                     "estado_origem": EstadoAudio.DETECTANDO_VOICEMAIL,
                     "evento_disparador": TipoEvento.HUMANO_CONFIRMADO,
@@ -184,10 +184,10 @@ class AudioContextManager:
                     "condicoes": None
                 },
                 
-                # Regra 7: Finalizar após reproduzir voicemail
+                # Regra 7: Finalizar apos reproduzir voicemail
                 {
                     "nome": "Finalizar Voicemail",
-                    "descricao": "Finalizar chamada após reproduzir mensagem no voicemail",
+                    "descricao": "Finalizar chamada apos reproduzir mensagem no voicemail",
                     "prioridade": 70,
                     "estado_origem": EstadoAudio.REPRODUZINDO_VOICEMAIL,
                     "evento_disparador": None,
@@ -246,22 +246,22 @@ class AudioContextManager:
     
     def criar_template_presione1(self) -> AudioTemplate:
         """
-        Cria um template pré-configurado para campanhas "Presione 1".
+        Cria um template pre-configurado para campanhas "Presione 1".
         
         Returns:
             AudioTemplate: Template criado
         """
         try:
-            # Verificar se já existe
+            # Verificar se ja existe
             template_existente = self.db.query(AudioTemplate).filter(
-                AudioTemplate.nome == "Presione 1 Padrão"
+                AudioTemplate.nome == "Presione 1 Padrao"
             ).first()
             
             if template_existente:
-                logger.info("Template Presione 1 já existe")
+                logger.info("Template Presione 1 ja existe")
                 return template_existente
             
-            # Configuração do contexto
+            # Configuracao do contexto
             configuracao_contexto = {
                 "timeout_dtmf_padrao": 10,
                 "detectar_voicemail": True,
@@ -273,7 +273,7 @@ class AudioContextManager:
             regras_template = [
                 {
                     "nome": "Iniciar Chamada",
-                    "descricao": "Transição inicial quando a chamada é iniciada",
+                    "descricao": "Transicao inicial quando a chamada e iniciada",
                     "prioridade": 100,
                     "estado_origem": "iniciando",
                     "evento_disparador": "chamada_iniciada",
@@ -281,7 +281,7 @@ class AudioContextManager:
                 },
                 {
                     "nome": "Atendimento Detectado",
-                    "descricao": "Quando a chamada é atendida, aguardar DTMF",
+                    "descricao": "Quando a chamada e atendida, aguardar DTMF",
                     "prioridade": 90,
                     "estado_origem": "tocando",
                     "evento_disparador": "atendeu",
@@ -304,7 +304,7 @@ class AudioContextManager:
                 },
                 {
                     "nome": "Timeout DTMF",
-                    "descricao": "Timeout aguardando DTMF, verificar se é voicemail",
+                    "descricao": "Timeout aguardando DTMF, verificar se e voicemail",
                     "prioridade": 80,
                     "estado_origem": "aguardando_dtmf",
                     "evento_disparador": "timeout_dtmf",
@@ -319,8 +319,8 @@ class AudioContextManager:
                     "estado_destino": "reproduzindo_voicemail"
                 },
                 {
-                    "nome": "Humano Após Voicemail",
-                    "descricao": "Humano detectado após análise de voicemail",
+                    "nome": "Humano Apos Voicemail",
+                    "descricao": "Humano detectado apos analise de voicemail",
                     "prioridade": 75,
                     "estado_origem": "detectando_voicemail",
                     "evento_disparador": "humano_confirmado",
@@ -330,8 +330,8 @@ class AudioContextManager:
             
             # Criar template
             template = AudioTemplate(
-                nome="Presione 1 Padrão",
-                descricao="Template padrão para campanhas Presione 1 com detecção de voicemail",
+                nome="Presione 1 Padrao",
+                descricao="Template padrao para campanhas Presione 1 com deteccao de voicemail",
                 categoria="presione1",
                 configuracao_contexto=configuracao_contexto,
                 regras_template=regras_template
@@ -363,9 +363,9 @@ class AudioContextManager:
         Args:
             template_id: ID do template
             nome_contexto: Nome do novo contexto
-            audio_principal_url: URL do áudio principal
-            audio_voicemail_url: URL do áudio para voicemail
-            configuracoes_personalizadas: Configurações específicas
+            audio_principal_url: URL do audio principal
+            audio_voicemail_url: URL do audio para voicemail
+            configuracoes_personalizadas: Configuracoes especificas
             
         Returns:
             AudioContexto: Contexto criado
@@ -377,9 +377,9 @@ class AudioContextManager:
             ).first()
             
             if not template:
-                raise ValueError(f"Template {template_id} não encontrado")
+                raise ValueError(f"Template {template_id} nao encontrado")
             
-            # Mesclar configurações
+            # Mesclar configuracoes
             config_final = template.configuracao_contexto.copy()
             if configuracoes_personalizadas:
                 config_final.update(configuracoes_personalizadas)
@@ -429,7 +429,7 @@ class AudioContextManager:
     
     def listar_contextos(self, ativo_apenas: bool = True) -> List[AudioContexto]:
         """
-        Lista todos os contextos de áudio.
+        Lista todos os contextos de audio.
         
         Args:
             ativo_apenas: Se deve listar apenas contextos ativos
@@ -446,10 +446,10 @@ class AudioContextManager:
     
     def listar_templates(self, categoria: Optional[str] = None) -> List[AudioTemplate]:
         """
-        Lista todos os templates disponíveis.
+        Lista todos os templates disponiveis.
         
         Args:
-            categoria: Filtrar por categoria específica
+            categoria: Filtrar por categoria especifica
             
         Returns:
             List[AudioTemplate]: Lista de templates
@@ -463,7 +463,7 @@ class AudioContextManager:
     
     def obter_contexto_por_nome(self, nome: str) -> Optional[AudioContexto]:
         """
-        Obtém um contexto pelo nome.
+        Obtem um contexto pelo nome.
         
         Args:
             nome: Nome do contexto
@@ -478,7 +478,7 @@ class AudioContextManager:
     
     def inicializar_templates_padrao(self) -> Dict[str, AudioTemplate]:
         """
-        Inicializa os templates padrão do sistema.
+        Inicializa os templates padrao do sistema.
         
         Returns:
             Dict: Templates criados
@@ -490,9 +490,9 @@ class AudioContextManager:
             template_presione1 = self.criar_template_presione1()
             templates_criados["presione1"] = template_presione1
             
-            logger.info(f"Templates padrão inicializados: {list(templates_criados.keys())}")
+            logger.info(f"Templates padrao inicializados: {list(templates_criados.keys())}")
             return templates_criados
             
         except Exception as e:
-            logger.error(f"Erro ao inicializar templates padrão: {str(e)}")
+            logger.error(f"Erro ao inicializar templates padrao: {str(e)}")
             raise 

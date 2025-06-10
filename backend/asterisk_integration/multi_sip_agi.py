@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AGI Script para Integração Multi-SIP com Asterisk
-Seleção dinâmica de provedores SIP para chamadas de saída
+AGI Script para Integracao Multi-SIP com Asterisk
+Selecao dinamica de provedores SIP para chamadas de saida
 """
 
 import sys
@@ -12,7 +12,7 @@ import json
 import logging
 from typing import Dict, Any, Optional
 
-# Configuração de logging
+# Configuracao de logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -24,14 +24,14 @@ logging.basicConfig(
 logger = logging.getLogger('MultiSipAGI')
 
 class AsteriskAGI:
-    """Classe para comunicação AGI com Asterisk"""
+    """Classe para comunicacao AGI com Asterisk"""
     
     def __init__(self):
         self.variables = {}
         self._read_variables()
     
     def _read_variables(self):
-        """Lê variáveis do ambiente AGI"""
+        """Le variaveis do ambiente AGI"""
         while True:
             line = sys.stdin.readline().strip()
             if line == '':
@@ -41,16 +41,16 @@ class AsteriskAGI:
                 key, value = line.split(':', 1)
                 self.variables[key.strip()] = value.strip()
         
-        logger.info(f"Variáveis AGI carregadas: {self.variables}")
+        logger.info(f"Variaveis AGI carregadas: {self.variables}")
     
     def get_variable(self, var_name: str) -> Optional[str]:
-        """Obtém valor de uma variável do Asterisk"""
+        """Obtem valor de uma variavel do Asterisk"""
         sys.stdout.write(f'GET VARIABLE {var_name}\n')
         sys.stdout.flush()
         
         response = sys.stdin.readline().strip()
         if response.startswith('200 result=1'):
-            # Extrair valor entre parênteses
+            # Extrair valor entre parenteses
             start = response.find('(') + 1
             end = response.find(')')
             if start > 0 and end > start:
@@ -59,7 +59,7 @@ class AsteriskAGI:
         return None
     
     def set_variable(self, var_name: str, value: str):
-        """Define valor de uma variável no Asterisk"""
+        """Define valor de uma variavel no Asterisk"""
         sys.stdout.write(f'SET VARIABLE {var_name} "{value}"\n')
         sys.stdout.flush()
         sys.stdin.readline()  # Ler resposta
@@ -96,7 +96,7 @@ class MultiSipSelector:
                 "duracao_estimada_segundos": 60
             }
             
-            logger.info(f"Solicitando seleção de provedor para {numero_destino}")
+            logger.info(f"Solicitando selecao de provedor para {numero_destino}")
             
             response = requests.post(
                 url, 
@@ -114,7 +114,7 @@ class MultiSipSelector:
                 return None
                 
         except requests.exceptions.RequestException as e:
-            logger.error(f"Erro de conexão com API: {str(e)}")
+            logger.error(f"Erro de conexao com API: {str(e)}")
             return None
         except Exception as e:
             logger.error(f"Erro inesperado: {str(e)}")
@@ -135,7 +135,7 @@ class MultiSipSelector:
             )
             
             if response.status_code == 204:
-                logger.info(f"Resultado registrado para seleção {uuid_selecao}")
+                logger.info(f"Resultado registrado para selecao {uuid_selecao}")
             else:
                 logger.warning(f"Falha ao registrar resultado: {response.status_code}")
                 
@@ -143,11 +143,11 @@ class MultiSipSelector:
             logger.error(f"Erro ao registrar resultado: {str(e)}")
 
 def construir_dial_string(provedor: Dict[str, Any], numero_destino: str) -> str:
-    """Constrói string de discagem para Asterisk"""
+    """Constroi string de discagem para Asterisk"""
     provedor_data = provedor['provedor_selecionado']
     
-    # Formato básico: SIP/numero@provedor
-    # Pode ser personalizado conforme configuração do Asterisk
+    # Formato basico: SIP/numero@provedor
+    # Pode ser personalizado conforme configuracao do Asterisk
     
     if provedor_data['tipo_provedor'] == 'twilio':
         # Para Twilio, formato especial
@@ -162,12 +162,12 @@ def construir_dial_string(provedor: Dict[str, Any], numero_destino: str) -> str:
         return f"SIP/{numero_destino}@{provedor_data['codigo']}"
     
     else:
-        # Formato genérico
+        # Formato generico
         codigo = provedor_data['codigo'].lower()
         return f"SIP/{numero_destino}@{codigo}"
 
 def aplicar_configuracoes_canal(agi: AsteriskAGI, provedor: Dict[str, Any]):
-    """Aplica configurações específicas do provedor ao canal"""
+    """Aplica configuracoes especificas do provedor ao canal"""
     provedor_data = provedor['provedor_selecionado']
     
     # Definir timeout baseado no provedor
@@ -181,14 +181,14 @@ def aplicar_configuracoes_canal(agi: AsteriskAGI, provedor: Dict[str, Any]):
             if 'codec_preferido' in configuracoes:
                 agi.set_variable('SIP_CODEC', configuracoes['codec_preferido'])
     
-    # Definir variáveis de contexto para logs
+    # Definir variaveis de contexto para logs
     agi.set_variable('MULTISIP_PROVEDOR_ID', str(provedor_data['id']))
     agi.set_variable('MULTISIP_PROVEDOR_NOME', provedor_data['nome'])
     agi.set_variable('MULTISIP_UUID_SELECAO', str(provedor['uuid_selecao']))
     agi.set_variable('MULTISIP_CUSTO_ESTIMADO', str(provedor['custo_estimado']))
 
 def main():
-    """Função principal do AGI"""
+    """Funcao principal do AGI"""
     agi = AsteriskAGI()
     selector = MultiSipSelector()
     
@@ -200,11 +200,11 @@ def main():
         metodo_selecao = agi.get_variable('METODO_SELECAO') or 'inteligente'
         
         if not numero_destino:
-            agi.verbose("ERRO: Número de destino não fornecido", 1)
+            agi.verbose("ERRO: Numero de destino nao fornecido", 1)
             agi.hangup()
             return
         
-        agi.verbose(f"Iniciando seleção de provedor para {numero_destino}", 2)
+        agi.verbose(f"Iniciando selecao de provedor para {numero_destino}", 2)
         
         # Converter campanha_id se fornecido
         campanha_id_int = None
@@ -219,12 +219,12 @@ def main():
         )
         
         if not resultado_selecao:
-            agi.verbose("ERRO: Não foi possível selecionar provedor", 1)
+            agi.verbose("ERRO: Nao foi possivel selecionar provedor", 1)
             agi.set_variable('MULTISIP_ERROR', 'SELECTION_FAILED')
             agi.hangup()
             return
         
-        # Aplicar configurações do provedor
+        # Aplicar configuracoes do provedor
         aplicar_configuracoes_canal(agi, resultado_selecao)
         
         # Construir string de discagem
@@ -234,11 +234,11 @@ def main():
         agi.verbose(f"String de discagem: {dial_string}", 2)
         agi.verbose(f"Custo estimado: {resultado_selecao['custo_estimado']}", 2)
         
-        # Definir variável com string de discagem para uso no dialplan
+        # Definir variavel com string de discagem para uso no dialplan
         agi.set_variable('MULTISIP_DIAL_STRING', dial_string)
         agi.set_variable('MULTISIP_SUCCESS', '1')
         
-        logger.info(f"Seleção concluída: {resultado_selecao['provedor_selecionado']['nome']} para {numero_destino}")
+        logger.info(f"Selecao concluida: {resultado_selecao['provedor_selecionado']['nome']} para {numero_destino}")
         
     except Exception as e:
         error_msg = f"Erro no AGI Multi-SIP: {str(e)}"

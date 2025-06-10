@@ -16,11 +16,11 @@ logger = logging.getLogger(__name__)
 
 class AudioStateMachine:
     """
-    Máquina de estados para o sistema de áudio inteligente.
-    Gerencia transições de estado baseadas em eventos e regras.
+    Maquina de estados para o sistema de audio inteligente.
+    Gerencia transicoes de estado baseadas em eventos e regras.
     """
     
-    # Transições válidas de estado (estado_atual -> [estados_permitidos])
+    # Transicoes validas de estado (estado_atual -> [estados_permitidos])
     TRANSICOES_VALIDAS = {
         EstadoAudio.INICIANDO: [
             EstadoAudio.TOCANDO, 
@@ -81,7 +81,7 @@ class AudioStateMachine:
         estado_destino: EstadoAudio
     ) -> bool:
         """
-        Valida se uma transição de estado é permitida.
+        Valida se uma transicao de estado e permitida.
         """
         estados_permitidos = self.TRANSICOES_VALIDAS.get(estado_atual, [])
         return estado_destino in estados_permitidos
@@ -95,25 +95,25 @@ class AudioStateMachine:
         regra_aplicada: Optional[AudioRegra] = None
     ) -> bool:
         """
-        Altera o estado de uma sessão de áudio.
+        Altera o estado de uma sessao de audio.
         
         Args:
-            sessao: Sessão de áudio a ser atualizada
+            sessao: Sessao de audio a ser atualizada
             novo_estado: Novo estado desejado
-            evento: Evento que disparou a mudança
-            dados_evento: Dados específicos do evento
+            evento: Evento que disparou a mudanca
+            dados_evento: Dados especificos do evento
             regra_aplicada: Regra que foi aplicada (se houver)
             
         Returns:
-            bool: True se a mudança foi aplicada com sucesso
+            bool: True se a mudanca foi aplicada com sucesso
         """
         estado_anterior = sessao.estado_atual
         
-        # Validar transição
+        # Validar transicao
         if not self.validar_transicao(estado_anterior, novo_estado):
             logger.warning(
-                f"Transição inválida: {estado_anterior} -> {novo_estado} "
-                f"para sessão {sessao.id}"
+                f"Transicao invalida: {estado_anterior} -> {novo_estado} "
+                f"para sessao {sessao.id}"
             )
             return False
         
@@ -129,7 +129,7 @@ class AudioStateMachine:
             )
             self.db.add(evento_registro)
             
-            # Atualizar sessão
+            # Atualizar sessao
             sessao.estado_anterior = estado_anterior
             sessao.estado_atual = novo_estado
             sessao.ultima_mudanca_estado = datetime.utcnow()
@@ -142,20 +142,20 @@ class AudioStateMachine:
             
             logger.info(
                 f"Estado alterado: {estado_anterior} -> {novo_estado} "
-                f"para sessão {sessao.id} (evento: {evento})"
+                f"para sessao {sessao.id} (evento: {evento})"
             )
             
             return True
             
         except Exception as e:
             self.db.rollback()
-            logger.error(f"Erro ao alterar estado da sessão {sessao.id}: {str(e)}")
+            logger.error(f"Erro ao alterar estado da sessao {sessao.id}: {str(e)}")
             return False
 
 class AudioRulesEngine:
     """
-    Motor de regras para reprodução dinâmica de áudio.
-    Avalia condições e determina próximas ações baseadas em regras configuráveis.
+    Motor de regras para reproducao dinamica de audio.
+    Avalia condicoes e determina proximas acoes baseadas em regras configuraveis.
     """
     
     def __init__(self, db: Session):
@@ -168,14 +168,14 @@ class AudioRulesEngine:
         contexto_dados: Dict[str, Any]
     ) -> bool:
         """
-        Avalia uma condição específica.
+        Avalia uma condicao especifica.
         
         Args:
-            condicao: Condição a ser avaliada
-            contexto_dados: Dados do contexto atual da sessão
+            condicao: Condicao a ser avaliada
+            contexto_dados: Dados do contexto atual da sessao
             
         Returns:
-            bool: True se a condição é atendida
+            bool: True se a condicao e atendida
         """
         try:
             campo = condicao.get("campo")
@@ -210,7 +210,7 @@ class AudioRulesEngine:
             return False
             
         except Exception as e:
-            logger.error(f"Erro ao avaliar condição: {str(e)}")
+            logger.error(f"Erro ao avaliar condicao: {str(e)}")
             return False
     
     def avaliar_regra(
@@ -221,13 +221,13 @@ class AudioRulesEngine:
         dados_evento: Optional[Dict[str, Any]] = None
     ) -> bool:
         """
-        Avalia se uma regra específica deve ser aplicada.
+        Avalia se uma regra especifica deve ser aplicada.
         
         Args:
             regra: Regra a ser avaliada
-            sessao: Sessão atual
-            evento: Evento que disparou a avaliação
-            dados_evento: Dados específicos do evento
+            sessao: Sessao atual
+            evento: Evento que disparou a avaliacao
+            dados_evento: Dados especificos do evento
             
         Returns:
             bool: True se a regra deve ser aplicada
@@ -240,7 +240,7 @@ class AudioRulesEngine:
         if regra.evento_disparador and regra.evento_disparador != evento:
             return False
             
-        # Preparar dados do contexto para avaliação
+        # Preparar dados do contexto para avaliacao
         contexto_dados = sessao.dados_contexto or {}
         contexto_dados.update(dados_evento or {})
         
@@ -257,7 +257,7 @@ class AudioRulesEngine:
             "evento_atual": evento.value
         })
         
-        # Avaliar condições adicionais
+        # Avaliar condicoes adicionais
         if regra.condicoes:
             for condicao in regra.condicoes:
                 if not self.avaliar_condicao(condicao, contexto_dados):
@@ -272,7 +272,7 @@ class AudioRulesEngine:
         dados_evento: Optional[Dict[str, Any]] = None
     ) -> List[AudioRegra]:
         """
-        Busca todas as regras aplicáveis para uma sessão e evento.
+        Busca todas as regras aplicaveis para uma sessao e evento.
         
         Returns:
             List[AudioRegra]: Lista de regras ordenadas por prioridade
@@ -298,7 +298,7 @@ class AudioRulesEngine:
         # Ordenar por prioridade (maior prioridade primeiro)
         regras = regras_query.order_by(AudioRegra.prioridade.desc()).all()
         
-        # Filtrar regras que atendem às condições
+        # Filtrar regras que atendem as condicoes
         regras_aplicaveis = []
         for regra in regras:
             if self.avaliar_regra(regra, sessao, evento, dados_evento):
@@ -314,13 +314,13 @@ class AudioRulesEngine:
         dados_evento: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Aplica uma regra específica a uma sessão.
+        Aplica uma regra especifica a uma sessao.
         
         Returns:
-            Dict: Resultado da aplicação da regra
+            Dict: Resultado da aplicacao da regra
         """
         try:
-            # Alterar estado se necessário
+            # Alterar estado se necessario
             sucesso_mudanca = True
             if regra.estado_destino != sessao.estado_atual:
                 sucesso_mudanca = self.state_machine.alterar_estado(
@@ -338,15 +338,15 @@ class AudioRulesEngine:
                     "regra_id": regra.id
                 }
             
-            # Aplicar ações adicionais
+            # Aplicar acoes adicionais
             acoes_resultado = {}
             
-            # Atualizar URL do áudio se especificado
+            # Atualizar URL do audio se especificado
             if regra.audio_url:
                 sessao.audio_atual_url = regra.audio_url
                 acoes_resultado["audio_alterado"] = regra.audio_url
             
-            # Aplicar parâmetros da ação
+            # Aplicar parametros da acao
             if regra.parametros_acao:
                 for parametro, valor in regra.parametros_acao.items():
                     if parametro == "timeout_dtmf":
@@ -366,7 +366,7 @@ class AudioRulesEngine:
             
             self.db.commit()
             
-            logger.info(f"Regra {regra.id} aplicada com sucesso à sessão {sessao.id}")
+            logger.info(f"Regra {regra.id} aplicada com sucesso a sessao {sessao.id}")
             
             return {
                 "sucesso": True,
@@ -391,18 +391,18 @@ class AudioRulesEngine:
         dados_evento: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Processa um evento para uma sessão específica.
+        Processa um evento para uma sessao especifica.
         
         Args:
-            sessao_id: ID da sessão
+            sessao_id: ID da sessao
             evento: Tipo do evento
-            dados_evento: Dados específicos do evento
+            dados_evento: Dados especificos do evento
             
         Returns:
             Dict: Resultado do processamento
         """
         try:
-            # Buscar sessão
+            # Buscar sessao
             sessao = self.db.query(AudioSessao).filter(
                 AudioSessao.id == sessao_id
             ).first()
@@ -410,26 +410,26 @@ class AudioRulesEngine:
             if not sessao:
                 return {
                     "sucesso": False,
-                    "erro": f"Sessão {sessao_id} não encontrada"
+                    "erro": f"Sessao {sessao_id} nao encontrada"
                 }
             
-            # Buscar regras aplicáveis
+            # Buscar regras aplicaveis
             regras_aplicaveis = self.buscar_regras_aplicaveis(
                 sessao, evento, dados_evento
             )
             
             if not regras_aplicaveis:
                 logger.info(
-                    f"Nenhuma regra aplicável para evento {evento} "
-                    f"na sessão {sessao_id}"
+                    f"Nenhuma regra aplicavel para evento {evento} "
+                    f"na sessao {sessao_id}"
                 )
                 return {
                     "sucesso": True,
-                    "mensagem": "Nenhuma regra aplicável",
+                    "mensagem": "Nenhuma regra aplicavel",
                     "regras_avaliadas": 0
                 }
             
-            # Aplicar primeira regra aplicável (maior prioridade)
+            # Aplicar primeira regra aplicavel (maior prioridade)
             regra_escolhida = regras_aplicaveis[0]
             resultado = self.aplicar_regra(
                 regra_escolhida, sessao, evento, dados_evento
@@ -449,8 +449,8 @@ class AudioRulesEngine:
 
 class AudioIntelligentSystem:
     """
-    Sistema principal de áudio inteligente.
-    Coordena a máquina de estados e o motor de regras.
+    Sistema principal de audio inteligente.
+    Coordena a maquina de estados e o motor de regras.
     """
     
     def __init__(self, db: Session):
@@ -465,24 +465,24 @@ class AudioIntelligentSystem:
         configuracoes_personalizadas: Optional[Dict[str, Any]] = None
     ) -> AudioSessao:
         """
-        Inicia uma nova sessão de áudio para uma chamada.
+        Inicia uma nova sessao de audio para uma chamada.
         
         Args:
             llamada_id: ID da chamada
-            contexto_id: ID do contexto de áudio
-            configuracoes_personalizadas: Configurações específicas para esta sessão
+            contexto_id: ID do contexto de audio
+            configuracoes_personalizadas: Configuracoes especificas para esta sessao
             
         Returns:
-            AudioSessao: Sessão criada
+            AudioSessao: Sessao criada
         """
         try:
-            # Verificar se já existe sessão para esta chamada
+            # Verificar se ja existe sessao para esta chamada
             sessao_existente = self.db.query(AudioSessao).filter(
                 AudioSessao.llamada_id == llamada_id
             ).first()
             
             if sessao_existente:
-                logger.warning(f"Sessão já existe para chamada {llamada_id}")
+                logger.warning(f"Sessao ja existe para chamada {llamada_id}")
                 return sessao_existente
             
             # Buscar contexto
@@ -491,9 +491,9 @@ class AudioIntelligentSystem:
             ).first()
             
             if not contexto:
-                raise ValueError(f"Contexto {contexto_id} não encontrado")
+                raise ValueError(f"Contexto {contexto_id} nao encontrado")
             
-            # Criar nova sessão
+            # Criar nova sessao
             nova_sessao = AudioSessao(
                 llamada_id=llamada_id,
                 contexto_id=contexto_id,
@@ -508,7 +508,7 @@ class AudioIntelligentSystem:
             self.db.commit()
             self.db.refresh(nova_sessao)
             
-            logger.info(f"Sessão de áudio iniciada: {nova_sessao.id} para chamada {llamada_id}")
+            logger.info(f"Sessao de audio iniciada: {nova_sessao.id} para chamada {llamada_id}")
             
             # Processar evento inicial
             self.rules_engine.processar_evento(
@@ -520,7 +520,7 @@ class AudioIntelligentSystem:
             
         except Exception as e:
             self.db.rollback()
-            logger.error(f"Erro ao iniciar sessão de áudio: {str(e)}")
+            logger.error(f"Erro ao iniciar sessao de audio: {str(e)}")
             raise
     
     def processar_evento_llamada(
@@ -535,25 +535,25 @@ class AudioIntelligentSystem:
         Args:
             llamada_id: ID da chamada
             evento: Tipo do evento
-            dados_evento: Dados específicos do evento
+            dados_evento: Dados especificos do evento
             
         Returns:
             Dict: Resultado do processamento
         """
         try:
-            # Buscar sessão ativa para a chamada
+            # Buscar sessao ativa para a chamada
             sessao = self.db.query(AudioSessao).filter(
                 AudioSessao.llamada_id == llamada_id
             ).first()
             
             if not sessao:
-                logger.warning(f"Nenhuma sessão ativa encontrada para chamada {llamada_id}")
+                logger.warning(f"Nenhuma sessao ativa encontrada para chamada {llamada_id}")
                 return {
                     "sucesso": False,
-                    "erro": "Sessão não encontrada"
+                    "erro": "Sessao nao encontrada"
                 }
             
-            # Processar evento através do motor de regras
+            # Processar evento atraves do motor de regras
             resultado = self.rules_engine.processar_evento(
                 sessao.id, evento, dados_evento
             )
@@ -569,13 +569,13 @@ class AudioIntelligentSystem:
     
     def obter_status_sessao(self, llamada_id: int) -> Optional[Dict[str, Any]]:
         """
-        Obtém o status atual de uma sessão de áudio.
+        Obtem o status atual de uma sessao de audio.
         
         Args:
             llamada_id: ID da chamada
             
         Returns:
-            Dict: Status da sessão ou None se não encontrada
+            Dict: Status da sessao ou None se nao encontrada
         """
         try:
             sessao = self.db.query(AudioSessao).filter(
@@ -607,5 +607,5 @@ class AudioIntelligentSystem:
             }
             
         except Exception as e:
-            logger.error(f"Erro ao obter status da sessão: {str(e)}")
+            logger.error(f"Erro ao obter status da sessao: {str(e)}")
             return None 

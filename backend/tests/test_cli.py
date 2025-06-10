@@ -27,7 +27,7 @@ class TestCliService:
     
     @pytest.fixture
     def mock_db(self):
-        """Mock de la sesión de base de datos."""
+        """Mock de la sesion de base de datos."""
         return Mock(spec=Session)
     
     @pytest.fixture
@@ -60,14 +60,14 @@ class TestCliService:
         # Configurar mock
         mock_db.query.return_value.filter.return_value.all.return_value = []
         
-        # Executar y verificar excepción
+        # Executar y verificar excepcion
         with pytest.raises(Exception) as exc_info:
             service.generar_cli_aleatorio()
         
-        assert "Nenhum CLI disponível" in str(exc_info.value)
+        assert "Nenhum CLI disponivel" in str(exc_info.value)
     
     def test_generar_cli_aleatorio_con_exclusion(self, service, mock_db):
-        """Test generar CLI excluyendo un CLI específico."""
+        """Test generar CLI excluyendo un CLI especifico."""
         # Configurar mock
         mock_cli1 = Cli(id=1, numero_normalizado="+5491122334455", activo=True)
         mock_cli2 = Cli(id=2, numero_normalizado="+5491133445566", activo=True)
@@ -116,7 +116,7 @@ class TestCliService:
         assert isinstance(resultado, Cli)
     
     def test_agregar_cli_ya_existe_activo(self, service, mock_db):
-        """Test agregar CLI que ya existe y está activo."""
+        """Test agregar CLI que ya existe y esta activo."""
         # Configurar mock
         mock_cli_existente = Cli(
             id=1,
@@ -130,11 +130,11 @@ class TestCliService:
             descripcion="CLI de teste"
         )
         
-        # Executar y verificar excepción
+        # Executar y verificar excepcion
         with pytest.raises(Exception) as exc_info:
             service.agregar_cli(cli_data)
         
-        assert "já existe" in str(exc_info.value)
+        assert "ja existe" in str(exc_info.value)
     
     def test_agregar_cli_reactivar_inactivo(self, service, mock_db):
         """Test reactivar CLI inactivo."""
@@ -143,13 +143,13 @@ class TestCliService:
             id=1,
             numero_normalizado="+5491122334455",
             activo=False,
-            descripcion="Descripción anterior"
+            descripcion="Descripcion anterior"
         )
         mock_db.query.return_value.filter.return_value.first.return_value = mock_cli_existente
         
         cli_data = CliCreate(
             numero="+5491122334455",
-            descripcion="Nueva descripción"
+            descripcion="Nueva descripcion"
         )
         
         # Executar
@@ -157,7 +157,7 @@ class TestCliService:
         
         # Verificar
         assert resultado.activo is True
-        assert resultado.descripcion == "Nueva descripción"
+        assert resultado.descripcion == "Nueva descripcion"
         mock_db.commit.assert_called_once()
     
     def test_agregar_clis_bulk(self, service):
@@ -169,18 +169,18 @@ class TestCliService:
             "+5491122334455"  # Duplicado
         ]
         
-        # Mock do método agregar_cli
+        # Mock do metodo agregar_cli
         with patch.object(service, 'agregar_cli') as mock_agregar:
-            # Configurar comportamento para diferentes números
+            # Configurar comportamento para diferentes numeros
             def side_effect(cli_data):
                 if "invalido" in cli_data.numero:
-                    raise Exception("Número CLI inválido")
+                    raise Exception("Numero CLI invalido")
                 elif cli_data.numero == "+5491122334455":
                     # Primeiro sucesso, segundo duplicado
                     if mock_agregar.call_count <= 1:
                         return Cli()
                     else:
-                        raise Exception("já existe")
+                        raise Exception("ja existe")
                 else:
                     return Cli()
             
@@ -218,17 +218,17 @@ class TestCliService:
         mock_cli = Cli(
             id=1,
             numero_normalizado="+5491122334455",
-            descripcion="Descripción anterior"
+            descripcion="Descripcion anterior"
         )
         mock_db.query.return_value.filter.return_value.first.return_value = mock_cli
         
-        dados_atualizacao = CliUpdate(descripcion="Nueva descripción")
+        dados_atualizacao = CliUpdate(descripcion="Nueva descripcion")
         
         # Executar
         resultado = service.atualizar_cli(1, dados_atualizacao)
         
         # Verificar
-        assert resultado.descripcion == "Nueva descripción"
+        assert resultado.descripcion == "Nueva descripcion"
         mock_db.commit.assert_called_once()
     
     def test_remover_cli(self, service, mock_db):
@@ -260,7 +260,7 @@ class TestCliEndpoints:
     @patch('app.database.obtener_sesion')
     @patch('app.services.cli_service.CliService')
     def test_generar_cli_aleatorio_endpoint(self, mock_service_class, mock_db):
-        """Test endpoint de geração de CLI aleatorio."""
+        """Test endpoint de geracao de CLI aleatorio."""
         # Configurar mock
         mock_service = Mock()
         mock_service_class.return_value = mock_service
@@ -273,7 +273,7 @@ class TestCliEndpoints:
             mensaje="CLI selecionado: +5491122334455"
         )
         
-        # Realizar petición
+        # Realizar peticion
         response = self.test_client.get("/api/v1/cli/generar-aleatorio")
         
         # Verificar respuesta
@@ -300,7 +300,7 @@ class TestCliEndpoints:
         )
         mock_service.agregar_cli.return_value = mock_cli
         
-        # Realizar petición
+        # Realizar peticion
         response = self.test_client.post(
             "/api/v1/cli/agregar",
             json={
@@ -337,7 +337,7 @@ class TestCliEndpoints:
         ]
         mock_service.listar_clis.return_value = mock_clis
         
-        # Realizar petición
+        # Realizar peticion
         response = self.test_client.get("/api/v1/cli/")
         
         # Verificar respuesta
@@ -358,10 +358,10 @@ class TestCliEndpoints:
             'clis_agregados': 2,
             'clis_duplicados': 1,
             'clis_invalidos': 1,
-            'errores': ['CLI 3: Número CLI inválido']
+            'errores': ['CLI 3: Numero CLI invalido']
         }
         
-        # Realizar petición
+        # Realizar peticion
         response = self.test_client.post(
             "/api/v1/cli/agregar-bulk",
             json={
@@ -379,7 +379,7 @@ class TestCliEndpoints:
 
 
 class TestIntegracionCliDiscado:
-    """Tests de integración entre CLI y discado."""
+    """Tests de integracion entre CLI y discado."""
     
     @patch('app.database.obtener_sesion')
     @patch('app.services.discado_service.DiscadoService')
@@ -403,7 +403,7 @@ class TestIntegracionCliDiscado:
             "bloqueado_blacklist": False
         }
         
-        # Realizar petición
+        # Realizar peticion
         response = client.post(
             "/api/v1/discado/iniciar-llamada",
             json={
@@ -437,7 +437,7 @@ class TestIntegracionCliDiscado:
             "bloqueado_blacklist": False
         }
         
-        # Realizar petición
+        # Realizar peticion
         response = client.post(
             "/api/v1/discado/iniciar-llamada",
             json={

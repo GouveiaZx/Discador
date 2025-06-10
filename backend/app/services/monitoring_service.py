@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Serviço de Monitoramento em Tempo Real
-Coleta e processa métricas do sistema de discagem preditiva
+Servico de Monitoramento em Tempo Real
+Coleta e processa metricas do sistema de discagem preditiva
 """
 
 import json
@@ -30,7 +30,7 @@ from app.schemas.monitoring import (
 logger = logging.getLogger(__name__)
 
 class MonitoringService:
-    """Serviço principal de monitoramento"""
+    """Servico principal de monitoramento"""
     
     def __init__(self, db: Session):
         self.db = db
@@ -42,12 +42,12 @@ class MonitoringService:
         self._cache_timestamp = {}
         self._cache_ttl = 10  # 10 segundos para cache local
         
-        # Configurações
+        # Configuracoes
         self.redis_ttl = 60  # 1 minuto para cache Redis
-        self.metrics_ttl = 300  # 5 minutos para métricas calculadas
+        self.metrics_ttl = 300  # 5 minutos para metricas calculadas
     
     def _init_redis(self):
-        """Inicializa conexão Redis"""
+        """Inicializa conexao Redis"""
         try:
             self.redis_client = redis.Redis(
                 host='localhost',
@@ -57,9 +57,9 @@ class MonitoringService:
                 socket_connect_timeout=5,
                 socket_timeout=5
             )
-            # Teste de conexão
+            # Teste de conexao
             self.redis_client.ping()
-            logger.info("Conexão Redis estabelecida com sucesso")
+            logger.info("Conexao Redis estabelecida com sucesso")
         except Exception as e:
             logger.warning(f"Falha ao conectar no Redis: {e}")
             self.redis_client = None
@@ -115,7 +115,7 @@ class MonitoringService:
             logger.error(f"Erro ao armazenar cache {key}: {e}")
     
     def _invalidate_cache(self, pattern: str) -> None:
-        """Invalida cache por padrão"""
+        """Invalida cache por padrao"""
         try:
             # Cache local
             keys_to_remove = [k for k in self._cache_local.keys() if pattern in k]
@@ -135,11 +135,11 @@ class MonitoringService:
             logger.error(f"Erro ao invalidar cache {pattern}: {e}")
 
     # ================================================
-    # MÉTRICAS DE CAMPANHAS
+    # METRICAS DE CAMPANHAS
     # ================================================
     
     def obter_metricas_campanhas(self, apenas_ativas: bool = True) -> List[MetricaCampanha]:
-        """Obtém métricas de todas as campanhas"""
+        """Obtem metricas de todas as campanhas"""
         cache_key = self._get_cache_key("campanhas", apenas_ativas)
         cached = self._get_from_cache(cache_key)
         
@@ -158,7 +158,7 @@ class MonitoringService:
             metricas = []
             
             for campanha in campanhas:
-                # Calcular métricas
+                # Calcular metricas
                 total_llamadas = self.db.query(LlamadaPresione1).filter(
                     LlamadaPresione1.campana_id == campanha.id
                 ).count()
@@ -182,7 +182,7 @@ class MonitoringService:
                 taxa_atendimento = (llamadas_atendidas / total_llamadas * 100) if total_llamadas > 0 else 0
                 taxa_sucesso = 0  # TODO: Implementar baseado em presiono_1
                 
-                # Tempo médio
+                # Tempo medio
                 tempo_medio = self.db.query(func.avg(LlamadaPresione1.duracion_total)).filter(
                     LlamadaPresione1.campana_id == campanha.id,
                     LlamadaPresione1.duracion_total.isnot(None)
@@ -197,7 +197,7 @@ class MonitoringService:
                     campanha_id=campanha.id,
                     nome_campanha=campanha.nombre,
                     status_campanha="ativa" if campanha.activa else "parada",
-                    total_contatos=0,  # TODO: Obter da lista de números
+                    total_contatos=0,  # TODO: Obter da lista de numeros
                     chamadas_realizadas=total_llamadas,
                     chamadas_ativas=llamadas_ativas,
                     chamadas_finalizadas=total_llamadas - llamadas_ativas,
@@ -220,15 +220,15 @@ class MonitoringService:
             return metricas
             
         except Exception as e:
-            logger.error(f"Erro ao obter métricas de campanhas: {e}")
+            logger.error(f"Erro ao obter metricas de campanhas: {e}")
             return []
     
     # ================================================
-    # MÉTRICAS DE PROVEDORES SIP
+    # METRICAS DE PROVEDORES SIP
     # ================================================
     
     def obter_metricas_provedores(self) -> List[MetricaProvedor]:
-        """Obtém métricas de todos os provedores SIP"""
+        """Obtem metricas de todos os provedores SIP"""
         cache_key = self._get_cache_key("provedores")
         cached = self._get_from_cache(cache_key)
         
@@ -260,7 +260,7 @@ class MonitoringService:
                 # Taxa de sucesso
                 taxa_sucesso = ((chamadas_hoje - falhas_hoje) / chamadas_hoje * 100) if chamadas_hoje > 0 else 100
                 
-                # Latência média
+                # Latencia media
                 latencia_media = self.db.query(func.avg(LogSelecaoProvedor.latencia_ms)).filter(
                     LogSelecaoProvedor.provedor_id == provedor.id,
                     func.date(LogSelecaoProvedor.timestamp_selecao) == hoje,
@@ -289,15 +289,15 @@ class MonitoringService:
             return metricas
             
         except Exception as e:
-            logger.error(f"Erro ao obter métricas de provedores: {e}")
+            logger.error(f"Erro ao obter metricas de provedores: {e}")
             return []
     
     # ================================================
-    # MÉTRICAS DE AGENTES
+    # METRICAS DE AGENTES
     # ================================================
     
     def obter_metricas_agentes(self) -> List[MetricaAgente]:
-        """Obtém métricas de todos os agentes"""
+        """Obtem metricas de todos os agentes"""
         cache_key = self._get_cache_key("agentes")
         cached = self._get_from_cache(cache_key)
         
@@ -312,7 +312,7 @@ class MonitoringService:
             metricas = []
             
             for agente in agentes:
-                # Calcular tempo médio de atendimento
+                # Calcular tempo medio de atendimento
                 tempo_medio = None
                 if agente.total_chamadas_atendidas > 0:
                     tempo_medio = agente.tempo_total_atendimento / agente.total_chamadas_atendidas
@@ -346,7 +346,7 @@ class MonitoringService:
             return metricas
             
         except Exception as e:
-            logger.error(f"Erro ao obter métricas de agentes: {e}")
+            logger.error(f"Erro ao obter metricas de agentes: {e}")
             return []
     
     # ================================================
@@ -354,7 +354,7 @@ class MonitoringService:
     # ================================================
     
     def obter_dashboard_resumo(self) -> DashboardResumo:
-        """Obtém dashboard resumido para supervisores"""
+        """Obtem dashboard resumido para supervisores"""
         cache_key = self._get_cache_key("dashboard_resumo")
         cached = self._get_from_cache(cache_key)
         
@@ -362,7 +362,7 @@ class MonitoringService:
             return DashboardResumo(**cached)
         
         try:
-            # Métricas básicas
+            # Metricas basicas
             campanhas = self.obter_metricas_campanhas(apenas_ativas=True)
             provedores = self.obter_metricas_provedores()
             agentes = self.obter_metricas_agentes()
@@ -435,7 +435,7 @@ class MonitoringService:
             )
     
     def obter_dashboard_detalhado(self) -> DashboardDetalhado:
-        """Obtém dashboard detalhado com todas as métricas"""
+        """Obtem dashboard detalhado com todas as metricas"""
         try:
             dashboard_resumo = self.obter_dashboard_resumo()
             
@@ -443,7 +443,7 @@ class MonitoringService:
             campanhas = self.obter_metricas_campanhas(apenas_ativas=True)
             agentes = self.obter_metricas_agentes()
             
-            # Chamadas ativas (simulação)
+            # Chamadas ativas (simulacao)
             chamadas_ativas = []  # TODO: Implementar consulta real
             
             # Eventos recentes
@@ -516,7 +516,7 @@ class MonitoringService:
             self.db.rollback()
     
     # ================================================
-    # LIMPEZA E MANUTENÇÃO
+    # LIMPEZA E MANUTENCAO
     # ================================================
     
     def limpar_cache_expirado(self) -> None:
@@ -546,7 +546,7 @@ class MonitoringService:
 # ================================================
 
 def get_monitoring_service(db: Session = None) -> MonitoringService:
-    """Factory function para criar instância do serviço"""
+    """Factory function para criar instancia do servico"""
     if not db:
         db = next(get_db())
     return MonitoringService(db) 

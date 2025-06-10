@@ -1,5 +1,5 @@
 """
-Serviço para gerenciar blacklist/lista negra de números.
+Servico para gerenciar blacklist/lista negra de numeros.
 """
 
 from typing import List, Optional, Dict, Any
@@ -22,29 +22,29 @@ from app.utils.logger import logger
 
 
 class BlacklistService:
-    """Serviço para operações de blacklist."""
+    """Servico para operacoes de blacklist."""
     
     def __init__(self, db: Session):
         self.db = db
     
     def verificar_numero_blacklist(self, numero: str) -> BlacklistVerificationResponse:
         """
-        Verifica se um número está na blacklist.
+        Verifica se um numero esta na blacklist.
         
         Args:
-            numero: Número a verificar
+            numero: Numero a verificar
             
         Returns:
-            BlacklistVerificationResponse com resultado da verificação
+            BlacklistVerificationResponse com resultado da verificacao
         """
-        # Normalizar número
+        # Normalizar numero
         validacao = validar_numero_telefono(numero)
         if not validacao.valido:
             return BlacklistVerificationResponse(
                 numero_original=numero,
                 numero_normalizado="",
                 en_blacklist=False,
-                motivo="Número inválido para verificación"
+                motivo="Numero invalido para verificacion"
             )
         
         # Buscar en blacklist
@@ -61,7 +61,7 @@ class BlacklistService:
             entrada_blacklist.ultima_vez_bloqueado = func.now()
             self.db.commit()
             
-            logger.info(f"Número {validacao.numero_normalizado} bloqueado por blacklist")
+            logger.info(f"Numero {validacao.numero_normalizado} bloqueado por blacklist")
             
             return BlacklistVerificationResponse(
                 numero_original=numero,
@@ -79,20 +79,20 @@ class BlacklistService:
     
     def agregar_numero_blacklist(self, numero_data: BlacklistCreate) -> ListaNegra:
         """
-        Agrega un número a la blacklist.
+        Agrega un numero a la blacklist.
         
         Args:
-            numero_data: Datos del número a agregar
+            numero_data: Datos del numero a agregar
             
         Returns:
             ListaNegra creada
         """
-        # Validar y normalizar número
+        # Validar y normalizar numero
         validacion = validar_numero_telefono(numero_data.numero)
         if not validacion.valido:
             raise HTTPException(
                 status_code=400,
-                detail=f"Número inválido: {validacion.motivo_invalido}"
+                detail=f"Numero invalido: {validacion.motivo_invalido}"
             )
         
         # Verificar si ya existe
@@ -104,7 +104,7 @@ class BlacklistService:
             if existente.activo:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"El número {validacion.numero_normalizado} ya está en blacklist"
+                    detail=f"El numero {validacion.numero_normalizado} ya esta en blacklist"
                 )
             else:
                 # Reactivar entrada existente
@@ -116,7 +116,7 @@ class BlacklistService:
                 self.db.commit()
                 self.db.refresh(existente)
                 
-                logger.info(f"Número {validacion.numero_normalizado} reactivado en blacklist")
+                logger.info(f"Numero {validacion.numero_normalizado} reactivado en blacklist")
                 return existente
         
         # Crear nueva entrada
@@ -134,27 +134,27 @@ class BlacklistService:
             self.db.commit()
             self.db.refresh(nueva_entrada)
             
-            logger.info(f"Número {validacion.numero_normalizado} agregado a blacklist")
+            logger.info(f"Numero {validacion.numero_normalizado} agregado a blacklist")
             return nueva_entrada
             
         except IntegrityError:
             self.db.rollback()
             raise HTTPException(
                 status_code=400,
-                detail="Error al agregar número a blacklist"
+                detail="Error al agregar numero a blacklist"
             )
     
     def agregar_numeros_bulk(self, numeros: List[str], motivo: str = None, creado_por: str = None) -> Dict[str, Any]:
         """
-        Agrega múltiples números a la blacklist.
+        Agrega multiples numeros a la blacklist.
         
         Args:
-            numeros: Lista de números a agregar
-            motivo: Motivo común para todos los números
-            creado_por: Usuario que agrega los números
+            numeros: Lista de numeros a agregar
+            motivo: Motivo comun para todos los numeros
+            creado_por: Usuario que agrega los numeros
             
         Returns:
-            Diccionario con estadísticas del procesamiento
+            Diccionario con estadisticas del procesamiento
         """
         numeros_agregados = 0
         numeros_duplicados = 0
@@ -173,16 +173,16 @@ class BlacklistService:
                 numeros_agregados += 1
                 
             except HTTPException as e:
-                if "ya está en blacklist" in str(e.detail):
+                if "ya esta en blacklist" in str(e.detail):
                     numeros_duplicados += 1
-                    errores.append(f"Número {i}: {e.detail}")
-                elif "inválido" in str(e.detail):
+                    errores.append(f"Numero {i}: {e.detail}")
+                elif "invalido" in str(e.detail):
                     numeros_invalidos += 1
-                    errores.append(f"Número {i}: {e.detail}")
+                    errores.append(f"Numero {i}: {e.detail}")
                 else:
-                    errores.append(f"Número {i}: Error inesperado - {e.detail}")
+                    errores.append(f"Numero {i}: Error inesperado - {e.detail}")
             except Exception as e:
-                errores.append(f"Número {i}: Error inesperado - {str(e)}")
+                errores.append(f"Numero {i}: Error inesperado - {str(e)}")
         
         return {
             'numeros_agregados': numeros_agregados,
@@ -193,10 +193,10 @@ class BlacklistService:
     
     def remover_numero_blacklist(self, numero_id: int) -> bool:
         """
-        Remove um número da blacklist (marca como inativo).
+        Remove um numero da blacklist (marca como inativo).
         
         Args:
-            numero_id: ID do número na blacklist
+            numero_id: ID do numero na blacklist
             
         Returns:
             True se removido com sucesso
@@ -206,22 +206,22 @@ class BlacklistService:
         if not entrada:
             raise HTTPException(
                 status_code=404,
-                detail=f"Número com ID {numero_id} não encontrado na blacklist"
+                detail=f"Numero com ID {numero_id} nao encontrado na blacklist"
             )
         
         entrada.activo = False
         entrada.fecha_actualizacion = func.now()
         self.db.commit()
         
-        logger.info(f"Número {entrada.numero_normalizado} removido da blacklist")
+        logger.info(f"Numero {entrada.numero_normalizado} removido da blacklist")
         return True
     
     def remover_numero_por_telefone(self, numero: str) -> bool:
         """
-        Remove um número da blacklist por número de telefone.
+        Remove um numero da blacklist por numero de telefone.
         
         Args:
-            numero: Número de telefone a remover
+            numero: Numero de telefone a remover
             
         Returns:
             True se removido com sucesso
@@ -230,7 +230,7 @@ class BlacklistService:
         if not validacao.valido:
             raise HTTPException(
                 status_code=400,
-                detail=f"Número inválido: {validacao.motivo_invalido}"
+                detail=f"Numero invalido: {validacao.motivo_invalido}"
             )
         
         entrada = self.db.query(ListaNegra).filter(
@@ -243,22 +243,22 @@ class BlacklistService:
         if not entrada:
             raise HTTPException(
                 status_code=404,
-                detail=f"Número {validacao.numero_normalizado} não encontrado na blacklist ativa"
+                detail=f"Numero {validacao.numero_normalizado} nao encontrado na blacklist ativa"
             )
         
         entrada.activo = False
         entrada.fecha_actualizacion = func.now()
         self.db.commit()
         
-        logger.info(f"Número {validacao.numero_normalizado} removido da blacklist")
+        logger.info(f"Numero {validacao.numero_normalizado} removido da blacklist")
         return True
     
     def atualizar_numero_blacklist(self, numero_id: int, dados_atualizacao: BlacklistUpdate) -> ListaNegra:
         """
-        Atualiza dados de um número na blacklist.
+        Atualiza dados de um numero na blacklist.
         
         Args:
-            numero_id: ID do número na blacklist
+            numero_id: ID do numero na blacklist
             dados_atualizacao: Dados para atualizar
             
         Returns:
@@ -269,7 +269,7 @@ class BlacklistService:
         if not entrada:
             raise HTTPException(
                 status_code=404,
-                detail=f"Número com ID {numero_id} não encontrado na blacklist"
+                detail=f"Numero com ID {numero_id} nao encontrado na blacklist"
             )
         
         # Atualizar campos fornecidos
@@ -286,20 +286,20 @@ class BlacklistService:
         self.db.commit()
         self.db.refresh(entrada)
         
-        logger.info(f"Número {entrada.numero_normalizado} atualizado na blacklist")
+        logger.info(f"Numero {entrada.numero_normalizado} atualizado na blacklist")
         return entrada
     
     def buscar_blacklist(self, criterios: BlacklistSearchRequest, skip: int = 0, limit: int = 100) -> List[ListaNegra]:
         """
-        Busca números na blacklist com filtros.
+        Busca numeros na blacklist com filtros.
         
         Args:
-            criterios: Critérios de busca
-            skip: Número de registros a pular
+            criterios: Criterios de busca
+            skip: Numero de registros a pular
             limit: Limite de registros a retornar
             
         Returns:
-            Lista de números encontrados
+            Lista de numeros encontrados
         """
         query = self.db.query(ListaNegra)
         
@@ -333,15 +333,15 @@ class BlacklistService:
     
     def obter_estatisticas(self) -> BlacklistStatsResponse:
         """
-        Obtém estatísticas da blacklist.
+        Obtem estatisticas da blacklist.
         
         Returns:
-            BlacklistStatsResponse com estatísticas
+            BlacklistStatsResponse com estatisticas
         """
         hoje = datetime.now().date()
         inicio_mes = datetime.now().replace(day=1).date()
         
-        # Contadores básicos
+        # Contadores basicos
         total_numeros = self.db.query(ListaNegra).count()
         numeros_activos = self.db.query(ListaNegra).filter(ListaNegra.activo == True).count()
         numeros_inactivos = total_numeros - numeros_activos
@@ -351,12 +351,12 @@ class BlacklistService:
             func.date(ListaNegra.ultima_vez_bloqueado) == hoje
         ).scalar() or 0
         
-        # Bloqueos no mês
+        # Bloqueos no mes
         total_bloqueos_mes = self.db.query(func.sum(ListaNegra.veces_bloqueado)).filter(
             func.date(ListaNegra.ultima_vez_bloqueado) >= inicio_mes
         ).scalar() or 0
         
-        # Número mais bloqueado
+        # Numero mais bloqueado
         numero_mais_bloqueado = self.db.query(ListaNegra).filter(
             ListaNegra.activo == True
         ).order_by(ListaNegra.veces_bloqueado.desc()).first()
@@ -372,15 +372,15 @@ class BlacklistService:
     
     def listar_blacklist(self, skip: int = 0, limit: int = 100, apenas_ativos: bool = True) -> List[ListaNegra]:
         """
-        Lista números da blacklist.
+        Lista numeros da blacklist.
         
         Args:
-            skip: Número de registros a pular
+            skip: Numero de registros a pular
             limit: Limite de registros
-            apenas_ativos: Se deve retornar apenas números ativos
+            apenas_ativos: Se deve retornar apenas numeros ativos
             
         Returns:
-            Lista de números na blacklist
+            Lista de numeros na blacklist
         """
         query = self.db.query(ListaNegra)
         

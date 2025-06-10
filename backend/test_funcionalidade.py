@@ -6,12 +6,12 @@ Script de teste simples para verificar a funcionalidade de blacklist.
 import sys
 import os
 
-# Adicionar o diretório backend ao path
+# Adicionar o diretorio backend ao path
 sys.path.insert(0, os.path.dirname(__file__))
 
 def test_validacao_numeros():
-    """Testa a validação de números."""
-    print("=== Teste de Validação de Números ===\n")
+    """Testa a validacao de numeros."""
+    print("=== Teste de Validacao de Numeros ===\n")
     
     try:
         from app.schemas.lista_llamadas import validar_numero_telefono
@@ -27,18 +27,18 @@ def test_validacao_numeros():
         
         for numero in numeros_teste:
             resultado = validar_numero_telefono(numero)
-            print(f"Número: '{numero}'")
-            print(f"  Válido: {resultado.valido}")
+            print(f"Numero: '{numero}'")
+            print(f"  Valido: {resultado.valido}")
             print(f"  Normalizado: {resultado.numero_normalizado}")
             if not resultado.valido:
                 print(f"  Motivo: {resultado.motivo_invalido}")
             print()
             
-        print("✅ Teste de validação concluído com sucesso!")
+        print("✅ Teste de validacao concluido com sucesso!")
         return True
         
     except Exception as e:
-        print(f"❌ Erro no teste de validação: {str(e)}")
+        print(f"❌ Erro no teste de validacao: {str(e)}")
         return False
 
 def test_schemas_blacklist():
@@ -67,7 +67,7 @@ def test_schemas_blacklist():
             en_blacklist=True,
             motivo="Spam detectado"
         )
-        print(f"Verificação: {verificacao.numero_normalizado} - Bloqueado: {verificacao.en_blacklist}")
+        print(f"Verificacao: {verificacao.numero_normalizado} - Bloqueado: {verificacao.en_blacklist}")
         
         # Teste BlacklistStatsResponse
         stats = BlacklistStatsResponse(
@@ -78,9 +78,9 @@ def test_schemas_blacklist():
             total_bloqueos_mes=50,
             numero_mas_bloqueado="+5491112345678"
         )
-        print(f"Stats: {stats.total_numeros} números, {stats.numeros_activos} ativos")
+        print(f"Stats: {stats.total_numeros} numeros, {stats.numeros_activos} ativos")
         
-        print("✅ Teste dos schemas concluído com sucesso!")
+        print("✅ Teste dos schemas concluido com sucesso!")
         return True
         
     except Exception as e:
@@ -88,8 +88,8 @@ def test_schemas_blacklist():
         return False
 
 def test_importacao_modelos():
-    """Testa a importação dos modelos."""
-    print("=== Teste de Importação dos Modelos ===\n")
+    """Testa a importacao dos modelos."""
+    print("=== Teste de Importacao dos Modelos ===\n")
     
     try:
         from app.models.lista_negra import ListaNegra
@@ -117,19 +117,19 @@ def test_importacao_modelos():
             else:
                 print(f"  ❌ {attr} (faltando)")
         
-        print("\n✅ Teste de importação concluído com sucesso!")
+        print("\n✅ Teste de importacao concluido com sucesso!")
         return True
         
     except Exception as e:
-        print(f"❌ Erro na importação dos modelos: {str(e)}")
+        print(f"❌ Erro na importacao dos modelos: {str(e)}")
         return False
 
 def test_servicos():
-    """Testa a importação dos serviços."""
-    print("=== Teste de Importação dos Serviços ===\n")
+    """Testa a importacao dos servicos."""
+    print("=== Teste de Importacao dos Servicos ===\n")
     
     try:
-        # Mock da sessão de BD para testar importação
+        # Mock da sessao de BD para testar importacao
         class MockSession:
             def query(self, *args):
                 return self
@@ -147,7 +147,7 @@ def test_servicos():
         from app.services.blacklist_service import BlacklistService
         from app.services.discado_service import DiscadoService
         
-        # Testar criação dos serviços
+        # Testar criacao dos servicos
         mock_db = MockSession()
         blacklist_service = BlacklistService(mock_db)
         discado_service = DiscadoService(mock_db)
@@ -155,7 +155,7 @@ def test_servicos():
         print("✅ BlacklistService criado com sucesso")
         print("✅ DiscadoService criado com sucesso")
         
-        # Verificar métodos principais
+        # Verificar metodos principais
         blacklist_methods = [
             'verificar_numero_blacklist',
             'agregar_numero_blacklist', 
@@ -163,7 +163,7 @@ def test_servicos():
             'listar_blacklist'
         ]
         
-        print(f"\nMétodos do BlacklistService:")
+        print(f"\nMetodos do BlacklistService:")
         for method in blacklist_methods:
             if hasattr(blacklist_service, method):
                 print(f"  ✅ {method}")
@@ -176,23 +176,23 @@ def test_servicos():
             'obtener_estadisticas_lista'
         ]
         
-        print(f"\nMétodos do DiscadoService:")
+        print(f"\nMetodos do DiscadoService:")
         for method in discado_methods:
             if hasattr(discado_service, method):
                 print(f"  ✅ {method}")
             else:
                 print(f"  ❌ {method} (faltando)")
         
-        print("\n✅ Teste dos serviços concluído com sucesso!")
+        print("\n✅ Teste dos servicos concluido com sucesso!")
         return True
         
     except Exception as e:
-        print(f"❌ Erro no teste dos serviços: {str(e)}")
+        print(f"❌ Erro no teste dos servicos: {str(e)}")
         return False
 
 def main():
     """Executa todos os testes."""
-    print("🚀 Iniciando testes da funcionalidade de Blacklist e Múltiplas Listas\n")
+    print("🚀 Iniciando testes da funcionalidade de Blacklist e Multiplas Listas\n")
     
     testes = [
         test_validacao_numeros,
@@ -221,7 +221,7 @@ def main():
     print(f"   Taxa de sucesso: {(sucessos/total)*100:.1f}%")
     
     if sucessos == total:
-        print("\n🎉 TODOS OS TESTES PASSARAM! A implementação está funcionando corretamente.")
+        print("\n🎉 TODOS OS TESTES PASSARAM! A implementacao esta funcionando corretamente.")
         return True
     else:
         print(f"\n⚠️  {total - sucessos} teste(s) falharam. Verifique as mensagens de erro acima.")

@@ -1,5 +1,5 @@
 """
-Serviço de discagem que integra blacklist e múltiplas listas de llamadas.
+Servico de discagem que integra blacklist e multiplas listas de llamadas.
 """
 
 from typing import Dict, Any, Optional
@@ -17,7 +17,7 @@ from app.utils.logger import logger
 
 
 class DiscadoService:
-    """Serviço para gerenciar o discado com verificação de blacklist e geração de CLI."""
+    """Servico para gerenciar o discado com verificacao de blacklist e geracao de CLI."""
     
     def __init__(self, db: Session):
         self.db = db
@@ -36,23 +36,23 @@ class DiscadoService:
         Inicia una llamada verificando primero la blacklist y generando CLI aleatorio.
         
         Args:
-            numero_destino: Número a llamar
-            campana_id: ID de la campaña (opcional)
+            numero_destino: Numero a llamar
+            campana_id: ID de la campana (opcional)
             lista_llamadas_id: ID de la lista de llamadas (opcional)
             usuario_id: ID del usuario que inicia la llamada
-            cli_personalizado: CLI específico a usar (opcional, caso contrário será aleatorio)
+            cli_personalizado: CLI especifico a usar (opcional, caso contrario sera aleatorio)
             
         Returns:
             Diccionario con resultado del intento de llamada
         """
         logger.info(f"Iniciando llamada a {numero_destino}")
         
-        # Validar y normalizar número
+        # Validar y normalizar numero
         validacion = validar_numero_telefono(numero_destino)
         if not validacion.valido:
             return {
                 "estado": "error",
-                "mensaje": f"Número inválido: {validacion.motivo_invalido}",
+                "mensaje": f"Numero invalido: {validacion.motivo_invalido}",
                 "numero_destino": numero_destino,
                 "bloqueado_blacklist": False
             }
@@ -83,7 +83,7 @@ class DiscadoService:
             
             return {
                 "estado": "bloqueado",
-                "mensaje": f"Número bloqueado por blacklist: {verificacion_blacklist.motivo}",
+                "mensaje": f"Numero bloqueado por blacklist: {verificacion_blacklist.motivo}",
                 "numero_destino": numero_destino,
                 "numero_normalizado": numero_normalizado,
                 "bloqueado_blacklist": True,
@@ -111,7 +111,7 @@ class DiscadoService:
                 logger.warning(f"No hay CLIs disponibles, usando CLI de fallback: {cli_generado}")
         
         try:
-            # Originar llamada través do Asterisk
+            # Originar llamada traves do Asterisk
             respuesta_asterisk = await asterisk_service.originar_llamada(
                 numero_destino=numero_normalizado,
                 cli=cli_generado
@@ -179,17 +179,17 @@ class DiscadoService:
         excluir_blacklist: bool = True
     ) -> Optional[Dict[str, Any]]:
         """
-        Obtiene el próximo número a llamar de una lista específica.
+        Obtiene el proximo numero a llamar de una lista especifica.
         
         Args:
             lista_llamadas_id: ID de la lista de llamadas
             usuario_id: ID del usuario (opcional)
-            excluir_blacklist: Si debe excluir números en blacklist
+            excluir_blacklist: Si debe excluir numeros en blacklist
             
         Returns:
-            Diccionario con datos del próximo número o None si no hay
+            Diccionario con datos del proximo numero o None si no hay
         """
-        # Verificar que la lista existe y está activa
+        # Verificar que la lista existe y esta activa
         lista = self.db.query(ListaLlamadas).filter(
             ListaLlamadas.id == lista_llamadas_id,
             ListaLlamadas.activa == True
@@ -201,13 +201,13 @@ class DiscadoService:
                 detail=f"Lista de llamadas {lista_llamadas_id} no encontrada o inactiva"
             )
         
-        # Buscar números de la lista que no han sido llamados
+        # Buscar numeros de la lista que no han sido llamados
         query = self.db.query(NumeroLlamada).filter(
             NumeroLlamada.id_lista == lista_llamadas_id,
             NumeroLlamada.valido == True
         )
         
-        # Excluir números que ya tienen llamadas registradas
+        # Excluir numeros que ya tienen llamadas registradas
         subquery_llamadas = self.db.query(Llamada.numero_normalizado).filter(
             Llamada.id_lista_llamadas == lista_llamadas_id
         )
@@ -216,7 +216,7 @@ class DiscadoService:
             ~NumeroLlamada.numero_normalizado.in_(subquery_llamadas)
         )
         
-        # Si se debe excluir blacklist, filtrar números bloqueados
+        # Si se debe excluir blacklist, filtrar numeros bloqueados
         if excluir_blacklist:
             from app.models.lista_negra import ListaNegra
             
@@ -228,11 +228,11 @@ class DiscadoService:
                 ~NumeroLlamada.numero_normalizado.in_(subquery_blacklist)
             )
         
-        # Obtener el primer número disponible
+        # Obtener el primer numero disponible
         proximo_numero = query.first()
         
         if not proximo_numero:
-            logger.info(f"No hay más números disponibles en lista {lista_llamadas_id}")
+            logger.info(f"No hay mas numeros disponibles en lista {lista_llamadas_id}")
             return None
         
         return {
@@ -251,24 +251,24 @@ class DiscadoService:
         cli_personalizado: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Llama al siguiente número disponible de una lista con CLI aleatorio.
+        Llama al siguiente numero disponible de una lista con CLI aleatorio.
         
         Args:
             lista_llamadas_id: ID de la lista de llamadas
-            campana_id: ID de la campaña (opcional)
+            campana_id: ID de la campana (opcional)
             usuario_id: ID del usuario
-            cli_personalizado: CLI específico a usar (opcional)
+            cli_personalizado: CLI especifico a usar (opcional)
             
         Returns:
             Resultado del intento de llamada
         """
-        # Obtener próximo número
+        # Obtener proximo numero
         proximo = self.obtener_proxima_llamada_lista(lista_llamadas_id, usuario_id)
         
         if not proximo:
             return {
                 "estado": "sin_numeros",
-                "mensaje": f"No hay más números disponibles en la lista {lista_llamadas_id}",
+                "mensaje": f"No hay mas numeros disponibles en la lista {lista_llamadas_id}",
                 "lista_id": lista_llamadas_id
             }
         
@@ -281,7 +281,7 @@ class DiscadoService:
             cli_personalizado=cli_personalizado
         )
         
-        # Agregar información de la lista al resultado
+        # Agregar informacion de la lista al resultado
         resultado.update({
             "lista_id": lista_llamadas_id,
             "lista_nombre": proximo["lista_nombre"],
@@ -292,13 +292,13 @@ class DiscadoService:
     
     def obtener_estadisticas_lista(self, lista_llamadas_id: int) -> Dict[str, Any]:
         """
-        Obtiene estadísticas de una lista de llamadas.
+        Obtiene estadisticas de una lista de llamadas.
         
         Args:
             lista_llamadas_id: ID de la lista
             
         Returns:
-            Diccionario con estadísticas
+            Diccionario con estadisticas
         """
         lista = self.db.query(ListaLlamadas).filter(ListaLlamadas.id == lista_llamadas_id).first()
         
@@ -308,7 +308,7 @@ class DiscadoService:
                 detail=f"Lista {lista_llamadas_id} no encontrada"
             )
         
-        # Contar números totales en la lista
+        # Contar numeros totales en la lista
         total_numeros = self.db.query(NumeroLlamada).filter(
             NumeroLlamada.id_lista == lista_llamadas_id,
             NumeroLlamada.valido == True

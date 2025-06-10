@@ -40,10 +40,10 @@ def mock_usuario_regular():
         tiene_permiso_llamadas=True
     )
 
-# Mock para estadísticas de llamadas
+# Mock para estadisticas de llamadas
 @pytest.fixture
 def mock_estadisticas():
-    """Crea un mock para las estadísticas de llamadas"""
+    """Crea un mock para las estadisticas de llamadas"""
     return {
         "total_llamadas": 132,
         "por_estado": {
@@ -65,10 +65,10 @@ def mock_estadisticas():
         }
     }
 
-# Mock para estadísticas vacías
+# Mock para estadisticas vacias
 @pytest.fixture
 def mock_estadisticas_vacias():
-    """Crea un mock para estadísticas vacías"""
+    """Crea un mock para estadisticas vacias"""
     return {
         "total_llamadas": 0,
         "por_estado": {
@@ -87,54 +87,54 @@ def mock_estadisticas_vacias():
         "en_progreso_por_usuario": {}
     }
 
-# Patch para autenticación con usuario administrador
+# Patch para autenticacion con usuario administrador
 @pytest.fixture
 def patch_auth_admin(mock_usuario_admin):
-    """Patch para autenticación con usuario administrador"""
+    """Patch para autenticacion con usuario administrador"""
     with patch("app.routes.llamadas.get_current_user_simulado", return_value=mock_usuario_admin):
         yield
 
-# Patch para autenticación con usuario regular
+# Patch para autenticacion con usuario regular
 @pytest.fixture
 def patch_auth_regular(mock_usuario_regular):
-    """Patch para autenticación con usuario regular"""
+    """Patch para autenticacion con usuario regular"""
     with patch("app.routes.llamadas.get_current_user_simulado", return_value=mock_usuario_regular):
         yield
 
-# Patch para obtener estadísticas
+# Patch para obtener estadisticas
 @pytest.fixture
 def patch_obtener_estadisticas(mock_estadisticas):
-    """Patch para el método obtener_estadisticas del servicio"""
+    """Patch para el metodo obtener_estadisticas del servicio"""
     with patch.object(LlamadasService, "obtener_estadisticas", return_value=mock_estadisticas):
         yield
 
-# Patch para obtener estadísticas vacías
+# Patch para obtener estadisticas vacias
 @pytest.fixture
 def patch_obtener_estadisticas_vacias(mock_estadisticas_vacias):
-    """Patch para el método obtener_estadisticas del servicio con datos vacíos"""
+    """Patch para el metodo obtener_estadisticas del servicio con datos vacios"""
     with patch.object(LlamadasService, "obtener_estadisticas", return_value=mock_estadisticas_vacias):
         yield
 
-# Patch para obtener estadísticas con error
+# Patch para obtener estadisticas con error
 @pytest.fixture
 def patch_obtener_estadisticas_error():
-    """Patch para el método obtener_estadisticas del servicio que devuelve error"""
+    """Patch para el metodo obtener_estadisticas del servicio que devuelve error"""
     with patch.object(
         LlamadasService, 
         "obtener_estadisticas", 
         side_effect=HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            detail="Error al obtener estadísticas"
+            detail="Error al obtener estadisticas"
         )
     ):
         yield
 
-# Tests para el servicio de estadísticas
+# Tests para el servicio de estadisticas
 class TestServicioEstadisticas:
-    """Tests para el servicio de estadísticas"""
+    """Tests para el servicio de estadisticas"""
     
     def test_obtener_estadisticas(self):
-        """Test para obtener estadísticas correctamente"""
+        """Test para obtener estadisticas correctamente"""
         # Crear mock de db
         db = MagicMock()
         
@@ -166,7 +166,7 @@ class TestServicioEstadisticas:
         ]
         db.query().join().filter().group_by().order_by().all.return_value = en_progreso_mock
         
-        # Ejecutar el método
+        # Ejecutar el metodo
         resultado = LlamadasService.obtener_estadisticas(db)
         
         # Verificar resultado
@@ -184,27 +184,27 @@ class TestServicioEstadisticas:
         assert resultado["en_progreso_por_usuario"]["integrador2@example.com"] == 3
     
     def test_obtener_estadisticas_error(self):
-        """Test para manejo de errores al obtener estadísticas"""
+        """Test para manejo de errores al obtener estadisticas"""
         # Crear mock de db
         db = MagicMock()
         
-        # Configurar mock para lanzar excepción
+        # Configurar mock para lanzar excepcion
         db.query().scalar.side_effect = Exception("Error de base de datos")
         
-        # Verificar que se lance la excepción HTTP
+        # Verificar que se lance la excepcion HTTP
         with pytest.raises(HTTPException) as excinfo:
             LlamadasService.obtener_estadisticas(db)
         
-        # Verificar el código de estado y el mensaje
+        # Verificar el codigo de estado y el mensaje
         assert excinfo.value.status_code == 500
-        assert "Error al obtener estadísticas" in excinfo.value.detail
+        assert "Error al obtener estadisticas" in excinfo.value.detail
 
-# Tests para la ruta de estadísticas
+# Tests para la ruta de estadisticas
 class TestRutaEstadisticas:
-    """Tests para la ruta de estadísticas"""
+    """Tests para la ruta de estadisticas"""
     
     def test_obtener_estadisticas_admin(self, patch_auth_admin, patch_obtener_estadisticas):
-        """Test para obtener estadísticas con usuario administrador"""
+        """Test para obtener estadisticas con usuario administrador"""
         response = client.get("/api/v1/llamadas/estadisticas")
         
         assert response.status_code == 200
@@ -224,14 +224,14 @@ class TestRutaEstadisticas:
         assert data["en_progreso_por_usuario"]["integrador2@example.com"] == 3
     
     def test_obtener_estadisticas_no_admin(self, patch_auth_regular, patch_obtener_estadisticas):
-        """Test para obtener estadísticas con usuario no administrador"""
+        """Test para obtener estadisticas con usuario no administrador"""
         response = client.get("/api/v1/llamadas/estadisticas")
         
         assert response.status_code == 403
         assert "Solo los administradores pueden acceder" in response.json()["error"]
     
     def test_obtener_estadisticas_vacias(self, patch_auth_admin, patch_obtener_estadisticas_vacias):
-        """Test para obtener estadísticas vacías"""
+        """Test para obtener estadisticas vacias"""
         response = client.get("/api/v1/llamadas/estadisticas")
         
         assert response.status_code == 200
@@ -250,8 +250,8 @@ class TestRutaEstadisticas:
         assert data["en_progreso_por_usuario"] == {}
     
     def test_obtener_estadisticas_error(self, patch_auth_admin, patch_obtener_estadisticas_error):
-        """Test para obtener estadísticas con error"""
+        """Test para obtener estadisticas con error"""
         response = client.get("/api/v1/llamadas/estadisticas")
         
         assert response.status_code == 500
-        assert "Error al obtener estadísticas" in response.json()["error"] 
+        assert "Error al obtener estadisticas" in response.json()["error"] 

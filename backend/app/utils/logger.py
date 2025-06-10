@@ -17,7 +17,7 @@ NIVELES = {
 
 def configurar_logger(nombre_logger: str = "discador") -> logging.Logger:
     """
-    Configura un logger con los parámetros de configuración.
+    Configura un logger con los parametros de configuracion.
     
     Args:
         nombre_logger: Nombre del logger a configurar
@@ -28,7 +28,7 @@ def configurar_logger(nombre_logger: str = "discador") -> logging.Logger:
     # Obtener o crear logger
     logger = logging.getLogger(nombre_logger)
     
-    # Evitar configurar el mismo logger múltiples veces
+    # Evitar configurar el mismo logger multiples veces
     if logger.handlers:
         return logger
         
@@ -44,14 +44,14 @@ def configurar_logger(nombre_logger: str = "discador") -> logging.Logger:
     console_handler.setFormatter(formato)
     logger.addHandler(console_handler)
     
-    # Handler para archivo si está configurado
+    # Handler para archivo si esta configurado
     if configuracion.LOG_ARCHIVO:
         # Crear directorio de logs si no existe
         directorio_logs = os.path.dirname(configuracion.LOG_ARCHIVO)
         if directorio_logs:
             Path(directorio_logs).mkdir(parents=True, exist_ok=True)
             
-        # Usar RotatingFileHandler o FileHandler según configuración
+        # Usar RotatingFileHandler o FileHandler segun configuracion
         if configuracion.LOG_ROTACION:
             file_handler = RotatingFileHandler(
                 configuracion.LOG_ARCHIVO,
@@ -66,16 +66,16 @@ def configurar_logger(nombre_logger: str = "discador") -> logging.Logger:
     
     return logger
 
-# Logger principal de la aplicación
+# Logger principal de la aplicacion
 logger = configurar_logger("discador")
 
-# Función para obtener un logger específico para un módulo
+# Funcion para obtener un logger especifico para un modulo
 def obtener_logger(nombre: str) -> logging.Logger:
     """
-    Obtiene un logger específico para un módulo.
+    Obtiene un logger especifico para un modulo.
     
     Args:
-        nombre: Nombre del módulo o componente
+        nombre: Nombre del modulo o componente
         
     Returns:
         logging.Logger: Logger configurado

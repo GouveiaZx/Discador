@@ -12,7 +12,7 @@ from app.database import obtener_sesion_context
 client = TestClient(app)
 
 # Constantes
-API_URL = "/api/v1/llamadas/presione1"  # URL completa según la configuración en main.py
+API_URL = "/api/v1/llamadas/presione1"  # URL completa segun la configuracion en main.py
 
 @pytest.fixture
 def crear_llamada_en_progreso():
@@ -33,7 +33,7 @@ def crear_llamada_en_progreso():
         # Devolver el ID para usar en las pruebas
         llamada_id = llamada.id
         
-    # Después de la prueba, se limpia automáticamente con el context manager
+    # Despues de la prueba, se limpia automaticamente con el context manager
     return llamada_id
 
 @pytest.fixture
@@ -57,7 +57,7 @@ def crear_llamada_conectada():
         # Devolver el ID para usar en las pruebas
         llamada_id = llamada.id
         
-    # Después de la prueba, se limpia automáticamente con el context manager
+    # Despues de la prueba, se limpia automaticamente con el context manager
     return llamada_id
 
 def test_presione1_llamada_no_encontrada():
@@ -79,7 +79,7 @@ def test_presione1_llamada_no_encontrada():
     assert "no existe" in datos_respuesta["detail"].lower()
 
 def test_presione1_llamada_estado_incorrecto(crear_llamada_conectada):
-    """Test para verificar el comportamiento cuando la llamada ya está conectada"""
+    """Test para verificar el comportamiento cuando la llamada ya esta conectada"""
     
     # Obtener ID de la llamada ya conectada
     llamada_id = crear_llamada_conectada
@@ -114,7 +114,7 @@ def test_presione1_correcto(crear_llamada_en_progreso):
     # Realizar la solicitud POST
     response = client.post(API_URL, json=datos)
     
-    # Verificar código de estado
+    # Verificar codigo de estado
     assert response.status_code == 200
     
     # Verificar estructura de la respuesta
@@ -124,7 +124,7 @@ def test_presione1_correcto(crear_llamada_en_progreso):
     assert "llamada_id" in datos_respuesta
     assert "detalles" in datos_respuesta
     
-    # Verificar valores específicos
+    # Verificar valores especificos
     assert datos_respuesta["estado"] == "conectada"
     assert datos_respuesta["llamada_id"] == llamada_id
     assert "fecha_conexion" in datos_respuesta["detalles"]
@@ -149,7 +149,7 @@ def test_presione1_error_db():
     
     # Simular un error en la base de datos
     with patch('sqlalchemy.orm.Session.commit') as mock_commit:
-        # Hacer que commit lance una excepción
+        # Hacer que commit lance una excepcion
         mock_commit.side_effect = Exception("Error simulado de base de datos")
         
         # Realizar la solicitud POST

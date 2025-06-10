@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Script de teste rápido para a validação de números.
+Script de teste rapido para a validacao de numeros.
 """
 
 import sys
 import os
 
-# Adicionar o diretório backend ao path
+# Adicionar o diretorio backend ao path
 sys.path.insert(0, os.path.dirname(__file__))
 
 from app.schemas.lista_llamadas import validar_numero_telefono, normalizar_numero_argentino
 
 def test_validacao():
-    """Testa a validação de números."""
+    """Testa a validacao de numeros."""
     
-    print("=== Teste de Validação de Números ===\n")
+    print("=== Teste de Validacao de Numeros ===\n")
     
     numeros_teste = [
         "+54 9 11 1234-5678",
@@ -28,18 +28,18 @@ def test_validacao():
     ]
     
     for numero in numeros_teste:
-        print(f"Número: '{numero}'")
+        print(f"Numero: '{numero}'")
         resultado = validar_numero_telefono(numero)
-        print(f"  Válido: {resultado.valido}")
+        print(f"  Valido: {resultado.valido}")
         print(f"  Normalizado: {resultado.numero_normalizado}")
         if not resultado.valido:
             print(f"  Motivo: {resultado.motivo_invalido}")
         print()
 
 def test_normalizacao():
-    """Testa a normalização de números."""
+    """Testa a normalizacao de numeros."""
     
-    print("=== Teste de Normalização ===\n")
+    print("=== Teste de Normalizacao ===\n")
     
     numeros_teste = [
         "5491112345678",
@@ -55,4 +55,4 @@ def test_normalizacao():
 if __name__ == "__main__":
     test_validacao()
     test_normalizacao()
-    print("✅ Testes de validação concluídos!") 
+    print("✅ Testes de validacao concluidos!") 

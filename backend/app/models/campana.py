@@ -6,7 +6,7 @@ from app.database import Base
 
 class Campana(Base):
     """
-    Modelo para la tabla campanas que almacena la información de las campañas de llamadas.
+    Modelo para la tabla campanas que almacena la informacion de las campanas de llamadas.
     """
     __tablename__ = "campanas"
     
@@ -21,7 +21,7 @@ class Campana(Base):
     llamadas = relationship("Llamada", back_populates="campana")
     leads = relationship("Lead", back_populates="campana")
     
-    # Índices adicionales
+    # Indices adicionales
     __table_args__ = (
         Index('idx_campanas_nombre', nombre),
         Index('idx_campanas_activa', activa),

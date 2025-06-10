@@ -15,16 +15,16 @@ async def reconocer_voz(
     db: Session = Depends(obtener_sesion)
 ):
     """
-    Envía un archivo .wav y devuelve la transcripción usando Vosk.
+    Envia un archivo .wav y devuelve la transcripcion usando Vosk.
     
-    Parámetros:
+    Parametros:
         archivo: Archivo de audio en formato .wav
         
     Retorna:
-        dict: Transcripción del audio
+        dict: Transcripcion del audio
     """
     try:
-        # Verificar extensión del archivo
+        # Verificar extension del archivo
         nombre_archivo = archivo.filename
         if not nombre_archivo.endswith('.wav'):
             raise HTTPException(status_code=400, detail="Formato de archivo no soportado. Use WAV")
@@ -35,10 +35,10 @@ async def reconocer_voz(
             temp_file.write(await archivo.read())
         
         try:
-            # En una implementación real, aquí iría la lógica para usar Vosk
+            # En una implementacion real, aqui iria la logica para usar Vosk
             # Por ahora, simulamos el reconocimiento
             
-            # Simulación de respuesta
+            # Simulacion de respuesta
             transcripcion = "Hola, estoy interesado en el producto que mencionaste en el anuncio."
             
             return {

@@ -10,7 +10,7 @@ from app.database import obtener_sesion_context
 client = TestClient(app)
 
 # Constantes
-API_URL = "/api/v1/llamadas/iniciar"  # URL completa según la configuración en main.py
+API_URL = "/api/v1/llamadas/iniciar"  # URL completa segun la configuracion en main.py
 
 def test_iniciar_llamada_ruta():
     """Test para verificar el funcionamiento de la ruta POST /api/llamadas/iniciar"""
@@ -25,7 +25,7 @@ def test_iniciar_llamada_ruta():
     # Realizar la solicitud POST
     response = client.post(API_URL, json=datos_llamada)
     
-    # Verificar código de estado
+    # Verificar codigo de estado
     assert response.status_code == 200
     
     # Verificar estructura de la respuesta
@@ -36,7 +36,7 @@ def test_iniciar_llamada_ruta():
     assert "cli_utilizado" in datos
     assert "detalles" in datos
     
-    # Verificar valores específicos
+    # Verificar valores especificos
     assert datos["estado"] == "en_progreso"
     assert datos["cli_utilizado"].startswith("91")
     assert isinstance(datos["llamada_id"], int)
@@ -61,18 +61,18 @@ def test_iniciar_llamada_sin_prefijo():
     # Realizar la solicitud POST
     response = client.post(API_URL, json=datos_llamada)
     
-    # Verificar código de estado
+    # Verificar codigo de estado
     assert response.status_code == 200
     
-    # Verificar que se ha generado un CLI automáticamente
+    # Verificar que se ha generado un CLI automaticamente
     datos = response.json()
     assert datos["cli_utilizado"] is not None
-    assert len(datos["cli_utilizado"]) == 9  # Longitud de número español
+    assert len(datos["cli_utilizado"]) == 9  # Longitud de numero espanol
 
 def test_iniciar_llamada_error_campana():
-    """Test para verificar el manejo de errores al proporcionar una campaña inexistente"""
+    """Test para verificar el manejo de errores al proporcionar una campana inexistente"""
     
-    # Datos de prueba con campaña inexistente
+    # Datos de prueba con campana inexistente
     datos_llamada = {
         "numero_destino": "666123456",
         "campana_id": 999999  # ID que presumiblemente no existe
@@ -82,9 +82,9 @@ def test_iniciar_llamada_error_campana():
     response = client.post(API_URL, json=datos_llamada)
     
     # Verificar el manejo de errores
-    # Nota: En una implementación completa, esto debería devolver un error 404 o 400
-    # pero en nuestra simulación actual puede que no falle ya que no estamos validando
-    # la existencia de la campaña
+    # Nota: En una implementacion completa, esto deberia devolver un error 404 o 400
+    # pero en nuestra simulacion actual puede que no falle ya que no estamos validando
+    # la existencia de la campana
     assert response.status_code in [200, 400, 404, 500]
     
     if response.status_code == 200:

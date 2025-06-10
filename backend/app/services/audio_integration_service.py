@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class AudioIntegrationService:
     """
-    Serviço de integração que conecta o sistema de áudio inteligente
+    Servico de integracao que conecta o sistema de audio inteligente
     com o sistema de chamadas existente.
     """
     
@@ -27,30 +27,30 @@ class AudioIntegrationService:
         self,
         numero_destino: str,
         campana_id: int,
-        contexto_audio_nome: str = "Presione 1 Padrão",
+        contexto_audio_nome: str = "Presione 1 Padrao",
         cli: Optional[str] = None,
         configuracoes_audio: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Inicia uma chamada com o sistema de áudio inteligente.
+        Inicia uma chamada com o sistema de audio inteligente.
         
         Args:
-            numero_destino: Número de destino
+            numero_destino: Numero de destino
             campana_id: ID da campanha
-            contexto_audio_nome: Nome do contexto de áudio
+            contexto_audio_nome: Nome do contexto de audio
             cli: CLI para a chamada
-            configuracoes_audio: Configurações específicas do áudio
+            configuracoes_audio: Configuracoes especificas do audio
             
         Returns:
-            Dict: Resultado da operação
+            Dict: Resultado da operacao
         """
         try:
-            # Buscar contexto de áudio
+            # Buscar contexto de audio
             contexto = self.context_manager.obter_contexto_por_nome(contexto_audio_nome)
             if not contexto:
                 return {
                     "sucesso": False,
-                    "erro": f"Contexto de áudio '{contexto_audio_nome}' não encontrado"
+                    "erro": f"Contexto de audio '{contexto_audio_nome}' nao encontrado"
                 }
             
             # Criar registro da chamada
@@ -67,14 +67,14 @@ class AudioIntegrationService:
             self.db.commit()
             self.db.refresh(nova_llamada)
             
-            # Iniciar sessão de áudio
+            # Iniciar sessao de audio
             sessao_audio = self.audio_system.iniciar_sessao(
                 llamada_id=nova_llamada.id,
                 contexto_id=contexto.id,
                 configuracoes_personalizadas=configuracoes_audio
             )
             
-            # Preparar variáveis para o Asterisk
+            # Preparar variaveis para o Asterisk
             variables_asterisk = {
                 "LLAMADA_ID": nova_llamada.id,
                 "CAMPANA_ID": campana_id,
@@ -103,7 +103,7 @@ class AudioIntegrationService:
             nova_llamada.estado = "en_progreso"
             self.db.commit()
             
-            logger.info(f"Chamada com áudio inteligente iniciada: {nova_llamada.id}")
+            logger.info(f"Chamada com audio inteligente iniciada: {nova_llamada.id}")
             
             return {
                 "sucesso": True,
@@ -115,7 +115,7 @@ class AudioIntegrationService:
             
         except Exception as e:
             self.db.rollback()
-            logger.error(f"Erro ao iniciar chamada com áudio inteligente: {str(e)}")
+            logger.error(f"Erro ao iniciar chamada com audio inteligente: {str(e)}")
             return {
                 "sucesso": False,
                 "erro": str(e)
@@ -128,7 +128,7 @@ class AudioIntegrationService:
         dados_evento: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Processa eventos recebidos do Asterisk e os converte para eventos do sistema de áudio.
+        Processa eventos recebidos do Asterisk e os converte para eventos do sistema de audio.
         
         Args:
             llamada_id: ID da chamada
@@ -139,7 +139,7 @@ class AudioIntegrationService:
             Dict: Resultado do processamento
         """
         try:
-            # Mapeamento de eventos do Asterisk para eventos do sistema de áudio
+            # Mapeamento de eventos do Asterisk para eventos do sistema de audio
             mapeamento_eventos = {
                 "Dial": TipoEvento.TELEFONE_TOCANDO,
                 "DialEnd": TipoEvento.ATENDEU,
@@ -156,10 +156,10 @@ class AudioIntegrationService:
                 logger.warning(f"Evento desconhecido do Asterisk: {tipo_evento}")
                 return {
                     "sucesso": False,
-                    "erro": f"Evento não mapeado: {tipo_evento}"
+                    "erro": f"Evento nao mapeado: {tipo_evento}"
                 }
             
-            # Preparar dados específicos do evento
+            # Preparar dados especificos do evento
             dados_processados = {}
             
             if evento_audio == TipoEvento.DTMF_DETECTADO:
@@ -169,14 +169,14 @@ class AudioIntegrationService:
             elif evento_audio == TipoEvento.ATENDEU:
                 dados_processados["tempo_resposta"] = dados_evento.get("DialTime", 0)
             
-            # Processar evento no sistema de áudio
+            # Processar evento no sistema de audio
             resultado = self.audio_system.processar_evento_llamada(
                 llamada_id=llamada_id,
                 evento=evento_audio,
                 dados_evento=dados_processados
             )
             
-            # Atualizar estado da chamada se necessário
+            # Atualizar estado da chamada se necessario
             if resultado.get("sucesso"):
                 self._atualizar_estado_llamada_por_audio(llamada_id, evento_audio, dados_processados)
             
@@ -196,7 +196,7 @@ class AudioIntegrationService:
         dados_evento: Dict[str, Any]
     ):
         """
-        Atualiza o estado da chamada baseado nos eventos do sistema de áudio.
+        Atualiza o estado da chamada baseado nos eventos do sistema de audio.
         """
         try:
             llamada = self.db.query(Llamada).filter(Llamada.id == llamada_id).first()
@@ -229,7 +229,7 @@ class AudioIntegrationService:
     
     def obter_status_completo_llamada(self, llamada_id: int) -> Optional[Dict[str, Any]]:
         """
-        Obtém o status completo de uma chamada, incluindo informações do sistema de áudio.
+        Obtem o status completo de uma chamada, incluindo informacoes do sistema de audio.
         
         Args:
             llamada_id: ID da chamada
@@ -243,7 +243,7 @@ class AudioIntegrationService:
             if not llamada:
                 return None
             
-            # Obter status da sessão de áudio
+            # Obter status da sessao de audio
             status_audio = self.audio_system.obter_status_sessao(llamada_id)
             
             # Montar resposta completa
@@ -276,18 +276,18 @@ class AudioIntegrationService:
         motivo_finalizacao: str = "Normal"
     ) -> Dict[str, Any]:
         """
-        Finaliza uma chamada e sua sessão de áudio.
+        Finaliza uma chamada e sua sessao de audio.
         
         Args:
             llamada_id: ID da chamada
             resultado: Resultado final da chamada
-            motivo_finalizacao: Motivo da finalização
+            motivo_finalizacao: Motivo da finalizacao
             
         Returns:
-            Dict: Resultado da operação
+            Dict: Resultado da operacao
         """
         try:
-            # Processar evento de finalização no sistema de áudio
+            # Processar evento de finalizacao no sistema de audio
             resultado_audio = self.audio_system.processar_evento_llamada(
                 llamada_id=llamada_id,
                 evento=TipoEvento.CHAMADA_FINALIZADA,
@@ -306,7 +306,7 @@ class AudioIntegrationService:
                 llamada.fecha_finalizacion = datetime.now()
                 self.db.commit()
             
-            logger.info(f"Chamada {llamada_id} finalizada com áudio inteligente")
+            logger.info(f"Chamada {llamada_id} finalizada com audio inteligente")
             
             return {
                 "sucesso": True,
@@ -317,7 +317,7 @@ class AudioIntegrationService:
             
         except Exception as e:
             self.db.rollback()
-            logger.error(f"Erro ao finalizar chamada com áudio: {str(e)}")
+            logger.error(f"Erro ao finalizar chamada com audio: {str(e)}")
             return {
                 "sucesso": False,
                 "erro": str(e)
@@ -331,19 +331,19 @@ class AudioIntegrationService:
             Dict: Resultado da configuracao
         """
         try:
-            # Inicializar templates padrão
+            # Inicializar templates padrao
             templates = self.context_manager.inicializar_templates_padrao()
             
-            # Criar contexto Presione 1 padrão se não existir
-            contexto_existente = self.context_manager.obter_contexto_por_nome("Presione 1 Padrão")
+            # Criar contexto Presione 1 padrao se nao existir
+            contexto_existente = self.context_manager.obter_contexto_por_nome("Presione 1 Padrao")
             
             if not contexto_existente:
-                # URLs de exemplo - em produção, estas devem apontar para arquivos reais
+                # URLs de exemplo - em producao, estas devem apontar para arquivos reais
                 audio_principal = "https://example.com/audios/presione1_principal.wav"
                 audio_voicemail = "https://example.com/audios/presione1_voicemail.wav"
                 
                 contexto_presione1 = self.context_manager.criar_contexto_presione1(
-                    nome="Presione 1 Padrão",
+                    nome="Presione 1 Padrao",
                     audio_principal_url=audio_principal,
                     audio_voicemail_url=audio_voicemail,
                     timeout_dtmf=10,
@@ -351,20 +351,20 @@ class AudioIntegrationService:
                     tentativas_maximas=3
                 )
                 
-                logger.info(f"Contexto padrão criado: {contexto_presione1.nome}")
+                logger.info(f"Contexto padrao criado: {contexto_presione1.nome}")
             
-            # Listar contextos disponíveis
+            # Listar contextos disponiveis
             contextos_disponiveis = self.context_manager.listar_contextos()
             
             return {
                 "sucesso": True,
                 "templates_criados": len(templates),
                 "contextos_disponiveis": [c.nome for c in contextos_disponiveis],
-                "contexto_padrao": "Presione 1 Padrão"
+                "contexto_padrao": "Presione 1 Padrao"
             }
             
         except Exception as e:
-            logger.error(f"Erro ao configurar contextos padrão: {str(e)}")
+            logger.error(f"Erro ao configurar contextos padrao: {str(e)}")
             return {
                 "sucesso": False,
                 "erro": str(e)

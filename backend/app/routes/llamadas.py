@@ -25,8 +25,8 @@ router = APIRouter(tags=["Llamadas"])
 
 # Esquema para la solicitud de iniciar llamada
 class IniciarLlamadaRequest(BaseModel):
-    numero_destino: str = Field(..., description="Número de teléfono al que se realizará la llamada")
-    campana_id: int = Field(..., description="ID de la campaña a la que pertenece la llamada")
+    numero_destino: str = Field(..., description="Numero de telefono al que se realizara la llamada")
+    campana_id: int = Field(..., description="ID de la campana a la que pertenece la llamada")
     prefijo_cli: Optional[str] = Field(None, description="Prefijo para el CLI (opcional)")
     variables_adicionales: Optional[dict] = Field(None, description="Variables adicionales para la llamada")
     
@@ -42,15 +42,15 @@ class IniciarLlamadaRequest(BaseModel):
 
 # Esquema para la respuesta de iniciar llamada
 class IniciarLlamadaResponse(BaseModel):
-    mensaje: str = Field(..., description="Mensaje informativo sobre el resultado de la operación")
+    mensaje: str = Field(..., description="Mensaje informativo sobre el resultado de la operacion")
     estado: str = Field(..., description="Estado de la llamada")
     llamada_id: int = Field(..., description="ID de la llamada registrada en la base de datos")
-    cli_utilizado: str = Field(..., description="Número CLI utilizado para la llamada saliente")
-    detalles: Optional[dict] = Field(None, description="Detalles adicionales de la operación")
+    cli_utilizado: str = Field(..., description="Numero CLI utilizado para la llamada saliente")
+    detalles: Optional[dict] = Field(None, description="Detalles adicionales de la operacion")
 
 # Esquema para la solicitud de presione1
 class Presione1Request(BaseModel):
-    llamada_id: int = Field(..., description="ID de la llamada en la que se detectó la tecla 1")
+    llamada_id: int = Field(..., description="ID de la llamada en la que se detecto la tecla 1")
     
     class Config:
         schema_extra = {
@@ -61,10 +61,10 @@ class Presione1Request(BaseModel):
 
 # Esquema para la respuesta de presione1
 class Presione1Response(BaseModel):
-    mensaje: str = Field(..., description="Mensaje informativo sobre el resultado de la operación")
-    estado: str = Field(..., description="Estado de la llamada después de procesar el evento")
+    mensaje: str = Field(..., description="Mensaje informativo sobre el resultado de la operacion")
+    estado: str = Field(..., description="Estado de la llamada despues de procesar el evento")
     llamada_id: int = Field(..., description="ID de la llamada procesada")
-    detalles: Optional[dict] = Field(None, description="Detalles adicionales de la operación")
+    detalles: Optional[dict] = Field(None, description="Detalles adicionales de la operacion")
 
 @router.post("/iniciar", response_model=IniciarLlamadaResponse, summary="Iniciar una llamada")
 async def iniciar_llamada(
@@ -75,9 +75,9 @@ async def iniciar_llamada(
     Inicia una llamada usando Asterisk AMI.
     
     Esta ruta realiza las siguientes acciones:
-    1. Genera un número CLI para la llamada saliente
+    1. Genera un numero CLI para la llamada saliente
     2. Registra la llamada en la base de datos con estado "en_progreso"
-    3. Inicia la llamada a través de Asterisk AMI (simulado por ahora)
+    3. Inicia la llamada a traves de Asterisk AMI (simulado por ahora)
     4. Devuelve los detalles de la llamada iniciada
     
     Returns:
@@ -122,10 +122,10 @@ async def procesar_presione1(
     Procesa el evento cuando un usuario presiona la tecla 1 durante una llamada.
     
     Esta ruta realiza las siguientes acciones:
-    1. Verifica si la llamada existe y está en el estado correcto
+    1. Verifica si la llamada existe y esta en el estado correcto
     2. Actualiza el estado de la llamada a "conectada"
-    3. Registra la fecha y hora de la conexión
-    4. Marca que el usuario presionó la tecla 1
+    3. Registra la fecha y hora de la conexion
+    4. Marca que el usuario presiono la tecla 1
     
     Returns:
         Presione1Response: Resultado del procesamiento
@@ -162,7 +162,7 @@ async def procesar_presione1(
 
 @router.get(
     "/proxima", 
-    summary="Obtener la próxima llamada pendiente",
+    summary="Obtener la proxima llamada pendiente",
     response_model=Union[LlamadaProximaResponse, LlamadaNoDisponibleResponse],
     responses={
         403: {"model": ErrorResponse, "description": "Permiso denegado"},
@@ -174,12 +174,12 @@ async def obtener_proxima_llamada(
     db: Session = Depends(obtener_sesion)
 ):
     """
-    Obtiene la próxima llamada pendiente y la asigna al usuario actual.
+    Obtiene la proxima llamada pendiente y la asigna al usuario actual.
     
     Esta ruta realiza las siguientes acciones:
     1. Verifica que el usuario tenga permisos (administrador o integrador)
     2. Si el usuario ya tiene una llamada en progreso, devuelve esa misma
-    3. Busca la próxima llamada pendiente y la asigna al usuario
+    3. Busca la proxima llamada pendiente y la asigna al usuario
     4. Devuelve los detalles de la llamada asignada
     
     Returns:
@@ -194,7 +194,7 @@ async def obtener_proxima_llamada(
                 detail={"error": "No tienes permisos para acceder a este recurso"}
             )
         
-        # Asignar la próxima llamada pendiente al usuario
+        # Asignar la proxima llamada pendiente al usuario
         llamada = distribuidor_llamadas_service.asignar_llamada(db, usuario_actual)
         
         # Si no hay llamadas pendientes
@@ -212,7 +212,7 @@ async def obtener_proxima_llamada(
         )
     
     except ValueError as e:
-        # Error de validación (usuario sin permisos)
+        # Error de validacion (usuario sin permisos)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={"error": str(e)}
@@ -234,7 +234,7 @@ async def obtener_proxima_llamada(
     summary="Finalizar una llamada y registrar su resultado",
     response_model=FinalizarLlamadaResponse,
     responses={
-        400: {"model": ErrorResponse, "description": "Solicitud inválida"},
+        400: {"model": ErrorResponse, "description": "Solicitud invalida"},
         403: {"model": ErrorResponse, "description": "Permiso denegado"},
         404: {"model": ErrorResponse, "description": "Llamada no encontrada"},
         500: {"model": ErrorResponse, "description": "Error interno del servidor"}
@@ -251,9 +251,9 @@ async def finalizar_llamada(
     Esta ruta realiza las siguientes acciones:
     1. Verifica que el usuario tenga permisos (administrador o integrador)
     2. Verifica que la llamada exista y pertenezca al usuario (a menos que sea administrador)
-    3. Verifica que el resultado sea válido
+    3. Verifica que el resultado sea valido
     4. Actualiza el estado de la llamada a "finalizada"
-    5. Registra el resultado y la fecha de finalización
+    5. Registra el resultado y la fecha de finalizacion
     
     Returns:
         FinalizarLlamadaResponse: Detalles de la llamada finalizada
@@ -283,7 +283,7 @@ async def finalizar_llamada(
         )
     
     except ValueError as e:
-        # Error de validación
+        # Error de validacion
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": str(e)}
@@ -302,7 +302,7 @@ async def finalizar_llamada(
 
 @router.get(
     "/estadisticas",
-    summary="Obtener estadísticas agregadas de llamadas",
+    summary="Obtener estadisticas agregadas de llamadas",
     response_model=EstadisticasLlamadasResponse,
     responses={
         403: {"model": ErrorResponse, "description": "Permiso denegado"},
@@ -314,34 +314,34 @@ async def obtener_estadisticas_llamadas(
     db: Session = Depends(obtener_sesion)
 ):
     """
-    Obtiene estadísticas agregadas sobre las llamadas realizadas por el sistema.
+    Obtiene estadisticas agregadas sobre las llamadas realizadas por el sistema.
     
     Esta ruta realiza las siguientes acciones:
     1. Verifica que el usuario tenga permisos de administrador
-    2. Calcula las métricas agregadas utilizando consultas optimizadas:
+    2. Calcula las metricas agregadas utilizando consultas optimizadas:
        - Total de llamadas en el sistema
        - Llamadas agrupadas por estado
        - Llamadas agrupadas por resultado
        - Llamadas en progreso agrupadas por usuario
     
-    Esta ruta está optimizada para grandes volúmenes de datos y utiliza
+    Esta ruta esta optimizada para grandes volumenes de datos y utiliza
     consultas agregadas directamente en la base de datos.
     
     Returns:
-        EstadisticasLlamadasResponse: Métricas agregadas de llamadas
+        EstadisticasLlamadasResponse: Metricas agregadas de llamadas
     """
     try:
         # Verificar que el usuario sea administrador
         if not usuario_actual.es_administrador:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail={"error": "Solo los administradores pueden acceder a las estadísticas"}
+                detail={"error": "Solo los administradores pueden acceder a las estadisticas"}
             )
         
-        # Obtener las estadísticas
+        # Obtener las estadisticas
         estadisticas = llamadas_service.obtener_estadisticas(db)
         
-        # Devolver las estadísticas formateadas
+        # Devolver las estadisticas formateadas
         return EstadisticasLlamadasResponse(
             total_llamadas=estadisticas["total_llamadas"],
             por_estado=estadisticas["por_estado"],
@@ -357,7 +357,7 @@ async def obtener_estadisticas_llamadas(
         # Manejar cualquier otro error
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error": f"Error al obtener estadísticas: {str(e)}"}
+            detail={"error": f"Error al obtener estadisticas: {str(e)}"}
         )
 
 @router.get(
@@ -380,18 +380,18 @@ async def exportar_llamadas_finalizadas(
     """
     Exporta todas las llamadas con estado 'finalizada' a un archivo CSV descargable.
     
-    Esta ruta está restringida a usuarios con rol de administrador y genera un archivo
+    Esta ruta esta restringida a usuarios con rol de administrador y genera un archivo
     CSV con las siguientes columnas:
     
-    - llamada_id: Identificador único de la llamada
-    - numero_destino: Número de teléfono al que se realizó la llamada
+    - llamada_id: Identificador unico de la llamada
+    - numero_destino: Numero de telefono al que se realizo la llamada
     - estado: Estado de la llamada (siempre 'finalizada' en este caso)
     - resultado: Resultado de la llamada (contestada, no_contesta, etc.)
-    - fecha_asignacion: Fecha y hora en que se asignó la llamada a un usuario
-    - fecha_conexion: Fecha y hora en que se estableció la conexión
-    - fecha_finalizacion: Fecha y hora en que finalizó la llamada
-    - duracion_segundos: Duración total de la llamada en segundos
-    - usuario_email: Correo electrónico del usuario que atendió la llamada
+    - fecha_asignacion: Fecha y hora en que se asigno la llamada a un usuario
+    - fecha_conexion: Fecha y hora en que se establecio la conexion
+    - fecha_finalizacion: Fecha y hora en que finalizo la llamada
+    - duracion_segundos: Duracion total de la llamada en segundos
+    - usuario_email: Correo electronico del usuario que atendio la llamada
     
     Las fechas se formatean en formato ISO (YYYY-MM-DDTHH:MM:SS).
     
@@ -437,16 +437,16 @@ async def exportar_llamadas_finalizadas(
     "/webhook",
     summary="Actualizar estado de llamada desde sistema externo",
     description=(
-        "Permite a sistemas externos (ej. central telefónica) notificar cambios de estado en llamadas. "
-        "Requiere autenticación mediante API Key en el encabezado X-API-Key. "
+        "Permite a sistemas externos (ej. central telefonica) notificar cambios de estado en llamadas. "
+        "Requiere autenticacion mediante API Key en el encabezado X-API-Key. "
         "La API Key debe configurarse en la variable de entorno WEBHOOK_API_KEY."
     ),
     response_model=WebhookLlamadaResponse,
     responses={
         200: {"model": WebhookLlamadaResponse, "description": "Estado actualizado correctamente"},
-        403: {"model": WebhookErrorResponse, "description": "API Key inválida"},
+        403: {"model": WebhookErrorResponse, "description": "API Key invalida"},
         404: {"model": WebhookErrorResponse, "description": "Llamada no encontrada"},
-        422: {"model": WebhookErrorResponse, "description": "Estado inválido o transición no permitida"},
+        422: {"model": WebhookErrorResponse, "description": "Estado invalido o transicion no permitida"},
         500: {"model": WebhookErrorResponse, "description": "Error interno del servidor"}
     }
 )
@@ -459,15 +459,15 @@ async def actualizar_estado_via_webhook(
     Recibe notificaciones de sistemas externos para actualizar el estado de una llamada.
     
     Esta ruta:
-    1. Verifica la autenticación mediante API Key (header X-API-Key)
-    2. Valida que la llamada exista y el estado sea válido
+    1. Verifica la autenticacion mediante API Key (header X-API-Key)
+    2. Valida que la llamada exista y el estado sea valido
     3. Actualiza el estado respetando las transiciones permitidas
     
-    Estados válidos:
+    Estados validos:
     - "en_progreso": Llamada en curso
-    - "conectada": Usuario atendió la llamada
+    - "conectada": Usuario atendio la llamada
     - "finalizada": Llamada terminada correctamente
-    - "fallida": Error técnico o problema en la llamada
+    - "fallida": Error tecnico o problema en la llamada
     - "cancelada": Llamada cancelada por el sistema o usuario
     
     Transiciones no permitidas:
@@ -487,7 +487,7 @@ async def actualizar_estado_via_webhook(
     ```
     
     Returns:
-        WebhookLlamadaResponse: Información sobre la actualización del estado
+        WebhookLlamadaResponse: Informacion sobre la actualizacion del estado
     """
     try:
         # Actualizar el estado de la llamada

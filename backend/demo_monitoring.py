@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Demonstração do Sistema de Monitoramento em Tempo Real
+Demonstracao do Sistema de Monitoramento em Tempo Real
 Script para testar todas as funcionalidades do painel de monitoramento
 """
 
@@ -18,24 +18,24 @@ class MonitoringDemo:
         self.api_url = f"{base_url}/api/v1/monitoring"
         self.session = requests.Session()
         
-        # Headers padrão
+        # Headers padrao
         self.session.headers.update({
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         })
         
-        print("🎯 Demonstração do Sistema de Monitoramento Iniciada")
+        print("🎯 Demonstracao do Sistema de Monitoramento Iniciada")
         print(f"📡 API Base: {self.api_url}")
         print("=" * 60)
 
     def print_section(self, title: str):
-        """Imprime seção formatada"""
+        """Imprime secao formatada"""
         print(f"\n{'=' * 60}")
         print(f"📋 {title}")
         print("=" * 60)
 
     def print_step(self, step: str):
-        """Imprime passo da demonstração"""
+        """Imprime passo da demonstracao"""
         print(f"⚡ {step}")
 
     def print_success(self, message: str):
@@ -47,11 +47,11 @@ class MonitoringDemo:
         print(f"❌ {message}")
 
     def print_info(self, message: str):
-        """Imprime informação"""
+        """Imprime informacao"""
         print(f"ℹ️ {message}")
 
     def make_request(self, method: str, endpoint: str, data: Dict = None) -> requests.Response:
-        """Faz requisição HTTP"""
+        """Faz requisicao HTTP"""
         url = f"{self.api_url}{endpoint}"
         
         try:
@@ -64,19 +64,19 @@ class MonitoringDemo:
             elif method.upper() == "DELETE":
                 response = self.session.delete(url)
             else:
-                raise ValueError(f"Método HTTP não suportado: {method}")
+                raise ValueError(f"Metodo HTTP nao suportado: {method}")
             
             return response
             
         except requests.exceptions.RequestException as e:
-            self.print_error(f"Erro na requisição: {e}")
+            self.print_error(f"Erro na requisicao: {e}")
             return None
 
     def test_health_check(self) -> bool:
         """Testa health check do sistema"""
         self.print_section("HEALTH CHECK DO SISTEMA")
         
-        self.print_step("Verificando saúde do sistema de monitoramento...")
+        self.print_step("Verificando saude do sistema de monitoramento...")
         
         response = self.make_request("GET", "/health")
         
@@ -87,16 +87,16 @@ class MonitoringDemo:
             print(f"   • Status: {data.get('status', 'unknown')}")
             print(f"   • Redis: {data.get('redis', 'unknown')}")
             print(f"   • Campanhas ativas: {data.get('campanhas_ativas', 0)}")
-            print(f"   • Conexões WebSocket: {data.get('conexoes_websocket', 0)}")
+            print(f"   • Conexoes WebSocket: {data.get('conexoes_websocket', 0)}")
             
             return True
         else:
-            self.print_error("Sistema de monitoramento indisponível")
+            self.print_error("Sistema de monitoramento indisponivel")
             return False
 
     def create_sample_agents(self) -> List[int]:
         """Cria agentes de exemplo"""
-        self.print_section("CRIAÇÃO DE AGENTES DE EXEMPLO")
+        self.print_section("CRIACAO DE AGENTES DE EXEMPLO")
         
         agentes_exemplo = [
             {
@@ -105,7 +105,7 @@ class MonitoringDemo:
                 "extensao_sip": "1001",
                 "email": "ana@empresa.com",
                 "max_chamadas_simultaneas": 2,
-                "skills": {"idiomas": ["português", "espanhol"], "departamento": "vendas"}
+                "skills": {"idiomas": ["portugues", "espanhol"], "departamento": "vendas"}
             },
             {
                 "nome_agente": "Carlos Santos",
@@ -113,7 +113,7 @@ class MonitoringDemo:
                 "extensao_sip": "1002",
                 "email": "carlos@empresa.com",
                 "max_chamadas_simultaneas": 1,
-                "skills": {"idiomas": ["português"], "departamento": "suporte"}
+                "skills": {"idiomas": ["portugues"], "departamento": "suporte"}
             },
             {
                 "nome_agente": "Maria Oliveira",
@@ -121,7 +121,7 @@ class MonitoringDemo:
                 "extensao_sip": "1003",
                 "email": "maria@empresa.com",
                 "max_chamadas_simultaneas": 3,
-                "skills": {"idiomas": ["português", "inglês"], "departamento": "vendas"}
+                "skills": {"idiomas": ["portugues", "ingles"], "departamento": "vendas"}
             }
         ]
         
@@ -143,7 +143,7 @@ class MonitoringDemo:
 
     def update_agent_status(self, agente_ids: List[int]):
         """Atualiza status dos agentes"""
-        self.print_section("SIMULAÇÃO DE STATUS DOS AGENTES")
+        self.print_section("SIMULACAO DE STATUS DOS AGENTES")
         
         status_options = ["livre", "em_chamada", "ausente", "pausado"]
         
@@ -177,20 +177,20 @@ class MonitoringDemo:
             },
             {
                 "tipo_evento": "provedor_falha",
-                "titulo": "Falha temporária no Provedor Twilio",
-                "descricao": "Timeout detectado na conexão SIP - failover automático ativado",
+                "titulo": "Falha temporaria no Provedor Twilio",
+                "descricao": "Timeout detectado na conexao SIP - failover automatico ativado",
                 "nivel_severidade": "warning"
             },
             {
                 "tipo_evento": "agente_login",
-                "titulo": "Múltiplos agentes conectados",
+                "titulo": "Multiplos agentes conectados",
                 "descricao": "Sistema registrou login de 5 agentes simultaneamente",
                 "nivel_severidade": "info"
             },
             {
                 "tipo_evento": "chamada_finalizada",
-                "titulo": "Pico de transferências bem-sucedidas",
-                "descricao": "Taxa de transferência alcançou 95% na última hora",
+                "titulo": "Pico de transferencias bem-sucedidas",
+                "descricao": "Taxa de transferencia alcancou 95% na ultima hora",
                 "nivel_severidade": "info"
             }
         ]
@@ -221,7 +221,7 @@ class MonitoringDemo:
             print(f"   • Chamadas ativas: {data.get('total_chamadas_ativas', 0)}")
             print(f"   • Agentes online: {data.get('total_agentes_online', 0)}")
             print(f"   • Taxa atendimento geral: {data.get('taxa_atendimento_geral', 0)}%")
-            print(f"   • Alertas críticos: {data.get('alertas_criticos', 0)}")
+            print(f"   • Alertas criticos: {data.get('alertas_criticos', 0)}")
             print(f"   • Alertas warning: {data.get('alertas_warning', 0)}")
         else:
             self.print_error("Falha ao obter dashboard resumido")
@@ -242,11 +242,11 @@ class MonitoringDemo:
             self.print_error("Falha ao obter dashboard detalhado")
 
     def test_metrics_apis(self):
-        """Testa APIs de métricas específicas"""
-        self.print_section("TESTE DAS APIS DE MÉTRICAS")
+        """Testa APIs de metricas especificas"""
+        self.print_section("TESTE DAS APIS DE METRICAS")
         
-        # Métricas de campanhas
-        self.print_step("Obtendo métricas de campanhas...")
+        # Metricas de campanhas
+        self.print_step("Obtendo metricas de campanhas...")
         response = self.make_request("GET", "/campanhas?apenas_ativas=true")
         
         if response and response.status_code == 200:
@@ -256,10 +256,10 @@ class MonitoringDemo:
             for campanha in campanhas[:3]:  # Mostrar apenas as 3 primeiras
                 print(f"   • {campanha['nome_campanha']}: {campanha['chamadas_ativas']} ativas")
         else:
-            self.print_error("Falha ao obter métricas de campanhas")
+            self.print_error("Falha ao obter metricas de campanhas")
         
-        # Métricas de provedores
-        self.print_step("Obtendo métricas de provedores SIP...")
+        # Metricas de provedores
+        self.print_step("Obtendo metricas de provedores SIP...")
         response = self.make_request("GET", "/provedores")
         
         if response and response.status_code == 200:
@@ -269,10 +269,10 @@ class MonitoringDemo:
             for provedor in provedores:
                 print(f"   • {provedor['nome_provedor']}: {provedor['status_conexao']} - {provedor['taxa_sucesso']}% sucesso")
         else:
-            self.print_error("Falha ao obter métricas de provedores")
+            self.print_error("Falha ao obter metricas de provedores")
         
-        # Métricas de agentes
-        self.print_step("Obtendo métricas de agentes...")
+        # Metricas de agentes
+        self.print_step("Obtendo metricas de agentes...")
         response = self.make_request("GET", "/agentes")
         
         if response and response.status_code == 200:
@@ -282,7 +282,7 @@ class MonitoringDemo:
             for agente in agentes:
                 print(f"   • {agente['nome_agente']} ({agente['codigo_agente']}): {agente['status_atual']}")
         else:
-            self.print_error("Falha ao obter métricas de agentes")
+            self.print_error("Falha ao obter metricas de agentes")
 
     def test_events_api(self):
         """Testa API de eventos"""
@@ -293,7 +293,7 @@ class MonitoringDemo:
         
         if response and response.status_code == 200:
             eventos = response.json()
-            self.print_success(f"Encontrados {len(eventos)} eventos nas últimas 24h")
+            self.print_success(f"Encontrados {len(eventos)} eventos nas ultimas 24h")
             
             for evento in eventos[:5]:  # Mostrar apenas os 5 primeiros
                 timestamp = evento.get('timestamp_evento', 'N/A')
@@ -302,10 +302,10 @@ class MonitoringDemo:
             self.print_error("Falha ao obter eventos")
 
     def test_export_functionality(self):
-        """Testa funcionalidade de exportação"""
-        self.print_section("TESTE DE EXPORTAÇÃO DE DADOS")
+        """Testa funcionalidade de exportacao"""
+        self.print_section("TESTE DE EXPORTACAO DE DADOS")
         
-        self.print_step("Solicitando exportação CSV...")
+        self.print_step("Solicitando exportacao CSV...")
         
         export_data = {
             "tipo_export": "csv",
@@ -319,16 +319,16 @@ class MonitoringDemo:
         response = self.make_request("POST", "/export/csv", export_data)
         
         if response and response.status_code == 200:
-            # Verificar se é CSV
+            # Verificar se e CSV
             content_type = response.headers.get('content-type', '')
             if 'csv' in content_type or 'text' in content_type:
-                self.print_success("Exportação CSV gerada com sucesso")
+                self.print_success("Exportacao CSV gerada com sucesso")
                 print(f"   • Content-Type: {content_type}")
                 print(f"   • Tamanho: {len(response.content)} bytes")
             else:
-                self.print_info("Resposta recebida, mas tipo de conteúdo inesperado")
+                self.print_info("Resposta recebida, mas tipo de conteudo inesperado")
         else:
-            self.print_error("Falha ao gerar exportação CSV")
+            self.print_error("Falha ao gerar exportacao CSV")
 
     def test_cache_management(self):
         """Testa gerenciamento de cache"""
@@ -345,15 +345,15 @@ class MonitoringDemo:
             self.print_error("Falha ao limpar cache")
 
     def simulate_realtime_updates(self, duration: int = 30):
-        """Simula atualizações em tempo real"""
-        self.print_section(f"SIMULAÇÃO DE ATUALIZAÇÕES EM TEMPO REAL ({duration}s)")
+        """Simula atualizacoes em tempo real"""
+        self.print_section(f"SIMULACAO DE ATUALIZACOES EM TEMPO REAL ({duration}s)")
         
-        self.print_step("Iniciando monitoramento de métricas...")
+        self.print_step("Iniciando monitoramento de metricas...")
         
         start_time = time.time()
         
         while time.time() - start_time < duration:
-            # Buscar métricas atualizadas
+            # Buscar metricas atualizadas
             response = self.make_request("GET", "/dashboard/resumo")
             
             if response and response.status_code == 200:
@@ -367,17 +367,17 @@ class MonitoringDemo:
             
             time.sleep(3)  # Atualizar a cada 3 segundos
         
-        self.print_success("Simulação de tempo real concluída")
+        self.print_success("Simulacao de tempo real concluida")
 
     def run_full_demo(self):
-        """Executa demonstração completa"""
-        print("🚀 INICIANDO DEMONSTRAÇÃO COMPLETA DO SISTEMA DE MONITORAMENTO")
+        """Executa demonstracao completa"""
+        print("🚀 INICIANDO DEMONSTRACAO COMPLETA DO SISTEMA DE MONITORAMENTO")
         print("=" * 80)
         
         try:
             # 1. Health Check
             if not self.test_health_check():
-                self.print_error("Sistema não está funcionando. Abortando demonstração.")
+                self.print_error("Sistema nao esta funcionando. Abortando demonstracao.")
                 return
             
             # 2. Criar agentes de exemplo
@@ -393,56 +393,56 @@ class MonitoringDemo:
             # 5. Testar APIs do dashboard
             self.test_dashboard_apis()
             
-            # 6. Testar APIs de métricas
+            # 6. Testar APIs de metricas
             self.test_metrics_apis()
             
             # 7. Testar API de eventos
             self.test_events_api()
             
-            # 8. Testar exportação
+            # 8. Testar exportacao
             self.test_export_functionality()
             
             # 9. Testar gerenciamento de cache
             self.test_cache_management()
             
-            # 10. Simulação em tempo real
-            self.print_section("DEMONSTRAÇÃO FINAL - TEMPO REAL")
-            self.print_info("Esta seção mostrará atualizações em tempo real por 30 segundos")
+            # 10. Simulacao em tempo real
+            self.print_section("DEMONSTRACAO FINAL - TEMPO REAL")
+            self.print_info("Esta secao mostrara atualizacoes em tempo real por 30 segundos")
             input("Pressione ENTER para iniciar...")
             
             self.simulate_realtime_updates(30)
             
             # Resumo final
-            self.print_section("RESUMO DA DEMONSTRAÇÃO")
+            self.print_section("RESUMO DA DEMONSTRACAO")
             self.print_success("✅ Health Check - Sistema operacional")
             self.print_success(f"✅ Agentes criados - {len(agente_ids)} agentes")
-            self.print_success("✅ Status atualizados - Simulação de trabalho")
+            self.print_success("✅ Status atualizados - Simulacao de trabalho")
             self.print_success("✅ Eventos registrados - Auditoria funcionando")
             self.print_success("✅ APIs testadas - Dashboards funcionais")
-            self.print_success("✅ Métricas verificadas - Dados em tempo real")
-            self.print_success("✅ Exportação testada - CSV gerado")
+            self.print_success("✅ Metricas verificadas - Dados em tempo real")
+            self.print_success("✅ Exportacao testada - CSV gerado")
             self.print_success("✅ Cache gerenciado - Performance otimizada")
-            self.print_success("✅ Tempo real simulado - Atualizações automáticas")
+            self.print_success("✅ Tempo real simulado - Atualizacoes automaticas")
             
-            print("\n🎉 DEMONSTRAÇÃO CONCLUÍDA COM SUCESSO!")
-            print("O Sistema de Monitoramento em Tempo Real está funcionando perfeitamente.")
+            print("\n🎉 DEMONSTRACAO CONCLUIDA COM SUCESSO!")
+            print("O Sistema de Monitoramento em Tempo Real esta funcionando perfeitamente.")
             print("\n📊 Acesse o frontend em: http://localhost:3000")
             print("🔗 API docs em: http://localhost:8000/docs")
             
         except KeyboardInterrupt:
-            self.print_info("Demonstração interrompida pelo usuário")
+            self.print_info("Demonstracao interrompida pelo usuario")
         except Exception as e:
             self.print_error(f"Erro inesperado: {e}")
 
 def main():
-    """Função principal"""
+    """Funcao principal"""
     demo = MonitoringDemo()
     
-    print("Escolha uma opção:")
-    print("1. Demonstração completa")
+    print("Escolha uma opcao:")
+    print("1. Demonstracao completa")
     print("2. Apenas health check")
     print("3. Apenas teste de APIs")
-    print("4. Apenas simulação tempo real")
+    print("4. Apenas simulacao tempo real")
     
     choice = input("\nDigite sua escolha (1-4): ").strip()
     
@@ -455,10 +455,10 @@ def main():
         demo.test_metrics_apis()
         demo.test_events_api()
     elif choice == "4":
-        duration = int(input("Duração em segundos (padrão 30): ") or "30")
+        duration = int(input("Duracao em segundos (padrao 30): ") or "30")
         demo.simulate_realtime_updates(duration)
     else:
-        print("Opção inválida. Executando demonstração completa...")
+        print("Opcao invalida. Executando demonstracao completa...")
         demo.run_full_demo()
 
 if __name__ == "__main__":

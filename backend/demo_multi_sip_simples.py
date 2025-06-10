@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-🔌 SISTEMA MULTI-SIP - DEMONSTRAÇÃO FUNCIONAL
-Demonstração das funcionalidades principais do sistema
+🔌 SISTEMA MULTI-SIP - DEMONSTRACAO FUNCIONAL
+Demonstracao das funcionalidades principais do sistema
 """
 
 def main():
     print("🔌 " + "="*60)
-    print("   SISTEMA MULTI-SIP - DEMONSTRAÇÃO COMPLETA")
-    print("   Integração Avançada com VoIP e Múltiplos Provedores")
+    print("   SISTEMA MULTI-SIP - DEMONSTRACAO COMPLETA")
+    print("   Integracao Avancada com VoIP e Multiplos Provedores")
     print("="*62)
     
     # 1. Provedores Exemplo
@@ -61,7 +61,7 @@ def main():
         print(f"• {p['nome']} ({p['codigo']})")
         print(f"  ├─ Tipo: {p['tipo']}")
         print(f"  ├─ Servidor: {p['servidor']}")
-        print(f"  ├─ Latência: {p['latencia']}ms")
+        print(f"  ├─ Latencia: {p['latencia']}ms")
         print(f"  ├─ Taxa Sucesso: {p['taxa_sucesso']}%")
         print(f"  └─ Custo: ${p['custo_base']:.4f}/min")
         print()
@@ -79,15 +79,15 @@ def main():
     for destino, info in tarifas.items():
         print(f"• {destino}: ${info['custo']:.4f}/min → {info['melhor_provedor']}")
     
-    # 3. Algoritmos de Seleção
-    print(f"\n🧠 ALGORITMOS DE SELEÇÃO INTELIGENTE:")
+    # 3. Algoritmos de Selecao
+    print(f"\n🧠 ALGORITMOS DE SELECAO INTELIGENTE:")
     print("-" * 62)
     
     numero_teste = "5511999887766"
-    print(f"📞 Testando número: {numero_teste} (Brasil - São Paulo)")
+    print(f"📞 Testando numero: {numero_teste} (Brasil - Sao Paulo)")
     print()
     
-    # Simulação de seleção
+    # Simulacao de selecao
     algoritmos = [
         {
             "nome": "MENOR_CUSTO",
@@ -99,13 +99,13 @@ def main():
             "nome": "MELHOR_QUALIDADE",
             "provedor_selecionado": "Twilio Brazil Premium",
             "custo": 0.015,
-            "justificativa": "99.4% taxa de sucesso, baixa latência"
+            "justificativa": "99.4% taxa de sucesso, baixa latencia"
         },
         {
             "nome": "INTELIGENTE",
             "provedor_selecionado": "GoTrunk Nacional",
             "custo": 0.009,
-            "justificativa": "Score: 0.847 (40% custo + 40% qualidade + 20% latência)"
+            "justificativa": "Score: 0.847 (40% custo + 40% qualidade + 20% latencia)"
         }
     ]
     
@@ -120,20 +120,20 @@ def main():
     print("⚠️  TESTE DE FAILOVER:")
     print("-" * 62)
     print("🔴 Simulando falha do provedor principal...")
-    print("   Twilio Brazil Premium → INDISPONÍVEL")
+    print("   Twilio Brazil Premium → INDISPONIVEL")
     print()
-    print("🚀 Failover automático ativado:")
+    print("🚀 Failover automatico ativado:")
     print("   ✅ Roteamento para: GoTrunk Nacional")
     print("   💰 Custo alternativo: $0.012")
     print("   ⏱️  Tempo de failover: 150ms")
     print()
     
-    # 5. Integração Asterisk
-    print("🎛️  INTEGRAÇÃO COM ASTERISK:")
+    # 5. Integracao Asterisk
+    print("🎛️  INTEGRACAO COM ASTERISK:")
     print("-" * 62)
-    print("📞 AGI Script em execução:")
+    print("📞 AGI Script em execucao:")
     print("   Script: /var/lib/asterisk/agi-bin/multi_sip_agi.py")
-    print("   Número: 5511999887766")
+    print("   Numero: 5511999887766")
     print("   Algoritmo: INTELIGENTE")
     print()
     print("📤 Dial String gerada:")
@@ -150,48 +150,48 @@ def main():
         "Provedores ativos": 3,
         "Chamadas hoje": 1.247,
         "Taxa sucesso geral": "97.8%",
-        "Custo médio/min": "$0.0135",
-        "Latência média": "68.2ms",
-        "Economia vs único": "23.4%"
+        "Custo medio/min": "$0.0135",
+        "Latencia media": "68.2ms",
+        "Economia vs unico": "23.4%"
     }
     
     for metrica, valor in estatisticas.items():
         print(f"   {metrica:20} → {valor}")
     
-    # 7. APIs Disponíveis
+    # 7. APIs Disponiveis
     print(f"\n🌐 ENDPOINTS DA API REST:")
     print("-" * 62)
     endpoints = [
         "POST /api/multi-sip/provedores - Criar provedor",
         "GET  /api/multi-sip/provedores - Listar provedores", 
-        "POST /api/multi-sip/selecionar-provedor - Seleção inteligente",
+        "POST /api/multi-sip/selecionar-provedor - Selecao inteligente",
         "GET  /api/multi-sip/status-provedores - Status em tempo real",
-        "GET  /api/multi-sip/logs-selecao - Logs e estatísticas"
+        "GET  /api/multi-sip/logs-selecao - Logs e estatisticas"
     ]
     
     for endpoint in endpoints:
         print(f"   • {endpoint}")
     
-    # 8. Recursos Avançados
-    print(f"\n🚀 RECURSOS AVANÇADOS IMPLEMENTADOS:")
+    # 8. Recursos Avancados
+    print(f"\n🚀 RECURSOS AVANCADOS IMPLEMENTADOS:")
     print("-" * 62)
     recursos = [
-        "✅ Seleção inteligente multi-algoritmo",
-        "✅ Roteamento geográfico por prefixo",
-        "✅ Failover automático em < 200ms",
-        "✅ Monitoramento latência/taxa sucesso",
-        "✅ Gestão tarifas por provedor/destino",
-        "✅ Logs imutáveis para ML/análise",
-        "✅ Integração AGI completa",
+        "✅ Selecao inteligente multi-algoritmo",
+        "✅ Roteamento geografico por prefixo",
+        "✅ Failover automatico em < 200ms",
+        "✅ Monitoramento latencia/taxa sucesso",
+        "✅ Gestao tarifas por provedor/destino",
+        "✅ Logs imutaveis para ML/analise",
+        "✅ Integracao AGI completa",
         "✅ Escalabilidade 10+ provedores",
         "✅ APIs RESTful documentadas",
-        "✅ Segurança e criptografia"
+        "✅ Seguranca e criptografia"
     ]
     
     for recurso in recursos:
         print(f"   {recurso}")
     
-    print(f"\n📚 INSTALAÇÃO E CONFIGURAÇÃO:")
+    print(f"\n📚 INSTALACAO E CONFIGURACAO:")
     print("-" * 62)
     print("   1. 📄 Consulte: backend/docs/MULTI_SIP_INSTALL.md")
     print("   2. 🗄️  Aplicar: migrations/create_multi_sip_tables.sql")
@@ -199,9 +199,9 @@ def main():
     print("   4. 🌐 Testar APIs REST")
     print("   5. 📊 Monitorar via dashboard")
     
-    print(f"\n✅ SISTEMA MULTI-SIP PRONTO PARA PRODUÇÃO!")
+    print(f"\n✅ SISTEMA MULTI-SIP PRONTO PARA PRODUCAO!")
     print("="*62)
-    print("🔌 Integração completa implementada com sucesso! 🚀")
+    print("🔌 Integracao completa implementada com sucesso! 🚀")
     
     return True
 
@@ -209,8 +209,8 @@ if __name__ == "__main__":
     try:
         sucesso = main()
         if sucesso:
-            print("\n🎉 Demonstração executada com SUCESSO!")
+            print("\n🎉 Demonstracao executada com SUCESSO!")
         else:
-            print("\n❌ Erro na demonstração")
+            print("\n❌ Erro na demonstracao")
     except Exception as e:
         print(f"\n�� Erro: {str(e)}") 

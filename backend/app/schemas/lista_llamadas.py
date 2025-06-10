@@ -5,24 +5,24 @@ import re
 
 
 class NumeroLlamadaBase(BaseModel):
-    """Schema base para números de llamadas."""
-    numero: str = Field(..., description="Número de teléfono original")
-    numero_normalizado: str = Field(..., description="Número normalizado")
-    valido: bool = Field(True, description="Si el número es válido")
-    notas: Optional[str] = Field(None, description="Notas adicionales sobre el número")
+    """Schema base para numeros de llamadas."""
+    numero: str = Field(..., description="Numero de telefono original")
+    numero_normalizado: str = Field(..., description="Numero normalizado")
+    valido: bool = Field(True, description="Si el numero es valido")
+    notas: Optional[str] = Field(None, description="Notas adicionales sobre el numero")
 
 
 class NumeroLlamadaCreate(BaseModel):
-    """Schema para crear un número de llamada."""
-    numero: str = Field(..., description="Número de teléfono")
+    """Schema para crear un numero de llamada."""
+    numero: str = Field(..., description="Numero de telefono")
     id_lista: int = Field(..., description="ID de la lista a la que pertenece")
 
 
 class NumeroLlamadaResponse(NumeroLlamadaBase):
-    """Schema para respuesta de número de llamada."""
-    id: int = Field(..., description="ID único del número")
+    """Schema para respuesta de numero de llamada."""
+    id: int = Field(..., description="ID unico del numero")
     id_lista: int = Field(..., description="ID de la lista")
-    fecha_creacion: datetime = Field(..., description="Fecha de creación")
+    fecha_creacion: datetime = Field(..., description="Fecha de creacion")
     
     class Config:
         from_attributes = True
@@ -31,8 +31,8 @@ class NumeroLlamadaResponse(NumeroLlamadaBase):
 class ListaLlamadasBase(BaseModel):
     """Schema base para listas de llamadas."""
     nombre: str = Field(..., min_length=1, max_length=100, description="Nombre de la lista")
-    descripcion: Optional[str] = Field(None, max_length=255, description="Descripción de la lista")
-    activa: bool = Field(True, description="Si la lista está activa")
+    descripcion: Optional[str] = Field(None, max_length=255, description="Descripcion de la lista")
+    activa: bool = Field(True, description="Si la lista esta activa")
 
 
 class ListaLlamadasCreate(ListaLlamadasBase):
@@ -49,21 +49,21 @@ class ListaLlamadasUpdate(BaseModel):
 
 class ListaLlamadasResponse(ListaLlamadasBase):
     """Schema para respuesta de lista de llamadas."""
-    id: int = Field(..., description="ID único de la lista")
+    id: int = Field(..., description="ID unico de la lista")
     archivo_original: str = Field(..., description="Nombre del archivo original")
-    total_numeros: int = Field(..., description="Total de números en el archivo")
-    numeros_validos: int = Field(..., description="Números válidos procesados")
-    numeros_duplicados: int = Field(..., description="Números duplicados encontrados")
-    fecha_creacion: datetime = Field(..., description="Fecha de creación")
-    fecha_actualizacion: datetime = Field(..., description="Fecha de última actualización")
+    total_numeros: int = Field(..., description="Total de numeros en el archivo")
+    numeros_validos: int = Field(..., description="Numeros validos procesados")
+    numeros_duplicados: int = Field(..., description="Numeros duplicados encontrados")
+    fecha_creacion: datetime = Field(..., description="Fecha de creacion")
+    fecha_actualizacion: datetime = Field(..., description="Fecha de ultima actualizacion")
     
     class Config:
         from_attributes = True
 
 
 class ListaLlamadasDetailResponse(ListaLlamadasResponse):
-    """Schema detallado de lista con números incluidos."""
-    numeros: List[NumeroLlamadaResponse] = Field([], description="Lista de números")
+    """Schema detallado de lista con numeros incluidos."""
+    numeros: List[NumeroLlamadaResponse] = Field([], description="Lista de numeros")
 
 
 class UploadArchivoResponse(BaseModel):
@@ -72,15 +72,15 @@ class UploadArchivoResponse(BaseModel):
     lista_id: int = Field(..., description="ID de la lista creada")
     nombre_lista: str = Field(..., description="Nombre de la lista")
     archivo_original: str = Field(..., description="Nombre del archivo procesado")
-    total_numeros_archivo: int = Field(..., description="Total de líneas en el archivo")
-    numeros_validos: int = Field(..., description="Números válidos guardados")
-    numeros_invalidos: int = Field(..., description="Números inválidos encontrados")
-    numeros_duplicados: int = Field(..., description="Números duplicados removidos")
+    total_numeros_archivo: int = Field(..., description="Total de lineas en el archivo")
+    numeros_validos: int = Field(..., description="Numeros validos guardados")
+    numeros_invalidos: int = Field(..., description="Numeros invalidos encontrados")
+    numeros_duplicados: int = Field(..., description="Numeros duplicados removidos")
     errores: List[str] = Field([], description="Lista de errores encontrados")
 
 
 class ValidacionNumero(BaseModel):
-    """Schema para validación de números individuales."""
+    """Schema para validacion de numeros individuales."""
     numero_original: str
     numero_normalizado: str
     valido: bool
@@ -89,7 +89,7 @@ class ValidacionNumero(BaseModel):
 
 def validar_numero_telefono(numero: str) -> ValidacionNumero:
     """
-    Valida y normaliza un número de teléfono.
+    Valida y normaliza un numero de telefono.
     
     Aceita formatos como:
     - +54 9 11 1234-5678
@@ -98,10 +98,10 @@ def validar_numero_telefono(numero: str) -> ValidacionNumero:
     - 1112345678
     
     Args:
-        numero: Número a validar
+        numero: Numero a validar
         
     Returns:
-        ValidacionNumero con resultado de la validación
+        ValidacionNumero con resultado de la validacion
     """
     numero_original = numero.strip()
     
@@ -110,13 +110,13 @@ def validar_numero_telefono(numero: str) -> ValidacionNumero:
             numero_original=numero_original,
             numero_normalizado="",
             valido=False,
-            motivo_invalido="Número vacío"
+            motivo_invalido="Numero vacio"
         )
     
-    # Remover espacios, guiones y paréntesis
+    # Remover espacios, guiones y parentesis
     numero_limpio = re.sub(r'[^\d+]', '', numero_original)
     
-    # Normalizar número argentino
+    # Normalizar numero argentino
     numero_normalizado = normalizar_numero_argentino(numero_limpio)
     
     # Validar formato final
@@ -125,16 +125,16 @@ def validar_numero_telefono(numero: str) -> ValidacionNumero:
             numero_original=numero_original,
             numero_normalizado="",
             valido=False,
-            motivo_invalido="Formato de número inválido"
+            motivo_invalido="Formato de numero invalido"
         )
     
-    # Validar longitud (números argentinos tienen 13 dígitos con +54)
+    # Validar longitud (numeros argentinos tienen 13 digitos con +54)
     if len(numero_normalizado) < 11 or len(numero_normalizado) > 15:
         return ValidacionNumero(
             numero_original=numero_original,
             numero_normalizado=numero_normalizado,
             valido=False,
-            motivo_invalido=f"Longitud inválida: {len(numero_normalizado)} dígitos"
+            motivo_invalido=f"Longitud invalida: {len(numero_normalizado)} digitos"
         )
     
     return ValidacionNumero(
@@ -146,13 +146,13 @@ def validar_numero_telefono(numero: str) -> ValidacionNumero:
 
 def normalizar_numero_argentino(numero: str) -> str:
     """
-    Normaliza un número argentino al formato +549XXXXXXXXXX
+    Normaliza un numero argentino al formato +549XXXXXXXXXX
     
     Args:
-        numero: Número limpio (solo dígitos y +)
+        numero: Numero limpio (solo digitos y +)
         
     Returns:
-        Número normalizado o string vacío si es inválido
+        Numero normalizado o string vacio si es invalido
     """
     if not numero:
         return ""
@@ -161,29 +161,29 @@ def normalizar_numero_argentino(numero: str) -> str:
     if numero.startswith('+'):
         numero = numero[1:]
     
-    # Casos comunes de números argentinos
+    # Casos comunes de numeros argentinos
     if numero.startswith('54'):
-        # Ya tiene código de país
+        # Ya tiene codigo de pais
         if numero.startswith('549'):
             # Ya normalizado
             return f"+{numero}"
         elif len(numero) >= 12:
-            # Agregar 9 después del código de país
+            # Agregar 9 despues del codigo de pais
             return f"+549{numero[2:]}"
     elif numero.startswith('9'):
-        # Número con 9 pero sin código de país
+        # Numero con 9 pero sin codigo de pais
         return f"+54{numero}"
     elif numero.startswith('11') or numero.startswith('2') or numero.startswith('3'):
-        # Número de área sin 9 ni código de país
+        # Numero de area sin 9 ni codigo de pais
         return f"+549{numero}"
     elif len(numero) == 8:
-        # Número corto, asumir Buenos Aires (11)
+        # Numero corto, asumir Buenos Aires (11)
         return f"+54911{numero}"
     elif len(numero) == 10:
-        # Número completo sin código de país ni 9
+        # Numero completo sin codigo de pais ni 9
         return f"+549{numero}"
     
-    # Si no coincide con ningún patrón conocido, intentar como está
+    # Si no coincide con ningun patron conocido, intentar como esta
     if numero.isdigit() and len(numero) >= 8:
         return f"+549{numero}"
     

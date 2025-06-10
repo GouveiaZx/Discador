@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Dict, Optional
 
 class EstadisticasLlamadasResponse(BaseModel):
-    """Esquema de respuesta para estadísticas de llamadas"""
+    """Esquema de respuesta para estadisticas de llamadas"""
     total_llamadas: int = Field(
         ..., 
         description="Cantidad total de llamadas en el sistema",
@@ -31,7 +31,7 @@ class EstadisticasLlamadasResponse(BaseModel):
     )
     en_progreso_por_usuario: Dict[str, int] = Field(
         ..., 
-        description="Cantidad de llamadas en progreso agrupadas por correo electrónico del usuario",
+        description="Cantidad de llamadas en progreso agrupadas por correo electronico del usuario",
         example={
             "integrador1@example.com": 2,
             "integrador2@example.com": 3

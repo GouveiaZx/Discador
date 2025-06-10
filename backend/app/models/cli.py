@@ -20,7 +20,7 @@ class Cli(Base):
     fecha_actualizacion = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
     notas = Column(Text, nullable=True)
     
-    # Índices adicionales
+    # Indices adicionales
     __table_args__ = (
         Index('idx_cli_numero', numero),
         Index('idx_cli_normalizado', numero_normalizado),

@@ -5,7 +5,7 @@ from app.database import Base
 
 class ListaNegra(Base):
     """
-    Modelo para la tabla lista_negra que almacena los números de teléfono bloqueados.
+    Modelo para la tabla lista_negra que almacena los numeros de telefono bloqueados.
     """
     __tablename__ = "lista_negra"
     
@@ -17,11 +17,11 @@ class ListaNegra(Base):
     activo = Column(Boolean, default=True, nullable=False)
     fecha_creacion = Column(DateTime, default=func.now(), nullable=False)
     fecha_actualizacion = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
-    creado_por = Column(String(100), nullable=True)  # Usuario que agregó el número
-    veces_bloqueado = Column(Integer, default=0, nullable=False)  # Contador de veces que se bloqueó
-    ultima_vez_bloqueado = Column(DateTime, nullable=True)  # Última vez que se intentó llamar
+    creado_por = Column(String(100), nullable=True)  # Usuario que agrego el numero
+    veces_bloqueado = Column(Integer, default=0, nullable=False)  # Contador de veces que se bloqueo
+    ultima_vez_bloqueado = Column(DateTime, nullable=True)  # Ultima vez que se intento llamar
     
-    # Índices adicionales
+    # Indices adicionales
     __table_args__ = (
         Index('idx_lista_negra_numero', numero),
         Index('idx_lista_negra_normalizado', numero_normalizado),

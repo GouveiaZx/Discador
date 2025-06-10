@@ -26,7 +26,7 @@ from app.schemas.campanha_politica import (
 from app.utils.logger import logger
 
 class CampanhaPoliticaService:
-    """Serviço para gestão de campanhas políticas com compliance eleitoral"""
+    """Servico para gestao de campanhas politicas com compliance eleitoral"""
     
     def __init__(self, db: Session):
         self.db = db
@@ -37,14 +37,14 @@ class CampanhaPoliticaService:
         campanha_id: int, 
         timestamp_ligacao: datetime
     ) -> ValidacaoHorarioResponse:
-        """Valida se uma ligação pode ser feita no horário especificado"""
+        """Valida se uma ligacao pode ser feita no horario especificado"""
         try:
             campanha = self.db.query(CampanhaPolitica).filter(
                 CampanhaPolitica.id == campanha_id
             ).first()
             
             if not campanha:
-                raise ValueError(f"Campanha {campanha_id} não encontrada")
+                raise ValueError(f"Campanha {campanha_id} nao encontrada")
             
             config = campanha.configuracao_eleitoral
             
@@ -53,12 +53,12 @@ class CampanhaPoliticaService:
             if dia_semana not in config.dias_semana_permitidos:
                 return ValidacaoHorarioResponse(
                     dentro_horario_legal=False,
-                    motivo=f"Ligações não permitidas neste dia da semana",
+                    motivo=f"Ligacoes nao permitidas neste dia da semana",
                     horario_inicio_permitido=config.horario_inicio_permitido,
                     horario_fim_permitido=config.horario_fim_permitido
                 )
             
-            # Verificar horário do dia
+            # Verificar horario do dia
             horario_ligacao = timestamp_ligacao.time()
             horario_inicio = time.fromisoformat(config.horario_inicio_permitido)
             horario_fim = time.fromisoformat(config.horario_fim_permitido)
@@ -66,20 +66,20 @@ class CampanhaPoliticaService:
             if not (horario_inicio <= horario_ligacao <= horario_fim):
                 return ValidacaoHorarioResponse(
                     dentro_horario_legal=False,
-                    motivo=f"Fora do horário permitido ({config.horario_inicio_permitido}-{config.horario_fim_permitido})",
+                    motivo=f"Fora do horario permitido ({config.horario_inicio_permitido}-{config.horario_fim_permitido})",
                     horario_inicio_permitido=config.horario_inicio_permitido,
                     horario_fim_permitido=config.horario_fim_permitido
                 )
             
             return ValidacaoHorarioResponse(
                 dentro_horario_legal=True,
-                motivo="Horário dentro do período legal",
+                motivo="Horario dentro do periodo legal",
                 horario_inicio_permitido=config.horario_inicio_permitido,
                 horario_fim_permitido=config.horario_fim_permitido
             )
             
         except Exception as e:
-            logger.error(f"Erro ao validar horário legal: {e}")
+            logger.error(f"Erro ao validar horario legal: {e}")
             raise
     
     async def registrar_log_eleitoral(
@@ -87,9 +87,9 @@ class CampanhaPoliticaService:
         dados_log: LogEleitoralCreate,
         endereco_ip: str
     ) -> LogEleitoralImutavel:
-        """Registra log eleitoral imutável"""
+        """Registra log eleitoral imutavel"""
         try:
-            # Obter hash do último log
+            # Obter hash do ultimo log
             ultimo_log = self.db.query(LogEleitoralImutavel).order_by(
                 LogEleitoralImutavel.id.desc()
             ).first()
@@ -114,7 +114,7 @@ class CampanhaPoliticaService:
                 versao_sistema=self.versao_sistema
             )
             
-            # Calcular hash próprio
+            # Calcular hash proprio
             log_eleitoral.hash_proprio = self._calcular_hash_log(log_eleitoral)
             
             self.db.add(log_eleitoral)

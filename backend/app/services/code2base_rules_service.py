@@ -1,6 +1,6 @@
 """
-Serviço de Gestão de Regras do Sistema CODE2BASE
-Responsável por gerenciar regras de seleção inteligente de CLIs
+Servico de Gestao de Regras do Sistema CODE2BASE
+Responsavel por gerenciar regras de selecao inteligente de CLIs
 """
 
 import json
@@ -24,16 +24,16 @@ from app.utils.logger import logger
 
 
 class Code2BaseRulesService:
-    """Serviço para gestão de regras de seleção de CLI"""
+    """Servico para gestao de regras de selecao de CLI"""
     
     def __init__(self, db: Session):
         self.db = db
     
-    # ================== GESTÃO DE REGRAS ==================
+    # ================== GESTAO DE REGRAS ==================
     
     def criar_regra(self, regla_data: ReglaCliCreate) -> ReglaCliResponse:
         """
-        Cria uma nova regra de seleção de CLI
+        Cria uma nova regra de selecao de CLI
         
         Args:
             regla_data: Dados da regra
@@ -41,11 +41,11 @@ class Code2BaseRulesService:
         Returns:
             ReglaCliResponse com dados da regra criada
         """
-        # Validar condições JSON
+        # Validar condicoes JSON
         if not self._validar_condiciones(regla_data.condiciones):
             raise HTTPException(
                 status_code=400,
-                detail="Condições da regra inválidas"
+                detail="Condicoes da regra invalidas"
             )
         
         nova_regla = ReglaCli(
@@ -56,8 +56,8 @@ class Code2BaseRulesService:
             prioridad=regla_data.prioridad,
             peso=regla_data.peso,
             activo=regla_data.activo,
-            aplica_a_campaña=regla_data.aplica_a_campaña,
-            campaña_ids=regla_data.campaña_ids
+            aplica_a_campana=regla_data.aplica_a_campana,
+            campana_ids=regla_data.campana_ids
         )
         
         try:
@@ -95,10 +95,10 @@ class Code2BaseRulesService:
         return [ReglaCliResponse.from_orm(r) for r in reglas]
     
     def obter_regra(self, regla_id: int) -> ReglaCliResponse:
-        """Obtém regra por ID"""
+        """Obtem regra por ID"""
         regla = self.db.query(ReglaCli).filter(ReglaCli.id == regla_id).first()
         if not regla:
-            raise HTTPException(status_code=404, detail="Regra não encontrada")
+            raise HTTPException(status_code=404, detail="Regra nao encontrada")
         
         return ReglaCliResponse.from_orm(regla)
     
@@ -106,14 +106,14 @@ class Code2BaseRulesService:
         """Atualiza regra"""
         regla = self.db.query(ReglaCli).filter(ReglaCli.id == regla_id).first()
         if not regla:
-            raise HTTPException(status_code=404, detail="Regra não encontrada")
+            raise HTTPException(status_code=404, detail="Regra nao encontrada")
         
-        # Validar novas condições se fornecidas
+        # Validar novas condicoes se fornecidas
         if regla_data.condiciones is not None:
             if not self._validar_condiciones(regla_data.condiciones):
                 raise HTTPException(
                     status_code=400,
-                    detail="Condições da regra inválidas"
+                    detail="Condicoes da regra invalidas"
                 )
         
         for field, value in regla_data.dict(exclude_unset=True).items():
@@ -133,7 +133,7 @@ class Code2BaseRulesService:
         """Remove regra (soft delete)"""
         regla = self.db.query(ReglaCli).filter(ReglaCli.id == regla_id).first()
         if not regla:
-            raise HTTPException(status_code=404, detail="Regra não encontrada")
+            raise HTTPException(status_code=404, detail="Regra nao encontrada")
         
         regla.activo = False
         regla.fecha_actualizacao = func.now()
@@ -144,16 +144,16 @@ class Code2BaseRulesService:
     
     def _validar_condiciones(self, condiciones: Dict[str, Any]) -> bool:
         """
-        Valida se as condições da regra são válidas
+        Valida se as condicoes da regra sao validas
         
         Args:
-            condiciones: Condições a validar
+            condiciones: Condicoes a validar
             
         Returns:
-            True se válidas
+            True se validas
         """
         try:
-            # Verificar tipos de dados válidos
+            # Verificar tipos de dados validos
             campos_validos = {
                 'pais', 'estado', 'prefijo', 'cidade', 
                 'tipo_numero', 'operadora', 
@@ -163,10 +163,10 @@ class Code2BaseRulesService:
             
             for campo in condiciones.keys():
                 if campo not in campos_validos:
-                    logger.warning(f"Campo {campo} não é válido em condições de regra")
+                    logger.warning(f"Campo {campo} nao e valido em condicoes de regra")
                     return False
             
-            # Validações específicas
+            # Validacoes especificas
             if 'calidad_minima' in condiciones:
                 valor = condiciones['calidad_minima']
                 if not isinstance(valor, (int, float)) or not (0.0 <= valor <= 1.0):
@@ -204,14 +204,14 @@ class Code2BaseRulesService:
             return True
             
         except Exception as e:
-            logger.error(f"Erro ao validar condições: {e}")
+            logger.error(f"Erro ao validar condicoes: {e}")
             return False
     
-    # ================== REGRAS PRÉ-DEFINIDAS ==================
+    # ================== REGRAS PRE-DEFINIDAS ==================
     
     def criar_regras_padrao(self) -> List[ReglaCliResponse]:
         """
-        Cria regras padrão do sistema
+        Cria regras padrao do sistema
         
         Returns:
             Lista de regras criadas
@@ -219,27 +219,27 @@ class Code2BaseRulesService:
         regras_padrao = [
             {
                 'nome': 'Priorizar mesmo prefixo',
-                'descripcion': 'Dar prioridade máxima a CLIs do mesmo prefixo que o destino',
+                'descripcion': 'Dar prioridade maxima a CLIs do mesmo prefixo que o destino',
                 'tipo_regra': TipoRegra.GEOGRAFIA,
                 'condiciones': {'mismo_prefijo': True},
                 'prioridad': 1,
                 'peso': 1.5,
                 'activo': True,
-                'aplica_a_campaña': False
+                'aplica_a_campana': False
             },
             {
-                'nome': 'Qualidade mínima móvel',
-                'descripcion': 'CLIs móveis devem ter qualidade mínima de 0.7',
+                'nome': 'Qualidade minima movel',
+                'descripcion': 'CLIs moveis devem ter qualidade minima de 0.7',
                 'tipo_regra': TipoRegra.GEOGRAFIA,
                 'condiciones': {'tipo_numero': 'movil', 'calidad_minima': 0.7},
                 'prioridad': 2,
                 'peso': 1.2,
                 'activo': True,
-                'aplica_a_campaña': False
+                'aplica_a_campana': False
             },
             {
-                'nome': 'Horário comercial Movistar',
-                'descripcion': 'Usar Movistar apenas em horário comercial',
+                'nome': 'Horario comercial Movistar',
+                'descripcion': 'Usar Movistar apenas em horario comercial',
                 'tipo_regra': TipoRegra.HORARIO,
                 'condiciones': {
                     'operadora': 'movistar',
@@ -248,17 +248,17 @@ class Code2BaseRulesService:
                 'prioridad': 3,
                 'peso': 1.1,
                 'activo': True,
-                'aplica_a_campaña': False
+                'aplica_a_campana': False
             },
             {
-                'nome': 'Taxa de sucesso mínima',
-                'descripcion': 'CLIs devem ter taxa de sucesso mínima de 0.3',
+                'nome': 'Taxa de sucesso minima',
+                'descripcion': 'CLIs devem ter taxa de sucesso minima de 0.3',
                 'tipo_regra': TipoRegra.GEOGRAFIA,
                 'condiciones': {'tasa_exito_minima': 0.3},
                 'prioridad': 4,
                 'peso': 1.0,
                 'activo': True,
-                'aplica_a_campaña': False
+                'aplica_a_campana': False
             },
             {
                 'nome': 'Fallback geral',
@@ -268,14 +268,14 @@ class Code2BaseRulesService:
                 'prioridad': 10,
                 'peso': 0.8,
                 'activo': True,
-                'aplica_a_campaña': False
+                'aplica_a_campana': False
             }
         ]
         
         regras_criadas = []
         
         for regra_data in regras_padrao:
-            # Verificar se já existe
+            # Verificar se ja existe
             existente = self.db.query(ReglaCli).filter(
                 ReglaCli.nome == regra_data['nome']
             ).first()
@@ -288,24 +288,24 @@ class Code2BaseRulesService:
                     self.db.refresh(nova_regla)
                     
                     regras_criadas.append(ReglaCliResponse.from_orm(nova_regla))
-                    logger.info(f"Regra padrão '{regla_data['nome']}' criada")
+                    logger.info(f"Regra padrao '{regla_data['nome']}' criada")
                     
                 except Exception as e:
                     self.db.rollback()
-                    logger.error(f"Erro ao criar regra padrão '{regla_data['nome']}': {e}")
+                    logger.error(f"Erro ao criar regra padrao '{regla_data['nome']}': {e}")
         
         return regras_criadas
     
-    # ================== ESTATÍSTICAS ==================
+    # ================== ESTATISTICAS ==================
     
     def obter_estatisticas_seleccion(self) -> EstadisticasSeleccion:
         """
-        Obtém estatísticas das seleções de CLI
+        Obtem estatisticas das selecoes de CLI
         
         Returns:
-            EstadisticasSeleccion com estatísticas
+            EstadisticasSeleccion com estatisticas
         """
-        # Contadores básicos
+        # Contadores basicos
         total_selecciones = self.db.query(HistorialSeleccionCli).count()
         selecciones_exitosas = self.db.query(HistorialSeleccionCli).filter(
             HistorialSeleccionCli.llamada_exitosa == True
@@ -442,7 +442,7 @@ class Code2BaseRulesService:
                 # Criar requisicao de selecao
                 seleccion_request = SeleccionCliRequest(
                     numero_destino=request.numero_destino,
-                    campaña_id=request.campaña_id
+                    campana_id=request.campana_id
                 )
                 
                 # Executar selecao

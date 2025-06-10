@@ -15,7 +15,7 @@ from app.auth.dependencies import USUARIOS_SIMULADOS
 client = TestClient(app)
 
 # Constantes
-API_URL = "/api/v1/llamadas/proxima"  # URL completa según la configuración en main.py
+API_URL = "/api/v1/llamadas/proxima"  # URL completa segun la configuracion en main.py
 
 @pytest.fixture
 def crear_llamada_pendiente():
@@ -36,7 +36,7 @@ def crear_llamada_pendiente():
         # Devolver el ID para usar en las pruebas
         llamada_id = llamada.id
         
-    # Después de la prueba, se limpia automáticamente con el context manager
+    # Despues de la prueba, se limpia automaticamente con el context manager
     return llamada_id
 
 @pytest.fixture
@@ -96,7 +96,7 @@ def test_proxima_llamada_sin_llamadas_disponibles():
     # Realizar la solicitud GET
     response = client.get(API_URL, headers=headers)
     
-    # Verificar código de estado
+    # Verificar codigo de estado
     assert response.status_code == 200
     
     # Verificar que el mensaje indica que no hay llamadas
@@ -118,7 +118,7 @@ def test_proxima_llamada_con_llamada_en_progreso(crear_llamada_en_progreso):
     # Realizar la solicitud GET
     response = client.get(API_URL, headers=headers)
     
-    # Verificar código de estado
+    # Verificar codigo de estado
     assert response.status_code == 200
     
     # Verificar que devuelve la llamada existente
@@ -128,7 +128,7 @@ def test_proxima_llamada_con_llamada_en_progreso(crear_llamada_en_progreso):
     assert datos_respuesta["estado"] == "en_progreso"
 
 def test_proxima_llamada_asignar_nueva(crear_llamada_pendiente):
-    """Test para verificar la asignación de una nueva llamada pendiente"""
+    """Test para verificar la asignacion de una nueva llamada pendiente"""
     
     # Obtener ID de la llamada pendiente
     llamada_id = crear_llamada_pendiente
@@ -141,16 +141,16 @@ def test_proxima_llamada_asignar_nueva(crear_llamada_pendiente):
     # Realizar la solicitud GET
     response = client.get(API_URL, headers=headers)
     
-    # Verificar código de estado
+    # Verificar codigo de estado
     assert response.status_code == 200
     
-    # Verificar que se asignó la llamada correctamente
+    # Verificar que se asigno la llamada correctamente
     datos_respuesta = response.json()
     assert "llamada_id" in datos_respuesta
     assert datos_respuesta["llamada_id"] == llamada_id
     assert datos_respuesta["estado"] == "en_progreso"
     
-    # Verificar que se actualizó en la base de datos
+    # Verificar que se actualizo en la base de datos
     with obtener_sesion_context() as db:
         llamada = db.query(Llamada).filter(Llamada.id == llamada_id).first()
         assert llamada is not None
@@ -168,7 +168,7 @@ def test_proxima_llamada_error_db():
     
     # Simular un error en la base de datos
     with patch('sqlalchemy.orm.Session.commit') as mock_commit:
-        # Hacer que commit lance una excepción
+        # Hacer que commit lance una excepcion
         mock_commit.side_effect = Exception("Error simulado de base de datos")
         
         # Realizar la solicitud GET

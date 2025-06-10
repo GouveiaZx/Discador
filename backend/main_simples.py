@@ -7,10 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
 
-# Importações básicas
+# Importacoes basicas
 from app.config import configuracion
 
-# Criar aplicação FastAPI simples
+# Criar aplicacao FastAPI simples
 app = FastAPI(
     title="Discador Predictivo - Railway",
     description="Sistema de discado predictivo (deploy Railway)",
@@ -30,7 +30,7 @@ app.add_middleware(
 
 @app.get("/")
 async def inicio():
-    """Página inicial"""
+    """Pagina inicial"""
     return {
         "mensagem": "🚀 Discador Predictivo funcionando no Railway!",
         "status": "ativo",
@@ -59,7 +59,7 @@ async def teste():
     """Endpoint de teste"""
     return {
         "teste": "sucesso",
-        "mensagem": "A API está funcionando no Railway!",
+        "mensagem": "A API esta funcionando no Railway!",
         "railway": True
     }
 
@@ -97,7 +97,7 @@ async def llamadas_en_progreso():
 
 @app.get("/api/v1/llamadas/historico")
 async def historico_llamadas():
-    """Mock: Histórico de chamadas"""
+    """Mock: Historico de chamadas"""
     return {
         "status": "success",
         "llamadas": [

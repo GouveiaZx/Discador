@@ -11,8 +11,8 @@ from app.schemas.lista_llamadas import validar_numero_telefono
 
 class CliBase(BaseModel):
     """Schema base para CLI."""
-    numero: str = Field(..., description="Número de teléfono CLI")
-    descripcion: Optional[str] = Field(None, max_length=255, description="Descripción del CLI")
+    numero: str = Field(..., description="Numero de telefono CLI")
+    descripcion: Optional[str] = Field(None, max_length=255, description="Descripcion del CLI")
     notas: Optional[str] = Field(None, description="Notas adicionales sobre el CLI")
 
 
@@ -21,10 +21,10 @@ class CliCreate(CliBase):
     
     @validator('numero')
     def validar_numero_telefono_field(cls, v):
-        """Valida que el número sea válido."""
+        """Valida que el numero sea valido."""
         validacion = validar_numero_telefono(v)
         if not validacion.valido:
-            raise ValueError(f"Número CLI inválido: {validacion.motivo_invalido}")
+            raise ValueError(f"Numero CLI invalido: {validacion.motivo_invalido}")
         return validacion.numero_normalizado
 
 
@@ -32,51 +32,51 @@ class CliUpdate(BaseModel):
     """Schema para actualizar CLI."""
     descripcion: Optional[str] = Field(None, max_length=255)
     notas: Optional[str] = Field(None)
-    activo: Optional[bool] = Field(None, description="Si el CLI está activo")
+    activo: Optional[bool] = Field(None, description="Si el CLI esta activo")
 
 
 class CliResponse(CliBase):
     """Schema para respuesta de CLI."""
-    id: int = Field(..., description="ID único del CLI")
-    numero_normalizado: str = Field(..., description="Número normalizado")
-    activo: bool = Field(..., description="Si el CLI está activo")
+    id: int = Field(..., description="ID unico del CLI")
+    numero_normalizado: str = Field(..., description="Numero normalizado")
+    activo: bool = Field(..., description="Si el CLI esta activo")
     veces_usado: int = Field(..., description="Veces que se ha usado este CLI")
-    ultima_vez_usado: Optional[datetime] = Field(None, description="Última vez que se usó")
-    fecha_creacion: datetime = Field(..., description="Fecha de creación")
-    fecha_actualizacion: datetime = Field(..., description="Fecha de última actualización")
+    ultima_vez_usado: Optional[datetime] = Field(None, description="Ultima vez que se uso")
+    fecha_creacion: datetime = Field(..., description="Fecha de creacion")
+    fecha_actualizacion: datetime = Field(..., description="Fecha de ultima actualizacion")
     
     class Config:
         from_attributes = True
 
 
 class CliBulkAddRequest(BaseModel):
-    """Schema para agregar múltiples CLIs."""
-    numeros: List[str] = Field(..., description="Lista de números CLI a agregar")
-    descripcion: Optional[str] = Field(None, description="Descripción común para todos los CLIs")
+    """Schema para agregar multiples CLIs."""
+    numeros: List[str] = Field(..., description="Lista de numeros CLI a agregar")
+    descripcion: Optional[str] = Field(None, description="Descripcion comun para todos los CLIs")
 
 
 class CliBulkAddResponse(BaseModel):
     """Schema para respuesta de agregado masivo de CLIs."""
     mensaje: str = Field(..., description="Mensaje de resultado")
     clis_agregados: int = Field(..., description="Cantidad de CLIs agregados exitosamente")
-    clis_duplicados: int = Field(..., description="CLIs que ya existían")
-    clis_invalidos: int = Field(..., description="CLIs inválidos encontrados")
+    clis_duplicados: int = Field(..., description="CLIs que ya existian")
+    clis_invalidos: int = Field(..., description="CLIs invalidos encontrados")
     errores: List[str] = Field([], description="Lista de errores encontrados")
 
 
 class CliStatsResponse(BaseModel):
-    """Schema para estadísticas de CLIs."""
+    """Schema para estadisticas de CLIs."""
     total_clis: int = Field(..., description="Total de CLIs registrados")
     clis_activos: int = Field(..., description="CLIs activos")
     clis_inactivos: int = Field(..., description="CLIs inactivos")
-    cli_mas_usado: Optional[str] = Field(None, description="CLI más usado")
+    cli_mas_usado: Optional[str] = Field(None, description="CLI mas usado")
     total_usos_hoy: int = Field(..., description="Total de usos hoy")
     total_usos_mes: int = Field(..., description="Total de usos este mes")
 
 
 class CliRandomRequest(BaseModel):
     """Schema para solicitar CLI aleatorio."""
-    excluir_cli: Optional[str] = Field(None, description="CLI a excluir de la selección")
+    excluir_cli: Optional[str] = Field(None, description="CLI a excluir de la seleccion")
     solo_poco_usados: Optional[bool] = Field(False, description="Preferir CLIs menos usados")
 
 

@@ -27,7 +27,7 @@ class TestBlacklistService:
     
     @pytest.fixture
     def mock_db(self):
-        """Mock de la sesión de base de datos."""
+        """Mock de la sesion de base de datos."""
         return Mock(spec=Session)
     
     @pytest.fixture
@@ -36,7 +36,7 @@ class TestBlacklistService:
         return BlacklistService(mock_db)
     
     def test_verificar_numero_no_blacklist(self, service, mock_db):
-        """Test verificar número que no está en blacklist."""
+        """Test verificar numero que no esta en blacklist."""
         # Configurar mock
         mock_db.query.return_value.filter.return_value.first.return_value = None
         
@@ -48,12 +48,12 @@ class TestBlacklistService:
         assert resultado.numero_normalizado == "+5491112345678"
     
     def test_verificar_numero_en_blacklist(self, service, mock_db):
-        """Test verificar número que está en blacklist."""
+        """Test verificar numero que esta en blacklist."""
         # Configurar mock
         mock_entrada = ListaNegra(
             id=1,
             numero_normalizado="+5491112345678",
-            motivo="Número reportado como spam",
+            motivo="Numero reportado como spam",
             veces_bloqueado=5,
             activo=True
         )
@@ -64,17 +64,17 @@ class TestBlacklistService:
         
         # Verificar
         assert resultado.en_blacklist is True
-        assert resultado.motivo == "Número reportado como spam"
+        assert resultado.motivo == "Numero reportado como spam"
         assert mock_entrada.veces_bloqueado == 6  # Debe incrementar
     
     def test_agregar_numero_blacklist_exitoso(self, service, mock_db):
-        """Test agregar número a blacklist exitosamente."""
+        """Test agregar numero a blacklist exitosamente."""
         # Configurar mock
         mock_db.query.return_value.filter.return_value.first.return_value = None
         
         numero_data = BlacklistCreate(
             numero="+5491112345678",
-            motivo="Número de spam",
+            motivo="Numero de spam",
             creado_por="admin"
         )
         
@@ -87,7 +87,7 @@ class TestBlacklistService:
         assert isinstance(resultado, ListaNegra)
     
     def test_agregar_numero_ya_existe_activo(self, service, mock_db):
-        """Test agregar número que ya existe y está activo."""
+        """Test agregar numero que ya existe y esta activo."""
         # Configurar mock
         mock_entrada_existente = ListaNegra(
             id=1,
@@ -98,17 +98,17 @@ class TestBlacklistService:
         
         numero_data = BlacklistCreate(
             numero="+5491112345678",
-            motivo="Número de spam"
+            motivo="Numero de spam"
         )
         
-        # Ejecutar y verificar excepción
+        # Ejecutar y verificar excepcion
         with pytest.raises(Exception) as exc_info:
             service.agregar_numero_blacklist(numero_data)
         
-        assert "ya está en blacklist" in str(exc_info.value)
+        assert "ya esta en blacklist" in str(exc_info.value)
     
     def test_agregar_numero_reactivar_inactivo(self, service, mock_db):
-        """Test reactivar número inactivo en blacklist."""
+        """Test reactivar numero inactivo en blacklist."""
         # Configurar mock
         mock_entrada_existente = ListaNegra(
             id=1,
@@ -134,7 +134,7 @@ class TestBlacklistService:
         mock_db.commit.assert_called_once()
     
     def test_remover_numero_blacklist(self, service, mock_db):
-        """Test remover número da blacklist."""
+        """Test remover numero da blacklist."""
         # Configurar mock
         mock_entrada = ListaNegra(
             id=1,
@@ -152,7 +152,7 @@ class TestBlacklistService:
         mock_db.commit.assert_called_once()
     
     def test_buscar_blacklist_por_numero(self, service, mock_db):
-        """Test buscar na blacklist por número."""
+        """Test buscar na blacklist por numero."""
         # Configurar mock
         mock_entradas = [
             ListaNegra(id=1, numero_normalizado="+5491112345678"),
@@ -170,7 +170,7 @@ class TestBlacklistService:
         mock_db.query.assert_called()
     
     def test_agregar_numeros_bulk(self, service):
-        """Test agregado masivo de números."""
+        """Test agregado masivo de numeros."""
         numeros = [
             "+5491112345678",
             "+5491187654321",
@@ -178,18 +178,18 @@ class TestBlacklistService:
             "+5491112345678"  # Duplicado
         ]
         
-        # Mock do método agregar_numero_blacklist
+        # Mock do metodo agregar_numero_blacklist
         with patch.object(service, 'agregar_numero_blacklist') as mock_agregar:
-            # Configurar comportamento para diferentes números
+            # Configurar comportamento para diferentes numeros
             def side_effect(numero_data):
                 if "invalido" in numero_data.numero:
-                    raise Exception("Número inválido")
+                    raise Exception("Numero invalido")
                 elif numero_data.numero == "+5491112345678":
                     # Primeiro sucesso, segundo duplicado
                     if mock_agregar.call_count <= 1:
                         return ListaNegra()
                     else:
-                        raise Exception("ya está en blacklist")
+                        raise Exception("ya esta en blacklist")
                 else:
                     return ListaNegra()
             
@@ -216,7 +216,7 @@ class TestBlacklistEndpoints:
     @patch('app.database.obtener_sesion')
     @patch('app.services.blacklist_service.BlacklistService')
     def test_verificar_numero_endpoint(self, mock_service_class, mock_db):
-        """Test endpoint de verificação de número."""
+        """Test endpoint de verificacao de numero."""
         # Configurar mock
         mock_service = Mock()
         mock_service_class.return_value = mock_service
@@ -226,10 +226,10 @@ class TestBlacklistEndpoints:
             numero_original="+5491112345678",
             numero_normalizado="+5491112345678",
             en_blacklist=True,
-            motivo="Número de spam"
+            motivo="Numero de spam"
         )
         
-        # Realizar petición
+        # Realizar peticion
         response = self.test_client.post(
             "/api/v1/blacklist/verificar",
             json={"numero": "+5491112345678"}
@@ -239,12 +239,12 @@ class TestBlacklistEndpoints:
         assert response.status_code == 200
         data = response.json()
         assert data["en_blacklist"] is True
-        assert data["motivo"] == "Número de spam"
+        assert data["motivo"] == "Numero de spam"
     
     @patch('app.database.obtener_sesion')
     @patch('app.services.blacklist_service.BlacklistService')
     def test_agregar_numero_endpoint(self, mock_service_class, mock_db):
-        """Test endpoint de agregar número."""
+        """Test endpoint de agregar numero."""
         # Configurar mock
         mock_service = Mock()
         mock_service_class.return_value = mock_service
@@ -259,7 +259,7 @@ class TestBlacklistEndpoints:
         )
         mock_service.agregar_numero_blacklist.return_value = mock_entrada
         
-        # Realizar petición
+        # Realizar peticion
         response = self.test_client.post(
             "/api/v1/blacklist/agregar",
             json={
@@ -297,7 +297,7 @@ class TestBlacklistEndpoints:
         ]
         mock_service.listar_blacklist.return_value = mock_entradas
         
-        # Realizar petición
+        # Realizar peticion
         response = self.test_client.get("/api/v1/blacklist/")
         
         # Verificar respuesta
@@ -318,10 +318,10 @@ class TestBlacklistEndpoints:
             'numeros_agregados': 2,
             'numeros_duplicados': 1,
             'numeros_invalidos': 1,
-            'errores': ['Número 3: Número inválido']
+            'errores': ['Numero 3: Numero invalido']
         }
         
-        # Realizar petición
+        # Realizar peticion
         response = self.test_client.post(
             "/api/v1/blacklist/agregar-bulk",
             json={
@@ -341,13 +341,13 @@ class TestBlacklistEndpoints:
     @patch('app.database.obtener_sesion')
     @patch('app.services.blacklist_service.BlacklistService')
     def test_remover_numero_endpoint(self, mock_service_class, mock_db):
-        """Test endpoint de remover número."""
+        """Test endpoint de remover numero."""
         # Configurar mock
         mock_service = Mock()
         mock_service_class.return_value = mock_service
         mock_service.remover_numero_blacklist.return_value = True
         
-        # Realizar petição
+        # Realizar peticao
         response = self.test_client.delete("/api/v1/blacklist/1")
         
         # Verificar resposta
@@ -358,26 +358,26 @@ class TestBlacklistEndpoints:
 
 
 class TestIntegracionBlacklistDiscado:
-    """Tests de integração entre blacklist e discado."""
+    """Tests de integracao entre blacklist e discado."""
     
     @patch('app.database.obtener_sesion')
     @patch('app.services.discado_service.DiscadoService')
     def test_discado_numero_bloqueado(self, mock_service_class, mock_db):
-        """Test que el discado bloquea números en blacklist."""
+        """Test que el discado bloquea numeros en blacklist."""
         # Configurar mock
         mock_service = Mock()
         mock_service_class.return_value = mock_service
         
-        # Simular número bloqueado
+        # Simular numero bloqueado
         mock_service.iniciar_llamada.return_value = {
             "estado": "bloqueado",
-            "mensaje": "Número bloqueado por blacklist: Spam",
+            "mensaje": "Numero bloqueado por blacklist: Spam",
             "numero_destino": "+5491112345678",
             "bloqueado_blacklist": True,
             "motivo_bloqueo": "Spam"
         }
         
-        # Realizar petición
+        # Realizar peticion
         response = client.post(
             "/api/v1/discado/iniciar-llamada",
             json={

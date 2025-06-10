@@ -84,24 +84,24 @@ def mock_llamadas_vacias():
     """Crea un mock para ninguna llamada finalizada"""
     return []
 
-# Patch para autenticación con usuario administrador
+# Patch para autenticacion con usuario administrador
 @pytest.fixture
 def patch_auth_admin(mock_usuario_admin):
-    """Patch para autenticación con usuario administrador"""
+    """Patch para autenticacion con usuario administrador"""
     with patch("app.routes.llamadas.get_current_user_simulado", return_value=mock_usuario_admin):
         yield
 
-# Patch para autenticación con usuario regular
+# Patch para autenticacion con usuario regular
 @pytest.fixture
 def patch_auth_regular(mock_usuario_regular):
-    """Patch para autenticación con usuario regular"""
+    """Patch para autenticacion con usuario regular"""
     with patch("app.routes.llamadas.get_current_user_simulado", return_value=mock_usuario_regular):
         yield
 
 # Patch para exportar CSV con llamadas
 @pytest.fixture
 def patch_exportar_csv(mock_llamadas_finalizadas):
-    """Patch para el método exportar_llamadas_finalizadas_csv del servicio"""
+    """Patch para el metodo exportar_llamadas_finalizadas_csv del servicio"""
     # Crear un CSV real con los datos mock
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=[
@@ -136,11 +136,11 @@ def patch_exportar_csv(mock_llamadas_finalizadas):
     with patch.object(LlamadasService, "exportar_llamadas_finalizadas_csv", return_value=csv_content):
         yield
 
-# Patch para exportar CSV vacío
+# Patch para exportar CSV vacio
 @pytest.fixture
 def patch_exportar_csv_vacio(mock_llamadas_vacias):
-    """Patch para el método exportar_llamadas_finalizadas_csv que devuelve un CSV vacío"""
-    # Crear un CSV vacío con solo la cabecera
+    """Patch para el metodo exportar_llamadas_finalizadas_csv que devuelve un CSV vacio"""
+    # Crear un CSV vacio con solo la cabecera
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=[
         "llamada_id", "numero_destino", "estado", "resultado", 
@@ -158,7 +158,7 @@ def patch_exportar_csv_vacio(mock_llamadas_vacias):
 # Patch para exportar CSV con error
 @pytest.fixture
 def patch_exportar_csv_error():
-    """Patch para el método exportar_llamadas_finalizadas_csv que devuelve un error"""
+    """Patch para el metodo exportar_llamadas_finalizadas_csv que devuelve un error"""
     with patch.object(
         LlamadasService, 
         "exportar_llamadas_finalizadas_csv", 
@@ -169,9 +169,9 @@ def patch_exportar_csv_error():
     ):
         yield
 
-# Tests para el servicio de exportación
+# Tests para el servicio de exportacion
 class TestServicioExportacion:
-    """Tests para el servicio de exportación a CSV"""
+    """Tests para el servicio de exportacion a CSV"""
     
     def test_exportar_llamadas_csv(self, mock_llamadas_finalizadas):
         """Test para exportar llamadas a CSV correctamente"""
@@ -181,7 +181,7 @@ class TestServicioExportacion:
         # Configurar mock para devolver llamadas finalizadas
         db.query().outerjoin().filter().order_by().all.return_value = mock_llamadas_finalizadas
         
-        # Ejecutar el método
+        # Ejecutar el metodo
         resultado = LlamadasService.exportar_llamadas_finalizadas_csv(db)
         
         # Verificar que es un string (contenido CSV)
@@ -201,10 +201,10 @@ class TestServicioExportacion:
         # Crear mock de db
         db = MagicMock()
         
-        # Configurar mock para devolver lista vacía
+        # Configurar mock para devolver lista vacia
         db.query().outerjoin().filter().order_by().all.return_value = []
         
-        # Ejecutar el método
+        # Ejecutar el metodo
         resultado = LlamadasService.exportar_llamadas_finalizadas_csv(db)
         
         # Verificar que es un string (contenido CSV)
@@ -215,27 +215,27 @@ class TestServicioExportacion:
         
         # Verificar que no contiene datos de llamadas (solo la cabecera)
         lineas = resultado.strip().split("\n")
-        assert len(lineas) == 1  # Solo la línea de cabecera
+        assert len(lineas) == 1  # Solo la linea de cabecera
     
     def test_exportar_llamadas_csv_error(self):
         """Test para manejo de errores al exportar llamadas a CSV"""
         # Crear mock de db
         db = MagicMock()
         
-        # Configurar mock para lanzar excepción
+        # Configurar mock para lanzar excepcion
         db.query().outerjoin().filter().order_by().all.side_effect = Exception("Error de base de datos")
         
-        # Verificar que se lance la excepción HTTP
+        # Verificar que se lance la excepcion HTTP
         with pytest.raises(HTTPException) as excinfo:
             LlamadasService.exportar_llamadas_finalizadas_csv(db)
         
-        # Verificar el código de estado y el mensaje
+        # Verificar el codigo de estado y el mensaje
         assert excinfo.value.status_code == 500
         assert "Error al exportar llamadas a CSV" in excinfo.value.detail
 
-# Tests para la ruta de exportación
+# Tests para la ruta de exportacion
 class TestRutaExportacion:
-    """Tests para la ruta de exportación a CSV"""
+    """Tests para la ruta de exportacion a CSV"""
     
     def test_exportar_llamadas_admin(self, patch_auth_admin, patch_exportar_csv):
         """Test para exportar llamadas con usuario administrador"""
@@ -270,13 +270,13 @@ class TestRutaExportacion:
         
         # Verificar que no hay datos adicionales
         lineas = content.strip().split("\n")
-        assert len(lineas) == 1  # Solo la línea de cabecera
+        assert len(lineas) == 1  # Solo la linea de cabecera
     
     def test_exportar_llamadas_no_admin(self, patch_auth_regular):
         """Test para exportar llamadas con usuario no administrador"""
         response = client.get("/api/v1/llamadas/exportar")
         
-        # Verificar denegación de acceso
+        # Verificar denegacion de acceso
         assert response.status_code == 403
         assert "Solo los administradores pueden exportar" in response.json()["error"]
     

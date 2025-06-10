@@ -1,19 +1,19 @@
 """
-Migración para crear la tabla usuarios.
+Migracion para crear la tabla usuarios.
 """
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
-# Revisión Alembic - usa UUID como identificador
+# Revision Alembic - usa UUID como identificador
 revision = '20230801000'
 down_revision = None
 branch_labels = None
 depends_on = None
 
 def upgrade():
-    """Aplica la migración: crea la tabla usuarios"""
+    """Aplica la migracion: crea la tabla usuarios"""
     op.create_table(
         'usuarios',
         sa.Column('id', UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
@@ -27,13 +27,13 @@ def upgrade():
         sa.Column('fecha_actualizacion', sa.DateTime(), nullable=False, server_default=sa.func.now()),
     )
     
-    # Crear índices
+    # Crear indices
     op.create_index('idx_usuarios_id', 'usuarios', ['id'])
     op.create_index('idx_usuarios_email', 'usuarios', ['email'])
     op.create_index('idx_usuarios_rol', 'usuarios', ['rol'])
 
 def downgrade():
-    """Revierte la migración: elimina la tabla usuarios"""
+    """Revierte la migracion: elimina la tabla usuarios"""
     op.drop_index('idx_usuarios_rol', 'usuarios')
     op.drop_index('idx_usuarios_email', 'usuarios')
     op.drop_index('idx_usuarios_id', 'usuarios')

@@ -1,5 +1,5 @@
 """
-Serviço para processar listas de llamadas a partir de arquivos CSV/TXT.
+Servico para processar listas de llamadas a partir de arquivos CSV/TXT.
 """
 
 import csv
@@ -15,7 +15,7 @@ from app.utils.logger import logger
 
 
 class ListaLlamadasService:
-    """Serviço para processar listas de llamadas."""
+    """Servico para processar listas de llamadas."""
     
     def __init__(self, db: Session):
         self.db = db
@@ -27,15 +27,15 @@ class ListaLlamadasService:
         descripcion: str = None
     ) -> Dict[str, Any]:
         """
-        Procesa un archivo CSV/TXT con números de teléfono.
+        Procesa un archivo CSV/TXT con numeros de telefono.
         
         Args:
             archivo: Archivo subido via FastAPI
             nombre_lista: Nombre para la lista de llamadas
-            descripcion: Descripción opcional de la lista
+            descripcion: Descripcion opcional de la lista
             
         Returns:
-            Diccionario con estadísticas del procesamiento
+            Diccionario con estadisticas del procesamiento
         """
         logger.info(f"Iniciando procesamiento de archivo: {archivo.filename}")
         
@@ -43,7 +43,7 @@ class ListaLlamadasService:
         if not self._validar_tipo_archivo(archivo.filename):
             raise HTTPException(
                 status_code=400,
-                detail="Tipo de archivo no válido. Solo se aceptan archivos CSV y TXT."
+                detail="Tipo de archivo no valido. Solo se aceptan archivos CSV y TXT."
             )
         
         # Verificar si ya existe una lista con ese nombre
@@ -62,7 +62,7 @@ class ListaLlamadasService:
             contenido = await archivo.read()
             contenido_texto = contenido.decode('utf-8')
             
-            # Procesar números
+            # Procesar numeros
             estadisticas = await self._procesar_numeros(contenido_texto, archivo.filename)
             
             # Crear lista en la base de datos
@@ -73,10 +73,10 @@ class ListaLlamadasService:
                 estadisticas
             )
             
-            # Guardar números válidos
+            # Guardar numeros validos
             numeros_guardados = self._guardar_numeros(lista.id, estadisticas['numeros_validos'])
             
-            # Actualizar estadísticas finales
+            # Actualizar estadisticas finales
             lista.numeros_validos = numeros_guardados
             self.db.commit()
             
@@ -96,7 +96,7 @@ class ListaLlamadasService:
         except UnicodeDecodeError:
             raise HTTPException(
                 status_code=400,
-                detail="Error al leer el archivo. Verifique que esté codificado en UTF-8."
+                detail="Error al leer el archivo. Verifique que este codificado en UTF-8."
             )
         except Exception as e:
             logger.error(f"Error procesando archivo: {str(e)}")
@@ -117,14 +117,14 @@ class ListaLlamadasService:
     
     async def _procesar_numeros(self, contenido: str, filename: str) -> Dict[str, Any]:
         """
-        Procesa el contenido del archivo y extrae los números.
+        Procesa el contenido del archivo y extrae los numeros.
         
         Args:
             contenido: Contenido del archivo como string
             filename: Nombre del archivo para determinar el formato
             
         Returns:
-            Diccionario con estadísticas del procesamiento
+            Diccionario con estadisticas del procesamiento
         """
         numeros_raw = []
         errores = []
@@ -144,7 +144,7 @@ class ListaLlamadasService:
                 'errores': errores
             }
         
-        # Validar y normalizar números
+        # Validar y normalizar numeros
         numeros_validos = []
         numeros_invalidos = 0
         numeros_vistos: Set[str] = set()
@@ -158,13 +158,13 @@ class ListaLlamadasService:
             
             if not validacion.valido:
                 numeros_invalidos += 1
-                errores.append(f"Línea {i}: {validacion.motivo_invalido} - '{numero_raw}'")
+                errores.append(f"Linea {i}: {validacion.motivo_invalido} - '{numero_raw}'")
                 continue
             
             # Verificar duplicados
             if validacion.numero_normalizado in numeros_vistos:
                 numeros_duplicados += 1
-                errores.append(f"Línea {i}: Número duplicado - '{numero_raw}'")
+                errores.append(f"Linea {i}: Numero duplicado - '{numero_raw}'")
                 continue
             
             numeros_vistos.add(validacion.numero_normalizado)
@@ -182,7 +182,7 @@ class ListaLlamadasService:
         }
     
     def _procesar_csv(self, contenido: str) -> List[str]:
-        """Procesa archivo CSV y extrae números."""
+        """Procesa archivo CSV y extrae numeros."""
         numeros = []
         
         # Detectar si tiene header
@@ -196,14 +196,14 @@ class ListaLlamadasService:
             next(reader)  # Saltar header
         
         for row in reader:
-            if row:  # Ignorar filas vacías
-                # Tomar el primer campo como número
+            if row:  # Ignorar filas vacias
+                # Tomar el primer campo como numero
                 numeros.append(row[0].strip())
         
         return numeros
     
     def _procesar_txt(self, contenido: str) -> List[str]:
-        """Procesa archivo TXT y extrae números (uno por línea)."""
+        """Procesa archivo TXT y extrae numeros (uno por linea)."""
         lineas = contenido.strip().split('\n')
         return [linea.strip() for linea in lineas if linea.strip()]
     
@@ -232,10 +232,10 @@ class ListaLlamadasService:
     
     def _guardar_numeros(self, lista_id: int, numeros_validos: List[Dict[str, str]]) -> int:
         """
-        Guarda los números válidos en la base de datos.
+        Guarda los numeros validos en la base de datos.
         
         Returns:
-            Cantidad de números guardados exitosamente
+            Cantidad de numeros guardados exitosamente
         """
         numeros_guardados = 0
         
@@ -252,9 +252,9 @@ class ListaLlamadasService:
                 numeros_guardados += 1
                 
             except IntegrityError:
-                # Manejar duplicados que puedan haber pasado la validación inicial
+                # Manejar duplicados que puedan haber pasado la validacion inicial
                 self.db.rollback()
-                logger.warning(f"Número duplicado encontrado en BD: {numero_data['numero_normalizado']}")
+                logger.warning(f"Numero duplicado encontrado en BD: {numero_data['numero_normalizado']}")
                 continue
         
         return numeros_guardados
@@ -282,7 +282,7 @@ class ListaLlamadasService:
         )
     
     def eliminar_lista(self, lista_id: int) -> bool:
-        """Elimina una lista y todos sus números."""
+        """Elimina una lista y todos sus numeros."""
         lista = self.obtener_lista(lista_id)
         
         try:

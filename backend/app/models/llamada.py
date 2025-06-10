@@ -8,29 +8,29 @@ from app.database import Base
 
 class Llamada(Base):
     """
-    Modelo para la tabla llamadas que almacena la información de las llamadas realizadas.
+    Modelo para la tabla llamadas que almacena la informacion de las llamadas realizadas.
     """
     __tablename__ = "llamadas"
     
     id = Column(Integer, primary_key=True, index=True)
     numero_destino = Column(String(20), nullable=False, index=True)
-    numero_normalizado = Column(String(20), nullable=False, index=True)  # Número normalizado para verificación
+    numero_normalizado = Column(String(20), nullable=False, index=True)  # Numero normalizado para verificacion
     cli = Column(String(20), nullable=True)
     id_campana = Column(Integer, ForeignKey("campanas.id"), nullable=True)
     id_lista_llamadas = Column(Integer, ForeignKey("listas_llamadas.id"), nullable=True)  # Nueva referencia a lista
     usuario_id = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True)  # Usuario asignado a la llamada
     fecha_inicio = Column(DateTime, default=func.now(), nullable=False)
-    fecha_asignacion = Column(DateTime, nullable=True)  # Fecha y hora en que se asignó la llamada a un usuario
-    fecha_conexion = Column(DateTime, nullable=True)  # Fecha y hora en que el usuario presionó 1
+    fecha_asignacion = Column(DateTime, nullable=True)  # Fecha y hora en que se asigno la llamada a un usuario
+    fecha_conexion = Column(DateTime, nullable=True)  # Fecha y hora en que el usuario presiono 1
     fecha_fin = Column(DateTime, nullable=True)
-    fecha_finalizacion = Column(DateTime, nullable=True)  # Fecha y hora en que se finalizó la llamada
-    duracion = Column(Integer, nullable=True)  # Duración en segundos
+    fecha_finalizacion = Column(DateTime, nullable=True)  # Fecha y hora en que se finalizo la llamada
+    duracion = Column(Integer, nullable=True)  # Duracion en segundos
     estado = Column(String(20), nullable=False, default="pendiente")  # pendiente, en_progreso, conectada, finalizada
     resultado = Column(String(20), nullable=True)  # contestada, no_contesta, buzon, numero_invalido, otro
-    presiono_1 = Column(Boolean, nullable=True)  # Indica si el usuario presionó la tecla 1 (DTMF detectado)
+    presiono_1 = Column(Boolean, nullable=True)  # Indica si el usuario presiono la tecla 1 (DTMF detectado)
     transcripcion = Column(Text, nullable=True)
     confianza_transcripcion = Column(Float, nullable=True)
-    dtmf_detectado = Column(String(20), nullable=True)  # Almacena cualquier dígito DTMF detectado durante la llamada
+    dtmf_detectado = Column(String(20), nullable=True)  # Almacena cualquier digito DTMF detectado durante la llamada
     bloqueado_blacklist = Column(Boolean, default=False, nullable=False)  # Si fue bloqueado por blacklist
     
     # Relaciones
@@ -38,7 +38,7 @@ class Llamada(Base):
     usuario = relationship("Usuario", back_populates="llamadas")
     lista_llamadas = relationship("ListaLlamadas", back_populates="llamadas")
     
-    # Índices adicionales
+    # Indices adicionales
     __table_args__ = (
         Index('idx_llamadas_numero_destino', numero_destino),
         Index('idx_llamadas_numero_normalizado', numero_normalizado),

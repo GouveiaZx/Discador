@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class AsteriskAMIService:
     """
     Servicio para interactuar con Asterisk Manager Interface (AMI).
-    Por ahora, es una implementación simulada.
+    Por ahora, es una implementacion simulada.
     """
     def __init__(self):
         self.host = configuracion.ASTERISK_HOST
@@ -24,26 +24,26 @@ class AsteriskAMIService:
         
     async def conectar(self) -> bool:
         """
-        Simula una conexión al AMI de Asterisk.
+        Simula una conexion al AMI de Asterisk.
         
         Returns:
-            bool: True si la conexión fue exitosa
+            bool: True si la conexion fue exitosa
         """
-        # Simulación de conexión
-        logger.info(f"Simulando conexión a Asterisk AMI en {self.host}:{self.port}")
-        await asyncio.sleep(0.1)  # Pequeña demora para simular latencia
+        # Simulacion de conexion
+        logger.info(f"Simulando conexion a Asterisk AMI en {self.host}:{self.port}")
+        await asyncio.sleep(0.1)  # Pequena demora para simular latencia
         self.conectado = True
         return True
     
     async def desconectar(self) -> bool:
         """
-        Simula una desconexión del AMI de Asterisk.
+        Simula una desconexion del AMI de Asterisk.
         
         Returns:
-            bool: True si la desconexión fue exitosa
+            bool: True si la desconexion fue exitosa
         """
-        logger.info("Simulando desconexión de Asterisk AMI")
-        await asyncio.sleep(0.05)  # Pequeña demora para simular latencia
+        logger.info("Simulando desconexion de Asterisk AMI")
+        await asyncio.sleep(0.05)  # Pequena demora para simular latencia
         self.conectado = False
         return True
     
@@ -58,34 +58,34 @@ class AsteriskAMIService:
         variables: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Simula la originación de una llamada a través de Asterisk.
+        Simula la originacion de una llamada a traves de Asterisk.
         
         Args:
-            numero_destino: Número al que se realizará la llamada
-            cli: Número que se mostrará como origen de la llamada
+            numero_destino: Numero al que se realizara la llamada
+            cli: Numero que se mostrara como origen de la llamada
             contexto: Contexto del dial plan para la llamada
-            extension: Extensión dentro del contexto
-            prioridad: Prioridad dentro de la extensión
-            timeout: Tiempo máximo de espera en milisegundos
+            extension: Extension dentro del contexto
+            prioridad: Prioridad dentro de la extension
+            timeout: Tiempo maximo de espera en milisegundos
             variables: Variables adicionales para la llamada
             
         Returns:
             Dict: Respuesta simulada de Asterisk
         """
-        # Verificar conexión (en una implementación real)
+        # Verificar conexion (en una implementacion real)
         if not self.conectado:
             await self.conectar()
         
-        # Generar un ID único para la llamada
+        # Generar un ID unico para la llamada
         unique_id = f"SIM-{uuid.uuid4().hex[:12]}"
         
         # Generar un channel simulado
         channel = f"SIP/{numero_destino}-{unique_id[:6]}"
         
-        # Logging de la acción
+        # Logging de la accion
         logger.info(f"Simulando llamada a {numero_destino} con CLI {cli} [ID: {unique_id}]")
         
-        # Simular pequeña demora en la respuesta
+        # Simular pequena demora en la respuesta
         await asyncio.sleep(0.2)
         
         # Crear respuesta simulada
@@ -99,7 +99,7 @@ class AsteriskAMIService:
             "Simulation": True
         }
         
-        # En una implementación real, aquí se enviaría la acción a Asterisk
+        # En una implementacion real, aqui se enviaria la accion a Asterisk
         
         return response
     
@@ -116,17 +116,17 @@ class AsteriskAMIService:
         contexto: str = "presione1-campana"
     ) -> Dict[str, Any]:
         """
-        Origina una llamada con modo "Presione 1" y detección de voicemail.
+        Origina una llamada con modo "Presione 1" y deteccion de voicemail.
         
         Args:
-            numero_destino: Número de destino
+            numero_destino: Numero de destino
             cli: CLI a mostrar
-            audio_url: URL del arquivo de áudio
+            audio_url: URL del arquivo de audio
             timeout_dtmf: Timeout para aguardar DTMF em segundos
             llamada_id: ID da chamada na base de dados
             detectar_voicemail: Se deve detectar correio de voz
-            mensaje_voicemail_url: URL do áudio para voicemail
-            duracion_maxima_voicemail: Duração máxima de gravação no voicemail
+            mensaje_voicemail_url: URL do audio para voicemail
+            duracion_maxima_voicemail: Duracao maxima de gravacao no voicemail
             contexto: Contexto no dialplan
             
         Returns:
@@ -135,12 +135,12 @@ class AsteriskAMIService:
         if not self.conectado:
             await self.conectar()
         
-        # Generar identificadores únicos
+        # Generar identificadores unicos
         unique_id = f"P1-{uuid.uuid4().hex[:12]}"
         channel = f"SIP/{numero_destino}-{unique_id[:6]}"
         action_id = f"presione1-{uuid.uuid4().hex[:8]}"
         
-        # Variables específicas para modo Presione 1 con voicemail
+        # Variables especificas para modo Presione 1 con voicemail
         variables = {
             "LLAMADA_ID": str(llamada_id),
             "AUDIO_URL": audio_url,
@@ -153,7 +153,7 @@ class AsteriskAMIService:
         
         logger.info(f"Iniciando chamada Presione 1 com voicemail para {numero_destino} [ID: {llamada_id}]")
         
-        # Simular demora da originação
+        # Simular demora da originacao
         await asyncio.sleep(0.3)
         
         # Simular fluxo completo em background
@@ -188,7 +188,7 @@ class AsteriskAMIService:
         duracion_maxima_voicemail: int = 30
     ):
         """
-        Simula el flujo completo de una llamada Presione 1 con detección de voicemail.
+        Simula el flujo completo de una llamada Presione 1 con deteccion de voicemail.
         """
         try:
             # 1. Simular marcado (3-8 segundos)
@@ -200,7 +200,7 @@ class AsteriskAMIService:
             rand_respuesta = random.random()
             
             if rand_respuesta < 0.15 and detectar_voicemail:
-                # 15% chance de caer en voicemail cuando detección está ativa
+                # 15% chance de caer en voicemail cuando deteccion esta ativa
                 await self._simular_voicemail_flow(
                     unique_id, channel, llamada_id, 
                     mensaje_voicemail_url, duracion_maxima_voicemail
@@ -213,7 +213,7 @@ class AsteriskAMIService:
                 )
                 
             else:
-                # 45% chance de não atender
+                # 45% chance de nao atender
                 await asyncio.sleep(15)  # Simular tentativas
                 await self._enviar_evento({
                     "Event": "CallHangup",
@@ -226,7 +226,7 @@ class AsteriskAMIService:
                 })
                 
         except Exception as e:
-            logger.error(f"Erro na simulação Presione 1 com voicemail: {str(e)}")
+            logger.error(f"Erro na simulacao Presione 1 com voicemail: {str(e)}")
             # Enviar evento de erro
             await self._enviar_evento({
                 "Event": "CallError",
@@ -250,7 +250,7 @@ class AsteriskAMIService:
         """
         import random
         
-        # Simular tempo até detectar voicemail (baseado em algoritmos reais)
+        # Simular tempo ate detectar voicemail (baseado em algoritmos reais)
         tempo_detecao = random.uniform(3, 8)
         await asyncio.sleep(tempo_detecao)
         
@@ -265,7 +265,7 @@ class AsteriskAMIService:
         })
         
         if mensaje_voicemail_url:
-            # Aguardar 1 segundo e começar reprodução da mensagem
+            # Aguardar 1 segundo e comecar reproducao da mensagem
             await asyncio.sleep(1)
             
             await self._enviar_evento({
@@ -278,7 +278,7 @@ class AsteriskAMIService:
                 "Timestamp": datetime.now().isoformat()
             })
             
-            # Simular duração da mensagem (entre 5 segundos e duração máxima)
+            # Simular duracao da mensagem (entre 5 segundos e duracao maxima)
             duracion_mensagem = random.uniform(5, min(duracion_maxima_voicemail, 25))
             await asyncio.sleep(duracion_mensagem)
             
@@ -292,7 +292,7 @@ class AsteriskAMIService:
                 "Timestamp": datetime.now().isoformat()
             })
             
-        # Finalizar chamada após deixar mensagem
+        # Finalizar chamada apos deixar mensagem
         await asyncio.sleep(1)
         await self._enviar_evento({
             "Event": "CallHangup",
@@ -326,7 +326,7 @@ class AsteriskAMIService:
             "Timestamp": datetime.now().isoformat()
         })
         
-        # Simular início do áudio (1 segundo depois)
+        # Simular inicio do audio (1 segundo depois)
         await asyncio.sleep(1)
         await self._enviar_evento({
             "Event": "AudioStarted",
@@ -365,7 +365,7 @@ class AsteriskAMIService:
             })
             
             if dtmf == "1":
-                # Simular transferência após 2 segundos
+                # Simular transferencia apos 2 segundos
                 await asyncio.sleep(2)
                 await self._enviar_evento({
                     "Event": "TransferStarted",
@@ -375,7 +375,7 @@ class AsteriskAMIService:
                     "Timestamp": datetime.now().isoformat()
                 })
             else:
-                # Finalizar chamada - não pressionou 1
+                # Finalizar chamada - nao pressionou 1
                 await asyncio.sleep(1)
                 await self._enviar_evento({
                     "Event": "CallHangup",
@@ -411,7 +411,7 @@ class AsteriskAMIService:
     async def _enviar_evento(self, evento: Dict[str, Any]):
         """
         Simula o envio de eventos do Asterisk.
-        Na implementação real, estes eventos viriam via AMI.
+        Na implementacao real, estes eventos viriam via AMI.
         """
         logger.info(f"Evento Asterisk: {evento['Event']} - LlamadaID: {evento.get('LlamadaID')}")
         
@@ -431,25 +431,25 @@ class AsteriskAMIService:
         
         Args:
             nome: Nome identificador do callback
-            callback: Função a ser chamada
+            callback: Funcao a ser chamada
         """
         self.event_callbacks[nome] = callback
         logger.info(f"Callback '{nome}' registrado para eventos Asterisk")
     
     async def transferir_llamada(self, channel: str, destino: str) -> Dict[str, Any]:
         """
-        Transfere uma chamada para destino específico.
+        Transfere uma chamada para destino especifico.
         
         Args:
             channel: Channel da chamada
-            destino: Extensão ou número de destino
+            destino: Extensao ou numero de destino
             
         Returns:
-            Dict: Resposta da transferência
+            Dict: Resposta da transferencia
         """
         logger.info(f"Transferindo {channel} para {destino}")
         
-        # Simular demora da transferência
+        # Simular demora da transferencia
         await asyncio.sleep(0.5)
         
         return {
@@ -470,11 +470,11 @@ class AsteriskAMIService:
             cola: Nome da fila
             
         Returns:
-            Dict: Resposta da transferência
+            Dict: Resposta da transferencia
         """
         logger.info(f"Transferindo {channel} para fila {cola}")
         
-        # Simular demora da transferência para fila
+        # Simular demora da transferencia para fila
         await asyncio.sleep(0.8)
         
         return {
@@ -488,7 +488,7 @@ class AsteriskAMIService:
     
     async def desligar_chamada(self, channel: str, motivo: str = "Normal Clearing") -> Dict[str, Any]:
         """
-        Desliga uma chamada específica.
+        Desliga uma chamada especifica.
         
         Args:
             channel: Channel da chamada

@@ -30,14 +30,14 @@ def verificar_numero_blacklist(
     db: Session = Depends(obtener_sesion)
 ) -> BlacklistVerificationResponse:
     """
-    Verifica si un número está en la blacklist.
+    Verifica si un numero esta en la blacklist.
     
-    **Uso principal**: Verificar antes de realizar una llamada si el número está bloqueado.
+    **Uso principal**: Verificar antes de realizar una llamada si el numero esta bloqueado.
     
     **Respuesta**:
-    - `en_blacklist`: True si el número está bloqueado
-    - `motivo`: Razón del bloqueo si aplica
-    - `fecha_bloqueo`: Cuándo se agregó a la blacklist
+    - `en_blacklist`: True si el numero esta bloqueado
+    - `motivo`: Razon del bloqueo si aplica
+    - `fecha_bloqueo`: Cuando se agrego a la blacklist
     """
     try:
         service = BlacklistService(db)
@@ -46,10 +46,10 @@ def verificar_numero_blacklist(
         return resultado
         
     except Exception as e:
-        logger.error(f"Error al verificar número en blacklist: {str(e)}")
+        logger.error(f"Error al verificar numero en blacklist: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail="Error interno al verificar número en blacklist"
+            detail="Error interno al verificar numero en blacklist"
         )
 
 
@@ -59,16 +59,16 @@ def agregar_numero_blacklist(
     db: Session = Depends(obtener_sesion)
 ) -> BlacklistResponse:
     """
-    Agrega un número a la blacklist.
+    Agrega un numero a la blacklist.
     
     **Validaciones**:
-    - Número debe ser válido y en formato argentino
+    - Numero debe ser valido y en formato argentino
     - No puede estar ya en blacklist activa
     
     **Campos opcionales**:
-    - `motivo`: Razón del bloqueo
+    - `motivo`: Razon del bloqueo
     - `observaciones`: Notas adicionales
-    - `creado_por`: Usuario que agrega el número
+    - `creado_por`: Usuario que agrega el numero
     """
     try:
         service = BlacklistService(db)
@@ -79,10 +79,10 @@ def agregar_numero_blacklist(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error al agregar número a blacklist: {str(e)}")
+        logger.error(f"Error al agregar numero a blacklist: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail="Error interno al agregar número a blacklist"
+            detail="Error interno al agregar numero a blacklist"
         )
 
 
@@ -92,14 +92,14 @@ def agregar_numeros_bulk(
     db: Session = Depends(obtener_sesion)
 ) -> BlacklistBulkAddResponse:
     """
-    Agrega múltiples números a la blacklist de una vez.
+    Agrega multiples numeros a la blacklist de una vez.
     
-    **Uso**: Importación masiva de números bloqueados.
+    **Uso**: Importacion masiva de numeros bloqueados.
     
-    **Características**:
-    - Procesa todos los números aunque algunos fallen
-    - Reporta estadísticas detalladas del procesamiento
-    - Números duplicados o inválidos se reportan pero no detienen el proceso
+    **Caracteristicas**:
+    - Procesa todos los numeros aunque algunos fallen
+    - Reporta estadisticas detalladas del procesamiento
+    - Numeros duplicados o invalidos se reportan pero no detienen el proceso
     """
     try:
         service = BlacklistService(db)
@@ -111,14 +111,14 @@ def agregar_numeros_bulk(
         
         mensaje = (
             f"Procesamiento completado. "
-            f"{resultado['numeros_agregados']} números agregados exitosamente."
+            f"{resultado['numeros_agregados']} numeros agregados exitosamente."
         )
         
         if resultado['numeros_duplicados'] > 0:
-            mensaje += f" {resultado['numeros_duplicados']} números ya estaban en blacklist."
+            mensaje += f" {resultado['numeros_duplicados']} numeros ya estaban en blacklist."
         
         if resultado['numeros_invalidos'] > 0:
-            mensaje += f" {resultado['numeros_invalidos']} números inválidos encontrados."
+            mensaje += f" {resultado['numeros_invalidos']} numeros invalidos encontrados."
         
         return BlacklistBulkAddResponse(
             mensaje=mensaje,
@@ -138,18 +138,18 @@ def agregar_numeros_bulk(
 
 @router.get("/", response_model=List[BlacklistResponse])
 def listar_blacklist(
-    skip: int = Query(0, description="Número de registros a saltar"),
-    limit: int = Query(100, description="Límite de registros a retornar"),
-    apenas_ativos: bool = Query(True, description="Solo números activos"),
+    skip: int = Query(0, description="Numero de registros a saltar"),
+    limit: int = Query(100, description="Limite de registros a retornar"),
+    apenas_ativos: bool = Query(True, description="Solo numeros activos"),
     db: Session = Depends(obtener_sesion)
 ) -> List[BlacklistResponse]:
     """
-    Lista números en la blacklist.
+    Lista numeros en la blacklist.
     
-    **Parámetros**:
-    - `skip`: Para paginación
-    - `limit`: Máximo de registros
-    - `apenas_ativos`: Si mostrar solo números activos (no removidos)
+    **Parametros**:
+    - `skip`: Para paginacion
+    - `limit`: Maximo de registros
+    - `apenas_ativos`: Si mostrar solo numeros activos (no removidos)
     """
     try:
         service = BlacklistService(db)
@@ -168,15 +168,15 @@ def listar_blacklist(
 @router.post("/buscar", response_model=List[BlacklistResponse])
 def buscar_blacklist(
     criterios: BlacklistSearchRequest,
-    skip: int = Query(0, description="Número de registros a saltar"),
-    limit: int = Query(100, description="Límite de registros a retornar"),
+    skip: int = Query(0, description="Numero de registros a saltar"),
+    limit: int = Query(100, description="Limite de registros a retornar"),
     db: Session = Depends(obtener_sesion)
 ) -> List[BlacklistResponse]:
     """
-    Busca números en la blacklist con filtros avanzados.
+    Busca numeros en la blacklist con filtros avanzados.
     
     **Filtros disponibles**:
-    - `numero`: Buscar por número (parcial)
+    - `numero`: Buscar por numero (parcial)
     - `motivo`: Buscar en motivos
     - `creado_por`: Filtrar por usuario
     - `activo`: Solo activos/inactivos
@@ -201,13 +201,13 @@ def obtener_estadisticas_blacklist(
     db: Session = Depends(obtener_sesion)
 ) -> BlacklistStatsResponse:
     """
-    Obtiene estadísticas de la blacklist.
+    Obtiene estadisticas de la blacklist.
     
-    **Información incluida**:
-    - Total de números en blacklist
-    - Números activos vs inactivos
+    **Informacion incluida**:
+    - Total de numeros en blacklist
+    - Numeros activos vs inactivos
     - Bloqueos realizados hoy y este mes
-    - Número más frecuentemente bloqueado
+    - Numero mas frecuentemente bloqueado
     """
     try:
         service = BlacklistService(db)
@@ -216,10 +216,10 @@ def obtener_estadisticas_blacklist(
         return estadisticas
         
     except Exception as e:
-        logger.error(f"Error al obtener estadísticas de blacklist: {str(e)}")
+        logger.error(f"Error al obtener estadisticas de blacklist: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail="Error interno al obtener estadísticas"
+            detail="Error interno al obtener estadisticas"
         )
 
 
@@ -230,10 +230,10 @@ def atualizar_numero_blacklist(
     db: Session = Depends(obtener_sesion)
 ) -> BlacklistResponse:
     """
-    Actualiza datos de un número en la blacklist.
+    Actualiza datos de un numero en la blacklist.
     
     **Campos actualizables**:
-    - `motivo`: Cambiar razón del bloqueo
+    - `motivo`: Cambiar razon del bloqueo
     - `observaciones`: Actualizar notas
     - `activo`: Activar/desactivar bloqueo
     """
@@ -246,10 +246,10 @@ def atualizar_numero_blacklist(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error al actualizar número en blacklist: {str(e)}")
+        logger.error(f"Error al actualizar numero en blacklist: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail="Error interno al actualizar número en blacklist"
+            detail="Error interno al actualizar numero en blacklist"
         )
 
 
@@ -259,9 +259,9 @@ def remover_numero_blacklist(
     db: Session = Depends(obtener_sesion)
 ) -> dict:
     """
-    Remueve un número de la blacklist (marca como inactivo).
+    Remueve un numero de la blacklist (marca como inactivo).
     
-    **Nota**: No elimina físicamente el registro, solo lo marca como inactivo
+    **Nota**: No elimina fisicamente el registro, solo lo marca como inactivo
     para mantener historial de bloqueos.
     """
     try:
@@ -269,17 +269,17 @@ def remover_numero_blacklist(
         service.remover_numero_blacklist(numero_id)
         
         return {
-            "mensaje": f"Número removido de blacklist exitosamente",
+            "mensaje": f"Numero removido de blacklist exitosamente",
             "numero_id": numero_id
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error al remover número de blacklist: {str(e)}")
+        logger.error(f"Error al remover numero de blacklist: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail="Error interno al remover número de blacklist"
+            detail="Error interno al remover numero de blacklist"
         )
 
 
@@ -289,24 +289,24 @@ def remover_numero_por_telefone(
     db: Session = Depends(obtener_sesion)
 ) -> dict:
     """
-    Remueve un número de la blacklist usando el número de teléfono.
+    Remueve un numero de la blacklist usando el numero de telefono.
     
-    **Más conveniente** que usar ID cuando se conoce el número exacto.
+    **Mas conveniente** que usar ID cuando se conoce el numero exacto.
     """
     try:
         service = BlacklistService(db)
         service.remover_numero_por_telefone(numero)
         
         return {
-            "mensaje": f"Número {numero} removido de blacklist exitosamente",
+            "mensaje": f"Numero {numero} removido de blacklist exitosamente",
             "numero": numero
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error al remover número por teléfono: {str(e)}")
+        logger.error(f"Error al remover numero por telefono: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail="Error interno al remover número por teléfono"
+            detail="Error interno al remover numero por telefono"
         ) 

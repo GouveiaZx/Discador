@@ -12,7 +12,7 @@ from app.services.llamadas import LlamadasService
 # Fixtures para los tests
 @pytest.fixture
 def mock_db():
-    """Crea un mock de la sesión de base de datos"""
+    """Crea un mock de la sesion de base de datos"""
     return MagicMock()
 
 @pytest.fixture
@@ -82,7 +82,7 @@ def test_finalizar_llamada_exitoso(mock_db, usuario_regular, llamada_activa):
     # Configurar el mock para devolver la llamada
     mock_db.query.return_value.filter.return_value.first.return_value = llamada_activa
     
-    # Ejecutar el método finalizar_llamada
+    # Ejecutar el metodo finalizar_llamada
     resultado = LlamadasService.finalizar_llamada(
         db=mock_db,
         llamada_id=llamada_activa.id,
@@ -90,7 +90,7 @@ def test_finalizar_llamada_exitoso(mock_db, usuario_regular, llamada_activa):
         usuario=usuario_regular
     )
     
-    # Verificar que se actualizó la llamada
+    # Verificar que se actualizo la llamada
     assert resultado.estado == "finalizada"
     assert resultado.resultado == "contestada"
     assert resultado.fecha_finalizacion is not None
@@ -99,11 +99,11 @@ def test_finalizar_llamada_exitoso(mock_db, usuario_regular, llamada_activa):
     mock_db.commit.assert_called_once()
 
 def test_finalizar_llamada_conectada(mock_db, usuario_regular, llamada_conectada):
-    """Test para finalizar una llamada que está en estado conectada"""
+    """Test para finalizar una llamada que esta en estado conectada"""
     # Configurar el mock para devolver la llamada
     mock_db.query.return_value.filter.return_value.first.return_value = llamada_conectada
     
-    # Ejecutar el método finalizar_llamada
+    # Ejecutar el metodo finalizar_llamada
     resultado = LlamadasService.finalizar_llamada(
         db=mock_db,
         llamada_id=llamada_conectada.id,
@@ -111,7 +111,7 @@ def test_finalizar_llamada_conectada(mock_db, usuario_regular, llamada_conectada
         usuario=usuario_regular
     )
     
-    # Verificar que se actualizó la llamada
+    # Verificar que se actualizo la llamada
     assert resultado.estado == "finalizada"
     assert resultado.resultado == "no_contesta"
     assert resultado.fecha_finalizacion is not None
@@ -127,7 +127,7 @@ def test_finalizar_llamada_admin_cualquier_llamada(mock_db, usuario_admin, llama
     # Configurar el mock para devolver la llamada
     mock_db.query.return_value.filter.return_value.first.return_value = llamada_activa
     
-    # Ejecutar el método finalizar_llamada
+    # Ejecutar el metodo finalizar_llamada
     resultado = LlamadasService.finalizar_llamada(
         db=mock_db,
         llamada_id=llamada_activa.id,
@@ -135,7 +135,7 @@ def test_finalizar_llamada_admin_cualquier_llamada(mock_db, usuario_admin, llama
         usuario=usuario_admin
     )
     
-    # Verificar que se actualizó la llamada
+    # Verificar que se actualizo la llamada
     assert resultado.estado == "finalizada"
     assert resultado.resultado == "buzon"
     
@@ -147,7 +147,7 @@ def test_finalizar_llamada_no_existe(mock_db, usuario_regular):
     # Configurar el mock para devolver None (llamada no encontrada)
     mock_db.query.return_value.filter.return_value.first.return_value = None
     
-    # Verificar que se lance la excepción HTTP
+    # Verificar que se lance la excepcion HTTP
     with pytest.raises(HTTPException) as excinfo:
         LlamadasService.finalizar_llamada(
             db=mock_db,
@@ -156,7 +156,7 @@ def test_finalizar_llamada_no_existe(mock_db, usuario_regular):
             usuario=usuario_regular
         )
     
-    # Verificar el código de estado y el mensaje
+    # Verificar el codigo de estado y el mensaje
     assert excinfo.value.status_code == 404
     assert "no existe" in excinfo.value.detail
 
@@ -168,7 +168,7 @@ def test_finalizar_llamada_no_pertenece_al_usuario(mock_db, usuario_regular, lla
     # Configurar el mock para devolver la llamada
     mock_db.query.return_value.filter.return_value.first.return_value = llamada_activa
     
-    # Verificar que se lance la excepción HTTP
+    # Verificar que se lance la excepcion HTTP
     with pytest.raises(HTTPException) as excinfo:
         LlamadasService.finalizar_llamada(
             db=mock_db,
@@ -177,16 +177,16 @@ def test_finalizar_llamada_no_pertenece_al_usuario(mock_db, usuario_regular, lla
             usuario=usuario_regular
         )
     
-    # Verificar el código de estado y el mensaje
+    # Verificar el codigo de estado y el mensaje
     assert excinfo.value.status_code == 403
     assert "No tienes permiso" in excinfo.value.detail
 
 def test_finalizar_llamada_ya_finalizada(mock_db, usuario_regular, llamada_finalizada):
-    """Test para finalizar una llamada que ya está finalizada"""
+    """Test para finalizar una llamada que ya esta finalizada"""
     # Configurar el mock para devolver la llamada
     mock_db.query.return_value.filter.return_value.first.return_value = llamada_finalizada
     
-    # Verificar que se lance la excepción HTTP
+    # Verificar que se lance la excepcion HTTP
     with pytest.raises(HTTPException) as excinfo:
         LlamadasService.finalizar_llamada(
             db=mock_db,
@@ -195,16 +195,16 @@ def test_finalizar_llamada_ya_finalizada(mock_db, usuario_regular, llamada_final
             usuario=usuario_regular
         )
     
-    # Verificar el código de estado y el mensaje
+    # Verificar el codigo de estado y el mensaje
     assert excinfo.value.status_code == 400
     assert "no puede ser finalizada" in excinfo.value.detail
 
 def test_finalizar_llamada_resultado_invalido(mock_db, usuario_regular, llamada_activa):
-    """Test para finalizar una llamada con un resultado inválido"""
+    """Test para finalizar una llamada con un resultado invalido"""
     # Configurar el mock para devolver la llamada
     mock_db.query.return_value.filter.return_value.first.return_value = llamada_activa
     
-    # Verificar que se lance la excepción HTTP
+    # Verificar que se lance la excepcion HTTP
     with pytest.raises(HTTPException) as excinfo:
         LlamadasService.finalizar_llamada(
             db=mock_db,
@@ -213,19 +213,19 @@ def test_finalizar_llamada_resultado_invalido(mock_db, usuario_regular, llamada_
             usuario=usuario_regular
         )
     
-    # Verificar el código de estado y el mensaje
+    # Verificar el codigo de estado y el mensaje
     assert excinfo.value.status_code == 400
-    assert "no es válido" in excinfo.value.detail
+    assert "no es valido" in excinfo.value.detail
 
 def test_finalizar_llamada_error_db(mock_db, usuario_regular, llamada_activa):
     """Test para finalizar una llamada con error en la base de datos"""
     # Configurar el mock para devolver la llamada
     mock_db.query.return_value.filter.return_value.first.return_value = llamada_activa
     
-    # Configurar el mock para lanzar una excepción al hacer commit
+    # Configurar el mock para lanzar una excepcion al hacer commit
     mock_db.commit.side_effect = SQLAlchemyError("Error de base de datos")
     
-    # Verificar que se lance la excepción HTTP
+    # Verificar que se lance la excepcion HTTP
     with pytest.raises(HTTPException) as excinfo:
         LlamadasService.finalizar_llamada(
             db=mock_db,
@@ -234,7 +234,7 @@ def test_finalizar_llamada_error_db(mock_db, usuario_regular, llamada_activa):
             usuario=usuario_regular
         )
     
-    # Verificar el código de estado y el mensaje
+    # Verificar el codigo de estado y el mensaje
     assert excinfo.value.status_code == 500
     assert "Error" in excinfo.value.detail
     

@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Script de teste para o Sistema de Áudio Inteligente
-Demonstra o funcionamento completo do sistema com exemplos práticos.
+Script de teste para o Sistema de Audio Inteligente
+Demonstra o funcionamento completo do sistema com exemplos praticos.
 """
 
 import asyncio
@@ -12,7 +12,7 @@ import os
 import json
 from datetime import datetime
 
-# Adicionar o diretório pai ao path para importar os módulos
+# Adicionar o diretorio pai ao path para importar os modulos
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy.orm import Session
@@ -23,7 +23,7 @@ from app.services.audio_engine import AudioIntelligentSystem
 from app.models.audio_sistema import TipoEvento, EstadoAudio
 
 def print_separador(titulo: str):
-    """Imprime um separador visual com título."""
+    """Imprime um separador visual com titulo."""
     print("\n" + "="*60)
     print(f" {titulo}")
     print("="*60)
@@ -34,46 +34,46 @@ def print_resultado(resultado: dict, titulo: str = "Resultado"):
     print(json.dumps(resultado, indent=2, ensure_ascii=False, default=str))
 
 async def teste_configuracao_inicial():
-    """Testa a configuração inicial do sistema."""
-    print_separador("TESTE 1: Configuração Inicial do Sistema")
+    """Testa a configuracao inicial do sistema."""
+    print_separador("TESTE 1: Configuracao Inicial do Sistema")
     
-    # Obter sessão do banco
+    # Obter sessao do banco
     db = next(get_db())
     
     try:
-        # Inicializar serviço de integração
+        # Inicializar servico de integracao
         integration_service = AudioIntegrationService(db)
         
         # Configurar sistema inicial
         print("Configurando sistema inicial...")
         resultado = await integration_service.setup_contextos_padrao()
-        print_resultado(resultado, "Configuração Inicial")
+        print_resultado(resultado, "Configuracao Inicial")
         
-        # Listar contextos disponíveis
+        # Listar contextos disponiveis
         context_manager = AudioContextManager(db)
         contextos = context_manager.listar_contextos()
         
-        print(f"\nContextos disponíveis ({len(contextos)}):")
+        print(f"\nContextos disponiveis ({len(contextos)}):")
         for contexto in contextos:
             print(f"- {contexto.nome}: {contexto.descricao}")
         
         # Listar templates
         templates = context_manager.listar_templates()
-        print(f"\nTemplates disponíveis ({len(templates)}):")
+        print(f"\nTemplates disponiveis ({len(templates)}):")
         for template in templates:
             print(f"- {template.nome} ({template.categoria}): {template.descricao}")
         
         return True
         
     except Exception as e:
-        print(f"Erro na configuração inicial: {str(e)}")
+        print(f"Erro na configuracao inicial: {str(e)}")
         return False
     finally:
         db.close()
 
 async def teste_criacao_contexto():
-    """Testa a criação de um contexto personalizado."""
-    print_separador("TESTE 2: Criação de Contexto Personalizado")
+    """Testa a criacao de um contexto personalizado."""
+    print_separador("TESTE 2: Criacao de Contexto Personalizado")
     
     db = next(get_db())
     
@@ -102,14 +102,14 @@ async def teste_criacao_contexto():
         return contexto.id
         
     except Exception as e:
-        print(f"Erro na criação do contexto: {str(e)}")
+        print(f"Erro na criacao do contexto: {str(e)}")
         return None
     finally:
         db.close()
 
 async def teste_chamada_completa():
-    """Testa uma chamada completa com o sistema de áudio inteligente."""
-    print_separador("TESTE 3: Simulação de Chamada Completa")
+    """Testa uma chamada completa com o sistema de audio inteligente."""
+    print_separador("TESTE 3: Simulacao de Chamada Completa")
     
     db = next(get_db())
     
@@ -117,11 +117,11 @@ async def teste_chamada_completa():
         integration_service = AudioIntegrationService(db)
         
         # Iniciar chamada
-        print("Iniciando chamada com áudio inteligente...")
+        print("Iniciando chamada com audio inteligente...")
         resultado_chamada = await integration_service.iniciar_chamada_com_audio_inteligente(
             numero_destino="+5511999999999",
             campana_id=1,
-            contexto_audio_nome="Presione 1 Padrão",
+            contexto_audio_nome="Presione 1 Padrao",
             cli="+5511888888888",
             configuracoes_audio={
                 "timeout_dtmf": 12,
@@ -137,12 +137,12 @@ async def teste_chamada_completa():
         
         llamada_id = resultado_chamada["llamada_id"]
         
-        # Simular sequência de eventos
+        # Simular sequencia de eventos
         eventos_simulados = [
             {
                 "tipo": "Dial",
                 "dados": {},
-                "descricao": "Telefone começou a tocar"
+                "descricao": "Telefone comecou a tocar"
             },
             {
                 "tipo": "DialEnd", 
@@ -192,31 +192,31 @@ async def teste_chamada_completa():
             resultado="contestada",
             motivo_finalizacao="Cliente conectado via DTMF"
         )
-        print_resultado(resultado_finalizacao, "Finalização")
+        print_resultado(resultado_finalizacao, "Finalizacao")
         
         return True
         
     except Exception as e:
-        print(f"Erro na simulação da chamada: {str(e)}")
+        print(f"Erro na simulacao da chamada: {str(e)}")
         return False
     finally:
         db.close()
 
 async def teste_motor_regras():
-    """Testa o motor de regras com diferentes cenários."""
-    print_separador("TESTE 4: Motor de Regras - Cenários Diversos")
+    """Testa o motor de regras com diferentes cenarios."""
+    print_separador("TESTE 4: Motor de Regras - Cenarios Diversos")
     
     db = next(get_db())
     
     try:
         integration_service = AudioIntegrationService(db)
         
-        # Cenário 1: Timeout DTMF
-        print("Cenário 1: Timeout aguardando DTMF")
+        # Cenario 1: Timeout DTMF
+        print("Cenario 1: Timeout aguardando DTMF")
         resultado1 = await integration_service.iniciar_chamada_com_audio_inteligente(
             numero_destino="+5511888888888",
             campana_id=1,
-            contexto_audio_nome="Presione 1 Padrão"
+            contexto_audio_nome="Presione 1 Padrao"
         )
         
         if resultado1.get("sucesso"):
@@ -229,30 +229,30 @@ async def teste_motor_regras():
             )
             print_resultado(resultado_timeout, "Resultado Timeout DTMF")
         
-        # Cenário 2: Detecção de Voicemail
-        print("\nCenário 2: Detecção de Voicemail")
+        # Cenario 2: Deteccao de Voicemail
+        print("\nCenario 2: Deteccao de Voicemail")
         resultado2 = await integration_service.iniciar_chamada_com_audio_inteligente(
             numero_destino="+5511777777777",
             campana_id=1,
-            contexto_audio_nome="Presione 1 Padrão"
+            contexto_audio_nome="Presione 1 Padrao"
         )
         
         if resultado2.get("sucesso"):
             llamada_id2 = resultado2["llamada_id"]
             
-            # Simular detecção de voicemail
+            # Simular deteccao de voicemail
             integration_service.processar_evento_asterisk(llamada_id2, "DialEnd", {})
             resultado_voicemail = integration_service.processar_evento_asterisk(
                 llamada_id2, "VoicemailDetected", {"Confidence": 0.95}
             )
-            print_resultado(resultado_voicemail, "Resultado Detecção Voicemail")
+            print_resultado(resultado_voicemail, "Resultado Deteccao Voicemail")
         
-        # Cenário 3: Erro no sistema
-        print("\nCenário 3: Erro no Sistema")
+        # Cenario 3: Erro no sistema
+        print("\nCenario 3: Erro no Sistema")
         resultado3 = await integration_service.iniciar_chamada_com_audio_inteligente(
             numero_destino="+5511666666666",
             campana_id=1,
-            contexto_audio_nome="Presione 1 Padrão"
+            contexto_audio_nome="Presione 1 Padrao"
         )
         
         if resultado3.get("sucesso"):
@@ -273,8 +273,8 @@ async def teste_motor_regras():
         db.close()
 
 async def teste_performance():
-    """Testa a performance do sistema com múltiplas chamadas."""
-    print_separador("TESTE 5: Performance - Múltiplas Chamadas")
+    """Testa a performance do sistema com multiplas chamadas."""
+    print_separador("TESTE 5: Performance - Multiplas Chamadas")
     
     db = next(get_db())
     
@@ -282,17 +282,17 @@ async def teste_performance():
         integration_service = AudioIntegrationService(db)
         
         num_chamadas = 5
-        print(f"Iniciando {num_chamadas} chamadas simultâneas...")
+        print(f"Iniciando {num_chamadas} chamadas simultaneas...")
         
         inicio = datetime.now()
         
-        # Iniciar múltiplas chamadas
+        # Iniciar multiplas chamadas
         chamadas = []
         for i in range(num_chamadas):
             resultado = await integration_service.iniciar_chamada_com_audio_inteligente(
                 numero_destino=f"+551199999{i:04d}",
                 campana_id=1,
-                contexto_audio_nome="Presione 1 Padrão"
+                contexto_audio_nome="Presione 1 Padrao"
             )
             
             if resultado.get("sucesso"):
@@ -312,7 +312,7 @@ async def teste_performance():
         print(f"\nPerformance:")
         print(f"- Chamadas processadas: {len(chamadas)}")
         print(f"- Tempo total: {duracao:.2f}s")
-        print(f"- Média por chamada: {duracao/len(chamadas):.2f}s")
+        print(f"- Media por chamada: {duracao/len(chamadas):.2f}s")
         
         return True
         
@@ -323,8 +323,8 @@ async def teste_performance():
         db.close()
 
 async def main():
-    """Função principal que executa todos os testes."""
-    print_separador("SISTEMA DE ÁUDIO INTELIGENTE - TESTES COMPLETOS")
+    """Funcao principal que executa todos os testes."""
+    print_separador("SISTEMA DE AUDIO INTELIGENTE - TESTES COMPLETOS")
     print("Iniciando bateria de testes do sistema...")
     
     # Inicializar banco de dados
@@ -338,8 +338,8 @@ async def main():
     
     # Lista de testes
     testes = [
-        ("Configuração Inicial", teste_configuracao_inicial),
-        ("Criação de Contexto", teste_criacao_contexto),
+        ("Configuracao Inicial", teste_configuracao_inicial),
+        ("Criacao de Contexto", teste_criacao_contexto),
         ("Chamada Completa", teste_chamada_completa),
         ("Motor de Regras", teste_motor_regras),
         ("Performance", teste_performance)
@@ -384,7 +384,7 @@ async def main():
     else:
         print(f"\n⚠️  {total - sucessos} teste(s) falharam. Verifique os logs acima.")
     
-    print_separador("TESTES CONCLUÍDOS")
+    print_separador("TESTES CONCLUIDOS")
 
 if __name__ == "__main__":
     # Executar testes

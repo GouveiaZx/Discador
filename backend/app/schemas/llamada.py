@@ -4,13 +4,13 @@ from typing import Optional, List, Dict, Any, Literal
 
 class LlamadaBase(BaseModel):
     """Esquema base para llamadas"""
-    numero_destino: str = Field(..., description="Número de teléfono al que se realizará la llamada")
+    numero_destino: str = Field(..., description="Numero de telefono al que se realizara la llamada")
     
 class LlamadaProximaResponse(BaseModel):
-    """Esquema de respuesta para la ruta de próxima llamada"""
-    mensaje: str = Field(..., description="Mensaje informativo sobre el resultado de la operación")
+    """Esquema de respuesta para la ruta de proxima llamada"""
+    mensaje: str = Field(..., description="Mensaje informativo sobre el resultado de la operacion")
     llamada_id: int = Field(..., description="ID de la llamada asignada")
-    numero_destino: str = Field(..., description="Número de teléfono de la llamada asignada")
+    numero_destino: str = Field(..., description="Numero de telefono de la llamada asignada")
     estado: str = Field(..., description="Estado de la llamada")
     
     class Config:
@@ -62,8 +62,8 @@ class FinalizarLlamadaRequest(BaseModel):
         }
 
 class FinalizarLlamadaResponse(BaseModel):
-    """Esquema de respuesta para la finalización de una llamada"""
-    mensaje: str = Field(..., description="Mensaje informativo sobre el resultado de la operación")
+    """Esquema de respuesta para la finalizacion de una llamada"""
+    mensaje: str = Field(..., description="Mensaje informativo sobre el resultado de la operacion")
     llamada_id: int = Field(..., description="ID de la llamada finalizada")
     estado: str = Field(..., description="Estado de la llamada")
     resultado: str = Field(..., description="Resultado de la llamada")

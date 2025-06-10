@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Script de instalação e configuração do sistema CODE2BASE
-Executa as migrações e configura dados iniciais.
+Script de instalacao e configuracao do sistema CODE2BASE
+Executa as migracoes e configura dados iniciais.
 """
 
 import sys
@@ -20,15 +20,15 @@ from sqlalchemy import text
 from app.utils.logger import logger
 
 async def executar_migracao_sql():
-    """Executa a migração SQL do CODE2BASE"""
-    print("🔧 Executando migração SQL do sistema CODE2BASE...")
+    """Executa a migracao SQL do CODE2BASE"""
+    print("🔧 Executando migracao SQL do sistema CODE2BASE...")
     
     try:
-        # Ler arquivo de migração
+        # Ler arquivo de migracao
         migration_file = Path(__file__).parent.parent.parent / "migrations" / "create_code2base_tables.sql"
         
         if not migration_file.exists():
-            print(f"❌ Arquivo de migração não encontrado: {migration_file}")
+            print(f"❌ Arquivo de migracao nao encontrado: {migration_file}")
             return False
             
         with open(migration_file, 'r', encoding='utf-8') as f:
@@ -48,22 +48,22 @@ async def executar_migracao_sql():
                     if "duplicate_object" not in str(e) and "already exists" not in str(e):
                         print(f"⚠️  Erro no comando {i+1}: {e}")
             
-        print("✅ Migração SQL executada com sucesso!")
+        print("✅ Migracao SQL executada com sucesso!")
         return True
         
     except Exception as e:
-        print(f"❌ Erro ao executar migração: {e}")
+        print(f"❌ Erro ao executar migracao: {e}")
         return False
 
 async def configurar_regras_padrao():
-    """Configura regras padrão do sistema"""
-    print("📋 Configurando regras padrão do sistema...")
+    """Configura regras padrao do sistema"""
+    print("📋 Configurando regras padrao do sistema...")
     
     try:
         async for db in get_db():
             rules_service = Code2BaseRulesService(db)
             await rules_service.criar_regras_padrao()
-            print("✅ Regras padrão configuradas!")
+            print("✅ Regras padrao configuradas!")
             return True
             
     except Exception as e:
@@ -71,12 +71,12 @@ async def configurar_regras_padrao():
         return False
 
 async def sincronizar_clis_existentes():
-    """Sincroniza CLIs existentes com o sistema geográfico"""
+    """Sincroniza CLIs existentes com o sistema geografico"""
     print("🔄 Sincronizando CLIs existentes...")
     
     try:
         async for db in get_db():
-            # Importar serviço que pode não existir ainda
+            # Importar servico que pode nao existir ainda
             try:
                 from app.services.code2base_geo_service import Code2BaseGeoService
                 geo_service = Code2BaseGeoService(db)
@@ -84,7 +84,7 @@ async def sincronizar_clis_existentes():
                 print(f"✅ {resultado.get('sincronizados', 0)} CLIs sincronizados!")
                 return True
             except ImportError:
-                print("⚠️  Serviço geográfico não disponível ainda")
+                print("⚠️  Servico geografico nao disponivel ainda")
                 return True
                 
     except Exception as e:
@@ -132,25 +132,25 @@ def verificar_tabelas():
         return False
 
 async def main():
-    """Função principal de instalação"""
-    print("🚀 Instalando sistema CODE2BASE Avançado")
+    """Funcao principal de instalacao"""
+    print("🚀 Instalando sistema CODE2BASE Avancado")
     print("=" * 50)
     
     success_steps = 0
     total_steps = 4
     
-    # Passo 1: Executar migração
+    # Passo 1: Executar migracao
     if await executar_migracao_sql():
         success_steps += 1
     
     # Passo 2: Verificar tabelas
     if verificar_tabelas():
         success_steps += 1
-        print("✅ Verificação de tabelas concluída!")
+        print("✅ Verificacao de tabelas concluida!")
     else:
-        print("❌ Falha na verificação de tabelas!")
+        print("❌ Falha na verificacao de tabelas!")
     
-    # Passo 3: Configurar regras padrão
+    # Passo 3: Configurar regras padrao
     if await configurar_regras_padrao():
         success_steps += 1
     
@@ -159,19 +159,19 @@ async def main():
         success_steps += 1
     
     print("\n" + "=" * 50)
-    print(f"📊 Instalação concluída: {success_steps}/{total_steps} passos executados")
+    print(f"📊 Instalacao concluida: {success_steps}/{total_steps} passos executados")
     
     if success_steps == total_steps:
         print("🎉 Sistema CODE2BASE instalado com sucesso!")
-        print("\n🔗 Endpoints disponíveis:")
-        print("  • /api/v1/code2base/seleccionar-cli - Seleção inteligente de CLI")
-        print("  • /api/v1/code2base/analizar-destino - Análise de destino")
-        print("  • /api/v1/code2base/geografia/* - Gestão geográfica")
-        print("  • /api/v1/code2base/reglas/* - Gestão de regras")
-        print("  • /api/v1/code2base/estadisticas - Estatísticas avançadas")
+        print("\n🔗 Endpoints disponiveis:")
+        print("  • /api/v1/code2base/seleccionar-cli - Selecao inteligente de CLI")
+        print("  • /api/v1/code2base/analizar-destino - Analise de destino")
+        print("  • /api/v1/code2base/geografia/* - Gestao geografica")
+        print("  • /api/v1/code2base/reglas/* - Gestao de regras")
+        print("  • /api/v1/code2base/estadisticas - Estatisticas avancadas")
         
     else:
-        print("⚠️  Instalação parcial. Verifique os erros acima.")
+        print("⚠️  Instalacao parcial. Verifique os erros acima.")
     
     return success_steps == total_steps
 

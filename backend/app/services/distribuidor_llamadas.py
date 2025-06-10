@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 class DistribuidorLlamadasService:
     """
-    Servicio para gestionar la distribución de llamadas pendientes a usuarios con permisos.
-    Encapsula la lógica de asignación y control de llamadas en progreso.
+    Servicio para gestionar la distribucion de llamadas pendientes a usuarios con permisos.
+    Encapsula la logica de asignacion y control de llamadas en progreso.
     """
     
     @staticmethod
@@ -22,14 +22,14 @@ class DistribuidorLlamadasService:
         usuario: Usuario
     ) -> Optional[Llamada]:
         """
-        Asigna una llamada pendiente a un usuario con permisos válidos.
+        Asigna una llamada pendiente a un usuario con permisos validos.
         
         Si el usuario ya tiene una llamada en progreso, devuelve esa misma.
         Si no, busca la siguiente llamada pendiente y la asigna al usuario.
         
         Args:
-            db: Sesión de base de datos
-            usuario: Usuario al que se asignará la llamada
+            db: Sesion de base de datos
+            usuario: Usuario al que se asignara la llamada
             
         Returns:
             Optional[Llamada]: Llamada asignada o None si no hay disponibles
@@ -39,7 +39,7 @@ class DistribuidorLlamadasService:
         """
         # Verificar que el usuario tenga permisos
         if not usuario.tiene_permiso_llamadas:
-            logger.warning(f"Usuario {usuario.email} intentó asignar llamada sin permisos")
+            logger.warning(f"Usuario {usuario.email} intento asignar llamada sin permisos")
             raise ValueError("El usuario no tiene permisos para gestionar llamadas")
         
         # Verificar si el usuario ya tiene una llamada en progreso

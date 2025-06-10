@@ -21,13 +21,13 @@ async def iniciar_chamada_audio_inteligente(
     db: Session = Depends(get_db)
 ):
     """
-    Inicia uma chamada com o sistema de áudio inteligente.
+    Inicia uma chamada com o sistema de audio inteligente.
     
     Body:
     {
         "numero_destino": "+5511999999999",
         "campana_id": 1,
-        "contexto_audio": "Presione 1 Padrão",
+        "contexto_audio": "Presione 1 Padrao",
         "cli": "+5511888888888",
         "configuracoes_audio": {
             "timeout_dtmf": 15,
@@ -38,20 +38,20 @@ async def iniciar_chamada_audio_inteligente(
     try:
         integration_service = AudioIntegrationService(db)
         
-        # Validar campos obrigatórios
+        # Validar campos obrigatorios
         numero_destino = request.get("numero_destino")
         campana_id = request.get("campana_id")
         
         if not numero_destino or not campana_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Campos obrigatórios: numero_destino, campana_id"
+                detail="Campos obrigatorios: numero_destino, campana_id"
             )
         
         resultado = await integration_service.iniciar_chamada_com_audio_inteligente(
             numero_destino=numero_destino,
             campana_id=campana_id,
-            contexto_audio_nome=request.get("contexto_audio", "Presione 1 Padrão"),
+            contexto_audio_nome=request.get("contexto_audio", "Presione 1 Padrao"),
             cli=request.get("cli"),
             configuracoes_audio=request.get("configuracoes_audio")
         )
@@ -64,7 +64,7 @@ async def iniciar_chamada_audio_inteligente(
         
         return {
             "success": True,
-            "message": "Chamada iniciada com sistema de áudio inteligente",
+            "message": "Chamada iniciada com sistema de audio inteligente",
             "data": resultado
         }
         
@@ -105,7 +105,7 @@ def processar_evento_asterisk(
         if not llamada_id or not tipo_evento:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Campos obrigatórios: llamada_id, tipo_evento"
+                detail="Campos obrigatorios: llamada_id, tipo_evento"
             )
         
         resultado = integration_service.processar_evento_asterisk(
@@ -135,7 +135,7 @@ def obter_status_llamada(
     db: Session = Depends(get_db)
 ):
     """
-    Obtém o status completo de uma chamada, incluindo áudio inteligente.
+    Obtem o status completo de uma chamada, incluindo audio inteligente.
     """
     try:
         integration_service = AudioIntegrationService(db)
@@ -145,7 +145,7 @@ def obter_status_llamada(
         if not status:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Chamada {llamada_id} não encontrada"
+                detail=f"Chamada {llamada_id} nao encontrada"
             )
         
         return {
@@ -169,7 +169,7 @@ def finalizar_llamada(
     db: Session = Depends(get_db)
 ):
     """
-    Finaliza uma chamada e sua sessão de áudio.
+    Finaliza uma chamada e sua sessao de audio.
     
     Body:
     {
@@ -216,7 +216,7 @@ def listar_contextos(
     db: Session = Depends(get_db)
 ):
     """
-    Lista todos os contextos de áudio disponíveis.
+    Lista todos os contextos de audio disponiveis.
     """
     try:
         context_manager = AudioContextManager(db)
@@ -256,7 +256,7 @@ def listar_templates(
     db: Session = Depends(get_db)
 ):
     """
-    Lista todos os templates de áudio disponíveis.
+    Lista todos os templates de audio disponiveis.
     """
     try:
         context_manager = AudioContextManager(db)
@@ -293,7 +293,7 @@ def criar_contexto(
     db: Session = Depends(get_db)
 ):
     """
-    Cria um novo contexto de áudio.
+    Cria um novo contexto de audio.
     
     Body:
     {
@@ -315,7 +315,7 @@ def criar_contexto(
         if not nome or not audio_principal_url:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Campos obrigatórios: nome, audio_principal_url"
+                detail="Campos obrigatorios: nome, audio_principal_url"
             )
         
         contexto = context_manager.criar_contexto_basico(
@@ -375,7 +375,7 @@ def criar_contexto_a_partir_template(
         if not all([template_id, nome_contexto, audio_principal_url]):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Campos obrigatórios: template_id, nome_contexto, audio_principal_url"
+                detail="Campos obrigatorios: template_id, nome_contexto, audio_principal_url"
             )
         
         contexto = context_manager.criar_contexto_a_partir_template(
@@ -410,7 +410,7 @@ async def configurar_sistema_inicial(
     db: Session = Depends(get_db)
 ):
     """
-    Configura o sistema de áudio inteligente com contextos e templates padrão.
+    Configura o sistema de audio inteligente com contextos e templates padrao.
     """
     try:
         integration_service = AudioIntegrationService(db)
@@ -420,19 +420,19 @@ async def configurar_sistema_inicial(
         if not resultado.get("sucesso"):
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=resultado.get("erro", "Erro na configuração inicial")
+                detail=resultado.get("erro", "Erro na configuracao inicial")
             )
         
         return {
             "success": True,
-            "message": "Sistema de áudio inteligente configurado",
+            "message": "Sistema de audio inteligente configurado",
             "data": resultado
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Erro na configuração inicial: {str(e)}")
+        logger.error(f"Erro na configuracao inicial: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro interno: {str(e)}"
@@ -441,7 +441,7 @@ async def configurar_sistema_inicial(
 @router.get("/eventos-disponiveis")
 def listar_eventos_disponiveis():
     """
-    Lista todos os tipos de eventos disponíveis no sistema.
+    Lista todos os tipos de eventos disponiveis no sistema.
     """
     try:
         eventos = []
@@ -470,21 +470,21 @@ async def teste_sistema_demo(
     db: Session = Depends(get_db)
 ):
     """
-    Rota de demonstração do sistema de áudio inteligente.
+    Rota de demonstracao do sistema de audio inteligente.
     Cria um contexto de teste e simula uma chamada.
     """
     try:
         integration_service = AudioIntegrationService(db)
         
-        # Configurar sistema inicial se necessário
+        # Configurar sistema inicial se necessario
         await integration_service.setup_contextos_padrao()
         
-        # Simular início de chamada
+        # Simular inicio de chamada
         numero_teste = "+5511999999999"
         resultado_chamada = await integration_service.iniciar_chamada_com_audio_inteligente(
             numero_destino=numero_teste,
             campana_id=1,
-            contexto_audio_nome="Presione 1 Padrão",
+            contexto_audio_nome="Presione 1 Padrao",
             cli="+5511888888888"
         )
         
@@ -521,7 +521,7 @@ async def teste_sistema_demo(
         
         return {
             "success": True,
-            "message": "Demonstração concluída com sucesso",
+            "message": "Demonstracao concluida com sucesso",
             "data": {
                 "chamada_iniciada": resultado_chamada,
                 "eventos_processados": resultados_eventos,
@@ -530,7 +530,7 @@ async def teste_sistema_demo(
         }
         
     except Exception as e:
-        logger.error(f"Erro na demonstração: {str(e)}")
+        logger.error(f"Erro na demonstracao: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro interno: {str(e)}"

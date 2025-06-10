@@ -25,7 +25,7 @@ router = APIRouter(prefix="/cli", tags=["CLI Management"])
 
 @router.get("/generar-aleatorio", response_model=CliRandomResponse)
 def generar_cli_aleatorio(
-    excluir_cli: Optional[str] = Query(None, description="CLI a excluir de la selección"),
+    excluir_cli: Optional[str] = Query(None, description="CLI a excluir de la seleccion"),
     solo_poco_usados: bool = Query(False, description="Preferir CLIs menos usados"),
     db: Session = Depends(obtener_sesion)
 ) -> CliRandomResponse:
@@ -34,13 +34,13 @@ def generar_cli_aleatorio(
     
     **Uso principal**: Obtener un CLI para una nueva llamada.
     
-    **Parámetros**:
-    - `excluir_cli`: CLI específico a excluir de la selección
+    **Parametros**:
+    - `excluir_cli`: CLI especifico a excluir de la seleccion
     - `solo_poco_usados`: Si debe preferir CLIs que han sido menos utilizados
     
     **Respuesta**:
     - `cli_seleccionado`: El CLI seleccionado aleatoriamente
-    - `veces_usado`: Cuántas veces se ha usado este CLI
+    - `veces_usado`: Cuantas veces se ha usado este CLI
     """
     try:
         service = CliService(db)
@@ -67,11 +67,11 @@ def agregar_cli(
     Agrega un nuevo CLI a la base de datos.
     
     **Validaciones**:
-    - Número debe ser válido y en formato argentino
+    - Numero debe ser valido y en formato argentino
     - No puede estar ya registrado como activo
     
     **Campos opcionales**:
-    - `descripcion`: Descripción del CLI
+    - `descripcion`: Descripcion del CLI
     - `notas`: Notas adicionales sobre el CLI
     """
     try:
@@ -96,14 +96,14 @@ def agregar_clis_bulk(
     db: Session = Depends(obtener_sesion)
 ) -> CliBulkAddResponse:
     """
-    Agrega múltiples CLIs de una vez.
+    Agrega multiples CLIs de una vez.
     
-    **Uso**: Importación masiva de CLIs permitidos.
+    **Uso**: Importacion masiva de CLIs permitidos.
     
-    **Características**:
-    - Procesa todos los números aunque algunos fallen
-    - Reporta estadísticas detalladas del procesamiento
-    - CLIs duplicados o inválidos se reportan pero no detienen el proceso
+    **Caracteristicas**:
+    - Procesa todos los numeros aunque algunos fallen
+    - Reporta estadisticas detalladas del procesamiento
+    - CLIs duplicados o invalidos se reportan pero no detienen el proceso
     """
     try:
         service = CliService(db)
@@ -115,10 +115,10 @@ def agregar_clis_bulk(
         )
         
         if resultado['clis_duplicados'] > 0:
-            mensaje += f" {resultado['clis_duplicados']} CLIs ya existían."
+            mensaje += f" {resultado['clis_duplicados']} CLIs ya existian."
         
         if resultado['clis_invalidos'] > 0:
-            mensaje += f" {resultado['clis_invalidos']} CLIs inválidos encontrados."
+            mensaje += f" {resultado['clis_invalidos']} CLIs invalidos encontrados."
         
         return CliBulkAddResponse(
             mensaje=mensaje,
@@ -138,17 +138,17 @@ def agregar_clis_bulk(
 
 @router.get("/", response_model=List[CliResponse])
 def listar_clis(
-    skip: int = Query(0, description="Número de registros a saltar"),
-    limit: int = Query(100, description="Límite de registros a retornar"),
+    skip: int = Query(0, description="Numero de registros a saltar"),
+    limit: int = Query(100, description="Limite de registros a retornar"),
     apenas_ativos: bool = Query(True, description="Solo CLIs activos"),
     db: Session = Depends(obtener_sesion)
 ) -> List[CliResponse]:
     """
     Lista CLIs registrados.
     
-    **Parámetros**:
-    - `skip`: Para paginación
-    - `limit`: Máximo de registros
+    **Parametros**:
+    - `skip`: Para paginacion
+    - `limit`: Maximo de registros
     - `apenas_ativos`: Si mostrar solo CLIs activos (no removidos)
     """
     try:
@@ -170,12 +170,12 @@ def obtener_estadisticas_cli(
     db: Session = Depends(obtener_sesion)
 ) -> CliStatsResponse:
     """
-    Obtiene estadísticas de los CLIs.
+    Obtiene estadisticas de los CLIs.
     
-    **Información incluida**:
+    **Informacion incluida**:
     - Total de CLIs registrados
     - CLIs activos vs inactivos
-    - CLI más utilizado
+    - CLI mas utilizado
     - Usos realizados hoy y este mes
     """
     try:
@@ -185,10 +185,10 @@ def obtener_estadisticas_cli(
         return estadisticas
         
     except Exception as e:
-        logger.error(f"Error al obtener estadísticas de CLIs: {str(e)}")
+        logger.error(f"Error al obtener estadisticas de CLIs: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail="Error interno al obtener estadísticas"
+            detail="Error interno al obtener estadisticas"
         )
 
 
@@ -202,7 +202,7 @@ def atualizar_cli(
     Actualiza datos de un CLI.
     
     **Campos actualizables**:
-    - `descripcion`: Cambiar descripción del CLI
+    - `descripcion`: Cambiar descripcion del CLI
     - `notas`: Actualizar notas
     - `activo`: Activar/desactivar CLI
     """
@@ -230,7 +230,7 @@ def remover_cli(
     """
     Remueve un CLI (marca como inactivo).
     
-    **Nota**: No elimina físicamente el registro, solo lo marca como inactivo
+    **Nota**: No elimina fisicamente el registro, solo lo marca como inactivo
     para mantener historial de uso.
     """
     try:

@@ -1,11 +1,11 @@
 from pydantic import BaseModel, Field
 from typing import Literal, Optional
 
-# Estados válidos para el webhook
+# Estados validos para el webhook
 ESTADOS_WEBHOOK_VALIDOS = Literal["en_progreso", "conectada", "finalizada", "fallida", "cancelada"]
 
 class WebhookLlamadaRequest(BaseModel):
-    """Esquema de solicitud para actualizar el estado de una llamada vía webhook"""
+    """Esquema de solicitud para actualizar el estado de una llamada via webhook"""
     llamada_id: int = Field(
         ..., 
         description="ID de la llamada a actualizar", 
@@ -27,15 +27,15 @@ class WebhookLlamadaRequest(BaseModel):
         }
 
 class WebhookLlamadaResponse(BaseModel):
-    """Esquema de respuesta para webhook de actualización de llamada"""
+    """Esquema de respuesta para webhook de actualizacion de llamada"""
     mensaje: str = Field(
         ..., 
-        description="Mensaje informativo sobre el resultado de la operación",
+        description="Mensaje informativo sobre el resultado de la operacion",
         example="Estado de llamada actualizado"
     )
     estado_actual: str = Field(
         ..., 
-        description="Estado actual de la llamada después de la actualización",
+        description="Estado actual de la llamada despues de la actualizacion",
         example="fallida"
     )
     
@@ -51,8 +51,8 @@ class WebhookErrorResponse(BaseModel):
     """Esquema de respuesta para errores en webhook"""
     error: str = Field(
         ..., 
-        description="Descripción del error ocurrido",
-        example="Llamada no encontrada o API Key inválida"
+        description="Descripcion del error ocurrido",
+        example="Llamada no encontrada o API Key invalida"
     )
     
     class Config:

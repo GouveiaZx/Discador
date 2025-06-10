@@ -8,19 +8,19 @@ load_dotenv()
 
 class Configuracion(BaseSettings):
     """
-    Clase de configuración usando Pydantic.
+    Clase de configuracion usando Pydantic.
     Carga las variables de entorno y proporciona valores por defecto.
     """
-    # Configuración general
+    # Configuracion general
     APP_NAME: str = "Discador Predictivo"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     
-    # Configuración del servidor
+    # Configuracion del servidor
     PUERTO: int = 8000
     HOST: str = "0.0.0.0"
     
-    # Configuración de la base de datos
+    # Configuracion de la base de datos
     DB_URL: Optional[PostgresDsn] = None
     DB_HOST: str = "localhost"
     DB_PUERTO: int = 5432
@@ -28,16 +28,16 @@ class Configuracion(BaseSettings):
     DB_PASSWORD: str = "postgres"
     DB_NOMBRE: str = "discador"
     
-    # Configuración de Asterisk
+    # Configuracion de Asterisk
     ASTERISK_HOST: str = "localhost"
     ASTERISK_PUERTO: int = 5038
     ASTERISK_USUARIO: str = "admin"
     ASTERISK_PASSWORD: str = "admin"
     
-    # Configuración de STT (Vosk)
+    # Configuracion de STT (Vosk)
     VOSK_MODEL_PATH: str = "./vosk-model-en-us-0.22"
     
-    # Configuración de logs
+    # Configuracion de logs
     LOG_NIVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     LOG_FORMATO: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     LOG_ARCHIVO: Optional[str] = "logs/discador.log"
@@ -48,12 +48,12 @@ class Configuracion(BaseSettings):
     @validator("DB_URL", pre=True)
     def validar_db_url(cls, v, values):
         """
-        Genera la URL de conexión si no se proporciona explícitamente.
+        Genera la URL de conexion si no se proporciona explicitamente.
         """
         if isinstance(v, str):
             return v
         
-        # Construir la URL de conexión a partir de los componentes
+        # Construir la URL de conexion a partir de los componentes
         return PostgresDsn.build(
             scheme="postgresql",
             user=values.get("DB_USUARIO"),
@@ -64,15 +64,15 @@ class Configuracion(BaseSettings):
         )
     
     class Config:
-        """Configuración de Pydantic"""
+        """Configuracion de Pydantic"""
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
 
-# Crear instancia de configuración
+# Crear instancia de configuracion
 configuracion = Configuracion()
 
-# Para compatibilidad con código existente
+# Para compatibilidad con codigo existente
 DATABASE_URL = configuracion.DB_URL
 ASTERISK_HOST = configuracion.ASTERISK_HOST
 ASTERISK_PORT = configuracion.ASTERISK_PUERTO
@@ -84,18 +84,18 @@ SERVER_PORT = configuracion.PUERTO
 
 def recargar_configuracion(archivo_env: str = ".env") -> Configuracion:
     """
-    Recarga la configuración desde el archivo .env especificado.
+    Recarga la configuracion desde el archivo .env especificado.
     
     Args:
         archivo_env: Ruta al archivo .env a cargar
         
     Returns:
-        Configuracion: Nueva instancia de configuración
+        Configuracion: Nueva instancia de configuracion
     """
     # Recargar el archivo .env
     load_dotenv(archivo_env, override=True)
     
-    # Crear nueva instancia de configuración
+    # Crear nueva instancia de configuracion
     nueva_config = Configuracion()
     
     # Actualizar variables globales para compatibilidad
