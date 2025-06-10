@@ -366,12 +366,12 @@ class Code2BaseRulesService:
             operadoras_mas_exitosas=operadoras_lista[:10]
         )
     
-    # ================== CONFIGURAÇÃO DO SISTEMA ==================
+    # ================== CONFIGURACAO DO SISTEMA ==================
     
     def obter_configuracion(self) -> ConfiguracionSistemaResponse:
-        """Obtém configuração atual do sistema"""
-        # Por enquanto, retorna configuração padrão
-        # Em uma implementação futura, poderia ser armazenada no banco
+        """Obtem configuracao atual do sistema"""
+        # Por enquanto, retorna configuracao padrao
+        # Em uma implementacao futura, poderia ser armazenada no banco
         config = ConfiguracionSistema()
         
         return ConfiguracionSistemaResponse(
@@ -382,10 +382,10 @@ class Code2BaseRulesService:
     
     def atualizar_configuracion(self, config: ConfiguracionSistema) -> ConfiguracionSistemaResponse:
         """
-        Atualiza configuração do sistema
+        Atualiza configuracao do sistema
         
         Args:
-            config: Nova configuração
+            config: Nova configuracao
             
         Returns:
             ConfiguracionSistemaResponse atualizada
@@ -404,9 +404,9 @@ class Code2BaseRulesService:
                 detail=f"Soma dos pesos deve ser 1.0, atual: {total_peso}"
             )
         
-        # Por enquanto, apenas retorna a configuração
-        # Em uma implementação futura, seria armazenada no banco
-        logger.info(f"Configuração atualizada: {config.dict()}")
+        # Por enquanto, apenas retorna a configuracao
+        # Em uma implementacao futura, seria armazenada no banco
+        logger.info(f"Configuracao atualizada: {config.dict()}")
         
         return ConfiguracionSistemaResponse(
             **config.dict(),
@@ -414,14 +414,14 @@ class Code2BaseRulesService:
             usuario_actualizacion="usuario"
         )
     
-    # ================== TESTES E SIMULAÇÕES ==================
+    # ================== TESTES E SIMULACOES ==================
     
     def testar_sistema(self, request: TesteSistemaRequest) -> TesteSistemaResponse:
         """
-        Testa o sistema com múltiplas simulações
+        Testa o sistema com multiplas simulacoes
         
         Args:
-            request: Parâmetros do teste
+            request: Parametros do teste
             
         Returns:
             TesteSistemaResponse com resultados
@@ -439,16 +439,16 @@ class Code2BaseRulesService:
         
         for i in range(request.simulaciones):
             try:
-                # Criar requisição de seleção
+                # Criar requisicao de selecao
                 seleccion_request = SeleccionCliRequest(
                     numero_destino=request.numero_destino,
                     campaña_id=request.campaña_id
                 )
                 
-                # Executar seleção
+                # Executar selecao
                 resultado = engine.seleccionar_cli_inteligente(seleccion_request)
                 
-                # Coletar estatísticas
+                # Coletar estatisticas
                 cli_info = {
                     'numero': resultado.cli_seleccionado.numero_normalizado,
                     'prefijo': resultado.cli_seleccionado.prefijo_codigo,
@@ -461,23 +461,23 @@ class Code2BaseRulesService:
                 scores_totales.append(resultado.cli_seleccionado.score_seleccion)
                 tiempos_totales.append(resultado.tiempo_seleccion_ms)
                 
-                # Distribuição por prefixo
+                # Distribuicao por prefixo
                 prefijo = resultado.cli_seleccionado.prefijo_codigo
                 distribucion_prefijo[prefijo] = distribucion_prefijo.get(prefijo, 0) + 1
                 
-                # Distribuição por operadora
+                # Distribuicao por operadora
                 operadora = resultado.cli_seleccionado.operadora.value if resultado.cli_seleccionado.operadora else 'desconocida'
                 distribucion_operadora[operadora] = distribucion_operadora.get(operadora, 0) + 1
                 
             except Exception as e:
-                logger.error(f"Erro na simulação {i}: {e}")
+                logger.error(f"Erro na simulacao {i}: {e}")
                 continue
         
-        # Calcular médias
+        # Calcular medias
         score_promedio = sum(scores_totales) / len(scores_totales) if scores_totales else 0.0
         tiempo_promedio = sum(tiempos_totales) / len(tiempos_totales) if tiempos_totales else 0.0
         
-        # Gerar recomendações
+        # Gerar recomendacoes
         recomendaciones = self._gerar_recomendaciones(
             distribucion_prefijo, 
             distribucion_operadora, 
@@ -502,43 +502,43 @@ class Code2BaseRulesService:
         score_promedio: float
     ) -> List[str]:
         """
-        Gera recomendações baseadas nos resultados dos testes
+        Gera recomendacoes baseadas nos resultados dos testes
         
         Args:
-            distribucion_prefijo: Distribuição por prefixo
-            distribucion_operadora: Distribuição por operadora
-            score_promedio: Score promédio
+            distribucion_prefijo: Distribuicao por prefixo
+            distribucion_operadora: Distribuicao por operadora
+            score_promedio: Score promedio
             
         Returns:
-            Lista de recomendações
+            Lista de recomendacoes
         """
         recomendaciones = []
         
-        # Análise de diversidade de prefixos
+        # Analise de diversidade de prefixos
         if len(distribucion_prefijo) == 1:
-            recomendaciones.append("Sistema está selecionando sempre o mesmo prefixo. Considere adicionar mais CLIs ou ajustar regras.")
+            recomendaciones.append("Sistema esta selecionando sempre o mesmo prefixo. Considere adicionar mais CLIs ou ajustar regras.")
         elif len(distribucion_prefijo) > 5:
-            recomendaciones.append("Boa diversidade de prefixos. Sistema está funcionando corretamente.")
+            recomendaciones.append("Boa diversidade de prefixos. Sistema esta funcionando corretamente.")
         
-        # Análise de operadoras
+        # Analise de operadoras
         if len(distribucion_operadora) == 1:
-            recomendaciones.append("Sistema está usando apenas uma operadora. Considere diversificar CLIs.")
+            recomendaciones.append("Sistema esta usando apenas uma operadora. Considere diversificar CLIs.")
         
-        # Análise de score
+        # Analise de score
         if score_promedio < 0.5:
-            recomendaciones.append("Score promédio baixo. Revise as regras de seleção e qualidade dos CLIs.")
+            recomendaciones.append("Score promedio baixo. Revise as regras de selecao e qualidade dos CLIs.")
         elif score_promedio > 0.8:
-            recomendaciones.append("Excelente score promédio. Sistema otimizado.")
+            recomendaciones.append("Excelente score promedio. Sistema otimizado.")
         
-        # Análise de concentração
+        # Analise de concentracao
         total_selecciones = sum(distribucion_prefijo.values())
         prefijo_mais_usado = max(distribucion_prefijo.values()) if distribucion_prefijo else 0
         concentracao = prefijo_mais_usado / total_selecciones if total_selecciones > 0 else 0
         
         if concentracao > 0.7:
-            recomendaciones.append("Alta concentração em um prefixo. Considere balancear a seleção.")
+            recomendaciones.append("Alta concentracao em um prefixo. Considere balancear a selecao.")
         
         if not recomendaciones:
-            recomendaciones.append("Sistema funcionando dentro dos parâmetros esperados.")
+            recomendaciones.append("Sistema funcionando dentro dos parametros esperados.")
         
         return recomendaciones 
