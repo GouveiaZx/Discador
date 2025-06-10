@@ -6,6 +6,7 @@ import HistoricoLlamadas from './components/HistoricoLlamadas';
 import GestionCampanhas from './components/GestionCampanhas';
 import UploadListas from './components/UploadListas';
 import GestionBlacklist from './components/GestionBlacklist';
+import ConfiguracionAvanzada from './components/ConfiguracionAvanzada';
 
 /**
  * Componente principal da aplicação autenticada
@@ -143,6 +144,22 @@ function AuthenticatedApp() {
                 </li>
               )}
               
+              {/* Configuración Avanzada - Admin */}
+              {hasPermission('admin') && (
+                <li>
+                  <button 
+                    onClick={() => setActiveTab('configuracion')}
+                    className={`px-4 py-2 rounded-t-lg transition-colors ${
+                      activeTab === 'configuracion' 
+                        ? 'bg-gray-900 text-white' 
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    ⚙️ Configuración
+                  </button>
+                </li>
+              )}
+              
               <li>
                 <button 
                   onClick={() => setActiveTab('historico')}
@@ -165,6 +182,7 @@ function AuthenticatedApp() {
         {activeTab === 'campanhas' && hasPermission('supervisor') && <GestionCampanhas />}
         {activeTab === 'listas' && hasPermission('supervisor') && <UploadListas />}
         {activeTab === 'blacklist' && hasPermission('admin') && <GestionBlacklist />}
+        {activeTab === 'configuracion' && hasPermission('admin') && <ConfiguracionAvanzada />}
         {activeTab === 'historico' && <HistoricoLlamadas />}
         
         {/* Mensaje de acceso denegado */}

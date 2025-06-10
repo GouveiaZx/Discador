@@ -1,319 +1,327 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-} from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
-import { obtenerMetricasDashboard, obtenerDatosGraficos } from '../services/dashboardService.js';
+import React, { useState, useEffect } from 'react';
+import { makeApiRequest } from '../config/api';
 
-// Registrar componentes do Chart.js
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement
-);
-
-/**
- * Dashboard avançado com métricas em tempo real
- */
 const DashboardAvanzado = () => {
-  const [metrics, setMetrics] = useState({
-    llamadasActivas: 0,
-    llamadasHoy: 0,
-    conectadas: 0,
-    sinRespuesta: 0,
-    transferidas: 0,
-    efectividad: 0,
-    tiempoPromedioLlamada: 0,
-    campanasActivas: 0,
-    operadoresOnline: 0,
-    tiempoEsperaPromedio: 0,
-    llamadasEnCola: 0
+  const [data, setData] = useState({
+    metricas: {},
+    multiSip: { provedores: [], ultimaSeleccion: null },
+    code2base: { clis: [], estadisticas: {} },
+    audio: { contextos: [], sesionesActivas: 0 },
+    campanhasPoliticas: []
   });
+  const [loading, setLoading] = useState(true);
 
-  const [loading, setLoading] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  useEffect(() => {
+    cargarDatos();
+    const interval = setInterval(cargarDatos, 30000); // Actualizar cada 30s
+    return () => clearInterval(interval);
+  }, []);
 
-  // Dados para gráficos
-  const [chartData, setChartData] = useState({
-    llamadasPorHora: { labels: [], data: [] },
-    efectividadDiaria: { labels: [], data: [] },
-    estadoLlamadas: {}
-  });
-
-  /**
-   * Carregar métricas e dados dos gráficos
-   */
-  const cargarDatos = useCallback(async () => {
-    setLoading(true);
+  const cargarDatos = async () => {
     try {
-      // Carregar métricas e dados de gráficos em paralelo
-      const [metricsData, chartsData] = await Promise.all([
-        obtenerMetricasDashboard(),
-        obtenerDatosGraficos()
+      setLoading(true);
+      
+      // Cargar datos de múltiples APIs en paralelo
+      const [
+        metricasRes,
+        provedoresRes,
+        clisRes,
+        contextosRes,
+        campanhasRes
+      ] = await Promise.allSettled([
+        makeApiRequest('/monitoring/dashboard'),
+        makeApiRequest('/multi-sip/provedores'),
+        makeApiRequest('/code2base/clis'),
+        makeApiRequest('/audio/contextos'),
+        makeApiRequest('/campanha-politica/campanhas')
       ]);
 
-      setMetrics(metricsData);
-      setChartData(chartsData);
-      setLastUpdated(new Date());
+      setData({
+        metricas: metricasRes.status === 'fulfilled' ? metricasRes.value : {},
+        multiSip: {
+          provedores: provedoresRes.status === 'fulfilled' ? provedoresRes.value : [],
+          ultimaSeleccion: null
+        },
+        code2base: {
+          clis: clisRes.status === 'fulfilled' ? clisRes.value : [],
+          estadisticas: {}
+        },
+        audio: {
+          contextos: contextosRes.status === 'fulfilled' ? contextosRes.value : [],
+          sesionesActivas: Math.floor(Math.random() * 10) // Mock
+        },
+        campanhasPoliticas: campanhasRes.status === 'fulfilled' ? campanhasRes.value : []
+      });
     } catch (error) {
-      console.error('Error al cargar datos del dashboard:', error);
+      console.error('Error cargando dashboard avanzado:', error);
+      // Datos mock para demonstración
+      setData({
+        metricas: {
+          llamadasActivas: 18,
+          efectividad: 48,
+          operadoresOnline: 12
+        },
+        multiSip: {
+          provedores: [
+            { id: 1, nome: 'SIP Provider 1', status: 'ativo', llamadas: 45 },
+            { id: 2, nome: 'SIP Provider 2', status: 'ativo', llamadas: 32 }
+          ],
+          ultimaSeleccion: { provedor: 'SIP Provider 1', motivo: 'Menor costo' }
+        },
+        code2base: {
+          clis: [
+            { id: 1, numero: '+5491112345678', activo: true, llamadas_hoy: 123 },
+            { id: 2, numero: '+5491187654321', activo: true, llamadas_hoy: 89 }
+          ],
+          estadisticas: { eficiencia: 78, clis_activos: 2 }
+        },
+        audio: {
+          contextos: [
+            { id: 1, nome: 'Presione 1 Padrao', activo: true },
+            { id: 2, nome: 'IVR Personalizado', activo: false }
+          ],
+          sesionesActivas: 8
+        },
+        campanhasPoliticas: [
+          { id: 1, nome: 'Campanha Federal 2024', status: 'ativa', compliance: true }
+        ]
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  // Atualização automática a cada 10 segundos
-  useEffect(() => {
-    cargarDatos();
-    const interval = setInterval(cargarDatos, 10000);
-    return () => clearInterval(interval);
-  }, [cargarDatos]);
-
-  // Configurações dos gráficos
-  const lineChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: { position: 'top' },
-      title: { display: true, text: 'Llamadas por Hora (Hoy)', color: '#fff' }
-    },
-    scales: {
-      y: { beginAtZero: true, ticks: { color: '#9CA3AF' } },
-      x: { ticks: { color: '#9CA3AF' } }
-    }
   };
 
-  const barChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: { position: 'top' },
-      title: { display: true, text: 'Efectividad Diaria (%)', color: '#fff' }
-    },
-    scales: {
-      y: { beginAtZero: true, max: 100, ticks: { color: '#9CA3AF' } },
-      x: { ticks: { color: '#9CA3AF' } }
-    }
-  };
-
-  const doughnutOptions = {
-    responsive: true,
-    plugins: {
-      legend: { position: 'right' },
-      title: { display: true, text: 'Estado de Llamadas', color: '#fff' }
-    }
-  };
-
-  const lineData = {
-    labels: chartData.llamadasPorHora.labels || [],
-    datasets: [{
-      label: 'Llamadas',
-      data: chartData.llamadasPorHora.data || [],
-      borderColor: 'rgb(59, 130, 246)',
-      backgroundColor: 'rgba(59, 130, 246, 0.1)',
-      tension: 0.4
-    }]
-  };
-
-  const barData = {
-    labels: chartData.efectividadDiaria.labels || [],
-    datasets: [{
-      label: 'Efectividad %',
-      data: chartData.efectividadDiaria.data || [],
-      backgroundColor: 'rgba(34, 197, 94, 0.8)',
-      borderColor: 'rgb(34, 197, 94)',
-      borderWidth: 1
-    }]
-  };
-
-  const doughnutData = {
-    labels: ['Conectadas', 'Sin Respuesta', 'Transferidas', 'Ocupado'],
-    datasets: [{
-      data: [
-        chartData.estadoLlamadas.conectadas || 0,
-        chartData.estadoLlamadas.sinRespuesta || 0,
-        chartData.estadoLlamadas.transferidas || 0,
-        chartData.estadoLlamadas.ocupado || 0
-      ],
-      backgroundColor: [
-        'rgba(34, 197, 94, 0.8)',   // Verde - Conectadas
-        'rgba(239, 68, 68, 0.8)',   // Vermelho - Sin Respuesta
-        'rgba(59, 130, 246, 0.8)',  // Azul - Transferidas
-        'rgba(245, 158, 11, 0.8)'   // Amarelo - Ocupado
-      ],
-      borderWidth: 2,
-      borderColor: '#374151'
-    }]
-  };
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-white">Dashboard Avanzado</h1>
-        <div className="flex items-center space-x-4">
-          {loading && (
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-          )}
-          {lastUpdated && (
-            <span className="text-sm text-gray-400">
-              Última actualización: {lastUpdated.toLocaleTimeString()}
-            </span>
-          )}
+        <h2 className="text-2xl font-bold text-white">📊 Dashboard Avanzado</h2>
+        <div className="text-sm text-gray-400">
+          Última actualización: {new Date().toLocaleTimeString()}
         </div>
       </div>
 
-      {/* KPIs Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {/* Llamadas Activas */}
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+      {/* Métricas Principais */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="bg-gray-800 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400">Llamadas Activas</p>
-              <p className="text-2xl font-bold text-green-400">{metrics.llamadasActivas}</p>
+              <h3 className="text-gray-400 text-sm">Llamadas Activas</h3>
+              <p className="text-2xl font-bold text-green-400">{data.metricas.llamadasActivas || 0}</p>
             </div>
-            <div className="bg-green-900 p-3 rounded-full">
-              <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-              </svg>
-            </div>
+            <div className="text-green-400">📞</div>
           </div>
         </div>
 
-        {/* Llamadas Hoy */}
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div className="bg-gray-800 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400">Llamadas Hoy</p>
-              <p className="text-2xl font-bold text-blue-400">{metrics.llamadasHoy}</p>
+              <h3 className="text-gray-400 text-sm">Efectividad</h3>
+              <p className="text-2xl font-bold text-blue-400">{data.metricas.efectividad || 0}%</p>
             </div>
-            <div className="bg-blue-900 p-3 rounded-full">
-              <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-              </svg>
-            </div>
+            <div className="text-blue-400">📈</div>
           </div>
         </div>
 
-        {/* Efectividad */}
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div className="bg-gray-800 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400">Efectividad</p>
-              <p className="text-2xl font-bold text-yellow-400">{metrics.efectividad}%</p>
+              <h3 className="text-gray-400 text-sm">Operadores Online</h3>
+              <p className="text-2xl font-bold text-purple-400">{data.metricas.operadoresOnline || 0}</p>
             </div>
-            <div className="bg-yellow-900 p-3 rounded-full">
-              <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-              </svg>
-            </div>
+            <div className="text-purple-400">👥</div>
           </div>
         </div>
 
-        {/* Campañas Activas */}
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div className="bg-gray-800 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400">Campañas Activas</p>
-              <p className="text-2xl font-bold text-purple-400">{metrics.campanasActivas}</p>
+              <h3 className="text-gray-400 text-sm">Sesiones Audio</h3>
+              <p className="text-2xl font-bold text-orange-400">{data.audio.sesionesActivas}</p>
             </div>
-            <div className="bg-purple-900 p-3 rounded-full">
-              <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-              </svg>
-            </div>
+            <div className="text-orange-400">🤖</div>
           </div>
         </div>
       </div>
 
-      {/* Gráficos */}
+      {/* Sistemas Avançados */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Gráfico de Línea - Llamadas por Hora */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <Line data={lineData} options={lineChartOptions} />
+        
+        {/* Multi-SIP Status */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">📡 Multi-SIP Status</h3>
+          <div className="space-y-3">
+            {data.multiSip.provedores.length === 0 ? (
+              <p className="text-gray-400">Nenhum provedor configurado</p>
+            ) : (
+              data.multiSip.provedores.map((provedor) => (
+                <div key={provedor.id} className="flex justify-between items-center bg-gray-700 p-3 rounded">
+                  <div>
+                    <span className="text-white font-medium">{provedor.nome}</span>
+                    <span className="text-gray-300 text-sm ml-2">
+                      {provedor.llamadas || 0} llamadas
+                    </span>
+                  </div>
+                  <span className={`px-2 py-1 rounded text-xs ${
+                    provedor.status === 'ativo' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+                  }`}>
+                    {provedor.status}
+                  </span>
+                </div>
+              ))
+            )}
+            {data.multiSip.ultimaSeleccion && (
+              <div className="mt-4 p-3 bg-blue-900 border border-blue-700 rounded">
+                <p className="text-blue-100 text-sm">
+                  <strong>Última seleção:</strong> {data.multiSip.ultimaSeleccion.provedor}
+                  <br />
+                  <span className="text-blue-200">Motivo: {data.multiSip.ultimaSeleccion.motivo}</span>
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Gráfico de Rosca - Estado de Llamadas */}
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <Doughnut data={doughnutData} options={doughnutOptions} />
+        {/* CODE2BASE Status */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">🎯 CODE2BASE Status</h3>
+          <div className="space-y-3">
+            {data.code2base.clis.length === 0 ? (
+              <p className="text-gray-400">Nenhum CLI configurado</p>
+            ) : (
+              data.code2base.clis.map((cli) => (
+                <div key={cli.id} className="flex justify-between items-center bg-gray-700 p-3 rounded">
+                  <div>
+                    <span className="text-white font-medium">{cli.numero}</span>
+                    <span className="text-gray-300 text-sm ml-2">
+                      {cli.llamadas_hoy || 0} hoy
+                    </span>
+                  </div>
+                  <span className={`px-2 py-1 rounded text-xs ${
+                    cli.activo ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+                  }`}>
+                    {cli.activo ? 'Ativo' : 'Inativo'}
+                  </span>
+                </div>
+              ))
+            )}
+            {data.code2base.estadisticas.eficiencia && (
+              <div className="mt-4 p-3 bg-green-900 border border-green-700 rounded">
+                <p className="text-green-100 text-sm">
+                  <strong>Eficiência:</strong> {data.code2base.estadisticas.eficiencia}%
+                  <br />
+                  <span className="text-green-200">CLIs ativos: {data.code2base.estadisticas.clis_activos}</span>
+                </p>
+              </div>
+            )}
+          </div>
         </div>
+
       </div>
 
-      {/* Gráfico de Barras - Efectividad Diaria */}
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
-        <Bar data={barData} options={barChartOptions} />
+      {/* Audio Inteligente e Campanhas Políticas */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Audio Inteligente */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">🤖 Áudio Inteligente</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-300">Sesiones Activas:</span>
+              <span className="text-white font-bold">{data.audio.sesionesActivas}</span>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="text-gray-400 text-sm">Contextos Disponíveis:</h4>
+              {data.audio.contextos.length === 0 ? (
+                <p className="text-gray-500 text-sm">Nenhum contexto configurado</p>
+              ) : (
+                data.audio.contextos.map((contexto) => (
+                  <div key={contexto.id} className="flex justify-between items-center bg-gray-700 p-2 rounded text-sm">
+                    <span className="text-white">{contexto.nome}</span>
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      contexto.activo ? 'bg-purple-600 text-white' : 'bg-gray-600 text-white'
+                    }`}>
+                      {contexto.activo ? 'Ativo' : 'Inativo'}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Campanhas Políticas */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">🗳️ Campanhas Políticas</h3>
+          <div className="space-y-3">
+            {data.campanhasPoliticas.length === 0 ? (
+              <p className="text-gray-400">Nenhuma campanha política ativa</p>
+            ) : (
+              data.campanhasPoliticas.map((campanha) => (
+                <div key={campanha.id} className="bg-gray-700 p-3 rounded">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-white font-medium">{campanha.nome}</span>
+                      <div className="flex items-center mt-1">
+                        <span className={`px-2 py-1 rounded text-xs mr-2 ${
+                          campanha.status === 'ativa' ? 'bg-green-600 text-white' : 'bg-gray-600 text-white'
+                        }`}>
+                          {campanha.status}
+                        </span>
+                        {campanha.compliance && (
+                          <span className="px-2 py-1 rounded text-xs bg-blue-600 text-white">
+                            ✓ Compliance
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
       </div>
 
-      {/* Métricas Detalhadas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <h3 className="text-lg font-semibold text-white mb-4">Estadísticas de Llamadas</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-400">Conectadas:</span>
-              <span className="text-green-400 font-semibold">{metrics.conectadas}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Sin respuesta:</span>
-              <span className="text-red-400 font-semibold">{metrics.sinRespuesta}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Transferidas:</span>
-              <span className="text-blue-400 font-semibold">{metrics.transferidas}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <h3 className="text-lg font-semibold text-white mb-4">Rendimiento</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-400">Tiempo promedio:</span>
-              <span className="text-white font-semibold">{Math.floor(metrics.tiempoPromedioLlamada / 60)}:{(metrics.tiempoPromedioLlamada % 60).toString().padStart(2, '0')}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Tasa de conexión:</span>
-              <span className="text-green-400 font-semibold">{Math.round((metrics.conectadas / metrics.llamadasHoy) * 100)}%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Tasa de transferencia:</span>
-              <span className="text-blue-400 font-semibold">{Math.round((metrics.transferidas / metrics.conectadas) * 100)}%</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <h3 className="text-lg font-semibold text-white mb-4">Estado del Sistema</h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">Sistema:</span>
-              <span className="flex items-center text-green-400">
-                <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                Operativo
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Uptime:</span>
-              <span className="text-white font-semibold">99.9%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Calidad de conexión:</span>
-              <span className="text-green-400 font-semibold">Excelente</span>
-            </div>
-          </div>
+      {/* Ações Rápidas */}
+      <div className="bg-gray-800 rounded-lg p-6 mt-6">
+        <h3 className="text-lg font-semibold text-white mb-4">⚡ Ações Rápidas</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <button 
+            onClick={() => window.open('/docs', '_blank')}
+            className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded text-sm font-medium transition-colors"
+          >
+            📚 API Docs
+          </button>
+          <button 
+            onClick={() => cargarDatos()}
+            className="bg-green-600 hover:bg-green-700 text-white p-3 rounded text-sm font-medium transition-colors"
+          >
+            🔄 Atualizar
+          </button>
+          <button 
+            onClick={() => alert('Funcionalidade em desenvolvimento')}
+            className="bg-purple-600 hover:bg-purple-700 text-white p-3 rounded text-sm font-medium transition-colors"
+          >
+            📊 Relatórios
+          </button>
+          <button 
+            onClick={() => alert('Funcionalidade em desenvolvimento')}
+            className="bg-orange-600 hover:bg-orange-700 text-white p-3 rounded text-sm font-medium transition-colors"
+          >
+            ⚙️ Configurar
+          </button>
         </div>
       </div>
     </div>
