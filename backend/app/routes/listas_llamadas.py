@@ -49,12 +49,12 @@ async def upload_archivo_numeros(
     """
     logger.info(f"Inicio upload de archivo: {archivo.filename}, Lista: {nombre_lista}")
     
-    # Validar tamaño del archivo (máximo 10MB)
-    max_size = 10 * 1024 * 1024  # 10MB
+    # Validar tamanho do arquivo (máximo 200MB para listas grandes)
+    max_size = 200 * 1024 * 1024
     if archivo.size and archivo.size > max_size:
         raise HTTPException(
             status_code=413,
-            detail="El archivo es demasiado grande. Tamaño máximo: 10MB"
+            detail="El archivo es demasiado grande. Tamaño máximo: 200MB"
         )
     
     try:

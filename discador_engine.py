@@ -7,10 +7,11 @@ import asyncio
 import random
 import time
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional
-from dataclasses import dataclass
+from typing import List, Dict, Optional, Any
+from dataclasses import dataclass, asdict
 from enum import Enum
 import logging
+import json
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -53,6 +54,20 @@ class CallLog:
     duration_seconds: int = 0
     error_message: Optional[str] = None
 
+@dataclass
+class TimerAlmoco:
+    """Configuração do timer de almoço"""
+    habilitado: bool = True
+    hora_inicio: str = "12:00"  # HH:MM
+    hora_fim: str = "13:00"     # HH:MM
+    dias_semana: List[int] = None  # 0=segunda, 6=domingo, None=todos os dias
+    pausar_automatico: bool = True
+    retomar_automatico: bool = True
+    
+    def __post_init__(self):
+        if self.dias_semana is None:
+            self.dias_semana = [0, 1, 2, 3, 4]  # Segunda a sexta por padrão
+
 class DiscadorEngine:
     """
     Engine principal do discador preditivo
@@ -73,6 +88,14 @@ class DiscadorEngine:
         self.is_running = False
         self.max_concurrent_calls = 5
         self.call_interval = 2  # segundos entre chamadas
+        
+        # Timer de almoço
+        self.timer_almoco = TimerAlmoco()
+        self.em_horario_almoco = False
+        self.campanhas_pausadas_por_almoco = set()
+        
+        # Task para monitoramento do horário de almoço
+        self._timer_almoco_task = None
         
     async def start_campaign(self, campaign_id: int, contacts: List[Dict], cli_number: str):
         """
@@ -296,6 +319,159 @@ class DiscadorAPI:
     API para integração com o backend FastAPI
     """
     
+    def __init__(self, database_path: str = "discador.db"):
+        # ... existing code ...
+        
+        # Timer de almoço
+        self.timer_almoco = TimerAlmoco()
+        self.em_horario_almoco = False
+        self.campanhas_pausadas_por_almoco = set()
+        
+        # Task para monitoramento do horário de almoço
+        self._timer_almoco_task = None
+
+    def configurar_timer_almoco(self, 
+                               habilitado: bool = True,
+                               hora_inicio: str = "12:00",
+                               hora_fim: str = "13:00", 
+                               dias_semana: List[int] = None,
+                               pausar_automatico: bool = True,
+                               retomar_automatico: bool = True) -> Dict[str, Any]:
+        """
+        Configura o timer de almoço
+        
+        Args:
+            habilitado: Se o timer está ativo
+            hora_inicio: Hora de início (HH:MM)
+            hora_fim: Hora de fim (HH:MM)
+            dias_semana: Lista de dias (0=segunda, 6=domingo, None=todos)
+            pausar_automatico: Se deve pausar campanhas automaticamente
+            retomar_automatico: Se deve retomar campanhas automaticamente
+        """
+        self.timer_almoco = TimerAlmoco(
+            habilitado=habilitado,
+            hora_inicio=hora_inicio,
+            hora_fim=hora_fim,
+            dias_semana=dias_semana or [0, 1, 2, 3, 4],
+            pausar_automatico=pausar_automatico,
+            retomar_automatico=retomar_automatico
+        )
+        
+        # Reiniciar task de monitoramento
+        if self._timer_almoco_task and not self._timer_almoco_task.done():
+            self._timer_almoco_task.cancel()
+        
+        if habilitado:
+            self._timer_almoco_task = asyncio.create_task(self._monitorar_horario_almoco())
+        
+        self.logger.info(f"Timer de almoço configurado: {hora_inicio}-{hora_fim}, dias: {dias_semana}")
+        
+        return {
+            "status": "configured",
+            "timer_almoco": asdict(self.timer_almoco),
+            "horario_atual": datetime.now().strftime("%H:%M"),
+            "em_horario_almoco": self._verificar_horario_almoco()
+        }
+
+    def _verificar_horario_almoco(self) -> bool:
+        """Verifica se está no horário de almoço"""
+        if not self.timer_almoco.habilitado:
+            return False
+        
+        agora = datetime.now()
+        dia_semana = agora.weekday()  # 0=segunda, 6=domingo
+        
+        # Verificar se é um dia válido
+        if dia_semana not in self.timer_almoco.dias_semana:
+            return False
+        
+        # Verificar horário
+        hora_atual = agora.strftime("%H:%M")
+        return self.timer_almoco.hora_inicio <= hora_atual <= self.timer_almoco.hora_fim
+
+    async def _monitorar_horario_almoco(self):
+        """Monitoramento contínuo do horário de almoço"""
+        self.logger.info("Iniciando monitoramento do timer de almoço")
+        
+        while True:
+            try:
+                em_almoco = self._verificar_horario_almoco()
+                
+                # Início do almoço
+                if em_almoco and not self.em_horario_almoco:
+                    self.em_horario_almoco = True
+                    self.logger.info("🍽️ INICIANDO HORÁRIO DE ALMOÇO - Pausando discador")
+                    
+                    if self.timer_almoco.pausar_automatico:
+                        # Pausar todas as campanhas ativas
+                        campanhas_pausadas = []
+                        for campanha_id, campanha in self.campanhas_ativas.items():
+                            if campanha['status'] == 'active':
+                                await self.pausar_campanha(campanha_id, "Timer de almoço")
+                                campanhas_pausadas.append(campanha_id)
+                        
+                        self.campanhas_pausadas_por_almoco = set(campanhas_pausadas)
+                        
+                        self.logger.info(f"Pausadas {len(campanhas_pausadas)} campanhas para almoço")
+                
+                # Fim do almoço
+                elif not em_almoco and self.em_horario_almoco:
+                    self.em_horario_almoco = False
+                    self.logger.info("🚀 FIM DO HORÁRIO DE ALMOÇO - Retomando discador")
+                    
+                    if self.timer_almoco.retomar_automatico:
+                        # Retomar campanhas que foram pausadas pelo almoço
+                        campanhas_retomadas = []
+                        for campanha_id in self.campanhas_pausadas_por_almoco:
+                            if campanha_id in self.campanhas_ativas:
+                                await self.retomar_campanha(campanha_id, "Fim do timer de almoço")
+                                campanhas_retomadas.append(campanha_id)
+                        
+                        self.campanhas_pausadas_por_almoco.clear()
+                        self.logger.info(f"Retomadas {len(campanhas_retomadas)} campanhas após almoço")
+                
+                # Aguardar 30 segundos antes da próxima verificação
+                await asyncio.sleep(30)
+                
+            except asyncio.CancelledError:
+                self.logger.info("Monitoramento do timer de almoço cancelado")
+                break
+            except Exception as e:
+                self.logger.error(f"Erro no monitoramento do timer de almoço: {e}")
+                await asyncio.sleep(60)  # Aguardar mais tempo em caso de erro
+
+    def obter_status_timer_almoco(self) -> Dict[str, Any]:
+        """Obtém o status atual do timer de almoço"""
+        agora = datetime.now()
+        em_almoco = self._verificar_horario_almoco()
+        
+        # Calcular próximo horário de almoço
+        proximo_almoco = None
+        if self.timer_almoco.habilitado:
+            hora_inicio = datetime.strptime(self.timer_almoco.hora_inicio, "%H:%M").time()
+            hoje = agora.date()
+            datetime_almoco = datetime.combine(hoje, hora_inicio)
+            
+            if datetime_almoco <= agora:
+                # Almoço já passou hoje, calcular para amanhã
+                datetime_almoco += timedelta(days=1)
+            
+            proximo_almoco = datetime_almoco.isoformat()
+        
+        return {
+            "habilitado": self.timer_almoco.habilitado,
+            "em_horario_almoco": em_almoco,
+            "hora_inicio": self.timer_almoco.hora_inicio,
+            "hora_fim": self.timer_almoco.hora_fim,
+            "dias_semana": self.timer_almoco.dias_semana,
+            "pausar_automatico": self.timer_almoco.pausar_automatico,
+            "retomar_automatico": self.timer_almoco.retomar_automatico,
+            "campanhas_pausadas_por_almoco": list(self.campanhas_pausadas_por_almoco),
+            "proximo_almoco": proximo_almoco,
+            "horario_atual": agora.strftime("%H:%M"),
+            "dia_semana": agora.weekday()
+        }
+
     @staticmethod
     async def start_campaign_async(campaign_data: Dict):
         """

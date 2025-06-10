@@ -36,7 +36,7 @@
 
 **Passo 1:** Abra o navegador e acesse a aplicação
 ```
-URL: http://localhost:3000 (desenvolvimento)
+URL: https://discador.vercel.app/ (desenvolvimento)
 ```
 
 **Passo 2:** Faça login no sistema
@@ -153,7 +153,7 @@ URL: http://localhost:3000 (desenvolvimento)
 
 ### ⚠️ **O QUE AINDA FALTA IMPLEMENTAR**
 
-#### **🔴 PRIMEIRA ETAPA (Núcleo Funcional):**
+#### **🔴 ETAPA FINAL DE DESENVOLVIMENTO:**
 
 **1. Marcador Predictivo Funcional:**
 ```
@@ -195,8 +195,6 @@ URL: http://localhost:3000 (desenvolvimento)
 ❌ Integração com SIP
 ```
 
-#### **🟡 SEGUNDA ETAPA (Integrações):**
-
 **6. Integrações SIP:**
 ```
 ❌ Conexão com Asterisk PBX
@@ -219,25 +217,6 @@ URL: http://localhost:3000 (desenvolvimento)
 ❌ Configuração automatizada
 ❌ Docker containers
 ❌ Documentação técnica
-```
-
----
-
-### 📊 **CRONOGRAMA ESTIMADO**
-
-```
-🔴 PRIMEIRA ETAPA (10-14 dias):
-├── Backend API Core (3-4 dias)
-├── Motor de Discagem (3-4 dias)
-├── Sistema IVR (2-3 dias)
-├── Detecção Buzón (2-3 dias)
-└── Testes e Ajustes (1-2 dias)
-
-🟡 SEGUNDA ETAPA (11-13 dias):
-├── Integrações SIP (4-5 dias)
-├── Reconhecimento Voz (3-4 dias)
-├── Instalação/Deploy (2-2 dias)
-└── Documentação (2-2 dias)
 ```
 
 ---
@@ -272,7 +251,7 @@ URL: http://localhost:3000 (desenvolvimento)
 
 **Paso 1:** Abrí el navegador y accedé a la aplicación
 ```
-URL: http://localhost:3000 (desarrollo)
+URL: https://discador.vercel.app/ (desarrollo)
 ```
 
 **Paso 2:** Iniciá sesión en el sistema
@@ -389,7 +368,7 @@ URL: http://localhost:3000 (desarrollo)
 
 ### ⚠️ **LO QUE AÚN FALTA IMPLEMENTAR**
 
-#### **🔴 PRIMERA ETAPA (Núcleo Funcional):**
+#### **🔴 ETAPA FINAL DE DESARROLLO:**
 
 **1. Marcador Predictivo Funcional:**
 ```
@@ -431,8 +410,6 @@ URL: http://localhost:3000 (desarrollo)
 ❌ Integración con SIP
 ```
 
-#### **🟡 SEGUNDA ETAPA (Integraciones):**
-
 **6. Integraciones SIP:**
 ```
 ❌ Conexión con Asterisk PBX
@@ -459,52 +436,37 @@ URL: http://localhost:3000 (desarrollo)
 
 ---
 
-### 📊 **CRONOGRAMA ESTIMADO**
-
-```
-🔴 PRIMERA ETAPA (10-14 días):
-├── Backend API Core (3-4 días)
-├── Motor de Marcación (3-4 días)
-├── Sistema IVR (2-3 días)
-├── Detección Buzón (2-3 días)
-└── Pruebas y Ajustes (1-2 días)
-
-🟡 SEGUNDA ETAPA (11-13 días):
-├── Integraciones SIP (4-5 días)
-├── Reconocimiento Voz (3-4 días)
-├── Instalación/Deploy (2-2 días)
-└── Documentación (2-2 días)
-```
-
----
-
 ## 🎯 **PRÓXIMOS PASOS RECOMENDADOS**
 
-### **1. PRIORIDADES INMEDIATAS:**
+### **1. PRIORIDADES PARA COMPLETAR O SISTEMA:**
 ```
-🔥 Backend API Core - Base para todas las funcionalidades
-🔥 Motor de Discagem/Marcación - Corazón del sistema
-🔥 Sistema IVR - Interacción con usuarios
+🔥 Backend API Core - Base para todas as funcionalidades
+🔥 Motor de Discagem/Marcação - Coração do sistema
+🔥 Sistema IVR - Interação com usuários
+🔥 Integrações SIP - Conectividade telefônica
+🔥 Reconhecimento de Voz - Funcionalidade avançada
 ```
 
-### **2. DEPENDENCIAS TÉCNICAS:**
+### **2. DEPENDÊNCIAS TÉCNICAS:**
 ```
 📋 Servidor Asterisk configurado
-📋 Troncales SIP activas
-📋 Base de datos de producción
-📋 Servidor de aplicación
+📋 Troncais SIP ativas
+📋 Base de dados de produção
+📋 Servidor de aplicação
+📋 Infraestrutura de áudio
 ```
 
 ### **3. TESTING REQUERIDO:**
 ```
-🧪 Pruebas de carga
-🧪 Pruebas de integración SIP
-🧪 Pruebas de calidad de audio
-🧪 Pruebas de detección de buzón
+🧪 Testes de carga
+🧪 Testes de integração SIP
+🧪 Testes de qualidade de áudio
+🧪 Testes de detecção de caixa postal
+🧪 Testes end-to-end completos
 ```
 
 ---
 
-**📅 Última actualización:** 30/01/2025  
-**🚀 Estado:** Frontend 100% funcional - Backend en desarrollo  
-**⏰ Próxima entrega:** Primera etapa (10-14 días) 
+**📅 Última atualização:** 30/01/2025  
+**🚀 Estado:** Frontend 100% funcional - Backend aguardando desenvolvimento  
+**⏰ Próxima fase:** Desenvolvimento completo do backend e integrações 

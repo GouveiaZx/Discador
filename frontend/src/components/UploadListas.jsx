@@ -81,9 +81,9 @@ function UploadListas() {
       return;
     }
 
-    // Validar tamanho (máximo 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Arquivo muito grande. Máximo 5MB permitido.');
+    // Validar tamanho (máximo 100MB para listas grandes)
+    if (file.size > 100 * 1024 * 1024) {
+      setError('Arquivo muito grande. Máximo 100MB permitido.');
       return;
     }
 
@@ -302,7 +302,7 @@ function UploadListas() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                   </svg>
                   <p className="text-sm">Clicá para seleccionar archivo</p>
-                  <p className="text-xs text-gray-500 mt-1">CSV o TXT, máximo 5MB</p>
+                  <p className="text-xs text-gray-500 mt-1">CSV o TXT, máximo 100MB</p>
                 </div>
               </label>
             </div>

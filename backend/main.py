@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
 
-from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, presione1
+from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, presione1, audio_inteligente, code2base, campanha_politica, multi_sip
 from app.database import inicializar_bd
 from app.config import configuracion
 from app.utils.logger import logger
@@ -16,7 +16,7 @@ import app.models
 # Crear la aplicación FastAPI
 app = FastAPI(
     title=configuracion.APP_NAME,
-    description="Sistema de discado predictivo con funcionalidades de manejo de llamadas, listas, blacklist, reconocimiento de voz y discado preditivo Presione 1",
+    description="Sistema de discado predictivo con funcionalidades de manejo de llamadas, listas, blacklist, reconocimiento de voz, discado preditivo Presione 1 y múltiples provedores SIP",
     version=configuracion.APP_VERSION,
     docs_url="/documentacion",
     redoc_url="/redoc",
@@ -45,6 +45,10 @@ app.include_router(cli.router, prefix=f"{api_prefix}/cli")
 app.include_router(stt.router, prefix=f"{api_prefix}/stt")
 app.include_router(reportes.router, prefix=f"{api_prefix}/reportes")
 app.include_router(presione1.router, prefix=f"{api_prefix}")
+app.include_router(audio_inteligente.router, prefix=f"{api_prefix}")
+app.include_router(code2base.router, prefix=f"{api_prefix}/code2base")
+app.include_router(campanha_politica.router, prefix=f"{api_prefix}/campanha-politica")
+app.include_router(multi_sip.router)  # Multi-SIP tem seu próprio prefixo
 
 @app.get("/")
 async def raiz():
@@ -60,7 +64,11 @@ async def raiz():
             "Gestión de lista negra",
             "Estadísticas y reportes",
             "CLI aleatório",
-            "Discado preditivo Presione 1"
+            "Discado preditivo Presione 1",
+            "Sistema de Áudio Inteligente",
+            "Sistema CODE2BASE - Seleção Inteligente de CLIs",
+            "Sistema de Campanhas Políticas - Conformidade Eleitoral",
+            "Sistema Multi-SIP - Múltiplos Provedores VoIP"
         ],
         "documentacion": "/documentacion"
     }

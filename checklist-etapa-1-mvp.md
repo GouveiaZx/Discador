@@ -210,32 +210,168 @@ Implementar MVP funcional com discador preditivo, modo "Pressione 1", gerenciame
 
 ---
 
-## 📊 **PROGRESSO DO MVP**
-- **✅ Concluído**: 32/35 itens (91%)
-- **🔄 Em progresso**: 1/35 itens (3%) 
-- **❌ Pendente**: 2/35 itens (6%)
+## 🎯 **FUNCIONALIDADES AVANÇADAS REQUISITADAS PELO CLIENTE**
+*Baseado na análise detalhada dos requisitos específicos*
 
-### 📈 **ANÁLISE FINAL**
-**✅ SISTEMA DISCADOR 95% FUNCIONAL!**
-- **Engine de discagem completo** com simulação realista
-- **6 novos endpoints** para controle total de campanhas
-- **Processamento "Pressione 1"** implementado
-- **Estatísticas em tempo real** funcionando
-- **Logs detalhados** de todas as chamadas
-- **Integração assíncrona** para campanhas em background
-- **Blacklist integrada** automaticamente
-- **Frontend com dados reais** - componentes prontos
-- **Configuração Supabase** - scripts e guias completos
+### 📞 **DISCADOR AVANÇADO - Configurações Profissionais**
 
-**🚫 BLOQUEADORES RESTANTES:**
-- **Supabase**: Executar configuração (guia pronto)
-- **VoIP**: Substituir simulação por Asterisk
-- **Deploy frontend**: Integrar novos componentes
+#### 🔢 Sistema CPS vs Concorrência (ALTA PRIORIDADE)
+- [ ] **Configuração separada de CPS (Calls Per Second)**
+  - Input numérico para CPS por campanha
+  - Diferenciação clara entre CPS e chamadas simultâneas
+  - Validação: Máximo 1000 CPS recomendado
+  - Dashboard mostrando CPS atual vs configurado
 
-**💡 FUNCIONALIDADES OPCIONAIS DISPONÍVEIS:**
-- 15+ melhorias podem ser feitas sem dependências
-- Foco em UX, configurações e relatórios
-- Todas podem ser implementadas com dados do discador
+- [ ] **Gestão de Chamadas Simultâneas**
+  - Configuração independente do CPS
+  - Limite máximo baseado no provedor VoIP
+  - Monitoramento em tempo real
+  - Alertas quando próximo do limite
+
+#### ⏱️ Sistema de Timers Avançado (ALTA PRIORIDADE)
+- [ ] **Wait Time Configurável**
+  - Timeout por campanha (5-60 segundos)
+  - Configuração diferenciada por tipo de número
+  - Estatísticas de wait time otimizado
+  
+- [ ] **Sistema de Horários Operacionais**
+  - Timer geral de funcionamento
+  - Timer especial para pausas (almoço/jantar)
+  - Configuração por zona horária
+  - Pausa automática em horários configurados
+
+#### 🎵 Gestão Avançada de Áudios (ALTA PRIORIDADE)
+- [ ] **Upload de Áudios Múltiplos**
+  - Áudio 1 (principal) e Áudio 2 (secundário)
+  - Suporte WAV, MP3 (16kHz recomendado)
+  - Preview e teste de áudios
+  - Gestão de biblioteca de áudios
+  
+- [ ] **Sistema DNC Multilíngue**
+  - Voz DNC em Espanhol e Inglês
+  - Detecção automática do idioma preferido
+  - Configuração por região/país
+  - Mensagens personalizáveis
+
+#### 🔧 Configurações de Roteamento (ALTA PRIORIDADE)
+- [ ] **Seleção de Trunk por Campanha**
+  - Dropdown com trunks disponíveis
+  - Configuração de failover entre trunks
+  - Estatísticas por trunk
+  - Custo por trunk (opcional)
+
+- [ ] **Gestão de Extensões**
+  - Número de extensão de destino por campanha
+  - Validação de extensões ativas
+  - Roteamento inteligente
+  - Filas de espera por extensão
+
+#### 📋 Deduplicação Avançada (ALTA PRIORIDADE)
+- [ ] **Controle de Números Repetidos**
+  - Checkbox: "Permitir números repetidos entre campanhas"
+  - Algoritmo de deduplicação cross-campanha
+  - Relatório de números duplicados removidos
+  - Opção de backup dos números removidos
+
+### 📊 **DASHBOARD DE MONITOREO AVANÇADO**
+
+#### 📈 Métricas Profissionais em Tempo Real (ALTA PRIORIDADE)
+- [ ] **Estatísticas Detalhadas da Campanha**
+  - Números totais carregados
+  - Números processados vs restantes
+  - Números DNC identificados
+  - CPS atual vs configurado
+  - Chamadas simultâneas ativas
+
+- [ ] **Monitoramento de Infraestrutura**
+  - Trunk de saída em uso
+  - Destino das chamadas (extensões)
+  - Pessoas falando em tempo real
+  - Chamadas ativas do provedor VoIP
+  - Status de conectividade
+
+#### 🎛️ Controle Operacional Avançado (ALTA PRIORIDADE)  
+- [ ] **Controle Granular de Campanhas**
+  - Pausar/Retomar campanha individual
+  - Pausar/Retomar todas as campanhas
+  - Controle de velocidade em tempo real
+  - Botão de emergência (stop all)
+
+### 📱 **GESTÃO DE CALLER ID INTELIGENTE**
+
+#### 🔢 Sistema CLI Avançado (MÉDIA PRIORIDADE)
+- [ ] **Modos de Caller ID**
+  - **Número Específico**: CLI fixo por campanha
+  - **Valor 0**: Rotação automática da tabela
+  - **BASE**: Geração automática de CLIs
+  - **CODE2BASE**: CLIs baseados em regras personalizadas
+
+- [ ] **Validação por País** 
+  - Suporte para 10 e 11 dígitos
+  - Formatação automática por país
+  - Validação de números válidos
+  - Detecção de códigos de área
+
+### ⚙️ **CONFIGURAÇÕES PARA CLIENTES ESPECÍFICOS**
+
+#### 🏛️ Modo Político (BAIXA PRIORIDADE - Customização)
+- [ ] **Configurações Regulamentares**
+  - Compliance com leis eleitorais
+  - Horários restritos para políticos
+  - Mensagens obrigatórias
+  - Logs auditáveis para reguladores
+
+---
+
+## 📋 **NOVA ESTIMATIVA DE PROGRESSO**
+
+### 🎯 **FUNCIONALIDADES TOTAIS**
+- **MVP Básico**: 35 itens (91% concluído)
+- **Funcionalidades Avançadas**: 25 itens (0% concluído)
+- **TOTAL GERAL**: 60 itens
+
+### 📊 **ANÁLISE DE VIABILIDADE**
+- **✅ Alta Viabilidade**: 20/25 itens (80%)
+- **⚠️ Média Viabilidade**: 3/25 itens (12%)  
+- **❌ Baixa Viabilidade**: 2/25 itens (8%)
+
+### 💰 **ANÁLISE DE CUSTOS CONFIRMADA**
+- **Dentro do orçamento atual**: 70% das funcionalidades
+- **Custos adicionais necessários**: 30% das funcionalidades
+- **Funcionalidades básicas**: Implementáveis imediatamente
+- **Funcionalidades VoIP avançadas**: Requerem orçamento separado
+
+---
+
+## 🚀 **CRONOGRAMA SUGERIDO PARA FUNCIONALIDADES AVANÇADAS**
+
+### 📅 **FASE 1 - Configurações Core (2-3 semanas)**
+- Sistema CPS vs Concorrência
+- Wait Time configurável
+- Gestão de Áudios (Upload + DNC multilíngue)
+- Sistema de Timers operacionais
+- Seleção de Trunk e Extensões
+
+### 📅 **FASE 2 - Dashboard Avançado (1-2 semanas)**
+- Métricas profissionais em tempo real
+- Controle granular de campanhas
+- Monitoramento de infraestrutura
+- Interface de controle operacional
+
+### 📅 **FASE 3 - Sistemas Inteligentes (2-3 semanas)**
+- Deduplicação avançada
+- Sistema de Caller ID inteligente
+- Validação por país
+- Formatação automática
+
+### 📅 **FASE 4 - Customizações (1-2 semanas)**
+- Configurações para políticos
+- Integrações específicas
+- Testes e ajustes finais
+
+### 🎯 **TOTAL ESTIMADO**: 6-10 semanas para funcionalidades avançadas
+
+---
 
 ## 🎉 **MARCO ALCANÇADO**
 **Sistema agora possui discador preditivo 95% funcional!**

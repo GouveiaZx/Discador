@@ -587,6 +587,51 @@ async def get_dashboard_real_stats():
         raise HTTPException(status_code=500, detail=f"Erro ao obter dados do dashboard: {str(e)}")
 
 # ===========================================
+# TIMER DE ALMOÇO - ENDPOINTS
+# ===========================================
+
+@app.get("/api/v1/timer-almoco/status")
+async def get_timer_almoco_status():
+    """Obter status do timer de almoço"""
+    try:
+        status = discador_engine.obter_status_timer_almoco()
+        return {
+            "status": "success",
+            "data": status
+        }
+    except Exception as e:
+        logger.error(f"Erro ao obter status do timer de almoço: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/v1/timer-almoco/configurar")
+async def configurar_timer_almoco(
+    habilitado: bool = True,
+    hora_inicio: str = "12:00",
+    hora_fim: str = "13:00",
+    dias_semana: list = [0, 1, 2, 3, 4],  # Segunda a sexta
+    pausar_automatico: bool = True,
+    retomar_automatico: bool = True
+):
+    """Configurar timer de almoço"""
+    try:
+        resultado = discador_engine.configurar_timer_almoco(
+            habilitado=habilitado,
+            hora_inicio=hora_inicio,
+            hora_fim=hora_fim,
+            dias_semana=dias_semana,
+            pausar_automatico=pausar_automatico,
+            retomar_automatico=retomar_automatico
+        )
+        return {
+            "status": "success",
+            "message": "Timer de almoço configurado com sucesso",
+            "data": resultado
+        }
+    except Exception as e:
+        logger.error(f"Erro ao configurar timer de almoço: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ===========================================
 # INICIALIZAÇÃO
 # ===========================================
 
