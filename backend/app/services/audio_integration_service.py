@@ -325,10 +325,10 @@ class AudioIntegrationService:
     
     async def setup_contextos_padrao(self) -> Dict[str, Any]:
         """
-        Configura os contextos padrão do sistema de áudio inteligente.
+        Configura os contextos padrao do sistema de audio inteligente.
         
         Returns:
-            Dict: Resultado da configuração
+            Dict: Resultado da configuracao
         """
         try:
             # Inicializar templates padrão

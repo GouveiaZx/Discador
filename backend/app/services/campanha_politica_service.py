@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Serviço principal para Campanhas Políticas
-Garante conformidade com legislação eleitoral
+Servico principal para Campanhas Politicas
+Garante conformidade com legislacao eleitoral
 """
 
 import hashlib
