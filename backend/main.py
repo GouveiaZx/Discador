@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
 from datetime import datetime
+from contextlib import asynccontextmanager
 
 from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, multi_sip, monitoring
 from app.database import inicializar_bd
@@ -17,6 +18,31 @@ import app.models
 # Rotas de correção rápida implementadas diretamente
 from fastapi import APIRouter
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Gerenciar o ciclo de vida da aplicação"""
+    # Startup
+    # Crear directorio de logs si no existe y esta configurado
+    if configuracion.LOG_ARQUIVO:
+        os.makedirs(os.path.dirname(configuracion.LOG_ARQUIVO), exist_ok=True)
+        
+    # Inicializar la base de datos
+    logger.info("Iniciando la aplicacion")
+    logger.info(f"Configuracion cargada. Modo debug: {configuracion.DEBUG}")
+    logger.info(f"Inicializando base de datos en {configuracion.DB_HOST}")
+    
+    try:
+        inicializar_bd()
+        logger.info("Base de datos inicializada correctamente")
+    except Exception as e:
+        logger.error(f"Error al inicializar la base de datos: {str(e)}")
+        raise
+    
+    yield
+    
+    # Shutdown
+    logger.info("Apagando la aplicacion")
+
 # Crear la aplicacion FastAPI
 app = FastAPI(
     title=configuracion.APP_NAME,
@@ -24,7 +50,8 @@ app = FastAPI(
     version=configuracion.APP_VERSION,
     docs_url="/documentacion",
     redoc_url="/redoc",
-    debug=configuracion.DEBUG
+    debug=configuracion.DEBUG,
+    lifespan=lifespan
 )
 
 # Configurar CORS
@@ -164,30 +191,6 @@ async def raiz():
         ],
         "documentacao": "/documentacao"
     }
-
-@app.on_event("startup")
-async def evento_inicio():
-    """Evento que se ejecuta al iniciar la aplicacion"""
-    # Crear directorio de logs si no existe y esta configurado
-    if configuracion.LOG_ARQUIVO:
-        os.makedirs(os.path.dirname(configuracion.LOG_ARQUIVO), exist_ok=True)
-        
-    # Inicializar la base de datos
-    logger.info("Iniciando la aplicacion")
-    logger.info(f"Configuracion cargada. Modo debug: {configuracion.DEBUG}")
-    logger.info(f"Inicializando base de datos en {configuracion.DB_HOST}")
-    
-    try:
-        inicializar_bd()
-        logger.info("Base de datos inicializada correctamente")
-    except Exception as e:
-        logger.error(f"Error al inicializar la base de datos: {str(e)}")
-        raise
-
-@app.on_event("shutdown")
-async def evento_cierre():
-    """Evento que se ejecuta al cerrar la aplicacion"""
-    logger.info("Apagando la aplicacion")
 
 if __name__ == "__main__":
     logger.info(f"Iniciando servidor en {configuracion.HOST}:{configuracion.PUERTO}")
