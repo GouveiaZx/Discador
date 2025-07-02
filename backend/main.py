@@ -169,8 +169,8 @@ async def raiz():
 async def evento_inicio():
     """Evento que se ejecuta al iniciar la aplicacion"""
     # Crear directorio de logs si no existe y esta configurado
-    if configuracion.LOG_ARCHIVO:
-        os.makedirs(os.path.dirname(configuracion.LOG_ARCHIVO), exist_ok=True)
+    if configuracion.LOG_ARQUIVO:
+        os.makedirs(os.path.dirname(configuracion.LOG_ARQUIVO), exist_ok=True)
         
     # Inicializar la base de datos
     logger.info("Iniciando la aplicacion")
