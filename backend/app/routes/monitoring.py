@@ -560,7 +560,7 @@ async def limpar_cache(
         
     except Exception as e:
         logger.error(f"Erro ao limpar cache: {e}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+        raise HTTPException(status_code=500, detail="Erro interno do servidor") 
 
 @router.get("/active_calls", response_model=List[Dict[str, Any]])
 def listar_chamadas_ativas(service: MonitoringService = Depends(get_monitoring_service)):

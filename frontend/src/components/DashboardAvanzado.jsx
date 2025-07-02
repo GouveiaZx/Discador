@@ -30,7 +30,7 @@ const DashboardAvanzado = () => {
         const requests = [
           makeApiRequest('/campanhas'),
           makeApiRequest('/llamadas/stats'),
-          makeApiRequest('/monitoring/dashboard'),
+        makeApiRequest('/monitoring/dashboard'),
           makeApiRequest('/llamadas/en-progreso'),
           makeApiRequest('/api/v1/stats')
         ];

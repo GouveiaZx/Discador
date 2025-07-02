@@ -53,13 +53,13 @@ export const makeApiRequest = async (endpoint, methodOrOptions = {}, data = null
   } else {
     // Forma tradicional: segundo parâmetro é um objeto de opções
     config = {
-      timeout: API_TIMEOUT,
-      headers: {
-        ...DEFAULT_HEADERS,
+    timeout: API_TIMEOUT,
+    headers: {
+      ...DEFAULT_HEADERS,
         ...methodOrOptions.headers
-      },
+    },
       ...methodOrOptions
-    };
+  };
   }
 
   console.log('🚀 Making API request:', { url, method: config.method || 'GET', hasBody: !!config.body });

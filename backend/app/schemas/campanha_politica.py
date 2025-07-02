@@ -185,7 +185,7 @@ class ValidacaoHorarioResponse(BaseModel):
     dentro_horario_legal: bool
     motivo: str
     horario_inicio_permitido: str
-    horario_fim_permitido: str
+    horario_fim_permitido: str 
 
 class CampanaBase(BaseModel):
     nombre: str

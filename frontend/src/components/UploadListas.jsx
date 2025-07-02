@@ -167,9 +167,9 @@ function UploadListas() {
         errors_count: response.numeros_invalidos || 0,
         message: response.mensaje || 'Upload realizado com sucesso'
       });
-      setFileState(FileStates.SUCCESS);
-      setFile(null);
-      setPreviewData(null);
+        setFileState(FileStates.SUCCESS);
+        setFile(null);
+        setPreviewData(null);
     } catch (error) {
       console.error('❌ Erro no upload:', error);
       setError('Error al cargar el archivo: ' + error.message);
