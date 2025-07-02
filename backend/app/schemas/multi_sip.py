@@ -24,7 +24,7 @@ class TipoAutenticacao(str, Enum):
 
 # ================== SCHEMAS BASE ==================
 
-class ProvedorSIPBase(BaseModel):
+class ProvedorSipBase(BaseModel):
     """Schema base para provedor SIP"""
     nome: str = Field(..., min_length=1, max_length=100)
     servidor_sip: str = Field(..., min_length=5, max_length=255)
@@ -54,11 +54,11 @@ class ProvedorSIPBase(BaseModel):
                     raise ValueError(f'IP invalido: {ip}')
         return v
 
-class ProvedorSIPCreate(ProvedorSIPBase):
+class ProvedorSipCreate(ProvedorSipBase):
     """Schema para criacao de provedor SIP"""
     pass
 
-class ProvedorSIPResponse(ProvedorSIPBase):
+class ProvedorSipResponse(ProvedorSipBase):
     """Schema de resposta do provedor SIP"""
     id: int
     data_criacao: datetime
@@ -72,7 +72,7 @@ class ProvedorSIPResponse(ProvedorSIPBase):
 
 # ================== TARIFAS SIP ==================
 
-class TarifaSIPBase(BaseModel):
+class TarifaSipBase(BaseModel):
     """Schema base para tarifa SIP"""
     provedor_id: int = Field(..., gt=0)
     pais_codigo: str = Field(..., min_length=2, max_length=5)
@@ -87,11 +87,11 @@ class TarifaSIPBase(BaseModel):
     data_fim_vigencia: Optional[datetime] = None
     ativo: bool = Field(default=True)
 
-class TarifaSIPCreate(TarifaSIPBase):
+class TarifaSipCreate(TarifaSipBase):
     """Schema para criacao de tarifa SIP"""
     pass
 
-class TarifaSIPResponse(TarifaSIPBase):
+class TarifaSipResponse(TarifaSipBase):
     """Schema de resposta da tarifa SIP"""
     id: int
     data_criacao: datetime
@@ -100,9 +100,56 @@ class TarifaSIPResponse(TarifaSIPBase):
     class Config:
         orm_mode = True
 
+# ================== SELECAO DE PROVEDOR ==================
+
+class SolicitacaoSelecaoProvedor(BaseModel):
+    """Schema para solicitacao de selecao de provedor"""
+    numero_destino: str = Field(..., min_length=8, max_length=20)
+    numero_origem: Optional[str] = Field(None, max_length=20)
+    duracao_estimada: Optional[int] = Field(None, gt=0)
+    prioridade_custo: float = Field(default=0.6, ge=0.0, le=1.0)
+    prioridade_qualidade: float = Field(default=0.3, ge=0.0, le=1.0)
+    prioridade_disponibilidade: float = Field(default=0.1, ge=0.0, le=1.0)
+    provedores_excluidos: Optional[List[int]] = Field(default_factory=list)
+
+class RespostaSelecaoProvedor(BaseModel):
+    """Schema de resposta da selecao de provedor"""
+    provedor_selecionado_id: int
+    provedor_nome: str
+    custo_estimado: float
+    qualidade_score: float
+    motivo_selecao: str
+    provedores_avaliados: int
+    timestamp_selecao: datetime
+
+# ================== STATUS E MONITORAMENTO ==================
+
+class StatusProvedorResponse(BaseModel):
+    """Schema de resposta do status do provedor"""
+    provedor_id: int
+    provedor_nome: str
+    status: StatusProvedor
+    latencia_ms: Optional[float] = None
+    taxa_sucesso: Optional[float] = None
+    chamadas_ativas: int = 0
+    ultima_verificacao: datetime
+
+class LogSelecaoResponse(BaseModel):
+    """Schema de resposta do log de selecao"""
+    id: int
+    provedor_id: int
+    numero_destino: str
+    custo_estimado: float
+    timestamp_selecao: datetime
+    sucesso: Optional[bool] = None
+    duracao_real: Optional[int] = None
+
+    class Config:
+        orm_mode = True
+
 # ================== CONFIGURACAO MULTI-SIP ==================
 
-class ConfiguracaoMultiSIPBase(BaseModel):
+class ConfiguracaoMultiSipBase(BaseModel):
     """Schema base para configuracao Multi-SIP"""
     nome_configuracao: str = Field(..., min_length=1, max_length=100)
     algoritmo_selecao: str = Field(default="menor_custo")
@@ -128,11 +175,11 @@ class ConfiguracaoMultiSIPBase(BaseModel):
             raise ValueError('Soma dos pesos nao pode exceder 1.0')
         return v
 
-class ConfiguracaoMultiSIPCreate(ConfiguracaoMultiSIPBase):
+class ConfiguracaoMultiSipCreate(ConfiguracaoMultiSipBase):
     """Schema para criacao de configuracao Multi-SIP"""
     pass
 
-class ConfiguracaoMultiSIPResponse(ConfiguracaoMultiSIPBase):
+class ConfiguracaoMultiSipResponse(ConfiguracaoMultiSipBase):
     """Schema de resposta da configuracao Multi-SIP"""
     id: int
     data_criacao: datetime

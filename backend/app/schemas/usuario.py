@@ -1,10 +1,10 @@
-from pydantic import BaseModel, Field, UUID4, EmailStr
+from pydantic import BaseModel, Field, UUID4
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
 class UsuarioBase(BaseModel):
     """Esquema base para usuarios"""
-    email: EmailStr = Field(..., description="Correo electronico del usuario")
+    email: str = Field(..., description="Correo electronico del usuario")
     nombre: str = Field(..., description="Nombre del usuario")
     apellido: str = Field(..., description="Apellido del usuario")
     

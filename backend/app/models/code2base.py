@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey, func
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey, func, Float, JSON
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -112,6 +112,40 @@ class Prefijo(Base):
     def __repr__(self):
         return f"<Prefijo(id={self.id}, prefijo={self.prefijo}, cidade_id={self.cidade_id})>"
 
+class CliGeo(Base):
+    __tablename__ = "cli_geo"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    cli_id = Column(Integer, ForeignKey("clis.id"), nullable=False)
+    prefijo_id = Column(Integer, ForeignKey("prefijo.id"), nullable=False)
+    numero = Column(String(20), nullable=False)
+    numero_normalizado = Column(String(20), nullable=False, unique=True)
+    tipo_numero = Column(String(20), nullable=False)
+    operadora = Column(String(50), nullable=False)
+    
+    # Métricas de qualidade
+    calidad = Column(Float, default=1.0, nullable=False)
+    tasa_exito = Column(Float, default=0.0, nullable=False)
+    total_llamadas = Column(Integer, default=0, nullable=False)
+    llamadas_exitosas = Column(Integer, default=0, nullable=False)
+    
+    # Configurações
+    limite_diario = Column(Integer, default=1000, nullable=False)
+    usos_hoy = Column(Integer, default=0, nullable=False)
+    
+    # Status
+    activo = Column(Boolean, default=True, nullable=False)
+    fecha_creacion = Column(DateTime, default=func.now())
+    fecha_actualizacion = Column(DateTime, default=func.now(), onupdate=func.now())
+    ultimo_uso = Column(DateTime, nullable=True)
+    
+    # Relationships
+    prefijo = relationship("Prefijo")
+    historiales = relationship("HistorialSeleccionCli", back_populates="cli_geo")
+    
+    def __repr__(self):
+        return f"<CliGeo(id={self.id}, numero={self.numero}, operadora={self.operadora})>"
+
 class ReglaCli(Base):
     __tablename__ = "regla_cli"
     
@@ -129,4 +163,33 @@ class ReglaCli(Base):
     tipo_regra = relationship("TipoRegra")
     
     def __repr__(self):
-        return f"<ReglaCli(id={self.id}, nome={self.nome}, cli_gerado={self.cli_gerado})>" 
+        return f"<ReglaCli(id={self.id}, nome={self.nome}, cli_gerado={self.cli_gerado})>"
+
+class HistorialSeleccionCli(Base):
+    __tablename__ = "historial_seleccion_cli"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    cli_geo_id = Column(Integer, ForeignKey("cli_geo.id"), nullable=False)
+    numero_destino = Column(String(20), nullable=False)
+    numero_destino_normalizado = Column(String(20), nullable=False)
+    
+    # Dados da seleção
+    score_seleccion = Column(Float, nullable=False)
+    reglas_aplicadas = Column(JSON, default=[])
+    total_candidatos = Column(Integer, nullable=False)
+    tiempo_seleccion_ms = Column(Float, nullable=False)
+    
+    # Resultado da chamada (atualizado posteriormente)
+    llamada_exitosa = Column(Boolean, nullable=True)
+    duracion_llamada = Column(Integer, nullable=True)  # em segundos
+    motivo_finalizacion = Column(String(50), nullable=True)
+    
+    # Timestamps
+    fecha_seleccion = Column(DateTime, default=func.now())
+    fecha_actualizacion_resultado = Column(DateTime, nullable=True)
+    
+    # Relationships
+    cli_geo = relationship("CliGeo", back_populates="historiales")
+    
+    def __repr__(self):
+        return f"<HistorialSeleccionCli(id={self.id}, cli_geo_id={self.cli_geo_id}, numero_destino={self.numero_destino})>" 

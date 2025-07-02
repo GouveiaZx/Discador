@@ -1,8 +1,38 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey, DECIMAL, func
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey, DECIMAL, func, Date, Time
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, date, time
+import enum
 
 from app.database import Base
+
+# Enums para tipos de log eleitoral
+class TipoLogEleitoral(enum.Enum):
+    CONFIGURACAO_CRIADA = "configuracao_criada"
+    CONFIGURACAO_ALTERADA = "configuracao_alterada"
+    CALENDARIO_CRIADO = "calendario_criado"
+    CAMPANHA_INICIADA = "campanha_iniciada"
+    CAMPANHA_PAUSADA = "campanha_pausada"
+    CAMPANHA_FINALIZADA = "campanha_finalizada"
+    VIOLACAO_HORARIO = "violacao_horario"
+    OPT_OUT_REGISTRADO = "opt_out_registrado"
+
+# Enum para tipos de eleição
+class TipoEleicao(enum.Enum):
+    MUNICIPAL = "municipal"
+    ESTADUAL = "estadual"
+    FEDERAL = "federal"
+    ESPECIAL = "especial"
+
+# Enum para status da campanha política
+class StatusCampanhaPolitica(enum.Enum):
+    CRIADA = "criada"
+    AGUARDANDO_APROVACAO = "aguardando_aprovacao"
+    APROVADA = "aprovada"
+    REJEITADA = "rejeitada"
+    ATIVA = "ativa"
+    PAUSADA = "pausada"
+    FINALIZADA = "finalizada"
+    CANCELADA = "cancelada"
 
 class CampanhaPolitica(Base):
     __tablename__ = "campanha_politica"
@@ -38,6 +68,109 @@ class CampanhaPolitica(Base):
     
     def __repr__(self):
         return f"<CampanhaPolitica(id={self.id}, nome={self.nome}, candidato={self.candidato})>"
+
+class ConfiguracaoEleitoral(Base):
+    __tablename__ = "configuracao_eleitoral"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    pais_codigo = Column(String(3), nullable=False, unique=True)
+    nome_pais = Column(String(100), nullable=False)
+    
+    # Horários permitidos
+    horario_inicio_segunda = Column(Time, nullable=False)
+    horario_fim_segunda = Column(Time, nullable=False)
+    horario_inicio_sabado = Column(Time, nullable=False)
+    horario_fim_sabado = Column(Time, nullable=False)
+    permite_domingo = Column(Boolean, default=False, nullable=False)
+    
+    # Configurações específicas
+    maximo_chamadas_por_numero = Column(Integer, default=1, nullable=False)
+    intervalo_minimo_chamadas_horas = Column(Integer, default=24, nullable=False)
+    
+    # Status
+    activo = Column(Boolean, default=True, nullable=False)
+    fecha_creacion = Column(DateTime, default=func.now())
+    fecha_actualizacion = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    def __repr__(self):
+        return f"<ConfiguracaoEleitoral(id={self.id}, pais={self.pais_codigo})>"
+
+class CalendarioEleitoral(Base):
+    __tablename__ = "calendario_eleitoral"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    pais_codigo = Column(String(3), nullable=False)
+    nome_eleicao = Column(String(100), nullable=False)
+    
+    # Datas da eleição
+    data_eleicao = Column(Date, nullable=False)
+    data_inicio_campanha = Column(Date, nullable=False)
+    data_fim_campanha = Column(Date, nullable=False)
+    
+    # Períodos de silêncio
+    data_inicio_silencio = Column(Date, nullable=True)
+    data_fim_silencio = Column(Date, nullable=True)
+    
+    # Configurações
+    tipo_eleicao = Column(String(50), nullable=False)  # municipal, estadual, federal
+    permite_pesquisa = Column(Boolean, default=True, nullable=False)
+    
+    # Status
+    activo = Column(Boolean, default=True, nullable=False)
+    fecha_creacion = Column(DateTime, default=func.now())
+    
+    def __repr__(self):
+        return f"<CalendarioEleitoral(id={self.id}, eleicao={self.nome_eleicao})>"
+
+class LogEleitoralImutavel(Base):
+    __tablename__ = "log_eleitoral_imutavel"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    
+    # Informações do log
+    tipo_log = Column(String(50), nullable=False)  # Usar enum TipoLogEleitoral
+    descricao = Column(Text, nullable=False)
+    dados_antes = Column(Text, nullable=True)  # JSON dos dados antes da mudança
+    dados_depois = Column(Text, nullable=True)  # JSON dos dados depois da mudança
+    
+    # Metadados imutáveis
+    usuario_id = Column(Integer, nullable=True)
+    usuario_nome = Column(String(100), nullable=True)
+    ip_origem = Column(String(45), nullable=True)
+    user_agent = Column(Text, nullable=True)
+    
+    # Timestamp imutável
+    timestamp_utc = Column(DateTime, default=func.now(), nullable=False)
+    
+    # Hash de integridade
+    hash_integridade = Column(String(64), nullable=False)
+    
+    def __repr__(self):
+        return f"<LogEleitoralImutavel(id={self.id}, tipo={self.tipo_log}, timestamp={self.timestamp_utc})>"
+
+class OptOutEleitoral(Base):
+    __tablename__ = "opt_out_eleitoral"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    
+    # Informações do número
+    numero = Column(String(20), nullable=False)
+    numero_normalizado = Column(String(20), nullable=False, unique=True, index=True)
+    
+    # Informações do opt-out
+    motivo = Column(String(255), nullable=True)
+    canal_origem = Column(String(50), nullable=False)  # telefone, sms, whatsapp, web
+    
+    # Metadados
+    ip_origem = Column(String(45), nullable=True)
+    user_agent = Column(Text, nullable=True)
+    
+    # Status
+    activo = Column(Boolean, default=True, nullable=False)
+    fecha_creacion = Column(DateTime, default=func.now())
+    
+    def __repr__(self):
+        return f"<OptOutEleitoral(id={self.id}, numero={self.numero})>"
 
 class AudioCampanha(Base):
     __tablename__ = "audio_campanha"

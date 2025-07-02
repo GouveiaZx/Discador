@@ -11,17 +11,17 @@ from typing import List, Optional, Dict, Any, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func
 
-from app.models.multi_sip import ProvedorSIP, TarifaSIP, ConfiguracaoMultiSIP
+from app.models.multi_sip import ProvedorSip, TarifaSip, ConfiguracaoMultiSip
 from app.schemas.multi_sip import (
-    ProvedorSIPCreate, ProvedorSIPResponse,
-    TarifaSIPCreate, TarifaSIPResponse,
-    ConfiguracaoMultiSIPCreate, ConfiguracaoMultiSIPResponse,
+    ProvedorSipCreate, ProvedorSipResponse,
+    TarifaSipCreate, TarifaSipResponse,
+    ConfiguracaoMultiSipCreate, ConfiguracaoMultiSipResponse,
     EstatisticasProvedor, EstatisticasGerais
 )
 
 logger = logging.getLogger(__name__)
 
-class MultiSIPService:
+class MultiSipService:
     """Servico principal para gerenciamento Multi-SIP"""
     
     def __init__(self, db: Session):
@@ -29,57 +29,57 @@ class MultiSIPService:
     
     # ================== PROVEDORES SIP ==================
     
-    def criar_provedor(self, provedor_data: ProvedorSIPCreate) -> ProvedorSIPResponse:
+    def criar_provedor(self, provedor_data: ProvedorSipCreate) -> ProvedorSipResponse:
         """Cria um novo provedor SIP"""
         try:
-            provedor = ProvedorSIP(**provedor_data.dict())
+            provedor = ProvedorSip(**provedor_data.dict())
             self.db.add(provedor)
             self.db.commit()
             self.db.refresh(provedor)
             
             logger.info(f"Provedor SIP criado: {provedor.nome}")
-            return ProvedorSIPResponse.from_orm(provedor)
+            return ProvedorSipResponse.from_orm(provedor)
         
         except Exception as e:
             self.db.rollback()
             logger.error(f"Erro ao criar provedor SIP: {e}")
             raise
     
-    def listar_provedores(self, apenas_ativos: bool = True) -> List[ProvedorSIPResponse]:
+    def listar_provedores(self, apenas_ativos: bool = True) -> List[ProvedorSipResponse]:
         """Lista todos os provedores SIP"""
         try:
-            query = self.db.query(ProvedorSIP)
+            query = self.db.query(ProvedorSip)
             
             if apenas_ativos:
-                query = query.filter(ProvedorSIP.status == "ativo")
+                query = query.filter(ProvedorSip.status == "ativo")
             
-            provedores = query.order_by(ProvedorSIP.prioridade).all()
-            return [ProvedorSIPResponse.from_orm(p) for p in provedores]
+            provedores = query.order_by(ProvedorSip.prioridade).all()
+            return [ProvedorSipResponse.from_orm(p) for p in provedores]
         
         except Exception as e:
             logger.error(f"Erro ao listar provedores: {e}")
             raise
     
-    def obter_provedor(self, provedor_id: int) -> Optional[ProvedorSIPResponse]:
+    def obter_provedor(self, provedor_id: int) -> Optional[ProvedorSipResponse]:
         """Obtem um provedor especifico"""
         try:
-            provedor = self.db.query(ProvedorSIP).filter(
-                ProvedorSIP.id == provedor_id
+            provedor = self.db.query(ProvedorSip).filter(
+                ProvedorSip.id == provedor_id
             ).first()
             
             if provedor:
-                return ProvedorSIPResponse.from_orm(provedor)
+                return ProvedorSipResponse.from_orm(provedor)
             return None
         
         except Exception as e:
             logger.error(f"Erro ao obter provedor {provedor_id}: {e}")
             raise
     
-    def atualizar_provedor(self, provedor_id: int, dados_atualizacao: Dict[str, Any]) -> Optional[ProvedorSIPResponse]:
+    def atualizar_provedor(self, provedor_id: int, dados_atualizacao: Dict[str, Any]) -> Optional[ProvedorSipResponse]:
         """Atualiza um provedor SIP"""
         try:
-            provedor = self.db.query(ProvedorSIP).filter(
-                ProvedorSIP.id == provedor_id
+            provedor = self.db.query(ProvedorSip).filter(
+                ProvedorSip.id == provedor_id
             ).first()
             
             if not provedor:
@@ -94,7 +94,7 @@ class MultiSIPService:
             self.db.refresh(provedor)
             
             logger.info(f"Provedor {provedor_id} atualizado")
-            return ProvedorSIPResponse.from_orm(provedor)
+            return ProvedorSipResponse.from_orm(provedor)
         
         except Exception as e:
             self.db.rollback()
@@ -104,8 +104,8 @@ class MultiSIPService:
     def deletar_provedor(self, provedor_id: int) -> bool:
         """Deleta um provedor SIP"""
         try:
-            provedor = self.db.query(ProvedorSIP).filter(
-                ProvedorSIP.id == provedor_id
+            provedor = self.db.query(ProvedorSip).filter(
+                ProvedorSip.id == provedor_id
             ).first()
             
             if not provedor:
@@ -124,51 +124,51 @@ class MultiSIPService:
     
     # ================== TARIFAS ==================
     
-    def criar_tarifa(self, tarifa_data: TarifaSIPCreate) -> TarifaSIPResponse:
+    def criar_tarifa(self, tarifa_data: TarifaSipCreate) -> TarifaSipResponse:
         """Cria uma nova tarifa SIP"""
         try:
-            tarifa = TarifaSIP(**tarifa_data.dict())
+            tarifa = TarifaSip(**tarifa_data.dict())
             self.db.add(tarifa)
             self.db.commit()
             self.db.refresh(tarifa)
             
             logger.info(f"Tarifa criada para provedor {tarifa.provedor_id} - {tarifa.nome_destino}")
-            return TarifaSIPResponse.from_orm(tarifa)
+            return TarifaSipResponse.from_orm(tarifa)
         
         except Exception as e:
             self.db.rollback()
             logger.error(f"Erro ao criar tarifa: {e}")
             raise
     
-    def buscar_melhor_tarifa(self, numero_destino: str) -> Optional[Tuple[ProvedorSIPResponse, TarifaSIPResponse]]:
+    def buscar_melhor_tarifa(self, numero_destino: str) -> Optional[Tuple[ProvedorSipResponse, TarifaSipResponse]]:
         """Busca a melhor tarifa para um numero de destino"""
         try:
             # Extrair prefixos possiveis do numero
             prefixos = self._extrair_prefixos(numero_destino)
             
             # Buscar tarifas ativas para os prefixos
-            tarifas = self.db.query(TarifaSIP, ProvedorSIP).join(
-                ProvedorSIP, TarifaSIP.provedor_id == ProvedorSIP.id
+            tarifas = self.db.query(TarifaSip, ProvedorSip).join(
+                ProvedorSip, TarifaSip.provedor_id == ProvedorSip.id
             ).filter(
                 and_(
-                    TarifaSIP.prefixo.in_(prefixos),
-                    TarifaSIP.ativo == True,
-                    ProvedorSIP.status == "ativo",
+                    TarifaSip.prefixo.in_(prefixos),
+                    TarifaSip.ativo == True,
+                    ProvedorSip.status == "ativo",
                     or_(
-                        TarifaSIP.data_fim_vigencia.is_(None),
-                        TarifaSIP.data_fim_vigencia >= datetime.utcnow()
+                        TarifaSip.data_fim_vigencia.is_(None),
+                        TarifaSip.data_fim_vigencia >= datetime.utcnow()
                     )
                 )
             ).order_by(
-                TarifaSIP.custo_por_minuto.asc(),
-                ProvedorSIP.prioridade.asc()
+                TarifaSip.custo_por_minuto.asc(),
+                ProvedorSip.prioridade.asc()
             ).all()
             
             if tarifas:
                 tarifa, provedor = tarifas[0]
                 return (
-                    ProvedorSIPResponse.from_orm(provedor),
-                    TarifaSIPResponse.from_orm(tarifa)
+                    ProvedorSipResponse.from_orm(provedor),
+                    TarifaSipResponse.from_orm(tarifa)
                 )
             
             return None
@@ -190,31 +190,31 @@ class MultiSIPService:
     
     # ================== CONFIGURACOES ==================
     
-    def criar_configuracao(self, config_data: ConfiguracaoMultiSIPCreate) -> ConfiguracaoMultiSIPResponse:
+    def criar_configuracao(self, config_data: ConfiguracaoMultiSipCreate) -> ConfiguracaoMultiSipResponse:
         """Cria uma nova configuracao Multi-SIP"""
         try:
-            config = ConfiguracaoMultiSIP(**config_data.dict())
+            config = ConfiguracaoMultiSip(**config_data.dict())
             self.db.add(config)
             self.db.commit()
             self.db.refresh(config)
             
             logger.info(f"Configuracao Multi-SIP criada: {config.nome_configuracao}")
-            return ConfiguracaoMultiSIPResponse.from_orm(config)
+            return ConfiguracaoMultiSipResponse.from_orm(config)
         
         except Exception as e:
             self.db.rollback()
             logger.error(f"Erro ao criar configuracao: {e}")
             raise
     
-    def obter_configuracao_ativa(self) -> Optional[ConfiguracaoMultiSIPResponse]:
+    def obter_configuracao_ativa(self) -> Optional[ConfiguracaoMultiSipResponse]:
         """Obtem a configuracao ativa do sistema"""
         try:
-            config = self.db.query(ConfiguracaoMultiSIP).filter(
-                ConfiguracaoMultiSIP.ativo == True
+            config = self.db.query(ConfiguracaoMultiSip).filter(
+                ConfiguracaoMultiSip.ativo == True
             ).first()
             
             if config:
-                return ConfiguracaoMultiSIPResponse.from_orm(config)
+                return ConfiguracaoMultiSipResponse.from_orm(config)
             return None
         
         except Exception as e:
@@ -254,7 +254,7 @@ class MultiSIPService:
             logger.error(f"Erro na selecao inteligente para {numero_destino}: {e}")
             raise
     
-    def _calcular_score_provedor(self, provedor: ProvedorSIPResponse, tarifa: TarifaSIPResponse, config: ConfiguracaoMultiSIPResponse) -> float:
+    def _calcular_score_provedor(self, provedor: ProvedorSipResponse, tarifa: TarifaSipResponse, config: ConfiguracaoMultiSipResponse) -> float:
         """Calcula o score de um provedor baseado nos pesos configurados"""
         try:
             # Score de custo (inverso - menor custo = maior score)
@@ -285,9 +285,9 @@ class MultiSIPService:
         """Obtem estatisticas gerais do sistema"""
         try:
             # Contar provedores
-            total_provedores = self.db.query(ProvedorSIP).count()
-            provedores_ativos = self.db.query(ProvedorSIP).filter(
-                ProvedorSIP.status == "ativo"
+            total_provedores = self.db.query(ProvedorSip).count()
+            provedores_ativos = self.db.query(ProvedorSip).filter(
+                ProvedorSip.status == "ativo"
             ).count()
             
             # Estatisticas de hoje (simulado - implementar com modelo de chamadas)

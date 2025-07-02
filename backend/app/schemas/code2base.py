@@ -7,7 +7,24 @@ from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 from enum import Enum
 
-from app.models.code2base import TipoOperadora, TipoRegra, TipoNumero
+# Enums para os schemas
+class TipoNumeroEnum(str, Enum):
+    MOVIL = "movil"
+    FIJO = "fijo"
+    ESPECIAL = "especial"
+
+class TipoOperadoraEnum(str, Enum):
+    DESCONOCIDA = "desconocida"
+    CLARO = "claro"
+    MOVISTAR = "movistar"
+    PERSONAL = "personal"
+    OTROS = "otros"
+
+class TipoReglaEnum(str, Enum):
+    GEOGRAFIA = "geografia"
+    OPERADORA = "operadora"
+    CALIDAD = "calidad"
+    TIEMPO = "tiempo"
 
 
 # ================== ESQUEMAS BASE ==================
@@ -100,8 +117,8 @@ class CidadeResponse(CidadeBase):
 
 class PrefijoBase(BaseModel):
     codigo: str = Field(..., min_length=1, max_length=10, description="Codigo do prefixo")
-    tipo_numero: TipoNumero = TipoNumero.MOVIL
-    operadora: Optional[TipoOperadora] = TipoOperadora.DESCONOCIDA
+    tipo_numero: TipoNumeroEnum = TipoNumeroEnum.MOVIL
+    operadora: Optional[TipoOperadoraEnum] = TipoOperadoraEnum.DESCONOCIDA
     pais_id: int = Field(..., description="ID do pais")
     estado_id: Optional[int] = None
     cidade_id: Optional[int] = None
@@ -121,8 +138,8 @@ class PrefijoCreate(PrefijoBase):
 
 
 class PrefijoUpdate(BaseModel):
-    tipo_numero: Optional[TipoNumero] = None
-    operadora: Optional[TipoOperadora] = None
+    tipo_numero: Optional[TipoNumeroEnum] = None
+    operadora: Optional[TipoOperadoraEnum] = None
     estado_id: Optional[int] = None
     cidade_id: Optional[int] = None
     descripcion: Optional[str] = None
@@ -148,8 +165,8 @@ class CliGeoBase(BaseModel):
     numero: str = Field(..., description="Numero CLI")
     cli_id: int = Field(..., description="ID do CLI original")
     prefijo_id: int = Field(..., description="ID do prefixo")
-    tipo_numero: TipoNumero = TipoNumero.MOVIL
-    operadora: Optional[TipoOperadora] = TipoOperadora.DESCONOCIDA
+    tipo_numero: TipoNumeroEnum = TipoNumeroEnum.MOVIL
+    operadora: Optional[TipoOperadoraEnum] = TipoOperadoraEnum.DESCONOCIDA
     calidad: float = Field(1.0, ge=0.0, le=1.0, description="Qualidade do CLI (0.0 a 1.0)")
     activo: bool = True
 
@@ -160,8 +177,8 @@ class CliGeoCreate(CliGeoBase):
 
 class CliGeoUpdate(BaseModel):
     prefijo_id: Optional[int] = None
-    tipo_numero: Optional[TipoNumero] = None
-    operadora: Optional[TipoOperadora] = None
+    tipo_numero: Optional[TipoNumeroEnum] = None
+    operadora: Optional[TipoOperadoraEnum] = None
     calidad: Optional[float] = Field(None, ge=0.0, le=1.0)
     activo: Optional[bool] = None
 
@@ -185,7 +202,7 @@ class CliGeoResponse(CliGeoBase):
 class ReglaCliBase(BaseModel):
     nome: str = Field(..., min_length=1, max_length=100, description="Nome da regra")
     descripcion: Optional[str] = None
-    tipo_regra: TipoRegra
+    tipo_regra: TipoReglaEnum
     condiciones: Dict[str, Any] = Field(..., description="Condicoes da regra em JSON")
     prioridad: int = Field(1, ge=1, le=10, description="Prioridade (1=alta, 10=baixa)")
     peso: float = Field(1.0, ge=0.0, le=10.0, description="Peso na selecao")
@@ -223,8 +240,8 @@ class ReglaCliResponse(ReglaCliBase):
 class SeleccionCliRequest(BaseModel):
     numero_destino: str = Field(..., description="Numero de destino")
     campana_id: Optional[int] = None
-    tipo_numero_preferido: Optional[TipoNumero] = None
-    operadora_preferida: Optional[TipoOperadora] = None
+    tipo_numero_preferido: Optional[TipoNumeroEnum] = None
+    operadora_preferida: Optional[TipoOperadoraEnum] = None
     excluir_clis: Optional[List[str]] = Field(None, description="CLIs a excluir da selecao")
     contexto_adicional: Optional[Dict[str, Any]] = Field(None, description="Contexto adicional para selecao")
 
@@ -234,8 +251,8 @@ class CliSeleccionado(BaseModel):
     numero: str
     numero_normalizado: str
     prefijo_codigo: str
-    tipo_numero: TipoNumero
-    operadora: Optional[TipoOperadora]
+    tipo_numero: TipoNumeroEnum
+    operadora: Optional[TipoOperadoraEnum]
     calidad: float
     tasa_exito: float
     score_seleccion: float
@@ -264,8 +281,8 @@ class AnalisisDestinoResponse(BaseModel):
     estado_detectado: Optional[str]
     cidade_detectada: Optional[str]
     prefijo_detectado: Optional[str]
-    tipo_numero: Optional[TipoNumero]
-    operadora_detectada: Optional[TipoOperadora]
+    tipo_numero: Optional[TipoNumeroEnum]
+    operadora_detectada: Optional[TipoOperadoraEnum]
     clis_compatibles: List[CliGeoResponse]
     total_clis_compatibles: int
 
@@ -298,7 +315,7 @@ class ReporteSistemaResponse(BaseModel):
 # ================== ESQUEMAS DE IMPORTACAO ==================
 
 class ImportarPrefijosRequest(BaseModel):
-    archivo_csv: str = Field(..., description="Dados CSV em base64 ou conteudo direto")
+    arquivo_csv: str = Field(..., description="Dados CSV em base64 ou conteudo direto")
     formato: str = Field("csv", description="Formato do arquivo")
     sobrescribir: bool = Field(False, description="Sobrescrever dados existentes")
 
@@ -311,7 +328,7 @@ class ImportarPrefijosResponse(BaseModel):
     mensaje: str
 
 
-# ================== ESQUEMAS DE CONFIGURACAO ==================
+# ================== CONFIGURACAO DO SISTEMA ==================
 
 class ConfiguracionSistema(BaseModel):
     algoritmo_seleccion: str = Field("weighted_score", description="Algoritmo de selecao")
@@ -332,7 +349,7 @@ class ConfiguracionSistemaResponse(ConfiguracionSistema):
         from_attributes = True
 
 
-# ================== ESQUEMAS DE TESTE ==================
+# ================== TESTE DO SISTEMA ==================
 
 class TesteSistemaRequest(BaseModel):
     numero_destino: str

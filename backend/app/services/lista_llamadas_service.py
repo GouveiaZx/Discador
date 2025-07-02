@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from app.models.lista_llamadas import ListaLlamadas, NumeroLlamada
-from app.schemas.lista_llamadas import validar_numero_telefono, ValidacionNumero
+from app.schemas.lista_llamadas import validar_numero_telefone, ValidacionNumero
 from app.utils.logger import logger
 
 
@@ -154,7 +154,7 @@ class ListaLlamadasService:
             if not numero_raw.strip():
                 continue
                 
-            validacion = validar_numero_telefono(numero_raw)
+            validacion = validar_numero_telefone(numero_raw)
             
             if not validacion.valido:
                 numeros_invalidos += 1

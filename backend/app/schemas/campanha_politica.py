@@ -23,8 +23,8 @@ class ConfiguracaoEleitoralBase(BaseModel):
     """Schema base para configuracao eleitoral"""
     pais_codigo: str = Field(..., min_length=2, max_length=5)
     pais_nome: str = Field(..., min_length=2, max_length=100)
-    horario_inicio_permitido: str = Field(..., regex=r"^([0-1][0-9]|2[0-3]):[0-5][0-9]$")
-    horario_fim_permitido: str = Field(..., regex=r"^([0-1][0-9]|2[0-3]):[0-5][0-9]$")
+    horario_inicio_permitido: str = Field(..., pattern=r"^([0-1][0-9]|2[0-3]):[0-5][0-9]$")
+    horario_fim_permitido: str = Field(..., pattern=r"^([0-1][0-9]|2[0-3]):[0-5][0-9]$")
     dias_semana_permitidos: List[int] = Field(..., min_items=1, max_items=7)
     mensagem_inicial_obrigatoria: str = Field(..., min_length=10, max_length=1000)
     mensagem_opt_out_obrigatoria: str = Field(..., min_length=10, max_length=500)

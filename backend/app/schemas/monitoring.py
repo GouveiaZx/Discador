@@ -156,7 +156,7 @@ class EventoSistemaBase(BaseModel):
     campanha_id: Optional[int] = None
     agente_id: Optional[int] = None
     chamada_id: Optional[str] = Field(None, max_length=100)
-    nivel_severidade: str = Field("info", regex="^(info|warning|error|critical)$")
+    nivel_severidade: str = Field("info", pattern="^(info|warning|error|critical)$")
 
 class EventoSistemaCreate(EventoSistemaBase):
     pass
@@ -322,7 +322,7 @@ class ExportRequest(BaseModel):
     """Request para exportacao de dados"""
     
     # Tipo de exportacao
-    tipo_export: str = Field(..., regex="^(csv|xlsx|json)$")
+    tipo_export: str = Field(..., pattern="^(csv|xlsx|json)$")
     
     # Dados a exportar
     incluir_chamadas: bool = True
@@ -334,7 +334,7 @@ class ExportRequest(BaseModel):
     
     # Configuracoes
     incluir_cabecalhos: bool = True
-    formato_data: str = Field("iso", regex="^(iso|br|us)$")
+    formato_data: str = Field("iso", pattern="^(iso|br|us)$")
 
 class WebSocketMessage(BaseModel):
     """Mensagem para WebSocket"""

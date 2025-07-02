@@ -12,8 +12,9 @@ from app.database import get_db
 from app.services.code2base_engine import Code2BaseEngine
 from app.services.code2base_geo_service import Code2BaseGeoService
 from app.services.code2base_rules_service import Code2BaseRulesService
-from app.models.code2base import TipoOperadora, TipoRegra, TipoNumero
 from app.schemas.code2base import (
+    # Enums
+    TipoOperadoraEnum, TipoReglaEnum, TipoNumeroEnum,
     # Esquemas de paises
     PaisCreate, PaisUpdate, PaisResponse,
     # Esquemas de estados
@@ -256,7 +257,7 @@ async def criar_prefijo(
 async def listar_prefijos(
     pais_id: Optional[int] = Query(None),
     estado_id: Optional[int] = Query(None),
-    tipo_numero: Optional[TipoNumero] = Query(None),
+    tipo_numero: Optional[TipoNumeroEnum] = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db)
@@ -311,8 +312,8 @@ async def criar_cli_geo(
 @router.get("/clis-geo", response_model=List[CliGeoResponse])
 async def listar_clis_geo(
     prefijo_id: Optional[int] = Query(None),
-    tipo_numero: Optional[TipoNumero] = Query(None),
-    operadora: Optional[TipoOperadora] = Query(None),
+    tipo_numero: Optional[TipoNumeroEnum] = Query(None),
+    operadora: Optional[TipoOperadoraEnum] = Query(None),
     apenas_ativos: bool = Query(True),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -375,7 +376,7 @@ async def criar_regra(
 
 @router.get("/regras", response_model=List[ReglaCliResponse])
 async def listar_regras(
-    tipo_regra: Optional[TipoRegra] = Query(None),
+    tipo_regra: Optional[TipoReglaEnum] = Query(None),
     apenas_ativas: bool = Query(True),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),

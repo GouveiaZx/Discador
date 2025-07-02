@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey, DECIMAL, func
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey, DECIMAL, func, Float
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
@@ -67,6 +67,33 @@ class TarifaSip(Base):
     
     def __repr__(self):
         return f"<TarifaSip(id={self.id}, prefixo={self.prefixo}, custo={self.custo_por_minuto})>"
+
+class ConfiguracaoMultiSip(Base):
+    __tablename__ = "configuracao_multi_sip"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String(100), nullable=False)
+    
+    # Algoritmo de seleção
+    algoritmo_selecao = Column(String(50), default="menor_custo", nullable=False)
+    
+    # Pesos para seleção
+    peso_custo = Column(Float, default=0.6, nullable=False)
+    peso_qualidade = Column(Float, default=0.3, nullable=False)
+    peso_disponibilidade = Column(Float, default=0.1, nullable=False)
+    
+    # Configurações de failover
+    failover_ativo = Column(Boolean, default=True, nullable=False)
+    max_tentativas = Column(Integer, default=3, nullable=False)
+    timeout_selecao = Column(Integer, default=5, nullable=False)
+    
+    # Status
+    ativo = Column(Boolean, default=True, nullable=False)
+    fecha_creacion = Column(DateTime, default=func.now())
+    fecha_actualizacion = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    def __repr__(self):
+        return f"<ConfiguracaoMultiSip(id={self.id}, nome={self.nome})>"
 
 class LogSelecaoProvedor(Base):
     __tablename__ = "log_selecao_provedor"

@@ -45,21 +45,21 @@ def configurar_logger(nombre_logger: str = "discador") -> logging.Logger:
     logger.addHandler(console_handler)
     
     # Handler para archivo si esta configurado
-    if configuracion.LOG_ARCHIVO:
+    if configuracion.LOG_ARQUIVO:
         # Crear directorio de logs si no existe
-        directorio_logs = os.path.dirname(configuracion.LOG_ARCHIVO)
+        directorio_logs = os.path.dirname(configuracion.LOG_ARQUIVO)
         if directorio_logs:
             Path(directorio_logs).mkdir(parents=True, exist_ok=True)
             
         # Usar RotatingFileHandler o FileHandler segun configuracion
         if configuracion.LOG_ROTACION:
             file_handler = RotatingFileHandler(
-                configuracion.LOG_ARCHIVO,
+                configuracion.LOG_ARQUIVO,
                 maxBytes=configuracion.LOG_MAX_TAMANO_MB * 1024 * 1024,
                 backupCount=configuracion.LOG_COPIAS_RESPALDO
             )
         else:
-            file_handler = logging.FileHandler(configuracion.LOG_ARCHIVO)
+            file_handler = logging.FileHandler(configuracion.LOG_ARQUIVO)
             
         file_handler.setFormatter(formato)
         logger.addHandler(file_handler)

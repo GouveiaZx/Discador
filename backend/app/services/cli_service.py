@@ -11,7 +11,7 @@ from sqlalchemy import func, and_, or_
 from fastapi import HTTPException
 
 from app.models.cli import Cli
-from app.schemas.lista_llamadas import validar_numero_telefono
+from app.schemas.lista_llamadas import validar_numero_telefone
 from app.schemas.cli import (
     CliCreate,
     CliUpdate,
@@ -47,7 +47,7 @@ class CliService:
         
         # Excluir CLI especifico se fornecido
         if excluir_cli:
-            validacao = validar_numero_telefono(excluir_cli)
+            validacao = validar_numero_telefone(excluir_cli)
             if validacao.valido:
                 query = query.filter(Cli.numero_normalizado != validacao.numero_normalizado)
         
@@ -95,7 +95,7 @@ class CliService:
             Cli criado
         """
         # Validar e normalizar numero
-        validacao = validar_numero_telefono(cli_data.numero)
+        validacao = validar_numero_telefone(cli_data.numero)
         if not validacao.valido:
             raise HTTPException(
                 status_code=400,

@@ -6,7 +6,7 @@ from typing import Optional, List
 from datetime import datetime
 from pydantic import BaseModel, Field, validator
 
-from app.schemas.lista_llamadas import validar_numero_telefono
+from app.schemas.lista_llamadas import validar_numero_telefone
 
 
 class CliBase(BaseModel):
@@ -20,9 +20,9 @@ class CliCreate(CliBase):
     """Schema para crear CLI."""
     
     @validator('numero')
-    def validar_numero_telefono_field(cls, v):
+    def validar_numero_telefone_field(cls, v):
         """Valida que el numero sea valido."""
-        validacion = validar_numero_telefono(v)
+        validacion = validar_numero_telefone(v)
         if not validacion.valido:
             raise ValueError(f"Numero CLI invalido: {validacion.motivo_invalido}")
         return validacion.numero_normalizado

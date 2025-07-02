@@ -20,7 +20,7 @@ from app.schemas.lista_llamadas import (
     NumeroLlamadaResponse,
     UploadArchivoResponse,
     ValidacionNumero,
-    validar_numero_telefono,
+    validar_numero_telefone,
     normalizar_numero_argentino
 )
 from app.schemas.blacklist import (
@@ -46,18 +46,18 @@ from app.schemas.cli import (
     CliRandomRequest,
     CliRandomResponse
 )
-from app.schemas.presione1 import (
-    CampanaPresione1Base,
-    CampanaPresione1Create,
-    CampanaPresione1Update,
-    CampanaPresione1Response,
-    LlamadaPresione1Base,
-    LlamadaPresione1Response,
-    IniciarCampanaRequest,
-    PausarCampanaRequest,
-    EstadisticasCampanaResponse,
-    MonitorCampanaResponse
-)
+# from app.schemas.presione1 import (
+#     CampanaPresione1Base,
+#     CampanaPresione1Create,
+#     CampanaPresione1Update,
+#     CampanaPresione1Response,
+#     LlamadaPresione1Base,
+#     LlamadaPresione1Response,
+#     IniciarCampanaRequest,
+#     PausarCampanaRequest,
+#     EstadisticasCampanaResponse,
+#     MonitorCampanaResponse
+# )
 
 __all__ = [
     'LlamadaBase',
@@ -84,7 +84,7 @@ __all__ = [
     'NumeroLlamadaResponse',
     'UploadArchivoResponse',
     'ValidacionNumero',
-    'validar_numero_telefono',
+    'validar_numero_telefone',
     'normalizar_numero_argentino',
     'BlacklistBase',
     'BlacklistCreate',
@@ -105,14 +105,14 @@ __all__ = [
     'CliStatsResponse',
     'CliRandomRequest',
     'CliRandomResponse',
-    'CampanaPresione1Base',
-    'CampanaPresione1Create',
-    'CampanaPresione1Update',
-    'CampanaPresione1Response',
-    'LlamadaPresione1Base',
-    'LlamadaPresione1Response',
-    'IniciarCampanaRequest',
-    'PausarCampanaRequest',
-    'EstadisticasCampanaResponse',
-    'MonitorCampanaResponse'
+    # 'CampanaPresione1Base',
+    # 'CampanaPresione1Create',
+    # 'CampanaPresione1Update',
+    # 'CampanaPresione1Response',
+    # 'LlamadaPresione1Base',
+    # 'LlamadaPresione1Response',
+    # 'IniciarCampanaRequest',
+    # 'PausarCampanaRequest',
+    # 'EstadisticasCampanaResponse',
+    # 'MonitorCampanaResponse'
 ] 

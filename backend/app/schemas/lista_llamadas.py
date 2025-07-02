@@ -1,6 +1,6 @@
 from typing import Optional, List
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 import re
 
 
@@ -87,7 +87,7 @@ class ValidacionNumero(BaseModel):
     motivo_invalido: Optional[str] = None
 
 
-def validar_numero_telefono(numero: str) -> ValidacionNumero:
+def validar_numero_telefone(numero: str) -> ValidacionNumero:
     """
     Valida y normaliza un numero de telefono.
     

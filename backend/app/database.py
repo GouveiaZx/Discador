@@ -40,13 +40,23 @@ def obtener_sesion() -> Generator[Session, None, None]:
     finally:
         db.close()
 
+# Alias para compatibilidade
+def get_db() -> Generator[Session, None, None]:
+    """
+    Alias para obtener_sesion para compatibilidade com código existente.
+    
+    Yields:
+        Session: Sesion de SQLAlchemy
+    """
+    return obtener_sesion()
+
 # Funcion para obtener una sesion como context manager
 @contextmanager
 def obtener_sesion_context() -> Generator[Session, None, None]:
     """
     Obtiene una sesion de base de datos para usar con 'with'.
     
-    Ejemplo:
+    Exemplo:
         with obtener_sesion_context() as db:
             resultado = db.query(Modelo).all()
     

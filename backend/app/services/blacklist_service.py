@@ -10,7 +10,7 @@ from sqlalchemy import func, and_, or_
 from fastapi import HTTPException
 
 from app.models.lista_negra import ListaNegra
-from app.schemas.lista_llamadas import validar_numero_telefono
+from app.schemas.lista_llamadas import validar_numero_telefone
 from app.schemas.blacklist import (
     BlacklistCreate,
     BlacklistUpdate, 
@@ -38,7 +38,7 @@ class BlacklistService:
             BlacklistVerificationResponse com resultado da verificacao
         """
         # Normalizar numero
-        validacao = validar_numero_telefono(numero)
+        validacao = validar_numero_telefone(numero)
         if not validacao.valido:
             return BlacklistVerificationResponse(
                 numero_original=numero,
@@ -88,7 +88,7 @@ class BlacklistService:
             ListaNegra creada
         """
         # Validar y normalizar numero
-        validacion = validar_numero_telefono(numero_data.numero)
+        validacion = validar_numero_telefone(numero_data.numero)
         if not validacion.valido:
             raise HTTPException(
                 status_code=400,
@@ -305,7 +305,7 @@ class BlacklistService:
         
         # Aplicar filtros
         if criterios.numero:
-            validacao = validar_numero_telefono(criterios.numero)
+            validacao = validar_numero_telefone(criterios.numero)
             if validacao.valido:
                 query = query.filter(
                     or_(

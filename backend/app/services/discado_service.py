@@ -12,7 +12,7 @@ from app.models.lista_llamadas import ListaLlamadas, NumeroLlamada
 from app.services.blacklist_service import BlacklistService
 from app.services.cli_service import CliService
 from app.services.asterisk import asterisk_service
-from app.schemas.lista_llamadas import validar_numero_telefono
+from app.schemas.lista_llamadas import validar_numero_telefone
 from app.utils.logger import logger
 
 
@@ -48,7 +48,7 @@ class DiscadoService:
         logger.info(f"Iniciando llamada a {numero_destino}")
         
         # Validar y normalizar numero
-        validacion = validar_numero_telefono(numero_destino)
+        validacion = validar_numero_telefone(numero_destino)
         if not validacion.valido:
             return {
                 "estado": "error",
