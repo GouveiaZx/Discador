@@ -59,7 +59,7 @@ class Configuracion(BaseSettings):
         
         # Se não tem URL configurada, usar Supabase em produção
         if not values.get("DEBUG", False):
-            return "postgresql://postgres.orxxocptgaeoyrtlxwkv:!Gouveia1@aws-0-sa-east-1.pooler.supabase.com:6543/postgres"
+            return "postgresql://postgres.orxxocptgaeoyrtlxwkv:%21Gouveia1@aws-0-us-east-1.pooler.supabase.com:6543/postgres"
         
         # Construir a URL de conexão a partir dos componentes (PostgreSQL)
         return PostgresDsn.build(
