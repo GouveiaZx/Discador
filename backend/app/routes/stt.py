@@ -4,8 +4,6 @@ import os
 import tempfile
 
 from app.database import obtener_sesion
-from app.config import VOSK_MODEL_PATH
-# Importar servicios necesarios
 
 router = APIRouter(tags=["STT"])
 
@@ -15,43 +13,61 @@ async def reconocer_voz(
     db: Session = Depends(obtener_sesion)
 ):
     """
-    Envia un archivo .wav y devuelve la transcripcion usando Vosk.
+    Endpoint mock para reconhecimento de voz.
+    Em produção, pode ser integrado com serviços como Google Speech-to-Text,
+    Azure Speech Services ou AWS Transcribe.
     
     Parametros:
-        archivo: Archivo de audio en formato .wav
+        archivo: Arquivo de áudio em formato .wav
         
     Retorna:
-        dict: Transcripcion del audio
+        dict: Transcrição simulada do áudio
     """
     try:
-        # Verificar extension del archivo
-        nombre_archivo = archivo.filename
-        if not nombre_archivo.endswith('.wav'):
-            raise HTTPException(status_code=400, detail="Formato de archivo no soportado. Use WAV")
+        # Verificar extensão do arquivo
+        nome_arquivo = archivo.filename
+        if not nome_arquivo.endswith(('.wav', '.mp3', '.m4a')):
+            raise HTTPException(
+                status_code=400, 
+                detail="Formato de arquivo não suportado. Use WAV, MP3 ou M4A"
+            )
         
-        # Guardar archivo temporalmente
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_file:
-            temp_file_path = temp_file.name
-            temp_file.write(await archivo.read())
+        # Verificar tamanho do arquivo (máximo 10MB)
+        arquivo_bytes = await archivo.read()
+        if len(arquivo_bytes) > 10 * 1024 * 1024:  # 10MB
+            raise HTTPException(
+                status_code=400,
+                detail="Arquivo muito grande. Máximo 10MB"
+            )
         
-        try:
-            # En una implementacion real, aqui iria la logica para usar Vosk
-            # Por ahora, simulamos el reconocimiento
-            
-            # Simulacion de respuesta
-            transcripcion = "Hola, estoy interesado en el producto que mencionaste en el anuncio."
-            
-            return {
-                "mensaje": "Audio procesado correctamente",
-                "transcripcion": transcripcion,
-                "confianza": 0.85
-            }
-        finally:
-            # Eliminar archivo temporal
-            if os.path.exists(temp_file_path):
-                os.remove(temp_file_path)
+        # Simulação de processamento
+        transcricoes_exemplo = [
+            "Olá, estou interessado no produto que vocês anunciaram.",
+            "Gostaria de saber mais informações sobre o serviço.",
+            "Podem me ligar mais tarde, por favor?",
+            "Não tenho interesse no momento, obrigado.",
+            "Deixa eu ver... sim, quero saber mais detalhes."
+        ]
+        
+        import random
+        transcricao = random.choice(transcricoes_exemplo)
+        confianca = round(random.uniform(0.7, 0.95), 2)
+        
+        return {
+            "status": "success",
+            "mensaje": "Áudio processado com sucesso",
+            "transcripcion": transcricao,
+            "confianza": confianca,
+            "duracion_segundos": round(len(arquivo_bytes) / 16000, 1),  # Estimativa
+            "formato": nome_arquivo.split('.')[-1].upper(),
+            "tamanho_kb": round(len(arquivo_bytes) / 1024, 1),
+            "mock": True
+        }
                 
     except Exception as e:
         if isinstance(e, HTTPException):
             raise e
-        raise HTTPException(status_code=500, detail=f"Error al procesar audio: {str(e)}") 
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Erro ao processar áudio: {str(e)}"
+        ) 
