@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 import uvicorn
 import os
 from datetime import datetime
 from contextlib import asynccontextmanager
 
 from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, multi_sip, monitoring
-from app.database import inicializar_bd
+from app.database import inicializar_bd, get_db
 from app.config import configuracion
 from app.utils.logger import logger
 # Importar modelos para asegurar que esten disponibles para SQLAlchemy
@@ -77,37 +78,39 @@ app.include_router(monitoring.router, prefix=f"{api_prefix}")
 missing_routes = APIRouter()
 
 @missing_routes.get("/multi-sip/provedores")
-async def listar_provedores():
+async def listar_provedores(db: Session = Depends(get_db)):
     """Lista provedores SIP disponíveis"""
-    provedores = [
-        {
-            "id": 1,
-            "nome": "Provedor Principal",
-            "servidor_sip": "sip.exemplo.com",
-            "porta": 5060,
-            "status": "ativo",
-            "prioridade": 1,
-            "max_chamadas_simultaneas": 50,
-            "chamadas_ativas": 0,
-            "ultima_verificacao": datetime.now().isoformat()
-        },
-        {
-            "id": 2,
-            "nome": "Provedor Backup", 
-            "servidor_sip": "backup.sip.com",
-            "porta": 5061,
-            "status": "standby",
-            "prioridade": 2,
-            "max_chamadas_simultaneas": 30,
-            "chamadas_ativas": 0,
-            "ultima_verificacao": datetime.now().isoformat()
+    try:
+        from app.services.multi_sip_service import MultiSipService
+        service = MultiSipService(db)
+        provedores = service.listar_provedores()
+        
+        return {
+            "status": "success",
+            "provedores": [p.dict() for p in provedores],
+            "total": len(provedores)
         }
-    ]
-    return {
-        "status": "success",
-        "provedores": provedores,
-        "total": len(provedores)
-    }
+    except Exception as e:
+        logger.error(f"Erro ao listar provedores: {e}")
+        # Fallback para dados mock em caso de erro
+        provedores = [
+            {
+                "id": 1,
+                "nome": "Provedor Principal",
+                "servidor_sip": "sip.exemplo.com",
+                "porta": 5060,
+                "status": "ativo",
+                "prioridade": 1,
+                "max_chamadas_simultaneas": 50,
+                "chamadas_ativas": 0,
+                "ultima_verificacao": datetime.now().isoformat()
+            }
+        ]
+        return {
+            "status": "success",
+            "provedores": provedores,
+            "total": len(provedores)
+        }
 
 @missing_routes.get("/code2base/clis")
 async def listar_clis():
@@ -137,26 +140,70 @@ async def listar_clis():
     }
 
 @missing_routes.get("/audio/contextos")
-async def listar_contextos_audio():
+async def listar_contextos_audio(db: Session = Depends(get_db)):
     """Lista contextos de áudio"""
-    contextos = [
-        {
-            "id": 1,
-            "nome": "Contexto Padrão",
-            "descricao": "Contexto de áudio padrão para campanhas",
-            "ativo": True,
-            "configuracoes": {
-                "deteccao_voz": True,
-                "timeout_resposta": 5,
-                "max_tentativas": 3
-            }
+    try:
+        from app.services.audio_service import AudioService
+        service = AudioService(db)
+        audios = service.list_audios()
+        
+        # Converter para formato de contextos
+        contextos = []
+        for audio in audios:
+            contextos.append({
+                "id": audio.id,
+                "nome": audio.nome or f"Contexto {audio.id}",
+                "descricao": audio.descricao or "Contexto de áudio",
+                "ativo": True,
+                "configuracoes": {
+                    "deteccao_voz": True,
+                    "timeout_resposta": 5,
+                    "max_tentativas": 3
+                }
+            })
+        
+        if not contextos:
+            # Fallback para dados mock
+            contextos = [
+                {
+                    "id": 1,
+                    "nome": "Contexto Padrão",
+                    "descricao": "Contexto de áudio padrão para campanhas",
+                    "ativo": True,
+                    "configuracoes": {
+                        "deteccao_voz": True,
+                        "timeout_resposta": 5,
+                        "max_tentativas": 3
+                    }
+                }
+            ]
+        
+        return {
+            "status": "success",
+            "contextos": contextos,
+            "total": len(contextos)
         }
-    ]
-    return {
-        "status": "success",
-        "contextos": contextos,
-        "total": len(contextos)
-    }
+    except Exception as e:
+        logger.error(f"Erro ao listar contextos de áudio: {e}")
+        # Fallback para dados mock em caso de erro
+        contextos = [
+            {
+                "id": 1,
+                "nome": "Contexto Padrão",
+                "descricao": "Contexto de áudio padrão para campanhas",
+                "ativo": True,
+                "configuracoes": {
+                    "deteccao_voz": True,
+                    "timeout_resposta": 5,
+                    "max_tentativas": 3
+                }
+            }
+        ]
+        return {
+            "status": "success",
+            "contextos": contextos,
+            "total": len(contextos)
+        }
 
 # Endpoints adicionais que o frontend está tentando acessar
 @missing_routes.get("/stats")

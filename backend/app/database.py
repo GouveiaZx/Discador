@@ -48,7 +48,11 @@ def get_db() -> Generator[Session, None, None]:
     Yields:
         Session: Sesion de SQLAlchemy
     """
-    return obtener_sesion()
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 # Funcion para obtener una sesion como context manager
 @contextmanager
