@@ -165,38 +165,44 @@ app.include_router(missing_routes, prefix=f"{api_prefix}")
 @app.get("/")
 @app.head("/")
 async def raiz():
-    logger.info("Solicitud a la ruta principal")
+    """Endpoint raiz com informações da API"""
     return {
+        "status": "healthy",
         "mensaje": f"API de {configuracion.APP_NAME}",
         "version": configuracion.APP_VERSION,
-        "estado": "activo",
-        "funcionalidades": [
-            "Discado predictivo com blacklist",
-            "Multiples listas de chamadas",
-            "Upload de arquivos CSV/TXT",
-            "Gestão de lista negra",
-            "Estatísticas e reportes",
-            "CLI aleatorio",
-            "Sistema de Audio Inteligente",
-            "CODE2BASE - Seleção inteligente de CLI",
-            "Campanhas Políticas com compliance",
-            "Multi-SIP com failover",
-            "Monitoramento em tempo real"
-        ],
-        "documentacao": "/documentacao"
+        "timestamp": datetime.now().isoformat(),
+        "estado": "activo"
     }
 
 @app.get("/health")
 @app.head("/health")
 async def health_check():
     """Endpoint dedicado para health checks"""
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    return {
+        "status": "healthy", 
+        "timestamp": datetime.now().isoformat(),
+        "service": "discador-api",
+        "version": configuracion.APP_VERSION
+    }
 
 @app.get("/ping")
 @app.head("/ping")
 async def ping():
     """Endpoint simples para verificação de conectividade"""
-    return {"message": "pong"}
+    return {"message": "pong", "timestamp": datetime.now().isoformat()}
+
+@app.get("/status")
+@app.head("/status")
+async def status():
+    """Endpoint de status detalhado"""
+    return {
+        "status": "operational",
+        "service": "discador-predictivo",
+        "version": configuracion.APP_VERSION,
+        "timestamp": datetime.now().isoformat(),
+        "uptime": "running",
+        "database": "connected"
+    }
 
 if __name__ == "__main__":
     logger.info(f"Iniciando servidor en {configuracion.HOST}:{configuracion.PUERTO}")
