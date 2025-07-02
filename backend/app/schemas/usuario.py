@@ -23,7 +23,7 @@ class UsuarioInDB(UsuarioBase):
     fecha_actualizacion: datetime = Field(..., description="Fecha de ultima actualizacion del usuario")
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Usuario(UsuarioBase):
     """Esquema para representar un usuario en las respuestas API"""
@@ -32,4 +32,4 @@ class Usuario(UsuarioBase):
     activo: bool = Field(..., description="Indica si el usuario esta activo")
     
     class Config:
-        orm_mode = True 
+        from_attributes = True 

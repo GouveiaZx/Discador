@@ -14,7 +14,7 @@ class DNCNumberOut(DNCNumberBase):
     created_at: Optional[datetime]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class DNCListBase(BaseModel):
     name: str
@@ -29,4 +29,4 @@ class DNCListOut(DNCListBase):
     numbers: List[DNCNumberOut] = []
 
     class Config:
-        orm_mode = True 
+        from_attributes = True 

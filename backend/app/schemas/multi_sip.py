@@ -68,7 +68,7 @@ class ProvedorSipResponse(ProvedorSipBase):
     chamadas_ativas: int = 0
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ================== TARIFAS SIP ==================
 
@@ -98,7 +98,7 @@ class TarifaSipResponse(TarifaSipBase):
     data_atualizacao: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ================== SELECAO DE PROVEDOR ==================
 
@@ -145,7 +145,7 @@ class LogSelecaoResponse(BaseModel):
     duracao_real: Optional[int] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ================== CONFIGURACAO MULTI-SIP ==================
 
@@ -186,7 +186,7 @@ class ConfiguracaoMultiSipResponse(ConfiguracaoMultiSipBase):
     data_atualizacao: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ================== ESTATISTICAS ==================
 

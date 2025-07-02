@@ -61,7 +61,7 @@ class ConfiguracaoEleitoralResponse(ConfiguracaoEleitoralBase):
     fecha_actualizacion: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ================================================
 # CALENDARIO ELEITORAL
@@ -94,7 +94,7 @@ class CalendarioEleitoralResponse(CalendarioEleitoralBase):
     fecha_actualizacion: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ================================================
 # CAMPANHA POLITICA
@@ -134,7 +134,7 @@ class CampanhaPoliticaResponse(CampanhaPoliticaBase):
     fecha_actualizacion: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ================================================
 # LOG ELEITORAL IMUTAVEL
@@ -169,7 +169,7 @@ class LogEleitoralResponse(BaseModel):
     fecha_creacion: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # ================================================
 # VALIDACOES
@@ -214,4 +214,4 @@ class CampanaOut(CampanaBase):
     fecha_actualizacion: Optional[datetime]
 
     class Config:
-        orm_mode = True 
+        from_attributes = True 

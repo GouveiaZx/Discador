@@ -39,7 +39,7 @@ class EstadisticasLlamadasResponse(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "total_llamadas": 132,
                 "por_estado": {

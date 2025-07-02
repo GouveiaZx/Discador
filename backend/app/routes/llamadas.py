@@ -31,7 +31,7 @@ class IniciarLlamadaRequest(BaseModel):
     variables_adicionales: Optional[dict] = Field(None, description="Variables adicionales para la llamada")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "numero_destino": "666123456",
                 "campana_id": 1,
@@ -53,7 +53,7 @@ class Presione1Request(BaseModel):
     llamada_id: int = Field(..., description="ID de la llamada en la que se detecto la tecla 1")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "llamada_id": 123
             }

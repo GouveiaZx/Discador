@@ -14,7 +14,7 @@ class LlamadaProximaResponse(BaseModel):
     estado: str = Field(..., description="Estado de la llamada")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "mensaje": "Llamada asignada correctamente",
                 "llamada_id": 123,
@@ -28,7 +28,7 @@ class LlamadaNoDisponibleResponse(BaseModel):
     mensaje: str = Field(..., description="Mensaje informativo")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "mensaje": "No hay llamadas pendientes para asignar"
             }
@@ -39,7 +39,7 @@ class ErrorResponse(BaseModel):
     error: str = Field(..., description="Mensaje de error")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "error": "No tienes permisos para acceder a este recurso"
             }
@@ -54,7 +54,7 @@ class FinalizarLlamadaRequest(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "llamada_id": 123,
                 "resultado": "contestada"
@@ -69,7 +69,7 @@ class FinalizarLlamadaResponse(BaseModel):
     resultado: str = Field(..., description="Resultado de la llamada")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "mensaje": "Llamada finalizada correctamente",
                 "llamada_id": 123,

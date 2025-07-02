@@ -19,7 +19,7 @@ class WebhookLlamadaRequest(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "llamada_id": 123,
                 "nuevo_estado": "fallida"
@@ -40,7 +40,7 @@ class WebhookLlamadaResponse(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "mensaje": "Estado de llamada actualizado",
                 "estado_actual": "fallida"
@@ -56,7 +56,7 @@ class WebhookErrorResponse(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "error": "La llamada con ID 123 no existe"
             }
