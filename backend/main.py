@@ -26,21 +26,9 @@ async def lifespan(app: FastAPI):
     if configuracion.LOG_ARQUIVO:
         os.makedirs(os.path.dirname(configuracion.LOG_ARQUIVO), exist_ok=True)
         
-    # Inicializar la base de datos
     logger.info("Iniciando la aplicacion")
     logger.info(f"Configuracion cargada. Modo debug: {configuracion.DEBUG}")
-    logger.info(f"Inicializando base de datos")
-    
-    try:
-        # Apenas tentar inicializar se estiver em modo debug
-        if configuracion.DEBUG:
-            inicializar_bd()
-            logger.info("Base de datos inicializada correctamente")
-        else:
-            logger.info("Modo produção: pulando inicialização de tabelas")
-    except Exception as e:
-        logger.warning(f"Aviso ao inicializar la base de datos: {str(e)}")
-        # Continua sem falhar em produção
+    logger.info("Aplicação iniciada sem inicialização de banco")
     
     yield
     
