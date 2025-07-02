@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config/api';
 
 const makeMultiSipRequest = async (endpoint, options = {}) => {
-  const baseUrl = 'http://localhost:8000';
-  const url = `${baseUrl}${endpoint}`;
+  const url = `${API_BASE_URL}${endpoint}`;
   
   const config = {
     headers: {
@@ -57,12 +57,14 @@ function ConfiguracionAvanzada() {
   });
 
   const [message, setMessage] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     cargarProvedores();
     cargarCLIs();
     cargarContextos();
+    cargarConfiguracion();
   }, []);
 
   const cargarProvedores = async () => {
@@ -190,6 +192,26 @@ function ConfiguracionAvanzada() {
       setMessage({ type: 'success', text: response.message || 'Setup de audio predeterminado realizado con éxito!' });
     } catch (error) {
       setMessage({ type: 'error', text: 'Error en setup: ' + error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cargarConfiguracion = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/api/v1/configuracion`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      setConfiguracion(data);
+      setError(null);
+    } catch (err) {
+      console.error('Erro ao carregar configuração:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }

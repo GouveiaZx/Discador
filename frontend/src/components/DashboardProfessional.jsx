@@ -1,5 +1,21 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { makeApiRequest } from '../config/api';
+import { 
+  PhoneIcon, 
+  UserGroupIcon, 
+  ChartBarIcon, 
+  ClockIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ArrowPathIcon,
+  DocumentTextIcon,
+  Cog6ToothIcon,
+  PlayIcon,
+  StopIcon,
+  PauseIcon
+} from '@heroicons/react/24/outline';
+import { API_BASE_URL } from '../config/api';
 
 /**
  * Componente de Métrica Profissional com Glass Morphism
@@ -514,13 +530,13 @@ const DashboardProfessional = () => {
               color="primary"
             />
             
-            <QuickActionButton
-              title="API Docs"
-              icon="📚"
-              description="Documentação"
-              onClick={() => window.open('http://localhost:8000/docs', '_blank')}
-              color="secondary"
-            />
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              onClick={() => window.open(`${API_BASE_URL}/documentacao`, '_blank')}
+            >
+              <DocumentTextIcon className="w-5 h-5" />
+              Documentação API
+            </button>
             
             <QuickActionButton
               title="Logs do Sistema"

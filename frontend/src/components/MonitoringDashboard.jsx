@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   PhoneIcon, 
   UserGroupIcon, 
@@ -12,6 +12,7 @@ import {
   StopIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
+import { API_BASE_URL } from '../config/api';
 
 // ============================================================================
 // COMPONENTE PRINCIPAL DO DASHBOARD
@@ -27,14 +28,11 @@ const MonitoringDashboard = () => {
   const [darkMode, setDarkMode] = useState(false);
 
   // WebSocket para atualizações em tempo real
-  const [ws, setWs] = useState(null);
+  const websocketRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
 
   // Configurações
   const REFRESH_INTERVAL = 3000; // 3 segundos
-  const API_BASE = window.location.hostname === 'localhost' 
-    ? 'http://localhost:8000/api/v1' 
-    : '/api/v1';
 
   // ============================================================================
   // FUNÇÕES DE API
@@ -43,16 +41,16 @@ const MonitoringDashboard = () => {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/monitoring/dashboard/resumo`);
-      if (!response.ok) throw new Error('Error al buscar datos');
+      const response = await fetch(`${API_BASE_URL}/api/v1/monitoring/dashboard`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       
       const data = await response.json();
       setDashboardData(data);
       setLastUpdate(new Date());
       setError(null);
     } catch (err) {
+      console.error('Erro ao carregar dashboard:', err);
       setError(err.message);
-      console.error('Error al buscar dashboard:', err);
     } finally {
       setLoading(false);
     }
@@ -60,51 +58,46 @@ const MonitoringDashboard = () => {
 
   // Função para conectar WebSocket
   const connectWebSocket = useCallback(() => {
-    if (ws) {
-      ws.close();
+    try {
+      const wsUrl = `${API_BASE_URL.replace('https://', 'wss://').replace('http://', 'ws://')}/api/v1/monitoring/ws/1`;
+      const websocket = new WebSocket(wsUrl);
+
+      websocket.onopen = () => {
+        console.log('WebSocket conectado');
+        setIsConnected(true);
+      };
+
+      websocket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.tipo === 'dashboard_update') {
+            setDashboardData(prevData => ({
+              ...prevData,
+              ...data.dados
+            }));
+          }
+        } catch (err) {
+          console.error('Erro ao processar mensagem WebSocket:', err);
+        }
+      };
+
+      websocket.onclose = () => {
+        console.log('WebSocket desconectado');
+        setIsConnected(false);
+        setTimeout(connectWebSocket, 5000);
+      };
+
+      websocket.onerror = (error) => {
+        console.error('Erro WebSocket:', error);
+        setIsConnected(false);
+      };
+
+      websocketRef.current = websocket;
+    } catch (err) {
+      console.error('Erro ao conectar WebSocket:', err);
+      setIsConnected(false);
     }
-
-    const websocket = new WebSocket(`ws://localhost:8000/api/v1/monitoring/ws/1`);
-    
-    websocket.onopen = () => {
-      console.log('WebSocket conectado');
-      setIsConnected(true);
-      // Solicitar dados iniciais
-      websocket.send(JSON.stringify({ tipo: 'solicitar_dashboard' }));
-    };
-
-    websocket.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        
-        if (message.tipo === 'dashboard_update') {
-          setDashboardData(message.datos);
-          setLastUpdate(new Date());
-        }
-      } catch (err) {
-        console.error('Error al procesar mensaje WebSocket:', err);
-      }
-    };
-
-    websocket.onclose = () => {
-      console.log('WebSocket desconectado');
-      setIsConnected(false);
-      
-      // Intentar reconectar después de 5 segundos
-      setTimeout(() => {
-        if (autoRefresh) {
-          connectWebSocket();
-        }
-      }, 5000);
-    };
-
-    websocket.onerror = (error) => {
-      console.error('Error en WebSocket:', error);
-      setIsConnected(false);
-    };
-
-    setWs(websocket);
-  }, [autoRefresh, ws]);
+  }, []);
 
   // ============================================================================
   // EFFECTS
@@ -121,8 +114,8 @@ const MonitoringDashboard = () => {
 
     // Cleanup
     return () => {
-      if (ws) {
-        ws.close();
+      if (websocketRef.current) {
+        websocketRef.current.close();
       }
     };
   }, [autoRefresh]);
