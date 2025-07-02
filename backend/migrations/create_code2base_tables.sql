@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS code2base_clis_geo (
     id SERIAL PRIMARY KEY,
     numero VARCHAR(20) NOT NULL,
     numero_normalizado VARCHAR(20) NOT NULL UNIQUE,
-    cli_id INTEGER NOT NULL REFERENCES clis(id) ON DELETE CASCADE,
+    cli_id INTEGER NOT NULL REFERENCES cli(id) ON DELETE CASCADE,
     prefijo_id INTEGER NOT NULL REFERENCES code2base_prefijos(id) ON DELETE CASCADE,
     tipo_numero tipo_numero NOT NULL DEFAULT 'fijo',
     operadora tipo_operadora DEFAULT 'desconocida',
