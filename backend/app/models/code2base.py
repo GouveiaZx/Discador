@@ -116,7 +116,7 @@ class CliGeo(Base):
     __tablename__ = "cli_geo"
     
     id = Column(Integer, primary_key=True, index=True)
-    cli_id = Column(Integer, ForeignKey("clis.id"), nullable=False)
+    cli_id = Column(Integer, ForeignKey("cli.id"), nullable=False)
     prefijo_id = Column(Integer, ForeignKey("prefijo.id"), nullable=False)
     numero = Column(String(20), nullable=False)
     numero_normalizado = Column(String(20), nullable=False, unique=True)

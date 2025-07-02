@@ -9,6 +9,7 @@ from .multi_sip import ProvedorSip, TarifaSip, LogSelecaoProvedor, ConfiguracaoM
 from .monitoring import AgenteMonitoramento, EventoSistema, SessionMonitoramento
 from .lista_llamadas import ListaLlamadas, NumeroLlamada
 from .lista_negra import ListaNegra
+from .cli import Cli
 from .code2base import TipoOperadora, TipoRegra, TipoNumero, Pais, Estado, Cidade, Prefijo, ReglaCli, CliGeo, HistorialSeleccionCli
 from .campanha_politica import (
     CampanhaPolitica, AudioCampanha, EstatisticaCampanha,
@@ -16,7 +17,6 @@ from .campanha_politica import (
     OptOutEleitoral, TipoLogEleitoral, TipoEleicao, StatusCampanhaPolitica
 )
 from .campana import Campana
-from .cli import Cli
 from .audio_sistema import (
     TipoEvento, AudioSistema, AudioContexto, AudioRegra, AudioSessao, 
     AudioEvento, AudioTemplate, EstadoAudio, TipoOperadorRegra
