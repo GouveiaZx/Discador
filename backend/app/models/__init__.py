@@ -11,7 +11,10 @@ from .lista_llamadas import ListaLlamadas
 from .code2base import TipoOperadora, TipoRegra, TipoNumero, Pais, Estado, Cidade, Prefijo, ReglaCli
 from .campanha_politica import CampanhaPolitica, AudioCampanha, EstatisticaCampanha
 from .campana import Campana
-from .audio_sistema import TipoEvento, AudioSistema
+from .audio_sistema import (
+    TipoEvento, AudioSistema, AudioContexto, AudioRegra, 
+    AudioSessao, AudioEvento, AudioTemplate, EstadoAudio, TipoOperadorRegra
+)
 
 # Lista de todos os modelos para facilitar importações
 __all__ = [
@@ -43,5 +46,12 @@ __all__ = [
     "EstatisticaCampanha",
     "Campana",
     "TipoEvento",
-    "AudioSistema"
+    "AudioSistema",
+    "AudioContexto",
+    "AudioRegra",
+    "AudioSessao",
+    "AudioEvento",
+    "AudioTemplate",
+    "EstadoAudio",
+    "TipoOperadorRegra"
 ] 
