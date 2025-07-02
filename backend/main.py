@@ -169,7 +169,9 @@ async def listar_contextos_audio():
 # Incluir rotas ausentes
 app.include_router(missing_routes, prefix=f"{api_prefix}")
 
+# Health check endpoints para Render.com
 @app.get("/")
+@app.head("/")
 async def raiz():
     logger.info("Solicitud a la ruta principal")
     return {
@@ -191,6 +193,18 @@ async def raiz():
         ],
         "documentacao": "/documentacao"
     }
+
+@app.get("/health")
+@app.head("/health")
+async def health_check():
+    """Endpoint dedicado para health checks"""
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+@app.get("/ping")
+@app.head("/ping")
+async def ping():
+    """Endpoint simples para verificação de conectividade"""
+    return {"message": "pong"}
 
 if __name__ == "__main__":
     logger.info(f"Iniciando servidor en {configuracion.HOST}:{configuracion.PUERTO}")

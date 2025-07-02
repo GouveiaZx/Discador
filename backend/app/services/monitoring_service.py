@@ -86,7 +86,7 @@ class MonitoringService:
     
     def obter_metricas_provedores(self):
         """Retorna métricas de provedores"""
-        return []
+            return []
     
     def obter_metricas_agentes(self):
         """Retorna métricas de agentes"""
@@ -113,7 +113,7 @@ class MonitoringService:
     
     def listar_chamadas_ativas(self):
         """Lista chamadas ativas"""
-        return []
+            return []
     
     def listar_historico_chamadas(self, limit: int = 100):
         """Lista histórico de chamadas"""
@@ -158,7 +158,7 @@ class MonitoringService:
         except Exception as e:
             logger.error(f"Erro ao atualizar status do agente: {e}")
             self.db.rollback()
-
+    
 def get_monitoring_service(db: Session = Depends(get_db)) -> MonitoringService:
     """Factory function para o serviço de monitoramento"""
     return MonitoringService(db) 
