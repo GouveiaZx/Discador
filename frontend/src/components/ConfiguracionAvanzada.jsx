@@ -69,7 +69,7 @@ function ConfiguracionAvanzada() {
 
   const cargarProvedores = async () => {
     try {
-      const response = await makeMultiSipRequest('/multi-sip/provedores');
+      const response = await makeMultiSipRequest('/api/v1/multi-sip/provedores');
       if (response && response.provedores) {
         setProvedores(response.provedores);
       }
@@ -81,7 +81,7 @@ function ConfiguracionAvanzada() {
   const crearProvedor = async () => {
     try {
       setLoading(true);
-      const response = await makeMultiSipRequest('/multi-sip/provedores', {
+      const response = await makeMultiSipRequest('/api/v1/multi-sip/provedores', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -103,7 +103,7 @@ function ConfiguracionAvanzada() {
 
   const cargarCLIs = async () => {
     try {
-      const response = await makeMultiSipRequest('/code2base/clis');
+      const response = await makeMultiSipRequest('/api/v1/code2base/clis');
       if (response && response.clis) {
         setClis(response.clis);
       }
@@ -115,7 +115,7 @@ function ConfiguracionAvanzada() {
   const crearCLI = async () => {
     try {
       setLoading(true);
-      const response = await makeMultiSipRequest('/code2base/clis', {
+      const response = await makeMultiSipRequest('/api/v1/code2base/clis', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -151,7 +151,7 @@ function ConfiguracionAvanzada() {
 
   const cargarContextos = async () => {
     try {
-      const response = await makeMultiSipRequest('/audio/contextos');
+      const response = await makeMultiSipRequest('/api/v1/audio/contextos');
       if (response && response.contextos) {
         setContextos(response.contextos);
       }
@@ -163,7 +163,7 @@ function ConfiguracionAvanzada() {
   const crearContexto = async () => {
     try {
       setLoading(true);
-      const response = await makeMultiSipRequest('/audio/contextos', {
+      const response = await makeMultiSipRequest('/api/v1/audio/contextos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -186,7 +186,7 @@ function ConfiguracionAvanzada() {
   const setupAudioPredeterminado = async () => {
     try {
       setLoading(true);
-      const response = await makeMultiSipRequest('/audio/setup-padrao', {
+      const response = await makeMultiSipRequest('/api/v1/audio/setup-padrao', {
         method: 'POST'
       });
       setMessage({ type: 'success', text: response.message || 'Setup de audio predeterminado realizado con éxito!' });

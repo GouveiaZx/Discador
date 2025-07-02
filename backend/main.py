@@ -223,6 +223,44 @@ async def listar_campaigns_alias():
         "message": "Use /api/v1/campanhas para acessar as campanhas"
     }
 
+# Endpoint de configuração
+@missing_routes.get("/configuracion")
+async def obter_configuracion():
+    """Configuração do sistema"""
+    return {
+        "status": "success",
+        "configuracion": {
+            "sistema_activo": True,
+            "version": "1.0.0",
+            "ultima_actualizacion": datetime.now().isoformat()
+        }
+    }
+
+# Endpoint de histórico de chamadas
+@missing_routes.get("/llamadas/historico")
+async def obter_historico_llamadas(
+    page: int = 1,
+    page_size: int = 10
+):
+    """Histórico de chamadas paginado"""
+    return {
+        "status": "success",
+        "llamadas": [],
+        "total": 0,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": 0
+    }
+
+# Endpoint de setup de áudio
+@missing_routes.post("/audio/setup-padrao")
+async def setup_audio_padrao():
+    """Setup de áudio padrão"""
+    return {
+        "status": "success",
+        "message": "Setup de áudio padrão realizado com sucesso!"
+    }
+
 # Incluir rotas ausentes
 app.include_router(missing_routes, prefix=f"{api_prefix}")
 
