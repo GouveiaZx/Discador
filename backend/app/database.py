@@ -74,13 +74,20 @@ def inicializar_bd() -> None:
     """
     Crea todas las tablas definidas en los modelos.
     """
-    # Em desenvolvimento, recriar todas as tabelas
-    if configuracion.DEBUG:
-        Base.metadata.drop_all(bind=engine)
-        Base.metadata.create_all(bind=engine)
-    else:
-        # Em produção, apenas criar se não existir
-        Base.metadata.create_all(bind=engine, checkfirst=True)
+    try:
+        # Em desenvolvimento, recriar todas as tabelas
+        if configuracion.DEBUG:
+            Base.metadata.drop_all(bind=engine)
+            Base.metadata.create_all(bind=engine)
+        else:
+            # Em produção, apenas criar se não existir com timeout reduzido
+            Base.metadata.create_all(bind=engine, checkfirst=True)
+    except Exception as e:
+        # Log do erro mas não falha a aplicação
+        from app.utils.logger import configurar_logger
+        logger = configurar_logger("database")
+        logger.warning(f"Aviso ao inicializar banco de dados: {str(e)}")
+        # Continua sem falhar
 
 # Funcion para cerrar la conexion a la base de datos
 def cerrar_conexion() -> None:

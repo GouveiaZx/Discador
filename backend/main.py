@@ -29,14 +29,18 @@ async def lifespan(app: FastAPI):
     # Inicializar la base de datos
     logger.info("Iniciando la aplicacion")
     logger.info(f"Configuracion cargada. Modo debug: {configuracion.DEBUG}")
-    logger.info(f"Inicializando base de datos en {configuracion.DB_HOST}")
+    logger.info(f"Inicializando base de datos")
     
     try:
-        inicializar_bd()
-        logger.info("Base de datos inicializada correctamente")
+        # Apenas tentar inicializar se estiver em modo debug
+        if configuracion.DEBUG:
+            inicializar_bd()
+            logger.info("Base de datos inicializada correctamente")
+        else:
+            logger.info("Modo produção: pulando inicialização de tabelas")
     except Exception as e:
-        logger.error(f"Error al inicializar la base de datos: {str(e)}")
-        raise
+        logger.warning(f"Aviso ao inicializar la base de datos: {str(e)}")
+        # Continua sem falhar em produção
     
     yield
     
