@@ -77,12 +77,8 @@ function UploadListas() {
    */
   const loadCampaigns = async () => {
     try {
-      const data = await makeApiRequest('/api/v1/campaigns', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const data = await makeApiRequest('/campaigns');
+      console.log('📋 Campanhas carregadas:', data);
       setCampaigns(data.campaigns || []);
     } catch (err) {
       setError('Error al cargar campañas: ' + err.message);
@@ -153,28 +149,29 @@ function UploadListas() {
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', file); // O backend principal espera 'file'
       formData.append('campaign_id', selectedCampaign);
 
-      const response = await makeApiRequest('/api/v1/lists/upload', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          // No setear Content-Type para que el navegador lo haga automáticamente con boundary
-        }
+      console.log('📤 Enviando upload:', {
+        file: file.name,
+        campaign: selectedCampaign
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        setUploadResult(result);
-        setFileState(FileStates.SUCCESS);
-        setFile(null);
-        setPreviewData(null);
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Error al subir archivo');
-      }
+      const response = await makeApiRequest('/contacts/upload', 'POST', formData);
+      
+      console.log('📥 Resposta do upload:', response);
+      
+      setUploadResult({
+        total_lines: response.total_numeros_archivo || 0,
+        contacts_added: response.numeros_validos || 0,
+        errors_count: response.numeros_invalidos || 0,
+        message: response.mensaje || 'Upload realizado com sucesso'
+      });
+      setFileState(FileStates.SUCCESS);
+      setFile(null);
+      setPreviewData(null);
     } catch (error) {
+      console.error('❌ Erro no upload:', error);
       setError('Error al cargar el archivo: ' + error.message);
       setFileState(FileStates.ERROR);
     } finally {

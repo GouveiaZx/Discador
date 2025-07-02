@@ -33,6 +33,38 @@ const CampaignMetricCard = ({ title, value, subtitle, icon, color = 'primary', l
   );
 };
 
+// Função de debug para testar no console do navegador
+window.testCreateCampaign = async () => {
+  try {
+    console.log('🧪 Testando criação de campanha...');
+    const testData = {
+      name: 'Test Campaign Debug',
+      description: 'Teste de debug',
+      cli_number: '1155512345',
+      max_concurrent_calls: 5,
+      max_attempts: 3,
+      retry_interval: 300
+    };
+    
+    console.log('📤 Enviando dados:', testData);
+    
+    // Importar a função makeApiRequest do config
+    const { makeApiRequest } = await import('../config/api.js');
+    const response = await makeApiRequest('/campaigns', 'POST', testData);
+    
+    console.log('📥 Resposta recebida:', response);
+    console.log('🔍 Tipo da resposta:', typeof response);
+    console.log('🔍 Chaves da resposta:', Object.keys(response || {}));
+    console.log('🔍 Tem ID?', !!(response && response.id));
+    console.log('🔍 Valor do ID:', response?.id);
+    
+    return response;
+  } catch (error) {
+    console.error('❌ Erro no teste:', error);
+    return null;
+  }
+};
+
 /**
  * Componente para gestão de campanhas profissional
  */
@@ -43,7 +75,11 @@ function GestionCampanhas() {
   const [success, setSuccess] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingCampanha, setEditingCampanha] = useState(null);
-  const [actionLoading, setActionLoading] = useState({});
+  const [actionLoading, setActionLoading] = useState({
+    creating: false,
+    updating: false,
+    deleting: false
+  });
   const [metrics, setMetrics] = useState({
     total: 0,
     active: 0,
@@ -66,14 +102,21 @@ function GestionCampanhas() {
   const fetchCampanhas = async () => {
     try {
       setLoading(true);
+      setError(''); // Limpar erro anterior
+      console.log('📋 Buscando lista de campanhas...');
       const response = await makeApiRequest('/campaigns');
-      if (response.success) {
-        setCampanhas(response.campaigns || []);
-        updateMetrics(response.campaigns || []);
+      console.log('📋 Resposta da listagem de campanhas:', response);
+      
+      if (response && response.campaigns) {
+        setCampanhas(response.campaigns);
+        updateMetrics(response.campaigns);
+        setError(''); // Limpar qualquer erro anterior
       } else {
-        setError('Error al cargar campañas');
+        setError('Error al cargar campañas: respuesta inválida');
+        console.error('Resposta inválida:', response);
       }
     } catch (err) {
+      console.error('Erro ao carregar campanhas:', err);
       setError('Error de conexión con el servidor');
     } finally {
       setLoading(false);
@@ -91,25 +134,63 @@ function GestionCampanhas() {
   const handleCreateCampaign = async (e) => {
     e.preventDefault();
     try {
-      setLoading(true);
-      const response = await makeApiRequest('/campaigns', 'POST', formData);
-      if (response.message) {
+      setActionLoading({ ...actionLoading, creating: true });
+      setError('');
+      setSuccess('');
+      
+      // Validar campos obrigatórios
+      if (!formData.name.trim()) {
+        setError('El nombre de la campaña es obligatorio');
+        return;
+      }
+      
+      console.log('🚀 Dados para criar campanha:', formData);
+      const createResponse = await makeApiRequest('/campaigns', 'POST', formData);
+      console.log('✅ Resposta da API de criação:', createResponse);
+      
+      // A API retorna um objeto com id, name, message etc. quando cria com sucesso
+      console.log('🔍 Verificando resposta:', {
+        hasResponse: !!createResponse,
+        hasId: !!(createResponse && createResponse.id),
+        id: createResponse?.id,
+        responseType: typeof createResponse,
+        responseKeys: createResponse ? Object.keys(createResponse) : 'N/A'
+      });
+      
+      // TESTE: Verificar especificamente se o ID existe e é válido
+      if (createResponse && typeof createResponse === 'object' && createResponse.id) {
+        console.log('✅ Condição atendida! ID encontrado:', createResponse.id);
         setSuccess('Campaña creada con éxito');
-        fetchCampanhas();
+        
+        // Recarregar a lista após a criação
+        console.log('🔄 Recarregando lista de campanhas...');
+        await fetchCampanhas();
         handleCloseModal();
+        
+        // Limpar mensagem de sucesso após 5 segundos
+        setTimeout(() => setSuccess(''), 5000);
       } else {
-        setError('Error al crear campaña');
+        console.error('❌ Condição NÃO atendida!');
+        console.error('- createResponse:', createResponse);
+        console.error('- typeof createResponse:', typeof createResponse);
+        console.error('- createResponse.id:', createResponse?.id);
+        console.error('- !!createResponse:', !!createResponse);
+        console.error('- !!createResponse.id:', !!(createResponse && createResponse.id));
+        setError('Error al crear campaña: respuesta inválida del servidor');
       }
     } catch (err) {
-      setError('Error al crear campaña');
+      console.error('Erro ao criar campanha:', err);
+      setError(`Error al crear campaña: ${err.message || 'Error desconocido'}`);
     } finally {
-      setLoading(false);
+      setActionLoading({ ...actionLoading, creating: false });
     }
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingCampanha(null);
+    setError('');
+    setSuccess('');
     setFormData({
       name: '',
       description: '',
@@ -118,6 +199,82 @@ function GestionCampanhas() {
       max_attempts: 3,
       retry_interval: 300
     });
+  };
+
+  const handleEditCampaign = (campanha) => {
+    setEditingCampanha(campanha);
+    setFormData({
+      name: campanha.name || '',
+      description: campanha.description || '',
+      cli_number: campanha.cli_number || '',
+      max_concurrent_calls: campanha.max_concurrent_calls || 5,
+      max_attempts: campanha.max_attempts || 3,
+      retry_interval: campanha.retry_interval || 300
+    });
+    setShowModal(true);
+  };
+
+  const handleUpdateCampaign = async (e) => {
+    e.preventDefault();
+    if (!editingCampanha) return;
+
+    try {
+      setActionLoading({ ...actionLoading, updating: true });
+      setError('');
+      setSuccess('');
+      
+      console.log('🔄 Dados para atualizar campanha:', formData);
+      const updateResponse = await makeApiRequest(`/campaigns/${editingCampanha.id}`, 'PUT', formData);
+      console.log('🔄 Resposta da atualização:', updateResponse);
+      
+      // A API retorna um objeto com id, name, message etc. quando atualiza com sucesso
+      if (updateResponse && updateResponse.id) {
+        setSuccess('Campaña actualizada con éxito');
+        await fetchCampanhas();
+        handleCloseModal();
+        
+        // Limpar mensagem de sucesso após 5 segundos
+        setTimeout(() => setSuccess(''), 5000);
+      } else {
+        setError('Error al actualizar campaña');
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar campanha:', err);
+      setError(`Error al actualizar campaña: ${err.message || 'Error desconocido'}`);
+    } finally {
+      setActionLoading({ ...actionLoading, updating: false });
+    }
+  };
+
+  const handleDeleteCampaign = async (campaignId) => {
+    if (!confirm('¿Estás seguro de que deseas eliminar esta campaña?')) {
+      return;
+    }
+
+    try {
+      setActionLoading({ ...actionLoading, [`deleting_${campaignId}`]: true });
+      setError('');
+      setSuccess('');
+      
+      const deleteResponse = await makeApiRequest(`/campaigns/${campaignId}`, 'DELETE');
+      console.log('🗑️ Resposta da exclusão:', deleteResponse);
+      
+      // A API retorna um objeto com message quando deleta com sucesso
+      if (deleteResponse && deleteResponse.message) {
+        setSuccess('Campaña eliminada con éxito');
+        await fetchCampanhas();
+        
+        // Limpar mensagem de sucesso após 5 segundos
+        setTimeout(() => setSuccess(''), 5000);
+      } else {
+        setError('Error al eliminar campaña');
+      }
+    } catch (err) {
+      console.error('Erro ao deletar campanha:', err);
+      setError(`Error al eliminar campaña: ${err.message || 'Error desconocido'}`);
+    } finally {
+      setActionLoading({ ...actionLoading, [`deleting_${campaignId}`]: false });
+    }
   };
 
   const renderStatusBadge = (status) => {
@@ -308,11 +465,26 @@ function GestionCampanhas() {
                       </td>
                       <td>
                         <div className="flex items-center space-x-2">
-                          <button className="btn-sm btn-primary">
-                            Editar
+                          <button 
+                            onClick={() => handleEditCampaign(campanha)}
+                            className="btn-sm btn-primary"
+                            disabled={actionLoading.updating}
+                          >
+                            {actionLoading.updating ? 'Editando...' : 'Editar'}
                           </button>
-                          <button className="btn-sm btn-danger">
-                            Eliminar
+                          <button 
+                            onClick={() => handleDeleteCampaign(campanha.id)}
+                            className="btn-sm btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={actionLoading[`deleting_${campanha.id}`]}
+                          >
+                            {actionLoading[`deleting_${campanha.id}`] ? (
+                              <div className="flex items-center space-x-1">
+                                <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
+                                <span>...</span>
+                              </div>
+                            ) : (
+                              'Eliminar'
+                            )}
                           </button>
                         </div>
                       </td>
@@ -330,7 +502,7 @@ function GestionCampanhas() {
             <div className="card-glass max-w-md w-full p-6 animate-fade-in-up">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-white">
-                  Nueva Campaña
+                  {editingCampanha ? 'Editar Campaña' : 'Nueva Campaña'}
                 </h3>
                 <button
                   onClick={handleCloseModal}
@@ -342,7 +514,7 @@ function GestionCampanhas() {
                 </button>
               </div>
 
-              <form onSubmit={handleCreateCampaign} className="space-y-4">
+              <form onSubmit={editingCampanha ? handleUpdateCampaign : handleCreateCampaign} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-secondary-300 mb-2">
                     Nombre de la Campaña
@@ -410,9 +582,28 @@ function GestionCampanhas() {
                   </button>
                   <button
                     type="submit"
-                    className="btn-primary flex-1"
+                    disabled={editingCampanha ? actionLoading.updating : actionLoading.creating}
+                    className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Crear Campaña
+                    {editingCampanha ? (
+                      actionLoading.updating ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                          <span>Actualizando...</span>
+                        </div>
+                      ) : (
+                        'Actualizar Campaña'
+                      )
+                    ) : (
+                      actionLoading.creating ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                          <span>Creando...</span>
+                        </div>
+                      ) : (
+                        'Crear Campaña'
+                      )
+                    )}
                   </button>
                 </div>
               </form>

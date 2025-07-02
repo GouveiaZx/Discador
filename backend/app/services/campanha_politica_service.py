@@ -141,4 +141,14 @@ class CampanhaPoliticaService:
         }
         
         dados_json = json.dumps(dados_hash, sort_keys=True)
-        return hashlib.sha256(dados_json.encode('utf-8')).hexdigest() 
+        return hashlib.sha256(dados_json.encode('utf-8')).hexdigest()
+
+    def update_campana(self, campana_id: int, campana_in):
+        campana = self.get_campana(campana_id)
+        if not campana:
+            return None
+        for field, value in campana_in.dict(exclude_unset=True).items():
+            setattr(campana, field, value)
+        self.db.commit()
+        self.db.refresh(campana)
+        return campana 

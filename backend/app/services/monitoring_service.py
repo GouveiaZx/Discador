@@ -541,6 +541,50 @@ class MonitoringService:
         except Exception as e:
             logger.error(f"Erro ao limpar cache expirado: {e}")
 
+    def listar_chamadas_ativas(self) -> list:
+        """Retorna lista detalhada de chamadas ativas para o painel em tempo real"""
+        from app.models.llamada import Llamada
+        from app.models.campana import Campana
+        chamadas = self.db.query(Llamada).filter(Llamada.estado.in_(["en_progreso", "conectada", "marcando"]))
+        result = []
+        for chamada in chamadas:
+            campanha = self.db.query(Campana).filter(Campana.id == chamada.id_campana).first()
+            result.append({
+                "id": chamada.id,
+                "phone_number": chamada.numero_destino,
+                "name": getattr(chamada, "nome", ""),
+                "extension": getattr(chamada, "cli", ""),
+                "trunk": getattr(chamada, "trunk", ""),
+                "duration": chamada.duracao,
+                "status": chamada.estado,
+                "campaign": campanha.nome if campanha else "",
+                "agent": getattr(chamada, "usuario_id", "")
+            })
+        return result
+
+    def listar_historico_chamadas(self, limit: int = 100) -> list:
+        """Retorna histórico das últimas chamadas realizadas"""
+        from app.models.llamada import Llamada
+        from app.models.campana import Campana
+        chamadas = self.db.query(Llamada).order_by(Llamada.fecha_inicio.desc()).limit(limit)
+        result = []
+        for chamada in chamadas:
+            campanha = self.db.query(Campana).filter(Campana.id == chamada.id_campana).first()
+            result.append({
+                "id": chamada.id,
+                "phone_number": chamada.numero_destino,
+                "name": getattr(chamada, "nome", ""),
+                "extension": getattr(chamada, "cli", ""),
+                "trunk": getattr(chamada, "trunk", ""),
+                "duration": chamada.duracao,
+                "status": chamada.estado,
+                "campaign": campanha.nome if campanha else "",
+                "agent": getattr(chamada, "usuario_id", ""),
+                "start_time": chamada.fecha_inicio,
+                "end_time": chamada.fecha_fin
+            })
+        return result
+
 # ================================================
 # FACTORY FUNCTION
 # ================================================

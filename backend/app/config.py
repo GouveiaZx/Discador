@@ -41,7 +41,7 @@ class Configuracion(BaseSettings):
     # Configuracion de logs
     LOG_NIVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     LOG_FORMATO: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    LOG_ARCHIVO: Optional[str] = "logs/discador.log"
+    LOG_ARQUIVO: Optional[str] = "logs/discador.log"
     LOG_ROTACION: bool = True
     LOG_MAX_TAMANO_MB: int = 10
     LOG_COPIAS_RESPALDO: int = 5
@@ -58,7 +58,7 @@ class Configuracion(BaseSettings):
                 return v
             # Se é PostgreSQL, retorna como está
             if v.startswith('postgres'):
-            return v
+                return v
         
         # Se não tem URL configurada, usar Supabase em produção
         if not values.get("DEBUG", False):
@@ -71,7 +71,7 @@ class Configuracion(BaseSettings):
             password=values.get("DB_PASSWORD"),
             host=values.get("DB_HOST"),
             port=str(values.get("DB_PUERTO")),
-            path=f"/{values.get('DB_NOMBRE') or ''}",
+            path=f"/{values.get('DB_NOME') or ''}",
         )
     
     class Config:

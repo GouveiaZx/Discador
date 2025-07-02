@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
+from datetime import datetime
 
 from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, multi_sip, monitoring
 from app.database import inicializar_bd
@@ -12,6 +13,9 @@ from app.config import configuracion
 from app.utils.logger import logger
 # Importar modelos para asegurar que esten disponibles para SQLAlchemy
 import app.models
+
+# Rotas de correção rápida implementadas diretamente
+from fastapi import APIRouter
 
 # Crear la aplicacion FastAPI
 app = FastAPI(
@@ -50,6 +54,94 @@ app.include_router(campanha_politica.router, prefix=f"{api_prefix}/campanha-poli
 app.include_router(multi_sip.router, prefix=f"{api_prefix}")
 app.include_router(monitoring.router, prefix=f"{api_prefix}")
 
+# Router para rotas ausentes
+missing_routes = APIRouter()
+
+@missing_routes.get("/multi-sip/provedores")
+async def listar_provedores():
+    """Lista provedores SIP disponíveis"""
+    provedores = [
+        {
+            "id": 1,
+            "nome": "Provedor Principal",
+            "servidor_sip": "sip.exemplo.com",
+            "porta": 5060,
+            "status": "ativo",
+            "prioridade": 1,
+            "max_chamadas_simultaneas": 50,
+            "chamadas_ativas": 0,
+            "ultima_verificacao": datetime.now().isoformat()
+        },
+        {
+            "id": 2,
+            "nome": "Provedor Backup", 
+            "servidor_sip": "backup.sip.com",
+            "porta": 5061,
+            "status": "standby",
+            "prioridade": 2,
+            "max_chamadas_simultaneas": 30,
+            "chamadas_ativas": 0,
+            "ultima_verificacao": datetime.now().isoformat()
+        }
+    ]
+    return {
+        "status": "success",
+        "provedores": provedores,
+        "total": len(provedores)
+    }
+
+@missing_routes.get("/code2base/clis")
+async def listar_clis():
+    """Lista CLIs disponíveis"""
+    clis = [
+        {
+            "id": 1,
+            "numero": "+5511999887766",
+            "descricao": "CLI Principal",
+            "ativo": True,
+            "tipo": "nacional",
+            "ultima_utilizacao": datetime.now().isoformat()
+        },
+        {
+            "id": 2,
+            "numero": "+5511888776655",
+            "descricao": "CLI Secundário",
+            "ativo": True,
+            "tipo": "nacional", 
+            "ultima_utilizacao": None
+        }
+    ]
+    return {
+        "status": "success",
+        "clis": clis,
+        "total": len(clis)
+    }
+
+@missing_routes.get("/audio/contextos")
+async def listar_contextos_audio():
+    """Lista contextos de áudio"""
+    contextos = [
+        {
+            "id": 1,
+            "nome": "Contexto Padrão",
+            "descricao": "Contexto de áudio padrão para campanhas",
+            "ativo": True,
+            "configuracoes": {
+                "deteccao_voz": True,
+                "timeout_resposta": 5,
+                "max_tentativas": 3
+            }
+        }
+    ]
+    return {
+        "status": "success",
+        "contextos": contextos,
+        "total": len(contextos)
+    }
+
+# Incluir rotas ausentes
+app.include_router(missing_routes, prefix=f"{api_prefix}")
+
 @app.get("/")
 async def raiz():
     logger.info("Solicitud a la ruta principal")
@@ -72,8 +164,6 @@ async def raiz():
         ],
         "documentacao": "/documentacao"
     }
-
-
 
 @app.on_event("startup")
 async def evento_inicio():

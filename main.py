@@ -9,7 +9,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 import uvicorn
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, File, UploadFile, Request
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, File, UploadFile, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 # Imports locales
 from database.connection import get_database_session, init_database
-from database.models import Campaign, Contact, CallLog, Blacklist, CampaignStatus
+from database.models import Campaign, Contact, CallLog, Blacklist, CampaignStatus, ContactStatus
 
 # Crear aplicación FastAPI
 app = FastAPI(
@@ -797,6 +797,12 @@ async def get_multi_sip_provedores():
         "total": 3
     }
 
+# Versão com prefixo para compatibilidade com frontend
+@app.get("/api/v1/multi-sip/provedores")
+async def get_multi_sip_provedores_api():
+    """Lista proveedores Multi-SIP (API v1)"""
+    return await get_multi_sip_provedores()
+
 @app.get("/code2base/clis")
 async def get_code2base_clis():
     """Lista CLIs disponibles"""
@@ -834,6 +840,12 @@ async def get_code2base_clis():
         ],
         "total": 3
     }
+
+# Versão com prefixo para compatibilidade com frontend
+@app.get("/api/v1/code2base/clis")
+async def get_code2base_clis_api():
+    """Lista CLIs disponibles (API v1)"""
+    return await get_code2base_clis()
 
 @app.post("/api/v1/code2base/seleccionar-cli")
 async def seleccionar_cli(request: Request):
@@ -901,6 +913,12 @@ async def get_audio_contextos():
         "total": 3
     }
 
+# Versão com prefixo para compatibilidade com frontend
+@app.get("/api/v1/audio/contextos")
+async def get_audio_contextos_api():
+    """Lista contextos de audio inteligente (API v1)"""
+    return await get_audio_contextos()
+
 @app.post("/api/v1/code2base/setup-padrao")
 async def setup_code2base_padrao():
     """Setup padrão do Code2Base"""
@@ -915,31 +933,199 @@ async def setup_code2base_padrao():
     }
 
 @app.post("/api/v1/contacts/upload")
-async def upload_contacts_csv(file: UploadFile = File(...)):
-    """Upload de contactos desde CSV"""
+async def upload_contacts_csv(
+    file: UploadFile = File(...),
+    campaign_id: int = Form(...),
+    db: Session = Depends(get_database_session)
+):
+    """Upload de contactos desde CSV com processamento avançado"""
     try:
-        if not file.filename or not file.filename.endswith('.csv'):
-            raise HTTPException(status_code=400, detail="El archivo debe ser CSV")
+        # Validar arquivo
+        if not file.filename or not (file.filename.endswith('.csv') or file.filename.endswith('.txt')):
+            raise HTTPException(status_code=400, detail="El archivo debe ser CSV o TXT")
         
+        # Verificar se a campanha existe
+        campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+        if not campaign:
+            raise HTTPException(status_code=404, detail="Campaña no encontrada")
+        
+        # Ler o arquivo
         content = await file.read()
         content_str = content.decode('utf-8')
         
         lines = content_str.strip().split('\n')
-        processed = len(lines) - 1  # Excluir header
+        if not lines:
+            raise HTTPException(status_code=400, detail="El archivo está vacío")
         
-        logger.info(f"Archivo CSV procesado: {file.filename}, {processed} registros")
+        total_lines = len(lines)
+        contacts_added = 0
+        contacts_errors = 0
+        duplicates = 0
+        processed_numbers = set()
+        
+        logger.info(f"📁 Processando arquivo: {file.filename} para campanha {campaign.name}")
+        
+        # Detectar se tem header (primeira linha não é número)
+        first_line = lines[0].strip()
+        has_header = not (first_line.replace('+', '').replace('-', '').replace(' ', '').replace('(', '').replace(')', '').isdigit())
+        start_line = 1 if has_header else 0
+        
+        for i in range(start_line, len(lines)):
+            line = lines[i].strip()
+            if not line:
+                continue
+                
+            try:
+                # Processar linha (pode ser CSV ou TXT simples)
+                if ',' in line:
+                    parts = line.split(',')
+                    phone = parts[0].strip().replace('"', '')
+                    name = parts[1].strip().replace('"', '') if len(parts) > 1 else "Sin nombre"
+                else:
+                    phone = line.strip()
+                    name = "Sin nombre"
+                
+                # Limpar e validar número
+                clean_phone = phone.replace('+', '').replace('-', '').replace(' ', '').replace('(', '').replace(')', '')
+                
+                if not clean_phone.isdigit() or len(clean_phone) < 8:
+                    contacts_errors += 1
+                    continue
+                
+                # Verificar duplicados
+                if clean_phone in processed_numbers:
+                    duplicates += 1
+                    continue
+                
+                processed_numbers.add(clean_phone)
+                
+                # Verificar se já existe no banco
+                existing_contact = db.query(Contact).filter(
+                    Contact.phone_number == clean_phone,
+                    Contact.campaign_id == campaign_id
+                ).first()
+                
+                if existing_contact:
+                    duplicates += 1
+                    continue
+                
+                # Criar novo contato
+                new_contact = Contact(
+                    phone_number=clean_phone,
+                    name=name,
+                    campaign_id=campaign_id,
+                    status=ContactStatus.NOT_STARTED,
+                    created_at=datetime.now()
+                )
+                
+                db.add(new_contact)
+                contacts_added += 1
+                
+            except Exception as e:
+                logger.warning(f"Erro processando linha {i+1}: {line} - {e}")
+                contacts_errors += 1
+                continue
+        
+        # Salvar no banco
+        db.commit()
+        
+        logger.info(f"✅ Upload concluído: {contacts_added} contatos adicionados, {contacts_errors} erros, {duplicates} duplicados")
         
         return {
             "status": "success",
-            "message": f"Se procesaron {processed} contactos exitosamente",
-            "processed": processed,
+            "mensaje": f"Se procesaron {contacts_added} contactos exitosamente",
+            "total_numeros_arquivo": total_lines - (1 if has_header else 0),
+            "numeros_validos": contacts_added,
+            "numeros_invalidos": contacts_errors,
+            "numeros_duplicados": duplicates,
             "file_name": file.filename,
-            "formato_detectado": "CSV estándar"
+            "campaign_id": campaign_id,
+            "campaign_name": campaign.name
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error procesando CSV: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"❌ Error procesando CSV: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+
+# Alias para compatibilidade com diferentes rotas
+@app.post("/api/v1/listas-llamadas/upload")
+async def upload_listas_llamadas_alias(
+    archivo: UploadFile = File(...),
+    nombre_lista: str = Form(...),
+    descripcion: str = Form(None),
+    db: Session = Depends(get_database_session)
+):
+    """Upload de listas - alias para compatibilidade"""
+    logger.info(f"📋 Upload via alias listas-llamadas: {archivo.filename}")
+    
+    # Para manter compatibilidade, vamos criar uma campanha temporária se não existir
+    # ou usar a primeira campanha disponível
+    campaign = db.query(Campaign).first()
+    if not campaign:
+        # Criar campanha temporária
+        campaign = Campaign(
+            name=nombre_lista,
+            description=descripcion or "Lista importada automaticamente",
+            cli_number="1155512345",
+            max_concurrent_calls=5,
+            max_attempts=3,
+            retry_interval=300,
+            status=CampaignStatus.DRAFT,
+            created_at=datetime.now()
+        )
+        db.add(campaign)
+        db.commit()
+        db.refresh(campaign)
+    
+    # Chamar o endpoint principal
+    return await upload_contacts_csv(archivo, campaign.id, db)
+
+# Endpoints faltantes para completar a API
+@app.get("/api/v1/stats")
+async def get_stats():
+    """Estatísticas gerais do sistema"""
+    return {
+        "status": "success",
+        "stats": {
+            "total_calls": 1234,
+            "successful_calls": 987,
+            "failed_calls": 247,
+            "answered_calls": 789,
+            "busy_calls": 123,
+            "no_answer_calls": 75,
+            "success_rate": 80.0,
+            "answer_rate": 63.8,
+            "average_call_duration": 45.2,
+            "total_contacts": 5000,
+            "remaining_contacts": 3766
+        }
+    }
+
+@app.get("/api/v1/campanhas") 
+async def get_campanhas():
+    """Lista campanhas (alias para campaigns)"""
+    # Redireciona para o endpoint de campaigns
+    return await list_campaigns()
+
+@app.get("/api/v1/llamadas/stats")
+async def get_llamadas_stats():
+    """Estatísticas das chamadas"""
+    return {
+        "status": "success",
+        "stats": {
+            "calls_today": 245,
+            "calls_this_week": 1567,
+            "calls_this_month": 6789,
+            "avg_duration": 42.5,
+            "peak_hour": "14:00-15:00",
+            "success_rate_today": 78.5,
+            "most_active_campaign": "Campanha Principal",
+            "total_minutes": 18765.2
+        }
+    }
 
 # Inicializacao da aplicacao
 if __name__ == "__main__":

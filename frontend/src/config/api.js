@@ -32,35 +32,37 @@ export const buildApiUrl = (endpoint) => {
 };
 
 // Função helper para fazer requisições HTTP com tratamento de erro melhorado
-export const makeApiRequest = async (endpoint, options = {}) => {
-  // CORREÇÃO: Redirecionar automaticamente rotas de áudio para o serviço de correção
-  const AUDIO_ENDPOINTS = [
-    '/audio/contextos',
-    '/audio/setup-padrao',
-    '/multi-sip/provedores',
-    '/code2base/clis',
-    '/audio-inteligente/contextos'
-  ];
-
-  const isAudioEndpoint = AUDIO_ENDPOINTS.some(path => endpoint.includes(path.replace('/api/v1', '')));
-  
-  if (isAudioEndpoint && import.meta.env.DEV) {
-    console.log('🔄 Redirecting to correction service:', endpoint);
-    return makeMultiSipRequest(endpoint, options);
-  }
-
+export const makeApiRequest = async (endpoint, methodOrOptions = {}, data = null) => {
   const url = buildApiUrl(endpoint);
   
-  const config = {
-    timeout: API_TIMEOUT,
-    headers: {
-      ...DEFAULT_HEADERS,
-      ...options.headers
-    },
-    ...options
-  };
+  // Se o segundo parâmetro é uma string, é um método HTTP
+  let config;
+  if (typeof methodOrOptions === 'string') {
+    config = {
+      method: methodOrOptions,
+      timeout: API_TIMEOUT,
+      headers: {
+        ...DEFAULT_HEADERS
+      }
+    };
+    
+    // Se há dados, adicionar ao body
+    if (data && (methodOrOptions === 'POST' || methodOrOptions === 'PUT' || methodOrOptions === 'PATCH')) {
+      config.body = JSON.stringify(data);
+    }
+  } else {
+    // Forma tradicional: segundo parâmetro é um objeto de opções
+    config = {
+      timeout: API_TIMEOUT,
+      headers: {
+        ...DEFAULT_HEADERS,
+        ...methodOrOptions.headers
+      },
+      ...methodOrOptions
+    };
+  }
 
-  console.log('🚀 Making API request:', { url, method: config.method || 'GET' });
+  console.log('🚀 Making API request:', { url, method: config.method || 'GET', hasBody: !!config.body });
 
   try {
     const response = await fetch(url, config);
@@ -123,50 +125,3 @@ if (import.meta.env.DEV) {
     'NODE_ENV': import.meta.env.NODE_ENV
   });
 } 
-
-// CORREÇÃO URGENTE: Função especial para rotas multi-sip
-export const makeMultiSipRequest = async (endpoint, options = {}) => {
-  // Redirecionar chamadas para o serviço de correção na porta 8001
-  const MULTISIP_ENDPOINTS = [
-    '/multi-sip/provedores',
-    '/code2base/clis',
-    '/audio-inteligente/contextos',
-    '/audio/contextos',
-    '/audio/setup-padrao',
-    '/api/v1/configuracion-avanzada/status'
-  ];
-
-  const isMultiSipEndpoint = MULTISIP_ENDPOINTS.some(path => endpoint.includes(path));
-  
-  if (isMultiSipEndpoint) {
-    const url = `http://localhost:8001${endpoint}`;
-    
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      },
-      ...options
-    };
-
-    console.log('🔧 Multi-SIP Request (Port 8001):', { url, method: config.method || 'GET' });
-
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('✅ Multi-SIP Success:', { url, data });
-      return data;
-    } catch (error) {
-      console.error('❌ Multi-SIP Error:', { url, error: error.message });
-      throw error;
-    }
-  }
-
-  // Caso não seja multi-sip, usar função padrão
-  return makeApiRequest(endpoint, options);
-}; 

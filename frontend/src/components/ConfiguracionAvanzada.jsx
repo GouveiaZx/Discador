@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 const makeMultiSipRequest = async (endpoint, options = {}) => {
-  const baseUrl = 'http://localhost:8001';
+  const baseUrl = 'http://localhost:8000';
   const url = `${baseUrl}${endpoint}`;
   
   const config = {

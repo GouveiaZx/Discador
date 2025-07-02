@@ -560,4 +560,22 @@ async def limpar_cache(
         
     except Exception as e:
         logger.error(f"Erro ao limpar cache: {e}")
-        raise HTTPException(status_code=500, detail="Erro interno do servidor") 
+        raise HTTPException(status_code=500, detail="Erro interno do servidor")
+
+@router.get("/active_calls", response_model=List[Dict[str, Any]])
+def listar_chamadas_ativas(service: MonitoringService = Depends(get_monitoring_service)):
+    """Retorna lista detalhada de chamadas ativas para o painel em tempo real"""
+    try:
+        return service.listar_chamadas_ativas()
+    except Exception as e:
+        logger.error(f"Erro ao listar chamadas ativas: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao listar chamadas ativas")
+
+@router.get("/call_history", response_model=List[Dict[str, Any]])
+def listar_historico_chamadas(limit: int = 100, service: MonitoringService = Depends(get_monitoring_service)):
+    """Retorna histórico das últimas chamadas realizadas"""
+    try:
+        return service.listar_historico_chamadas(limit=limit)
+    except Exception as e:
+        logger.error(f"Erro ao listar histórico de chamadas: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao listar histórico de chamadas") 

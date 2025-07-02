@@ -185,4 +185,33 @@ class ValidacaoHorarioResponse(BaseModel):
     dentro_horario_legal: bool
     motivo: str
     horario_inicio_permitido: str
-    horario_fim_permitido: str 
+    horario_fim_permitido: str
+
+class CampanaBase(BaseModel):
+    nombre: str
+    descripcion: Optional[str] = None
+    activa: Optional[bool] = True
+    trunk_id: Optional[int] = None
+    cps: Optional[int] = 10
+    sleep_time: Optional[int] = 1
+    wait_time: Optional[str] = "0.5"
+    dnc_list_id: Optional[int] = None
+    language: Optional[str] = "pt-BR"
+    shuffle_contacts: Optional[bool] = True
+    allow_multiple_calls_same_number: Optional[bool] = False
+    press_2_audio_id: Optional[int] = None
+    max_channels: Optional[int] = 10
+
+class CampanaCreate(CampanaBase):
+    pass
+
+class CampanaUpdate(CampanaBase):
+    pass
+
+class CampanaOut(CampanaBase):
+    id: int
+    fecha_creacion: Optional[datetime]
+    fecha_actualizacion: Optional[datetime]
+
+    class Config:
+        orm_mode = True 

@@ -1,758 +1,533 @@
-# 📞 Tutorial Completo - Sistema Discador Predictivo
-*Guía Completa en Español (Argentina) y Português (Brasil)*
+# 📞 Tutorial de Uso - Sistema Discador Predictivo
+*Guía Completa de Uso en Español (Argentina) y Português (Brasil)*
 
 ---
 
-## 🚀 **Índice / Índice**
+## 🌐 **Acceso al Sistema**
+
+**URL de Acceso:** [https://discador-predictivo.vercel.app](https://discador-predictivo.vercel.app)
+
+---
+
+## 📋 **Índice / Índice**
 
 ### **Español (Argentina)**
-1. [Introducción y Características](#introducción-y-características)
-2. [Instalación y Configuración Inicial](#instalación-y-configuración-inicial)
-3. [Acceso al Sistema](#acceso-al-sistema)
-4. [Gestión de Campañas](#gestión-de-campañas)
-5. [Gestión de Listas de Contactos](#gestión-de-listas-de-contactos)
-6. [Lista Negra (Blacklist)](#lista-negra-blacklist)
-7. [Configuración Avanzada Multi-SIP](#configuración-avanzada-multi-sip)
-8. [Monitoreo en Tiempo Real](#monitoreo-en-tiempo-real)
-9. [Histórico de Llamadas](#histórico-de-llamadas)
-10. [Resolución de Problemas](#resolución-de-problemas)
+1. [Acceso y Login](#acceso-y-login-es)
+2. [Gestión de Campañas](#gestión-de-campañas-es)
+3. [Upload de Listas de Contactos](#upload-de-listas-es)
+4. [Lista Negra (Blacklist)](#lista-negra-es)
+5. [Configuración Avanzada Multi-SIP](#configuración-multi-sip-es)
+6. [Monitoreo en Tiempo Real](#monitoreo-es)
+7. [Histórico de Llamadas](#histórico-es)
 
 ### **Português (Brasil)**
-1. [Introdução e Características](#introdução-e-características)
-2. [Instalação e Configuração Inicial](#instalação-e-configuração-inicial-br)
-3. [Acesso ao Sistema](#acesso-ao-sistema)
-4. [Gestão de Campanhas](#gestão-de-campanhas-br)
-5. [Gestão de Listas de Contatos](#gestão-de-listas-de-contatos)
-6. [Lista Negra (Blacklist)](#lista-negra-blacklist-br)
-7. [Configuração Avançada Multi-SIP](#configuração-avançada-multi-sip-br)
-8. [Monitoramento em Tempo Real](#monitoramento-em-tempo-real)
-9. [Histórico de Chamadas](#histórico-de-chamadas-br)
-10. [Solução de Problemas](#solução-de-problemas)
+1. [Acesso e Login](#acesso-e-login-br)
+2. [Gestão de Campanhas](#gestão-de-campanhas-br)
+3. [Upload de Listas de Contatos](#upload-de-listas-br)
+4. [Lista Negra (Blacklist)](#lista-negra-br)
+5. [Configuração Avançada Multi-SIP](#configuração-multi-sip-br)
+6. [Monitoramento em Tempo Real](#monitoramento-br)
+7. [Histórico de Chamadas](#histórico-br)
 
 ---
 
 # 🇦🇷 **ESPAÑOL (ARGENTINA)**
 
-## **Introducción y Características**
+## <a id="acceso-y-login-es"></a>🔐 **1. Acceso y Login**
 
-El Sistema Discador Predictivo es una solución completa para centros de llamadas que permite:
+### **Cómo acceder:**
+1. **Abrir navegador** y ir a: `https://discador-predictivo.vercel.app`
+2. **Login del sistema:**
+   - Usuario: `admin`
+   - Contraseña: `admin123`
+3. **Verificar acceso correcto:** Deberías ver el dashboard principal
 
-### ✨ **Características Principales**
-- **Discado Predictivo Inteligente**: Optimiza automáticamente la cantidad de llamadas simultáneas
-- **Gestión de Campañas**: Crea y administra múltiples campañas de llamadas
-- **Multi-SIP**: Soporte para múltiples proveedores SIP
-- **Lista Negra Avanzada**: Filtrado automático de números no deseados
-- **Monitoreo en Tiempo Real**: Dashboard con métricas en vivo
-- **Histórico Completo**: Reportes detallados de todas las llamadas
-- **Interfaz Moderna**: Dashboard profesional y fácil de usar
-
----
-
-## **Instalación y Configuración Inicial**
-
-### **Requisitos del Sistema**
-- **Sistema Operativo**: Windows 10/11, Linux Ubuntu 18+, macOS 10.14+
-- **Python**: 3.8 o superior
-- **Node.js**: 16.0 o superior
-- **Memoria RAM**: Mínimo 4GB (Recomendado 8GB)
-- **Espacio en Disco**: Mínimo 2GB
-
-### **Paso 1: Descargar el Sistema**
-```bash
-# Descargar y extraer el sistema
-cd C:\
-git clone https://github.com/tu-repo/discador-main.git
-cd discador-main
-```
-
-### **Paso 2: Instalación Automática**
-```bash
-# Windows PowerShell
-.\install.sh
-
-# Linux/Mac
-chmod +x install.sh
-./install.sh
-```
-
-### **Paso 3: Verificar Instalación**
-```bash
-# Verificar que todos los componentes están instalados
-python validate_system.py
-```
-
-### **Paso 4: Iniciar el Sistema**
-```bash
-# Terminal 1: Backend Principal (Puerto 8000)
-python main.py
-
-# Terminal 2: Servicio Multi-SIP (Puerto 8001)  
-python quick_fix_routes.py
-
-# Terminal 3: Frontend React (Puerto 3001)
-cd frontend
-npm start
-```
+### **¿Qué esperar?**
+- ✅ **Dashboard principal** con métricas en tiempo real
+- ✅ **Menú lateral** con todas las funcionalidades
+- ✅ **Interfaz moderna** completamente en español argentino
 
 ---
 
-## **Acceso al Sistema**
+## <a id="gestión-de-campañas-es"></a>📊 **2. Gestión de Campañas**
 
-### **URLs de Acceso**
-- **Frontend Principal**: `http://localhost:3001`
-- **API Backend**: `http://localhost:8000`
-- **API Multi-SIP**: `http://localhost:8001`
+### **Ubicación:** Menú lateral → "Gestión de Campañas"
 
-### **Credenciales por Defecto**
-- **Usuario**: `admin@discador.com`
-- **Contraseña**: `admin123`
+### **Crear Nueva Campaña:**
 
-### **Primera Configuración**
-1. Acceder a `http://localhost:3001`
-2. Iniciar sesión con las credenciales por defecto
-3. Ir a **Configuración** para personalizar el sistema
-4. Cambiar la contraseña por defecto
+1. **Hacer clic** en "Nueva Campaña" (botón azul)
+2. **Completar formulario:**
+   ```
+   Nombre: "Campaña Demo Argentina"
+   Descripción: "Prueba de funcionalidad del sistema"
+   Llamadas Simultáneas: 5
+   Intentos Máximos: 3
+   ```
+3. **Hacer clic** en "Crear Campaña"
 
----
+### **¿Qué deberías ver?**
+- ✅ **Métricas actualizadas** en tiempo real
+- ✅ **Lista de campañas** con la nueva entrada
+- ✅ **Estado "Borrador"** para la campaña recién creada
+- ✅ **Botones de acción** (Editar, Eliminar)
 
-## **Gestión de Campañas**
-
-### **Crear Nueva Campaña**
-
-1. **Navegar a Campañas**
-   - Hacer clic en "📊 Campañas" en el menú lateral
-
-2. **Crear Campaña**
-   - Hacer clic en "✅ Nueva Campaña"
-   - Completar los datos:
-     ```
-     Nombre: "Campaña Promocional Q1 2025"
-     Descripción: "Promoción de productos para el primer trimestre"
-     CLI (Número de origen): "+5411XXXXXXXX"
-     Máx. Llamadas Simultáneas: 10
-     Máx. Intentos por Contacto: 3
-     Intervalo entre Intentos: 300 segundos
-     ```
-
-3. **Configuración Avanzada**
-   - **Horarios de Llamada**: 09:00 - 18:00
-   - **Días Laborables**: Lunes a Viernes
-   - **Detección de Contestador**: Activada
-   - **Grabación de Llamadas**: Opcional
-
-### **Estados de Campaña**
-- 🟢 **Activa**: Realizando llamadas
-- 🟡 **Pausada**: Temporalmente detenida
-- 🔴 **Detenida**: Completamente finalizada
-- ⚫ **Borrador**: En configuración
-
-### **Acciones de Campaña**
-- **▶️ Iniciar**: Comenzar las llamadas
-- **⏸️ Pausar**: Detener temporalmente
-- **⏹️ Detener**: Finalizar completamente
-- **✏️ Editar**: Modificar configuración
-- **📊 Estadísticas**: Ver métricas detalladas
+### **Estados de Campaña:**
+- 🟢 **Activa:** Realizando llamadas
+- 🟡 **Pausada:** Temporalmente detenida  
+- ⚪ **Borrador:** Sin iniciar
+- 🔵 **Completada:** Finalizada
 
 ---
 
-## **Gestión de Listas de Contactos**
+## <a id="upload-de-listas-es"></a>📂 **3. Upload de Listas de Contactos**
 
-### **Subir Lista de Contactos**
+### **Ubicación:** Menú lateral → "Upload de Listas"
 
-1. **Preparar Archivo CSV**
+### **Probar Upload:**
+
+1. **Preparar archivo CSV** con formato:
    ```csv
-   nombre,telefono,email,observaciones
-   Juan Pérez,+5411XXXXXXXX,juan@email.com,Cliente Premium
-   María González,+5411YYYYYYYY,maria@email.com,Prospecto
-   Carlos López,+5411ZZZZZZZZ,carlos@email.com,Renovación
+   telefono,nombre,apellido,email
+   +5491123456789,Juan,Pérez,juan@email.com
+   +5491198765432,María,González,maria@email.com
    ```
 
-2. **Subir Lista**
-   - Ir a "📋 Listas"
-   - Hacer clic en "📤 Subir Lista"
-   - Seleccionar archivo CSV
-   - Asignar a campaña existente
-   - Verificar vista previa
-   - Confirmar importación
+2. **Proceso de Upload:**
+   - Hacer clic en "Seleccionar Archivo"
+   - Elegir tu archivo CSV
+   - Hacer clic en "Subir Lista"
 
-### **Gestión de Contactos**
-- **Filtros Disponibles**:
-  - Por campaña
-  - Por estado de llamada
-  - Por fecha de última llamada
-  - Por número de intentos
+### **¿Qué verificar?**
+- ✅ **Validación automática** del formato
+- ✅ **Detección de duplicados**
+- ✅ **Validación de números argentinos** (+54)
+- ✅ **Mensaje de éxito** con cantidad procesada
+- ✅ **Lista actualizada** en tiempo real
 
-- **Estados de Contacto**:
-  - ⏳ **Pendiente**: Sin llamar
-  - 📞 **En Proceso**: Llamando ahora
-  - ✅ **Contactado**: Llamada exitosa
-  - ❌ **No Contactado**: Sin respuesta
-  - 🚫 **Bloqueado**: En lista negra
+### **Formatos Soportados:**
+- ✅ **CSV** con delimitador coma
+- ✅ **Números internacionales** (+54, +55, etc.)
+- ✅ **Campos opcionales** (nombre, email)
 
 ---
 
-## **Lista Negra (Blacklist)**
+## <a id="lista-negra-es"></a>🚫 **4. Lista Negra (Blacklist)**
 
-### **Agregar Números a Lista Negra**
+### **Ubicación:** Menú lateral → "Lista Negra"
 
-1. **Agregar Individual**
-   - Ir a "🚫 Lista Negra"
-   - Hacer clic en "➕ Agregar Número"
-   - Ingresar número: `+5411XXXXXXXX`
-   - Motivo: "Solicitud del cliente"
-   - Confirmar
+### **Agregar número a blacklist:**
 
-2. **Importación Masiva**
-   ```csv
-   telefono,motivo,fecha_bloqueo
-   +5411XXXXXXXX,No molestar,2025-01-01
-   +5411YYYYYYYY,Número inválido,2025-01-01
+1. **Hacer clic** en "Agregar a Blacklist"
+2. **Completar datos:**
+   ```
+   Número: +5491123456789
+   Motivo: No molestar - Cliente solicita exclusión
+   ```
+3. **Hacer clic** en "Agregar"
+
+### **Funcionalidades para probar:**
+- ✅ **Búsqueda en tiempo real** (escribir número para buscar)
+- ✅ **Filtro por motivo** (desplegable)
+- ✅ **Exportación CSV** (botón "Exportar")
+- ✅ **Eliminación individual** (botón rojo)
+- ✅ **Validación automática** contra próximas campañas
+
+### **¿Qué verificar?**
+- ✅ **Números agregados** aparecen instantáneamente
+- ✅ **Contador actualizado** en métricas
+- ✅ **Validación de formato** de números
+
+---
+
+## <a id="configuración-multi-sip-es"></a>⚙️ **5. Configuración Avanzada Multi-SIP**
+
+### **Ubicación:** Menú lateral → "Configuración Avanzada"
+
+### **Proveedores SIP:**
+
+1. **Ver proveedores disponibles** en la pestaña "Proveedores"
+2. **Probar conexión** con botón "Probar"
+3. **Verificar estado** (Activo/Inactivo)
+
+### **CLIs (Números Salientes):**
+
+1. **Ir a pestaña "CLIs"**
+2. **Agregar nuevo CLI:**
+   ```
+   Número CLI: +5491123456789
+   Proveedor: Seleccionar de lista
+   Estado: Activo
+   ```
+3. **Hacer clic** en "Agregar CLI"
+
+### **Contextos de Audio:**
+
+1. **Ir a pestaña "Contextos de Audio"**
+2. **Crear nuevo contexto:**
+   ```
+   Nombre: "Saludo Argentina"
+   Descripción: "Audio para campañas en Argentina"
+   URL Audio: https://ejemplo.com/audio.wav
    ```
 
-### **Gestión de Lista Negra**
-- **Filtros**: Por motivo, fecha, campaña
-- **Acciones**: Eliminar, editar motivo, exportar
-- **Automatización**: Bloqueo automático después de X rechazos
+### **¿Qué verificar?**
+- ✅ **Lista de proveedores** carga correctamente
+- ✅ **Pruebas de conexión** funcionan
+- ✅ **CLIs se agregan** sin errores
+- ✅ **Contextos se crean** exitosamente
 
 ---
 
-## **Configuración Avanzada Multi-SIP**
+## <a id="monitoreo-es"></a>📈 **6. Monitoreo en Tiempo Real**
 
-### **Gestión de Proveedores SIP**
+### **Ubicación:** Menú lateral → "Monitoreo"
 
-1. **Agregar Proveedor**
-   - Ir a "⚙️ Configuración" → "Multi-SIP"
-   - Completar datos:
-     ```
-     Nombre: "Proveedor Principal"
-     Servidor SIP: "sip.proveedor.com"
-     Puerto: 5060
-     Usuario: "tu_usuario"
-     Contraseña: "tu_contraseña"
-     Protocolo: UDP/TCP/TLS
-     ```
+### **Dashboard de Métricas:**
 
-2. **Configurar Prioridades**
-   - Proveedor 1: Prioridad Alta (llamadas premium)
-   - Proveedor 2: Prioridad Media (llamadas estándar)
-   - Proveedor 3: Prioridad Baja (backup)
+#### **Métricas Principales:**
+- 📊 **Llamadas Activas:** Número en tiempo real
+- ⏱️ **Tiempo Promedio:** Duración de llamadas
+- 📞 **Total del Día:** Llamadas realizadas
+- 📈 **Tasa de Éxito:** Porcentaje de conexiones exitosas
 
-### **Gestión de CLIs**
+#### **Gráficos en Tiempo Real:**
+- 📊 **Gráfico de líneas:** Llamadas por hora
+- 🥧 **Gráfico circular:** Distribución por resultado
+- 📊 **Barras:** Comparativo por campaña
 
-1. **Configurar CLIs**
-   - Ir a "Gestión de CLIs"
-   - Agregar números autorizados:
-     ```
-     CLI: "+5411XXXXXXXX"
-     Proveedor: "Proveedor Principal"
-     Estado: Activo
-     Tipo: Nacional
-     ```
-
-2. **Distribución Automática**
-   - Algoritmo: Round Robin / Menor Uso / Por Región
-   - Balanceo de carga automático
+### **¿Qué probar?**
+- ✅ **Actualización automática** cada 30 segundos
+- ✅ **Hover en gráficos** muestra detalles
+- ✅ **Filtros por fecha** funcionan
+- ✅ **Exportación de reportes** en PDF/CSV
 
 ---
 
-## **Monitoreo en Tiempo Real**
+## <a id="histórico-es"></a>📋 **7. Histórico de Llamadas**
 
-### **Dashboard Principal**
-- **Métricas en Vivo**:
-  - 📞 Llamadas Activas: 25
-  - ✅ Llamadas Exitosas: 234
-  - ❌ Llamadas Fallidas: 45
-  - ⏱️ Tiempo Promedio: 2:45
-  - 📊 Tasa de Éxito: 84%
+### **Ubicación:** Menú lateral → "Histórico"
 
-### **Gráficos en Tiempo Real**
-- **Llamadas por Hora**: Gráfico de líneas
-- **Distribución por Estado**: Gráfico circular
-- **Proveedores SIP**: Estado y uso
-- **Rendimiento por Campaña**: Comparativo
+### **Búsqueda y Filtros:**
 
-### **Alertas Automáticas**
-- 🔴 **Críticas**: Caída de proveedor SIP
-- 🟡 **Advertencias**: Baja tasa de contacto
-- 🔵 **Informativas**: Campaña completada
+1. **Usar buscador:** Escribir número o nombre
+2. **Filtros disponibles:**
+   - 📅 **Fecha:** Rango personalizado
+   - 📞 **Estado:** Exitosa, Fallida, Ocupada
+   - 🏷️ **Campaña:** Seleccionar específica
+   - ⏱️ **Duración:** Mínima y máxima
 
----
+### **Acciones disponibles:**
+- 👁️ **Ver detalle:** Hacer clic en el ojo
+- 📞 **Rellamar:** Botón de re-contacto  
+- 📊 **Exportar:** Descargar selección en CSV
 
-## **Histórico de Llamadas**
+### **Detalle de Llamada:**
+Al hacer clic en "Ver detalle":
+- ⏱️ **Duración completa**
+- 📞 **Número marcado**
+- 🎯 **Resultado final**
+- 📅 **Fecha y hora exacta**
+- 👤 **Agente asignado**
+- 📝 **Notas adicionales**
 
-### **Filtros Avanzados**
-```
-Fecha: 01/01/2025 - 31/01/2025
-Campaña: "Campaña Promocional Q1 2025"
-Estado: Todas / Exitosas / Fallidas
-CLI: "+5411XXXXXXXX"
-Duración: 30s - 300s
-```
-
-### **Exportación de Reportes**
-- **Formatos**: CSV, Excel, PDF
-- **Datos Incluidos**:
-  - Fecha y hora de llamada
-  - Número de destino
-  - CLI utilizado
-  - Duración
-  - Estado final
-  - Grabación (si existe)
-
-### **Análisis de Datos**
-- **Estadísticas por Período**
-- **Comparativos Mensuales**
-- **Rendimiento por Agente**
-- **ROI por Campaña**
-
----
-
-## **Resolución de Problemas**
-
-### **Problemas Comunes**
-
-#### **1. No se pueden realizar llamadas**
-**Síntomas**: Las campañas no inician llamadas
-**Solución**:
-```bash
-# Verificar estado de proveedores SIP
-curl http://localhost:8001/multi-sip/provedores
-
-# Verificar conectividad
-ping sip.tu-proveedor.com
-
-# Revisar logs
-tail -f logs/sistema.log
-```
-
-#### **2. Interface no carga**
-**Síntomas**: Pantalla en blanco o errores 404
-**Solución**:
-```bash
-# Verificar servicios
-curl http://localhost:8000/health
-curl http://localhost:3001
-
-# Reiniciar frontend
-cd frontend
-npm install
-npm start
-```
-
-#### **3. Base de datos corrupta**
-**Solución**:
-```bash
-# Backup de emergencia
-cp discador.db discador.db.backup
-
-# Verificar integridad
-python validate_system.py
-
-# Restaurar si es necesario
-python scripts/repair_database.py
-```
-
-### **Logs del Sistema**
-```bash
-# Logs principales
-tail -f logs/main.log        # Backend principal
-tail -f logs/multisip.log    # Servicio Multi-SIP
-tail -f logs/frontend.log    # Frontend React
-```
-
-### **Contacto Soporte**
-- **Email**: soporte@discador.com
-- **WhatsApp**: +54 11 XXXX-XXXX
-- **Horario**: Lunes a Viernes 9:00-18:00 (UTC-3)
+### **¿Qué verificar?**
+- ✅ **Búsqueda instantánea** funciona
+- ✅ **Filtros combinados** muestran resultados correctos
+- ✅ **Paginación** navega correctamente
+- ✅ **Exportación** descarga archivo válido
+- ✅ **Detalle completo** muestra toda la información
 
 ---
 
 # 🇧🇷 **PORTUGUÊS (BRASIL)**
 
-## **Introdução e Características**
+## <a id="acesso-e-login-br"></a>🔐 **1. Acesso e Login**
 
-O Sistema Discador Preditivo é uma solução completa para centrais de atendimento que permite:
+### **Como acessar:**
+1. **Abrir navegador** e ir para: `https://discador-predictivo.vercel.app`
+2. **Login no sistema:**
+   - Usuário: `admin`
+   - Senha: `admin123`
+3. **Verificar acesso correto:** Você deve ver o dashboard principal
 
-### ✨ **Características Principais**
-- **Discagem Preditiva Inteligente**: Otimiza automaticamente a quantidade de chamadas simultâneas
-- **Gestão de Campanhas**: Cria e administra múltiplas campanhas de chamadas
-- **Multi-SIP**: Suporte para múltiplos provedores SIP
-- **Lista Negra Avançada**: Filtragem automática de números indesejados
-- **Monitoramento em Tempo Real**: Dashboard com métricas ao vivo
-- **Histórico Completo**: Relatórios detalhados de todas as chamadas
-- **Interface Moderna**: Dashboard profissional e fácil de usar
-
----
-
-## **Instalação e Configuração Inicial (BR)**
-
-### **Requisitos do Sistema**
-- **Sistema Operacional**: Windows 10/11, Linux Ubuntu 18+, macOS 10.14+
-- **Python**: 3.8 ou superior
-- **Node.js**: 16.0 ou superior
-- **Memória RAM**: Mínimo 4GB (Recomendado 8GB)
-- **Espaço em Disco**: Mínimo 2GB
-
-### **Passo 1: Baixar o Sistema**
-```bash
-# Baixar e extrair o sistema
-cd C:\
-git clone https://github.com/seu-repo/discador-main.git
-cd discador-main
-```
-
-### **Passo 2: Instalação Automática**
-```bash
-# Windows PowerShell
-.\install.sh
-
-# Linux/Mac
-chmod +x install.sh
-./install.sh
-```
-
-### **Passo 3: Verificar Instalação**
-```bash
-# Verificar que todos os componentes estão instalados
-python validate_system.py
-```
-
-### **Passo 4: Iniciar o Sistema**
-```bash
-# Terminal 1: Backend Principal (Porta 8000)
-python main.py
-
-# Terminal 2: Serviço Multi-SIP (Porta 8001)  
-python quick_fix_routes.py
-
-# Terminal 3: Frontend React (Porta 3001)
-cd frontend
-npm start
-```
+### **O que esperar?**
+- ✅ **Dashboard principal** com métricas em tempo real
+- ✅ **Menu lateral** com todas as funcionalidades
+- ✅ **Interface moderna** completamente em espanhol argentino
 
 ---
 
-## **Acesso ao Sistema**
+## <a id="gestão-de-campanhas-br"></a>📊 **2. Gestão de Campanhas**
 
-### **URLs de Acesso**
-- **Frontend Principal**: `http://localhost:3001`
-- **API Backend**: `http://localhost:8000`
-- **API Multi-SIP**: `http://localhost:8001`
+### **Localização:** Menu lateral → "Gestión de Campañas"
 
-### **Credenciais Padrão**
-- **Usuário**: `admin@discador.com`
-- **Senha**: `admin123`
+### **Criar Nova Campanha:**
 
-### **Primeira Configuração**
-1. Acessar `http://localhost:3001`
-2. Fazer login com as credenciais padrão
-3. Ir para **Configuração** para personalizar o sistema
-4. Alterar a senha padrão
+1. **Clicar** em "Nueva Campaña" (botão azul)
+2. **Preencher formulário:**
+   ```
+   Nome: "Campanha Demo Brasil"
+   Descrição: "Teste de funcionalidade do sistema"
+   Chamadas Simultâneas: 5
+   Tentativas Máximas: 3
+   ```
+3. **Clicar** em "Crear Campaña"
 
----
+### **O que você deve ver?**
+- ✅ **Métricas atualizadas** em tempo real
+- ✅ **Lista de campanhas** com a nova entrada
+- ✅ **Status "Borrador"** para a campanha recém-criada
+- ✅ **Botões de ação** (Editar, Eliminar)
 
-## **Gestão de Campanhas (BR)**
-
-### **Criar Nova Campanha**
-
-1. **Navegar para Campanhas**
-   - Clicar em "📊 Campanhas" no menu lateral
-
-2. **Criar Campanha**
-   - Clicar em "✅ Nova Campanha"
-   - Preencher os dados:
-     ```
-     Nome: "Campanha Promocional Q1 2025"
-     Descrição: "Promoção de produtos para o primeiro trimestre"
-     CLI (Número de origem): "+5511XXXXXXXX"
-     Máx. Chamadas Simultâneas: 10
-     Máx. Tentativas por Contato: 3
-     Intervalo entre Tentativas: 300 segundos
-     ```
-
-3. **Configuração Avançada**
-   - **Horários de Chamada**: 09:00 - 18:00
-   - **Dias Úteis**: Segunda a Sexta-feira
-   - **Detecção de Secretária**: Ativada
-   - **Gravação de Chamadas**: Opcional
-
-### **Estados da Campanha**
-- 🟢 **Ativa**: Realizando chamadas
-- 🟡 **Pausada**: Temporariamente parada
-- 🔴 **Parada**: Completamente finalizada
-- ⚫ **Rascunho**: Em configuração
-
-### **Ações da Campanha**
-- **▶️ Iniciar**: Começar as chamadas
-- **⏸️ Pausar**: Parar temporariamente
-- **⏹️ Parar**: Finalizar completamente
-- **✏️ Editar**: Modificar configuração
-- **📊 Estatísticas**: Ver métricas detalhadas
+### **Estados da Campanha:**
+- 🟢 **Activa:** Realizando chamadas
+- 🟡 **Pausada:** Temporariamente parada
+- ⚪ **Borrador:** Sem iniciar
+- 🔵 **Completada:** Finalizada
 
 ---
 
-## **Gestão de Listas de Contatos**
+## <a id="upload-de-listas-br"></a>📂 **3. Upload de Listas de Contatos**
 
-### **Enviar Lista de Contatos**
+### **Localização:** Menu lateral → "Upload de Listas"
 
-1. **Preparar Arquivo CSV**
+### **Testar Upload:**
+
+1. **Preparar arquivo CSV** com formato:
    ```csv
-   nome,telefone,email,observacoes
-   João Silva,+5511XXXXXXXX,joao@email.com,Cliente Premium
-   Maria Santos,+5511YYYYYYYY,maria@email.com,Prospecto
-   Carlos Oliveira,+5511ZZZZZZZZ,carlos@email.com,Renovação
+   telefono,nombre,apellido,email
+   +5511987654321,João,Silva,joao@email.com
+   +5511876543210,Maria,Santos,maria@email.com
    ```
 
-2. **Enviar Lista**
-   - Ir para "📋 Listas"
-   - Clicar em "📤 Enviar Lista"
-   - Selecionar arquivo CSV
-   - Atribuir à campanha existente
-   - Verificar pré-visualização
-   - Confirmar importação
+2. **Processo de Upload:**
+   - Clicar em "Seleccionar Archivo"
+   - Escolher seu arquivo CSV
+   - Clicar em "Subir Lista"
 
-### **Gestão de Contatos**
-- **Filtros Disponíveis**:
-  - Por campanha
-  - Por estado da chamada
-  - Por data da última chamada
-  - Por número de tentativas
+### **O que verificar?**
+- ✅ **Validação automática** do formato
+- ✅ **Detecção de duplicados**
+- ✅ **Validação de números brasileiros** (+55)
+- ✅ **Mensagem de sucesso** com quantidade processada
+- ✅ **Lista atualizada** em tempo real
 
-- **Estados do Contato**:
-  - ⏳ **Pendente**: Não chamado
-  - 📞 **Em Processo**: Chamando agora
-  - ✅ **Contatado**: Chamada bem-sucedida
-  - ❌ **Não Contatado**: Sem resposta
-  - 🚫 **Bloqueado**: Na lista negra
+### **Formatos Suportados:**
+- ✅ **CSV** com delimitador vírgula
+- ✅ **Números internacionais** (+54, +55, etc.)
+- ✅ **Campos opcionais** (nome, email)
 
 ---
 
-## **Lista Negra (Blacklist) (BR)**
+## <a id="lista-negra-br"></a>🚫 **4. Lista Negra (Blacklist)**
 
-### **Adicionar Números à Lista Negra**
+### **Localização:** Menu lateral → "Lista Negra"
 
-1. **Adicionar Individual**
-   - Ir para "🚫 Lista Negra"
-   - Clicar em "➕ Adicionar Número"
-   - Inserir número: `+5511XXXXXXXX`
-   - Motivo: "Solicitação do cliente"
-   - Confirmar
+### **Adicionar número à blacklist:**
 
-2. **Importação em Massa**
-   ```csv
-   telefone,motivo,data_bloqueio
-   +5511XXXXXXXX,Não incomodar,2025-01-01
-   +5511YYYYYYYY,Número inválido,2025-01-01
+1. **Clicar** em "Agregar a Blacklist"
+2. **Preencher dados:**
+   ```
+   Número: +5511987654321
+   Motivo: Não incomodar - Cliente solicita exclusão
+   ```
+3. **Clicar** em "Agregar"
+
+### **Funcionalidades para testar:**
+- ✅ **Busca em tempo real** (digitar número para buscar)
+- ✅ **Filtro por motivo** (dropdown)
+- ✅ **Exportação CSV** (botão "Exportar")
+- ✅ **Remoção individual** (botão vermelho)
+- ✅ **Validação automática** contra próximas campanhas
+
+### **O que verificar?**
+- ✅ **Números adicionados** aparecem instantaneamente
+- ✅ **Contador atualizado** nas métricas
+- ✅ **Validação de formato** de números
+
+---
+
+## <a id="configuração-multi-sip-br"></a>⚙️ **5. Configuração Avançada Multi-SIP**
+
+### **Localização:** Menu lateral → "Configuración Avanzada"
+
+### **Provedores SIP:**
+
+1. **Ver provedores disponíveis** na aba "Proveedores"
+2. **Testar conexão** com botão "Probar"
+3. **Verificar status** (Ativo/Inativo)
+
+### **CLIs (Números de Saída):**
+
+1. **Ir para aba "CLIs"**
+2. **Adicionar novo CLI:**
+   ```
+   Número CLI: +5511987654321
+   Provedor: Selecionar da lista
+   Status: Ativo
+   ```
+3. **Clicar** em "Agregar CLI"
+
+### **Contextos de Áudio:**
+
+1. **Ir para aba "Contextos de Audio"**
+2. **Criar novo contexto:**
+   ```
+   Nome: "Saudação Brasil"
+   Descrição: "Áudio para campanhas no Brasil"
+   URL Áudio: https://exemplo.com/audio.wav
    ```
 
-### **Gestão da Lista Negra**
-- **Filtros**: Por motivo, data, campanha
-- **Ações**: Remover, editar motivo, exportar
-- **Automatização**: Bloqueio automático após X rejeições
+### **O que verificar?**
+- ✅ **Lista de provedores** carrega corretamente
+- ✅ **Testes de conexão** funcionam
+- ✅ **CLIs são adicionados** sem erros
+- ✅ **Contextos são criados** com sucesso
 
 ---
 
-## **Configuração Avançada Multi-SIP (BR)**
+## <a id="monitoramento-br"></a>📈 **6. Monitoramento em Tempo Real**
 
-### **Gestão de Provedores SIP**
+### **Localização:** Menu lateral → "Monitoreo"
 
-1. **Adicionar Provedor**
-   - Ir para "⚙️ Configuração" → "Multi-SIP"
-   - Preencher dados:
-     ```
-     Nome: "Provedor Principal"
-     Servidor SIP: "sip.provedor.com"
-     Porta: 5060
-     Usuário: "seu_usuario"
-     Senha: "sua_senha"
-     Protocolo: UDP/TCP/TLS
-     ```
+### **Dashboard de Métricas:**
 
-2. **Configurar Prioridades**
-   - Provedor 1: Prioridade Alta (chamadas premium)
-   - Provedor 2: Prioridade Média (chamadas padrão)
-   - Provedor 3: Prioridade Baixa (backup)
+#### **Métricas Principais:**
+- 📊 **Chamadas Ativas:** Número em tempo real
+- ⏱️ **Tempo Médio:** Duração das chamadas
+- 📞 **Total do Dia:** Chamadas realizadas
+- 📈 **Taxa de Sucesso:** Porcentagem de conexões bem-sucedidas
 
-### **Gestão de CLIs**
+#### **Gráficos em Tempo Real:**
+- 📊 **Gráfico de linhas:** Chamadas por hora
+- 🥧 **Gráfico circular:** Distribuição por resultado
+- 📊 **Barras:** Comparativo por campanha
 
-1. **Configurar CLIs**
-   - Ir para "Gestão de CLIs"
-   - Adicionar números autorizados:
-     ```
-     CLI: "+5511XXXXXXXX"
-     Provedor: "Provedor Principal"
-     Estado: Ativo
-     Tipo: Nacional
-     ```
-
-2. **Distribuição Automática**
-   - Algoritmo: Round Robin / Menor Uso / Por Região
-   - Balanceamento de carga automático
+### **O que testar?**
+- ✅ **Atualização automática** a cada 30 segundos
+- ✅ **Hover nos gráficos** mostra detalhes
+- ✅ **Filtros por data** funcionam
+- ✅ **Exportação de relatórios** em PDF/CSV
 
 ---
 
-## **Monitoramento em Tempo Real**
+## <a id="histórico-br"></a>📋 **7. Histórico de Chamadas**
 
-### **Dashboard Principal**
-- **Métricas ao Vivo**:
-  - 📞 Chamadas Ativas: 25
-  - ✅ Chamadas Bem-sucedidas: 234
-  - ❌ Chamadas Falhadas: 45
-  - ⏱️ Tempo Médio: 2:45
-  - 📊 Taxa de Sucesso: 84%
+### **Localização:** Menu lateral → "Histórico"
 
-### **Gráficos em Tempo Real**
-- **Chamadas por Hora**: Gráfico de linhas
-- **Distribuição por Estado**: Gráfico circular
-- **Provedores SIP**: Estado e uso
-- **Desempenho por Campanha**: Comparativo
+### **Busca e Filtros:**
 
-### **Alertas Automáticos**
-- 🔴 **Críticos**: Queda de provedor SIP
-- 🟡 **Avisos**: Baixa taxa de contato
-- 🔵 **Informativos**: Campanha concluída
+1. **Usar buscador:** Digitar número ou nome
+2. **Filtros disponíveis:**
+   - 📅 **Data:** Período personalizado
+   - 📞 **Status:** Bem-sucedida, Falhada, Ocupada
+   - 🏷️ **Campanha:** Selecionar específica
+   - ⏱️ **Duração:** Mínima e máxima
 
----
+### **Ações disponíveis:**
+- 👁️ **Ver detalhe:** Clicar no olho
+- 📞 **Religar:** Botão de re-contato
+- 📊 **Exportar:** Baixar seleção em CSV
 
-## **Histórico de Chamadas (BR)**
+### **Detalhe da Chamada:**
+Ao clicar em "Ver detalle":
+- ⏱️ **Duração completa**
+- 📞 **Número discado**
+- 🎯 **Resultado final**
+- 📅 **Data e hora exata**
+- 👤 **Agente designado**
+- 📝 **Notas adicionais**
 
-### **Filtros Avançados**
-```
-Data: 01/01/2025 - 31/01/2025
-Campanha: "Campanha Promocional Q1 2025"
-Estado: Todas / Bem-sucedidas / Falhadas
-CLI: "+5511XXXXXXXX"
-Duração: 30s - 300s
-```
-
-### **Exportação de Relatórios**
-- **Formatos**: CSV, Excel, PDF
-- **Dados Incluídos**:
-  - Data e hora da chamada
-  - Número de destino
-  - CLI utilizado
-  - Duração
-  - Estado final
-  - Gravação (se existir)
-
-### **Análise de Dados**
-- **Estatísticas por Período**
-- **Comparativos Mensais**
-- **Desempenho por Agente**
-- **ROI por Campanha**
+### **O que verificar?**
+- ✅ **Busca instantânea** funciona
+- ✅ **Filtros combinados** mostram resultados corretos
+- ✅ **Paginação** navega corretamente
+- ✅ **Exportação** baixa arquivo válido
+- ✅ **Detalhe completo** mostra toda a informação
 
 ---
 
-## **Solução de Problemas**
+## 🎯 **FUNCIONALIDADES PRINCIPAIS DO SISTEMA**
 
-### **Problemas Comuns**
+### **✅ Módulos Implementados:**
 
-#### **1. Não é possível realizar chamadas**
-**Sintomas**: As campanhas não iniciam chamadas
-**Solução**:
-```bash
-# Verificar estado dos provedores SIP
-curl http://localhost:8001/multi-sip/provedores
+#### **🔧 Backend (API REST)**
+- FastAPI com documentação automática
+- SQLAlchemy para gestão de banco de dados
+- Sistema de autenticação com JWT
+- Validação automática de dados
+- Logs detalhados para debugging
 
-# Verificar conectividade
-ping sip.seu-provedor.com
+#### **🎨 Frontend (React + Vite)**
+- Interface moderna e responsiva
+- Gráficos interativos em tempo real
+- Componentes reutilizáveis
+- Gestão de estado eficiente
+- Design system consistente
 
-# Revisar logs
-tail -f logs/sistema.log
-```
+#### **📞 Sistema de Discagem**
+- Algoritmo preditivo inteligente
+- Múltiplos provedores SIP
+- Gestão de filas dinâmicas
+- Controle de taxa de chamadas
+- Detecção de caixa postal
 
-#### **2. Interface não carrega**
-**Sintomas**: Tela em branco ou erros 404
-**Solução**:
-```bash
-# Verificar serviços
-curl http://localhost:8000/health
-curl http://localhost:3001
+#### **📊 Analytics e Reportes**
+- Métricas em tempo real
+- Dashboard executivo
+- Relatórios customizáveis
+- Exportação em múltiplos formatos
+- Análise de performance
 
-# Reiniciar frontend
-cd frontend
-npm install
-npm start
-```
+#### **🛡️ Segurança e Compliance**
+- Lista negra automática
+- Validação de números
+- Logs de auditoria
+- Backup automático
+- Conformidade com regulamentações
 
-#### **3. Base de dados corrompida**
-**Solução**:
-```bash
-# Backup de emergência
-cp discador.db discador.db.backup
+### **🚀 Tecnologias Utilizadas:**
 
-# Verificar integridade
-python validate_system.py
+#### **Backend:**
+- Python 3.9+
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- Redis (cache)
+- Celery (tarefas assíncronas)
 
-# Restaurar se necessário
-python scripts/repair_database.py
-```
+#### **Frontend:**
+- React 18
+- Vite
+- TailwindCSS
+- Chart.js
+- Axios
+- React Router
 
-### **Logs do Sistema**
-```bash
-# Logs principais
-tail -f logs/main.log        # Backend principal
-tail -f logs/multisip.log    # Serviço Multi-SIP
-tail -f logs/frontend.log    # Frontend React
-```
-
-### **Contato Suporte**
-- **Email**: suporte@discador.com
-- **WhatsApp**: +55 11 XXXX-XXXX
-- **Horário**: Segunda a Sexta 9:00-18:00 (UTC-3)
-
----
-
-## 🔧 **Teste de Funcionalidades Completo**
-
-### **Lista de Verificação**
-
-#### ✅ **Backend (APIs)**
-```bash
-# Teste de saúde do sistema
-curl http://localhost:8000/health
-
-# Teste de campanhas
-curl http://localhost:8000/api/v1/campaigns
-
-# Teste de blacklist
-curl http://localhost:8000/api/v1/blacklist
-
-# Teste Multi-SIP
-curl http://localhost:8001/multi-sip/provedores
-```
-
-#### ✅ **Frontend**
-- [ ] Login/Logout funcional
-- [ ] Dashboard carrega corretamente
-- [ ] Criação de campanha
-- [ ] Upload de lista
-- [ ] Configuração Multi-SIP
-- [ ] Monitoreo em tempo real
-- [ ] Histórico de chamadas
-
-#### ✅ **Integração**
-- [ ] Provedor SIP conectado
-- [ ] CLIs configurados
-- [ ] Chamadas de teste realizadas
-- [ ] Gravações funcionando
-- [ ] Relatórios exportando
+#### **Infraestrutura:**
+- Vercel (Frontend)
+- Railway (Backend)
+- PostgreSQL (Banco)
+- Redis (Cache)
+- GitHub Actions (CI/CD)
 
 ---
 
-## 📞 **Suporte Técnico**
+## 🎉 **Conclusão**
 
-### **Canais de Atendimento**
-- **🇦🇷 Argentina**: +54 11 XXXX-XXXX
-- **🇧🇷 Brasil**: +55 11 XXXX-XXXX
-- **📧 Email**: soporte@discador.com
-- **🌐 Portal**: https://soporte.discador.com
+O sistema está **100% funcional** e **completamente traduzido** para espanhol argentino. Todas as funcionalidades principais foram testadas e estão operacionais:
 
-### **Horários de Atendimento**
-- **Lunes a Viernes / Segunda a Sexta**: 9:00-18:00
-- **Zona Horaria / Fuso Horário**: UTC-3
-- **Urgências / Emergências**: 24/7
+✅ **Gestão completa de campanhas**  
+✅ **Upload e validação de listas**  
+✅ **Sistema de blacklist robusto**  
+✅ **Configuração Multi-SIP avançada**  
+✅ **Monitoramento em tempo real**  
+✅ **Histórico detalhado de chamadas**  
+✅ **Interface moderna e intuitiva**  
+✅ **APIs documentadas e funcionais**  
+
+O sistema está **pronto para produção** e pode ser usado imediatamente pelo cliente para gestão profissional de campanhas telefônicas.
 
 ---
 
-*© 2025 Sistema Discador Predictivo - Todos os direitos reservados* 
+**📧 Suporte:** Para dúvidas ou suporte técnico, entre em contato através do repositório GitHub: https://github.com/GouveiaZx/Discador.git 

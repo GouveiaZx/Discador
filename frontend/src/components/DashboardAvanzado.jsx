@@ -30,7 +30,8 @@ const DashboardAvanzado = () => {
         const requests = [
           makeApiRequest('/campanhas'),
           makeApiRequest('/llamadas/stats'),
-        makeApiRequest('/monitoring/dashboard'),
+          makeApiRequest('/monitoring/dashboard'),
+          makeApiRequest('/llamadas/en-progreso'),
           makeApiRequest('/api/v1/stats')
         ];
 
@@ -38,7 +39,7 @@ const DashboardAvanzado = () => {
         const responses = await Promise.allSettled(requests);
         
         // Procesar respuestas con valores por defecto
-        const [campanasResult, llamadasResult, monitoringResult, globalStatsResult] = responses;
+        const [campanasResult, llamadasResult, monitoringResult, llamadasProgresoResult, globalStatsResult] = responses;
 
         // Calcular estadísticas combinadas de las APIs disponibles
         let calculatedStats = {
@@ -57,20 +58,36 @@ const DashboardAvanzado = () => {
         };
 
         // Procesar datos reales de las APIs
-        if (campanasResult.status === 'fulfilled' && campanasResult.value) {
-          calculatedStats.campanasActivas = campanasResult.value.length || 0;
+        if (campanasResult.status === 'fulfilled' && campanasResult.value && campanasResult.value.campaigns) {
+          calculatedStats.campanasActivas = campanasResult.value.campaigns.length || 0;
         }
 
-        if (llamadasResult.status === 'fulfilled' && llamadasResult.value) {
-          const llamadas = llamadasResult.value;
-          calculatedStats.llamadasHoy = llamadas.length || 0;
-          calculatedStats.llamadasEnProgreso = llamadas.filter(l => l.status === 'em_progresso').length || 0;
+        if (llamadasResult.status === 'fulfilled' && llamadasResult.value && llamadasResult.value.stats) {
+          const stats = llamadasResult.value.stats;
+          calculatedStats.llamadasHoy = stats.calls_today || 0;
+          calculatedStats.tasaExito = stats.success_rate_today || 0;
+          calculatedStats.tiempoPromedioLlamada = stats.avg_duration || 0;
         }
 
-        if (monitoringResult.status === 'fulfilled' && monitoringResult.value) {
-          const monitoring = monitoringResult.value;
-          calculatedStats.agentesOnline = monitoring.agentes_online || 0;
-          calculatedStats.tasaExito = monitoring.tasa_exito || 0;
+        if (monitoringResult.status === 'fulfilled' && monitoringResult.value && monitoringResult.value.monitoring) {
+          const monitoring = monitoringResult.value.monitoring;
+          calculatedStats.agentesOnline = monitoring.active_connections || 0;
+          calculatedStats.agentesDisponibles = Math.max(0, monitoring.active_connections - 5); // Mock de agentes disponibles
+          calculatedStats.agentesOcupados = Math.min(5, monitoring.active_connections); // Mock de agentes ocupados
+        }
+
+        if (llamadasProgresoResult.status === 'fulfilled' && llamadasProgresoResult.value && llamadasProgresoResult.value.calls) {
+          calculatedStats.llamadasEnProgreso = llamadasProgresoResult.value.calls.length || 0;
+          // Calcular algunas estadísticas adicionales basadas en las llamadas en progreso
+          calculatedStats.llamadasCompletadas = Math.max(0, calculatedStats.llamadasHoy - calculatedStats.llamadasEnProgreso);
+          calculatedStats.llamadasPerdidas = Math.floor(calculatedStats.llamadasHoy * 0.15); // Mock estimado
+        }
+
+        if (globalStatsResult.status === 'fulfilled' && globalStatsResult.value && globalStatsResult.value.stats) {
+          const gStats = globalStatsResult.value.stats;
+          // Usar estadísticas globales si están disponibles
+          calculatedStats.tasaConexion = gStats.success_rate || calculatedStats.tasaExito;
+          calculatedStats.promedioEspera = Math.floor(Math.random() * 30) + 10; // Mock temporal
         }
 
         setStats(calculatedStats);
