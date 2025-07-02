@@ -74,7 +74,7 @@ def inicializar_bd() -> None:
     """
     Crea todas las tablas definidas en los modelos.
     """
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine, checkfirst=True)
 
 # Funcion para cerrar la conexion a la base de datos
 def cerrar_conexion() -> None:
