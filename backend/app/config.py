@@ -18,7 +18,7 @@ class Configuracion(BaseSettings):
     DEBUG: bool = False
     
     # Configuracao del servidor
-    PUERTO: int = 8000
+    PUERTO: int = int(os.environ.get("PORT", 8000))
     HOST: str = "0.0.0.0"
     
     # Configuracao de la base de datos
