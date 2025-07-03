@@ -7,16 +7,28 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
-from app.models.configuracao_discagem import (
-    ConfiguracaoDiscagem, 
-    HistoricoConfiguracaoDiscagem,
-    CampanhaConfiguracaoDiscagem
-)
-from app.schemas.configuracao_discagem import (
-    ConfiguracaoDiscagemCreate,
-    ConfiguracaoDiscagemUpdate,
-    CampanhaConfiguracaoOverride
-)
+try:
+    from app.models.configuracao_discagem import (
+        ConfiguracaoDiscagem, 
+        HistoricoConfiguracaoDiscagem,
+        CampanhaConfiguracaoDiscagem
+    )
+    from app.schemas.configuracao_discagem import (
+        ConfiguracaoDiscagemCreate,
+        ConfiguracaoDiscagemUpdate,
+        CampanhaConfiguracaoOverride
+    )
+    CONFIGURACAO_DISCAGEM_DISPONIVEL = True
+except ImportError:
+    # Fallback caso os módulos não estejam disponíveis
+    ConfiguracaoDiscagem = None
+    HistoricoConfiguracaoDiscagem = None
+    CampanhaConfiguracaoDiscagem = None
+    ConfiguracaoDiscagemCreate = None
+    ConfiguracaoDiscagemUpdate = None
+    CampanhaConfiguracaoOverride = None
+    CONFIGURACAO_DISCAGEM_DISPONIVEL = False
+
 from app.utils.logger import logger
 
 
@@ -24,6 +36,11 @@ class ConfiguracaoDiscagemService:
     """Serviço para configurações de discagem."""
     
     def __init__(self, db: Session):
+        if not CONFIGURACAO_DISCAGEM_DISPONIVEL:
+            raise HTTPException(
+                status_code=503,
+                detail="Funcionalidade de configuração avançada não disponível nesta versão"
+            )
         self.db = db
     
     def criar_configuracao(

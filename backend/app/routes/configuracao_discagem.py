@@ -7,24 +7,40 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import obtener_sesion
-from app.services.configuracao_discagem_service import ConfiguracaoDiscagemService
-from app.schemas.configuracao_discagem import (
-    ConfiguracaoDiscagemCreate,
-    ConfiguracaoDiscagemUpdate,
-    ConfiguracaoDiscagemResponse,
-    ConfiguracaoDiscagemListResponse,
-    CampanhaConfiguracaoOverride,
-    CampanhaConfiguracaoResponse,
-    HistoricoConfiguracaoResponse
-)
+try:
+    from app.services.configuracao_discagem_service import ConfiguracaoDiscagemService
+    from app.schemas.configuracao_discagem import (
+        ConfiguracaoDiscagemCreate,
+        ConfiguracaoDiscagemUpdate,
+        ConfiguracaoDiscagemResponse,
+        ConfiguracaoDiscagemListResponse,
+        CampanhaConfiguracaoOverride,
+        CampanhaConfiguracaoResponse,
+        HistoricoConfiguracaoResponse
+    )
+    CONFIGURACAO_DISCAGEM_DISPONIVEL = True
+except ImportError:
+    # Fallback caso os módulos não estejam disponíveis
+    ConfiguracaoDiscagemService = None
+    CONFIGURACAO_DISCAGEM_DISPONIVEL = False
+    
 from app.utils.logger import logger
 
 router = APIRouter(prefix="/configuracao-discagem", tags=["Configuração de Discagem"])
 
 
-@router.post("/", response_model=ConfiguracaoDiscagemResponse)
+def verificar_disponibilidade():
+    """Verifica se a funcionalidade está disponível."""
+    if not CONFIGURACAO_DISCAGEM_DISPONIVEL:
+        raise HTTPException(
+            status_code=503,
+            detail="Funcionalidade de configuração avançada não disponível nesta versão"
+        )
+
+
+@router.post("/", response_model=ConfiguracaoDiscagemResponse if CONFIGURACAO_DISCAGEM_DISPONIVEL else dict)
 def criar_configuracao(
-    configuracao: ConfiguracaoDiscagemCreate,
+    configuracao: ConfiguracaoDiscagemCreate if CONFIGURACAO_DISCAGEM_DISPONIVEL else dict,
     db: Session = Depends(obtener_sesion)
 ):
     """
@@ -42,6 +58,8 @@ def criar_configuracao(
     - Horários permitidos
     - Detecção de fax/ocupado
     """
+    verificar_disponibilidade()
+    
     try:
         service = ConfiguracaoDiscagemService(db)
         nova_configuracao = service.criar_configuracao(configuracao)

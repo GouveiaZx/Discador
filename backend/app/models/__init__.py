@@ -22,8 +22,14 @@ from .audio_sistema import (
     AudioEvento, AudioTemplate, EstadoAudio, TipoOperadorRegra
 )
 
-# Importar novos modelos de configuração avançada
-from .configuracao_discagem import ConfiguracaoDiscagem, HistoricoConfiguracaoDiscagem, CampanhaConfiguracaoDiscagem
+# Importar novos modelos de configuração avançada (com fallback)
+try:
+    from .configuracao_discagem import ConfiguracaoDiscagem, HistoricoConfiguracaoDiscagem, CampanhaConfiguracaoDiscagem
+except ImportError:
+    # Fallback caso o módulo não esteja disponível no ambiente de produção
+    ConfiguracaoDiscagem = None
+    HistoricoConfiguracaoDiscagem = None
+    CampanhaConfiguracaoDiscagem = None
 
 # Lista de todos os modelos para facilitar importações
 __all__ = [
@@ -75,8 +81,13 @@ __all__ = [
     "AudioEvento",
     "AudioTemplate",
     "EstadoAudio",
-    "TipoOperadorRegra",
-    "ConfiguracaoDiscagem",
-    "HistoricoConfiguracaoDiscagem",
-    "CampanhaConfiguracaoDiscagem"
-] 
+    "TipoOperadorRegra"
+]
+
+# Adicionar modelos de configuração apenas se estiverem disponíveis
+if ConfiguracaoDiscagem is not None:
+    __all__.extend([
+        "ConfiguracaoDiscagem",
+        "HistoricoConfiguracaoDiscagem", 
+        "CampanhaConfiguracaoDiscagem"
+    ]) 
