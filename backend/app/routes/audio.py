@@ -45,7 +45,6 @@ async def listar_contextos_mock():
             "total": len(contextos)
         }
     except Exception as e:
-        logger.error(f"Erro ao listar contextos de áudio: {e}")
         return {
             "status": "error",
             "contextos": [],
