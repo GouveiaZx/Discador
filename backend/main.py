@@ -9,7 +9,7 @@ import os
 from datetime import datetime
 from contextlib import asynccontextmanager
 
-from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, multi_sip, monitoring
+from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, multi_sip, monitoring, audio
 from app.database import inicializar_bd, get_db
 from app.config import configuracion
 from app.utils.logger import logger
@@ -75,132 +75,43 @@ app.include_router(code2base.router, prefix=f"{api_prefix}")
 app.include_router(campanha_politica.router, prefix=f"{api_prefix}/campanha-politica")
 app.include_router(multi_sip.router, prefix=f"{api_prefix}")
 app.include_router(monitoring.router, prefix=f"{api_prefix}")
+app.include_router(audio.router, prefix=f"{api_prefix}")
 
 # Router para rotas ausentes
 missing_routes = APIRouter()
 
-@missing_routes.get("/multi-sip/provedores")
-async def listar_provedores():
-    """Lista provedores SIP disponíveis - versão simplificada"""
-    try:
-        logger.info("Listando provedores SIP (mock data)")
-        provedores = [
-            {
-                "id": 1,
-                "nome": "Provedor Principal",
-                "servidor_sip": "sip.exemplo.com",
-                "porta": 5060,
-                "status": "ativo",
-                "prioridade": 1,
-                "max_chamadas_simultaneas": 50,
-                "chamadas_ativas": 0,
-                "ultima_verificacao": datetime.now().isoformat()
-            },
-            {
-                "id": 2,
-                "nome": "Provedor Backup", 
-                "servidor_sip": "backup.sip.com",
-                "porta": 5061,
-                "status": "standby",
-                "prioridade": 2,
-                "max_chamadas_simultaneas": 30,
-                "chamadas_ativas": 0,
-                "ultima_verificacao": datetime.now().isoformat()
-            }
-        ]
-        return {
-            "status": "success",
-            "provedores": provedores,
-            "total": len(provedores)
-        }
-    except Exception as e:
-        logger.error(f"Erro ao listar provedores: {e}")
-        return {
-            "status": "error",
-            "provedores": [],
-            "total": 0,
-            "error": str(e)
-        }
+# Endpoints OPTIONS para CORS
+@missing_routes.options("/code2base/clis")
+async def options_code2base_clis():
+    """Endpoint OPTIONS para CORS"""
+    return {"message": "OK"}
 
 @missing_routes.get("/code2base/clis")
 async def listar_clis():
     """Lista CLIs disponíveis"""
-    try:
-        logger.info("Listando CLIs (mock data)")
-        clis = [
-            {
-                "id": 1,
-                "numero": "+5511999887766",
-                "descricao": "CLI Principal",
-                "ativo": True,
-                "tipo": "nacional",
-                "ultima_utilizacao": datetime.now().isoformat()
-            },
-            {
-                "id": 2,
-                "numero": "+5511888776655",
-                "descricao": "CLI Secundário",
-                "ativo": True,
-                "tipo": "nacional", 
-                "ultima_utilizacao": None
-            }
-        ]
-        return {
-            "status": "success",
-            "clis": clis,
-            "total": len(clis)
+    clis = [
+        {
+            "id": 1,
+            "numero": "+5511999887766",
+            "descricao": "CLI Principal",
+            "ativo": True,
+            "tipo": "nacional",
+            "ultima_utilizacao": datetime.now().isoformat()
+        },
+        {
+            "id": 2,
+            "numero": "+5511888776655",
+            "descricao": "CLI Secundário",
+            "ativo": True,
+            "tipo": "nacional", 
+            "ultima_utilizacao": None
         }
-    except Exception as e:
-        logger.error(f"Erro ao listar CLIs: {e}")
-        return {
-            "status": "error",
-            "clis": [],
-            "total": 0,
-            "error": str(e)
-        }
-
-@missing_routes.get("/audio/contextos")
-async def listar_contextos_audio():
-    """Lista contextos de áudio - versão simplificada"""
-    try:
-        logger.info("Listando contextos de áudio (mock data)")
-        contextos = [
-            {
-                "id": 1,
-                "nome": "Contexto Padrão",
-                "descricao": "Contexto de áudio padrão para campanhas",
-                "ativo": True,
-                "configuracoes": {
-                    "deteccao_voz": True,
-                    "timeout_resposta": 5,
-                    "max_tentativas": 3
-                }
-            },
-            {
-                "id": 2,
-                "nome": "Contexto Personalizado",
-                "descricao": "Contexto de áudio personalizado",
-                "ativo": True,
-                "configuracoes": {
-                    "deteccao_voz": True,
-                    "timeout_resposta": 10,
-                    "max_tentativas": 5
-                }
-            }
-        ]
-        return {
-            "status": "success",
-            "contextos": contextos,
-            "total": len(contextos)
-        }
-    except Exception as e:
-        logger.error(f"Erro ao listar contextos de áudio: {e}")
-        return {
-            "status": "error",
-            "contextos": [],
-            "total": 0,
-            "error": str(e)
-        }
+    ]
+    return {
+        "status": "success",
+        "clis": clis,
+        "total": len(clis)
+    }
 
 # Endpoints adicionais que o frontend está tentando acessar
 @missing_routes.get("/stats")

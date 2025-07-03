@@ -36,4 +36,37 @@ def update_audio(audio_id: int, audio_in: AudioUpdate, db: Session = Depends(obt
 @router.delete("/{audio_id}", response_model=bool)
 def delete_audio(audio_id: int, db: Session = Depends(obtener_sesion)):
     service = AudioService(db)
-    return service.delete_audio(audio_id) 
+    return service.delete_audio(audio_id)
+
+@router.get("/contextos")
+def listar_contextos_audio():
+    """Lista contextos de áudio disponíveis"""
+    contextos = [
+        {
+            "id": 1,
+            "nome": "Contexto Padrão",
+            "descricao": "Contexto de áudio padrão para campanhas",
+            "ativo": True,
+            "configuracoes": {
+                "deteccao_voz": True,
+                "timeout_resposta": 5,
+                "max_tentativas": 3
+            }
+        },
+        {
+            "id": 2,
+            "nome": "Contexto Avançado",
+            "descricao": "Contexto com configurações avançadas",
+            "ativo": True,
+            "configuracoes": {
+                "deteccao_voz": True,
+                "timeout_resposta": 10,
+                "max_tentativas": 5
+            }
+        }
+    ]
+    return {
+        "status": "success",
+        "contextos": contextos,
+        "total": len(contextos)
+    } 
