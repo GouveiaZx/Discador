@@ -47,10 +47,15 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configurar CORS com mais opções
+# Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En produccion, restringir a origenes especificos
+    allow_origins=[
+        "https://discador.vercel.app",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "*"  # Temporário para debug
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -92,36 +97,42 @@ async def options_audio_contextos():
 @missing_routes.get("/multi-sip/provedores")
 async def listar_provedores():
     """Lista provedores SIP disponíveis"""
-    # Dados mock para evitar dependências complexas
-    provedores = [
-        {
-            "id": 1,
-            "nome": "Provedor Principal",
-            "servidor_sip": "sip.exemplo.com",
-            "porta": 5060,
-            "status": "ativo",
-            "prioridade": 1,
-            "max_chamadas_simultaneas": 50,
-            "chamadas_ativas": 0,
-            "ultima_verificacao": datetime.now().isoformat()
-        },
-        {
-            "id": 2,
-            "nome": "Provedor Backup", 
-            "servidor_sip": "backup.sip.com",
-            "porta": 5061,
-            "status": "standby",
-            "prioridade": 2,
-            "max_chamadas_simultaneas": 30,
-            "chamadas_ativas": 0,
-            "ultima_verificacao": datetime.now().isoformat()
+    logger.info("Endpoint /multi-sip/provedores chamado")
+    try:
+        # Implementação simplificada sem dependências de banco
+        provedores = [
+            {
+                "id": 1,
+                "nome": "Provedor Principal",
+                "servidor_sip": "sip.exemplo.com",
+                "porta": 5060,
+                "status": "ativo",
+                "prioridade": 1,
+                "max_chamadas_simultaneas": 50,
+                "chamadas_ativas": 0,
+                "ultima_verificacao": datetime.now().isoformat()
+            },
+            {
+                "id": 2,
+                "nome": "Provedor Backup", 
+                "servidor_sip": "backup.sip.com",
+                "porta": 5061,
+                "status": "standby",
+                "prioridade": 2,
+                "max_chamadas_simultaneas": 30,
+                "chamadas_ativas": 0,
+                "ultima_verificacao": datetime.now().isoformat()
+            }
+        ]
+        logger.info(f"Retornando {len(provedores)} provedores")
+        return {
+            "status": "success",
+            "provedores": provedores,
+            "total": len(provedores)
         }
-    ]
-    return {
-        "status": "success",
-        "provedores": provedores,
-        "total": len(provedores)
-    }
+    except Exception as e:
+        logger.error(f"Erro no endpoint /multi-sip/provedores: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
 
 @missing_routes.get("/code2base/clis")
 async def listar_clis():
@@ -153,36 +164,42 @@ async def listar_clis():
 @missing_routes.get("/audio/contextos")
 async def listar_contextos_audio():
     """Lista contextos de áudio"""
-    # Dados mock para evitar dependências complexas
-    contextos = [
-        {
-            "id": 1,
-            "nome": "Contexto Padrão",
-            "descricao": "Contexto de áudio padrão para campanhas",
-            "ativo": True,
-            "configuracoes": {
-                "deteccao_voz": True,
-                "timeout_resposta": 5,
-                "max_tentativas": 3
+    logger.info("Endpoint /audio/contextos chamado")
+    try:
+        # Implementação simplificada sem dependências de banco
+        contextos = [
+            {
+                "id": 1,
+                "nome": "Contexto Padrão",
+                "descricao": "Contexto de áudio padrão para campanhas",
+                "ativo": True,
+                "configuracoes": {
+                    "deteccao_voz": True,
+                    "timeout_resposta": 5,
+                    "max_tentativas": 3
+                }
+            },
+            {
+                "id": 2,
+                "nome": "Contexto Avançado",
+                "descricao": "Contexto com configurações avançadas",
+                "ativo": True,
+                "configuracoes": {
+                    "deteccao_voz": True,
+                    "timeout_resposta": 10,
+                    "max_tentativas": 5
+                }
             }
-        },
-        {
-            "id": 2,
-            "nome": "Contexto Avançado",
-            "descricao": "Contexto com configurações avançadas",
-            "ativo": True,
-            "configuracoes": {
-                "deteccao_voz": True,
-                "timeout_resposta": 10,
-                "max_tentativas": 5
-            }
+        ]
+        logger.info(f"Retornando {len(contextos)} contextos")
+        return {
+            "status": "success",
+            "contextos": contextos,
+            "total": len(contextos)
         }
-    ]
-    return {
-        "status": "success",
-        "contextos": contextos,
-        "total": len(contextos)
-    }
+    except Exception as e:
+        logger.error(f"Erro no endpoint /audio/contextos: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
 
 # Endpoints adicionais que o frontend está tentando acessar
 @missing_routes.get("/stats")
