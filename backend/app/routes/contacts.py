@@ -187,4 +187,29 @@ async def options_upload_contatos():
 @router.options("/")
 async def options_contatos():
     """Endpoint OPTIONS para CORS."""
-    return {"message": "OK"} 
+    return {"message": "OK"}
+
+@router.post("/upload-simple")
+async def upload_simple(
+    arquivo: UploadFile = File(...),
+    incluir_nome: bool = Form(True),
+    pais_preferido: str = Form("auto")
+):
+    """Endpoint de upload super simples para teste."""
+    return {
+        "message": "Upload teste funcionando!",
+        "filename": arquivo.filename,
+        "size": arquivo.size,
+        "content_type": arquivo.content_type,
+        "incluir_nome": incluir_nome,
+        "pais_preferido": pais_preferido
+    }
+
+@router.get("/test")
+async def test_endpoint():
+    """Endpoint de teste para verificar se o deploy está funcionando."""
+    return {
+        "message": "Endpoint de contatos funcionando!",
+        "timestamp": "2025-01-08T12:00:00",
+        "version": "1.2.0"
+    } 
