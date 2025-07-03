@@ -56,6 +56,7 @@ function ConfiguracionAvanzada() {
     audio_principal_url: ''
   });
 
+  const [configuracion, setConfiguracion] = useState({});
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
