@@ -65,9 +65,9 @@ class TrunkBase(BaseModel):
     detectar_congestion: bool = Field(default=True, description="Detectar congestionamento")
     detectar_invalid: bool = Field(default=True, description="Detectar número inválido")
     
-    # Configurações de horário
-    horario_ativo_inicio: str = Field(default='00:00', description="Horário de início ativo")
-    horario_ativo_fim: str = Field(default='23:59', description="Horário de fim ativo")
+    # Configurações de horário de funcionamento
+    horario_ativo_inicio: Optional[str] = Field(None, pattern=r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$')
+    horario_ativo_fim: Optional[str] = Field(None, pattern=r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$')
     dias_semana_ativo: List[int] = Field(default=[0,1,2,3,4,5,6], description="Dias da semana ativos")
     timezone: str = Field(default='America/New_York', description="Timezone")
     
@@ -160,8 +160,8 @@ class TrunkUpdate(BaseModel):
     detectar_no_answer: Optional[bool] = None
     detectar_congestion: Optional[bool] = None
     detectar_invalid: Optional[bool] = None
-    horario_ativo_inicio: Optional[str] = Field(None, regex=r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$')
-    horario_ativo_fim: Optional[str] = Field(None, regex=r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$')
+    horario_ativo_inicio: Optional[str] = Field(None, pattern=r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$')
+    horario_ativo_fim: Optional[str] = Field(None, pattern=r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$')
     dias_semana_ativo: Optional[List[int]] = None
     timezone: Optional[str] = None
     custo_por_minuto: Optional[Decimal] = Field(None, ge=0.0)
@@ -186,7 +186,7 @@ class TrunkResponse(TrunkBase):
     fecha_actualizacion: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class TrunkListResponse(BaseModel):
@@ -204,7 +204,7 @@ class TrunkListResponse(BaseModel):
     prioridade: int
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class TrunkEstatisticaResponse(BaseModel):
@@ -225,7 +225,7 @@ class TrunkEstatisticaResponse(BaseModel):
     custo_total: Decimal
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class TrunkTesteConexao(BaseModel):

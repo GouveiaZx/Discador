@@ -11,7 +11,7 @@ import re
 import random
 import asyncio
 
-from app.models.llamadas import Llamada, EstadoLlamada
+from app.models.llamada import Llamada, EstadoLlamada
 from app.models.trunk import Trunk
 from app.utils.logger import logger
 

@@ -18,11 +18,16 @@ except ImportError:
 import hashlib
 
 from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, monitoring
-# Importar nova rota de configuração de discagem
+# Importar novas rotas avançadas
 try:
     from app.routes import configuracao_discagem
 except ImportError:
     configuracao_discagem = None
+
+try:
+    from app.routes import asterisk_monitoring
+except ImportError:
+    asterisk_monitoring = None
 from app.database import inicializar_bd, get_db
 from app.config import configuracion
 from app.utils.logger import logger
@@ -219,9 +224,12 @@ app.include_router(code2base.router, prefix=f"{api_prefix}")
 app.include_router(campanha_politica.router, prefix=f"{api_prefix}/campanha-politica")
 app.include_router(monitoring.router, prefix=f"{api_prefix}")
 
-# Incluir nova rota de configuração de discagem se disponível
+# Incluir novas rotas avançadas se disponíveis
 if configuracao_discagem:
     app.include_router(configuracao_discagem.router, prefix=f"{api_prefix}")
+
+if asterisk_monitoring:
+    app.include_router(asterisk_monitoring.router, prefix=f"{api_prefix}")
 
 # Router para rotas ausentes
 missing_routes = APIRouter()

@@ -339,7 +339,7 @@ def obter_dashboard_asterisk(db: Session = Depends(obtener_sesion)):
 def exportar_formato_asterisk(
     incluir_finalizadas: bool = Query(False),
     limite_horas: int = Query(24, ge=1, le=168),
-    formato_saida: str = Query("json", regex="^(json|text|csv)$"),
+    formato_saida: str = Query("json", pattern="^(json|text|csv)$"),
     db: Session = Depends(obtener_sesion)
 ):
     """

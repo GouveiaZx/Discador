@@ -34,8 +34,8 @@ class ConfiguracaoDiscagemBase(BaseModel):
     detectar_tono_ocupado: bool = Field(default=True, description="Detectar tom de ocupado")
     
     # Configurações de horário
-    horario_inicio: str = Field(default="08:00", regex=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", description="Horário de início")
-    horario_fin: str = Field(default="20:00", regex=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", description="Horário de fim")
+    horario_inicio: str = Field(default="08:00", pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", description="Horário de início")
+    horario_fin: str = Field(default="20:00", pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", description="Horário de fim")
     dias_semana_activos: List[int] = Field(default=[1,2,3,4,5], description="Dias da semana ativos (0=Domingo)")
     
     # Configurações de trunk/carrier
@@ -112,8 +112,8 @@ class ConfiguracaoDiscagemUpdate(ConfiguracaoDiscagemBase):
     detectar_contestador: Optional[bool] = None
     detectar_fax: Optional[bool] = None
     detectar_tono_ocupado: Optional[bool] = None
-    horario_inicio: Optional[str] = Field(None, regex=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
-    horario_fin: Optional[str] = Field(None, regex=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
+    horario_inicio: Optional[str] = Field(None, pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
+    horario_fin: Optional[str] = Field(None, pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
     dias_semana_activos: Optional[List[int]] = None
     balanceamento_trunks: Optional[bool] = None
     rotacao_cli: Optional[bool] = None
@@ -139,7 +139,7 @@ class ConfiguracaoDiscagemResponse(ConfiguracaoDiscagemBase):
     fecha_actualizacion: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ConfiguracaoDiscagemListResponse(BaseModel):
@@ -155,7 +155,7 @@ class ConfiguracaoDiscagemListResponse(BaseModel):
     fecha_creacion: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CampanhaConfiguracaoOverride(BaseModel):
@@ -164,8 +164,8 @@ class CampanhaConfiguracaoOverride(BaseModel):
     campanha_id: int
     configuracao_discagem_id: int
     override_cps: Optional[Decimal] = Field(None, ge=0.1, le=10.0)
-    override_horario_inicio: Optional[str] = Field(None, regex=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
-    override_horario_fin: Optional[str] = Field(None, regex=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
+    override_horario_inicio: Optional[str] = Field(None, pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
+    override_horario_fin: Optional[str] = Field(None, pattern=r"^([01]?[0-9]|2[0-3]):[0-5][0-9]$")
     override_max_canales: Optional[int] = Field(None, ge=1, le=100)
 
 
@@ -185,7 +185,7 @@ class CampanhaConfiguracaoResponse(BaseModel):
     configuracao_efetiva: Dict[str, Any]
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class HistoricoConfiguracaoResponse(BaseModel):
@@ -204,7 +204,7 @@ class HistoricoConfiguracaoResponse(BaseModel):
     fecha_fin: Optional[datetime] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ConfiguracaoDiscagemStats(BaseModel):
