@@ -291,18 +291,20 @@ const DashboardProfessional = () => {
         makeApiRequest('/multi-sip/provedores'),
         makeApiRequest('/api/v1/campaigns'),
         makeApiRequest('/code2base/clis'),
-        makeApiRequest('/audios/contextos')
+        makeApiRequest('/audio/contextos')
       ];
 
       const results = await Promise.allSettled(requests);
       
-      setData({
+      const newData = {
         metricas: results[0].status === 'fulfilled' ? results[0].value : {},
         provedores: results[1].status === 'fulfilled' ? (results[1].value?.provedores || results[1].value || []) : [],
         campanhas: results[2].status === 'fulfilled' ? (results[2].value?.campanhas || results[2].value || []) : [],
         clis: results[3].status === 'fulfilled' ? (results[3].value?.clis || results[3].value || []) : [],
         audio: results[4].status === 'fulfilled' ? (results[4].value?.contextos ? results[4].value : { contextos: results[4].value || [], sesionesActivas: 0 }) : { contextos: [], sesionesActivas: 0 }
-      });
+      };
+      
+      setData(newData);
       
       setLastUpdate(new Date());
     } catch (error) {

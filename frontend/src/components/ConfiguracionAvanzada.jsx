@@ -151,7 +151,7 @@ function ConfiguracionAvanzada() {
 
   const cargarContextos = async () => {
     try {
-      const response = await makeMultiSipRequest('/api/v1/audio/contextos-mock');
+      const response = await makeMultiSipRequest('/api/v1/audio/contextos');
       if (response && response.contextos) {
         setContextos(response.contextos);
       }
@@ -163,7 +163,7 @@ function ConfiguracionAvanzada() {
   const crearContexto = async () => {
     try {
       setLoading(true);
-      const response = await makeMultiSipRequest('/api/v1/audios/contextos', {
+      const response = await makeMultiSipRequest('/api/v1/audio/contextos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
