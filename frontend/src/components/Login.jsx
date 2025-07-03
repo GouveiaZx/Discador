@@ -40,7 +40,7 @@ function Login() {
     setLoginError('');
 
     if (!formData.username.trim() || !formData.password.trim()) {
-      setLoginError('Por favor, completa todos los campos');
+      setLoginError('Por favor, completá todos los campos');
       return;
     }
 
@@ -243,8 +243,8 @@ function Login() {
             {showCredentials && (
             <div className="mt-6 space-y-3 animate-fade-in">
               <p className="text-xs text-secondary-500 mb-4">
-                Haz clic en cualquier cuenta para login automático:
-                </p>
+                Hacé clic en cualquier cuenta para login automático:
+              </p>
                 
               {testAccounts.map((account, index) => (
                   <button
