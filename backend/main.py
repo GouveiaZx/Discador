@@ -240,6 +240,16 @@ async def options_code2base_clis():
     """Endpoint OPTIONS para CORS"""
     return {"message": "OK"}
 
+@missing_routes.options("/campaigns")
+async def options_campaigns():
+    """Endpoint OPTIONS para CORS - campaigns"""
+    return {"message": "OK"}
+
+@missing_routes.options("/campanhas")
+async def options_campanhas():
+    """Endpoint OPTIONS para CORS - campanhas"""
+    return {"message": "OK"}
+
 @missing_routes.get("/code2base/clis")
 async def listar_clis():
     """Lista CLIs disponíveis"""
@@ -332,6 +342,36 @@ async def listar_campaigns_alias():
         "message": "Use /api/v1/campanhas para acessar as campanhas"
     }
 
+@missing_routes.post("/campaigns")
+async def criar_campaign_alias(campaign_data: dict):
+    """Alias para criar campanhas - redireciona para /campanhas"""
+    try:
+        # Dados mock para a campanha criada
+        nova_campanha = {
+            "id": 999,  # ID mock
+            "nome": campaign_data.get("nome", "Nova Campanha"),
+            "descricao": campaign_data.get("descricao", "Campanha criada via API"),
+            "status": "criada",
+            "data_inicio": datetime.now().isoformat(),
+            "data_fim": None,
+            "total_contatos": 0,
+            "contatos_discados": 0,
+            "taxa_sucesso": 0.0,
+            "configuracoes": campaign_data
+        }
+        
+        return {
+            "status": "success",
+            "message": "Campanha criada com sucesso",
+            "campaign": nova_campanha
+        }
+    except Exception as e:
+        logger.error(f"Erro ao criar campanha: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro interno ao criar campanha: {str(e)}"
+        )
+
 # Endpoint de campanhas direto
 @missing_routes.get("/campanhas")
 async def listar_campanhas_direto():
@@ -365,6 +405,36 @@ async def listar_campanhas_direto():
         "campanhas": campanhas,
         "total": len(campanhas)
     }
+
+@missing_routes.post("/campanhas")
+async def criar_campanha_direto(campanha_data: dict):
+    """Cria campanha - dados mock"""
+    try:
+        # Dados mock para a campanha criada
+        nova_campanha = {
+            "id": 999,  # ID mock
+            "nome": campanha_data.get("nome", "Nova Campanha"),
+            "descricao": campanha_data.get("descricao", "Campanha criada via API"),
+            "status": "criada",
+            "data_inicio": datetime.now().isoformat(),
+            "data_fim": None,
+            "total_contatos": 0,
+            "contatos_discados": 0,
+            "taxa_sucesso": 0.0,
+            "configuracoes": campanha_data
+        }
+        
+        return {
+            "status": "success",
+            "message": "Campanha criada com sucesso",
+            "campanha": nova_campanha
+        }
+    except Exception as e:
+        logger.error(f"Erro ao criar campanha: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro interno ao criar campanha: {str(e)}"
+        )
 
 # Endpoint de blacklist
 @missing_routes.get("/blacklist")
