@@ -291,7 +291,7 @@ const DashboardProfessional = () => {
         makeApiRequest('/multi-sip/provedores'),
         makeApiRequest('/api/v1/campaigns'),
         makeApiRequest('/code2base/clis'),
-        makeApiRequest('/audio/contextos')
+        makeApiRequest('/audios/contextos')
       ];
 
       const results = await Promise.allSettled(requests);
@@ -303,6 +303,17 @@ const DashboardProfessional = () => {
         clis: results[3].status === 'fulfilled' ? (results[3].value?.clis || results[3].value || []) : [],
         audio: results[4].status === 'fulfilled' ? (results[4].value?.contextos ? results[4].value : { contextos: results[4].value || [], sesionesActivas: 0 }) : { contextos: [], sesionesActivas: 0 }
       };
+      
+      // Carregar dados de áudio
+      try {
+        const audioData = await makeApiRequest('/audios/contextos');
+        if (audioData && audioData.contextos) {
+          newData.audio.contextos = audioData.contextos;
+        }
+      } catch (error) {
+        console.warn('Erro ao carregar dados de áudio:', error);
+        newData.audio.contextos = [];
+      }
       
       setData(newData);
       
