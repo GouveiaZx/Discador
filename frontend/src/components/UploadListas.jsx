@@ -150,6 +150,12 @@ function UploadListas() {
   const handleFileSelect = (selectedFile) => {
     if (!selectedFile) return;
 
+    console.log('📁 Arquivo selecionado:', {
+      name: selectedFile.name,
+      size: selectedFile.size,
+      type: selectedFile.type
+    });
+
     setFile(selectedFile);
     setFileState(FileStates.READING);
     setError(null);
@@ -168,24 +174,58 @@ function UploadListas() {
           return;
         }
 
-        // Detectar headers automáticamente
-        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-        const preview = lines.slice(1, 6).map(line => {
-          const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
-          const row = {};
-          headers.forEach((header, index) => {
-            row[header] = values[index] || '';
+        console.log('📋 Primeiras linhas do arquivo:', lines.slice(0, 3));
+
+        // Detectar separador automaticamente
+        const firstLine = lines[0];
+        let separator = ',';
+        
+        if (firstLine.includes('\t')) {
+          separator = '\t';
+        } else if (firstLine.includes(';')) {
+          separator = ';';
+        } else if (firstLine.includes('|')) {
+          separator = '|';
+        } else if (!firstLine.includes(',')) {
+          // Se não tem vírgula, pode ser um arquivo TXT com apenas números
+          separator = null;
+        }
+
+        console.log('🔍 Separador detectado:', separator || 'linha única');
+
+        let headers = [];
+        let preview = [];
+
+        if (separator) {
+          // Arquivo com separadores (CSV, TSV, etc.)
+          headers = firstLine.split(separator).map(h => h.trim().replace(/"/g, ''));
+          preview = lines.slice(1, 6).map(line => {
+            const values = line.split(separator).map(v => v.trim().replace(/"/g, ''));
+            const row = {};
+            headers.forEach((header, index) => {
+              row[header] = values[index] || '';
+            });
+            return row;
           });
-          return row;
-        });
+        } else {
+          // Arquivo TXT simples (uma coluna por linha)
+          headers = ['telefone'];
+          preview = lines.slice(0, 5).map(line => ({
+            telefone: line.trim()
+          }));
+        }
+
+        console.log('📊 Preview processado:', { headers, preview });
 
         setPreviewData({
           headers,
           preview,
-          totalRows: lines.length - 1
+          totalRows: separator ? lines.length - 1 : lines.length,
+          separator
         });
         setFileState(FileStates.PREVIEW);
       } catch (err) {
+        console.error('❌ Erro ao processar arquivo:', err);
         setError('Error al leer el archivo: ' + err.message);
         setFileState(FileStates.ERROR);
       }
@@ -434,7 +474,7 @@ function UploadListas() {
             {/* File Upload Area */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Archivo CSV
+                Archivo CSV ou TXT
               </label>
               <div
                 className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
@@ -466,11 +506,11 @@ function UploadListas() {
                     <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 48 48">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" />
                     </svg>
-                    <p className="text-gray-300 text-lg font-medium mb-2">Arrastrá y soltá tu archivo CSV acá</p>
+                    <p className="text-gray-300 text-lg font-medium mb-2">Arrastrá tu archivo CSV ou TXT acá</p>
                     <p className="text-gray-500 mb-4">o</p>
                     <input
                       type="file"
-                      accept=".csv"
+                      accept=".csv,.txt,.tsv"
                       onChange={(e) => handleFileSelect(e.target.files?.[0])}
                       className="hidden"
                       id="file-upload"

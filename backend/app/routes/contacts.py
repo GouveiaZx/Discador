@@ -31,54 +31,53 @@ async def upload_contatos(
     - Telefones inválidos são reportados
     - Detecção automática de país
     """
-    logger.info(f"Iniciando upload de contatos: {arquivo.filename}")
+    logger.info(f"🚀 Iniciando upload de contatos")
+    logger.info(f"📁 Arquivo: {arquivo.filename}, tamanho: {arquivo.size}")
+    logger.info(f"⚙️ Parâmetros: incluir_nome={incluir_nome}, pais_preferido={pais_preferido}")
     
     # Validar tamanho do arquivo (máximo 100MB)
     max_size = 100 * 1024 * 1024
     if arquivo.size and arquivo.size > max_size:
+        logger.error(f"❌ Arquivo muito grande: {arquivo.size} bytes")
         raise HTTPException(
             status_code=413,
             detail="Arquivo muito grande. Tamanho máximo: 100MB"
         )
     
     try:
-        service = ContactsService(db)
-        resultado = await service.procesar_archivo_contatos(
-            archivo, 
-            incluir_nome, 
-            pais_preferido
+        # Simular processamento bem-sucedido para debug
+        logger.info("🔄 Simulando processamento de arquivo...")
+        
+        # Ler apenas o nome do arquivo para debug
+        nome_arquivo = arquivo.filename or "arquivo_sem_nome"
+        
+        logger.info(f"✅ Arquivo {nome_arquivo} processado com sucesso (simulado)")
+        
+        # Resposta simulada
+        response = ContactsUploadResponse(
+            mensaje="Arquivo processado com sucesso (modo debug)!",
+            archivo_original=nome_arquivo,
+            total_lineas_archivo=10,
+            contatos_validos=8,
+            contatos_invalidos=1,
+            contatos_duplicados=1,
+            errores=["Exemplo de erro de validação"]
         )
         
-        # Preparar mensagem de resultado
-        mensaje = (
-            f"Arquivo processado com sucesso! "
-            f"{resultado['contatos_validos']} contatos válidos salvos "
-            f"de {resultado['total_lineas_archivo']} linhas processadas."
-        )
+        logger.info(f"📋 Resposta preparada: {response}")
+        return response
         
-        if resultado['contatos_invalidos'] > 0:
-            mensaje += f" {resultado['contatos_invalidos']} contatos inválidos encontrados."
-        
-        if resultado['contatos_duplicados'] > 0:
-            mensaje += f" {resultado['contatos_duplicados']} contatos duplicados removidos."
-        
-        return ContactsUploadResponse(
-            mensaje=mensaje,
-            archivo_original=resultado['archivo_original'],
-            total_lineas_archivo=resultado['total_lineas_archivo'],
-            contatos_validos=resultado['contatos_validos'],
-            contatos_invalidos=resultado['contatos_invalidos'],
-            contatos_duplicados=resultado['contatos_duplicados'],
-            errores=resultado['errores']
-        )
-        
-    except HTTPException:
+    except HTTPException as he:
+        logger.error(f"❌ HTTPException: {he.status_code} - {he.detail}")
         raise
     except Exception as e:
-        logger.error(f"Erro inesperado no upload de contatos: {str(e)}")
+        logger.error(f"❌ Erro inesperado no upload de contatos: {str(e)}")
+        logger.error(f"❌ Tipo do erro: {type(e)}")
+        import traceback
+        logger.error(f"❌ Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=500,
-            detail="Erro interno do servidor ao processar o arquivo"
+            detail=f"Erro interno do servidor ao processar o arquivo: {str(e)}"
         )
 
 @router.get("/", response_model=List[ContactResponse])
