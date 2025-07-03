@@ -336,13 +336,25 @@ async def obter_stats_llamadas():
 # Alias para campanhas (o frontend usa /campaigns mas o backend tem /campanhas)
 @missing_routes.get("/campaigns")
 async def listar_campaigns_alias():
-    """Alias para campanhas - redireciona para /campanhas"""
-    return {
-        "status": "success",
-        "campaigns": [],
-        "total": 0,
-        "message": "Use /api/v1/campanhas para acessar as campanhas"
-    }
+    """Alias para campanhas - busca campanhas reais do Supabase"""
+    try:
+        # Buscar campanhas reais do Supabase
+        campaigns = get_campaigns_from_supabase()
+        
+        return {
+            "status": "success",
+            "campaigns": campaigns,
+            "total": len(campaigns),
+            "message": "Campanhas carregadas com sucesso"
+        }
+    except Exception as e:
+        logger.error(f"Erro ao listar campanhas: {str(e)}")
+        return {
+            "status": "error",
+            "campaigns": [],
+            "total": 0,
+            "message": f"Erro ao carregar campanhas: {str(e)}"
+        }
 
 @missing_routes.post("/campaigns")
 async def criar_campaign_alias(campaign_data: dict):
@@ -463,36 +475,25 @@ async def criar_campaign_alias(campaign_data: dict):
 # Endpoint de campanhas direto
 @missing_routes.get("/campanhas")
 async def listar_campanhas_direto():
-    """Lista campanhas - dados mock"""
-    campanhas = [
-        {
-            "id": 1,
-            "nome": "Campanha Principal",
-            "descricao": "Campanha de discado principal",
-            "status": "ativa",
-            "data_inicio": datetime.now().isoformat(),
-            "data_fim": None,
-            "total_contatos": 1000,
-            "contatos_discados": 250,
-            "taxa_sucesso": 15.5
-        },
-        {
-            "id": 2,
-            "nome": "Campanha Secundária", 
-            "descricao": "Campanha de follow-up",
-            "status": "pausada",
-            "data_inicio": datetime.now().isoformat(),
-            "data_fim": None,
-            "total_contatos": 500,
-            "contatos_discados": 100,
-            "taxa_sucesso": 12.0
+    """Lista campanhas - busca campanhas reais do Supabase"""
+    try:
+        # Buscar campanhas reais do Supabase
+        campanhas = get_campaigns_from_supabase()
+        
+        return {
+            "status": "success",
+            "campanhas": campanhas,
+            "total": len(campanhas),
+            "message": "Campanhas carregadas com sucesso"
         }
-    ]
-    return {
-        "status": "success",
-        "campanhas": campanhas,
-        "total": len(campanhas)
-    }
+    except Exception as e:
+        logger.error(f"Erro ao listar campanhas: {str(e)}")
+        return {
+            "status": "error",
+            "campanhas": [],
+            "total": 0,
+            "message": f"Erro ao carregar campanhas: {str(e)}"
+        }
 
 @missing_routes.post("/campanhas")
 async def criar_campanha_direto(campanha_data: dict):
@@ -780,7 +781,7 @@ async def status():
 
 # Configurações do Supabase
 SUPABASE_URL = "https://orxxocptgaeoyrtlxwkv.supabase.co"
-SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9yeHhvY3B0Z2Flb3lydGx4d2t2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTk3NzM0MDksImV4cCI6MjAzNTM0OTQwOX0.7VHPZCPLNcQkNZXXxFiQqLjdCwwxGNJ5FPiQZE1jJTY"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9yeHhvY3B0Z2Flb3lydGx4d2t2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyOTk0MDksImV4cCI6MjA2Njg3NTQwOX0.hJ5vXcLBiSE0TjVzdbZcnlN_jiT1mNijqWEWylVrhdQ"
 
 def create_campaign_in_supabase(campaign_data: dict):
     """Cria uma campanha no Supabase"""
@@ -831,6 +832,63 @@ def create_campaign_in_supabase(campaign_data: dict):
     except Exception as e:
         logger.error(f"Erro ao conectar com Supabase: {str(e)}")
         return None
+
+def get_campaigns_from_supabase():
+    """Busca campanhas do Supabase"""
+    try:
+        headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        # Buscar campanhas do Supabase
+        response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/campaigns",
+            headers=headers
+        )
+        
+        if response.status_code == 200:
+            campaigns = response.json()
+            # Converter para formato compatível com frontend
+            formatted_campaigns = []
+            for campaign in campaigns:
+                formatted_campaign = {
+                    "id": campaign["id"],
+                    "name": campaign["name"],
+                    "nome": campaign["name"],  # Compatibilidade
+                    "description": campaign.get("description", ""),
+                    "descricao": campaign.get("description", ""),  # Compatibilidade
+                    "status": campaign["status"],
+                    "cli_number": campaign["cli_number"],
+                    "audio_url": campaign.get("audio_url", ""),
+                    "start_time": campaign["start_time"],
+                    "end_time": campaign["end_time"],
+                    "timezone": campaign["timezone"],
+                    "max_attempts": campaign["max_attempts"],
+                    "retry_interval": campaign["retry_interval"],
+                    "max_concurrent_calls": campaign["max_concurrent_calls"],
+                    "owner_id": campaign["owner_id"],
+                    "cps": campaign["cps"],
+                    "sleep_time": campaign["sleep_time"],
+                    "wait_time": float(campaign["wait_time"]),
+                    "language": campaign["language"],
+                    "shuffle_contacts": campaign["shuffle_contacts"],
+                    "allow_multiple_calls_same_number": campaign["allow_multiple_calls_same_number"],
+                    "max_channels": campaign["max_channels"],
+                    "created_at": campaign["created_at"],
+                    "updated_at": campaign["updated_at"]
+                }
+                formatted_campaigns.append(formatted_campaign)
+            
+            return formatted_campaigns
+        else:
+            logger.error(f"Erro do Supabase ao buscar campanhas: {response.status_code} - {response.text}")
+            return []
+            
+    except Exception as e:
+        logger.error(f"Erro ao buscar campanhas do Supabase: {str(e)}")
+        return []
 
 if __name__ == "__main__":
     logger.info(f"Iniciando servidor en {configuracion.HOST}:{configuracion.PUERTO}")
