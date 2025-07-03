@@ -19,7 +19,7 @@ import hashlib
 import requests
 import json
 
-from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, monitoring
+from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, monitoring, contacts
 # Importar novas rotas avançadas
 try:
     from app.routes import configuracao_discagem
@@ -225,6 +225,7 @@ app.include_router(audio_inteligente.router, prefix=f"{api_prefix}")
 app.include_router(code2base.router, prefix=f"{api_prefix}")
 app.include_router(campanha_politica.router, prefix=f"{api_prefix}/campanha-politica")
 app.include_router(monitoring.router, prefix=f"{api_prefix}")
+app.include_router(contacts.router, prefix=f"{api_prefix}")
 
 # Incluir novas rotas avançadas se disponíveis
 if configuracao_discagem:
