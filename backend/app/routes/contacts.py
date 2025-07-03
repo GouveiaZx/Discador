@@ -91,16 +91,30 @@ async def upload_contatos(
         
         # Contar linhas do arquivo
         linhas = texto.strip().split('\n')
+        # Limpar caracteres \r que podem vir do Windows
+        linhas = [linha.replace('\r', '').strip() for linha in linhas]
         total_linhas = len([linha for linha in linhas if linha.strip()])
         
         logger.info(f"📊 Arquivo processado: {total_linhas} linhas")
         
+        # Verificar se arquivo tem conteúdo válido
+        if total_linhas == 0:
+            logger.error("❌ Nenhuma linha válida encontrada")
+            raise HTTPException(
+                status_code=400,
+                detail="Arquivo não contém linhas válidas"
+            )
+        
+        # Mostrar amostra das primeiras linhas para debug
+        amostra_linhas = linhas[:5]
+        logger.info(f"🔍 Primeiras linhas: {amostra_linhas}")
+        
         # Para arquivos muito grandes, processar apenas uma amostra primeiro
         if total_linhas > 10000:
             logger.info("⚠️ Arquivo muito grande, processando amostra...")
-            # Processar apenas primeiras 100 linhas para teste
-            linhas_amostra = linhas[:100]
-            total_linhas_processadas = len(linhas_amostra)
+            # Processar apenas primeiras 1000 linhas para teste
+            linhas_processadas = linhas[:1000]
+            total_linhas_processadas = len(linhas_processadas)
             contatos_validos = max(1, int(total_linhas_processadas * 0.8))  # Simular 80% válidos
         else:
             total_linhas_processadas = total_linhas
@@ -212,4 +226,50 @@ async def test_endpoint():
         "message": "Endpoint de contatos funcionando!",
         "timestamp": "2025-01-08T12:00:00",
         "version": "1.2.0"
-    } 
+    }
+
+@router.post("/debug-txt")
+async def debug_txt_upload(
+    arquivo: UploadFile = File(...),
+    incluir_nome: bool = Form(True),
+    pais_preferido: str = Form("auto")
+):
+    """Endpoint específico para debug de arquivos TXT grandes."""
+    logger.info(f"🔍 Debug TXT - Arquivo: {arquivo.filename}, tamanho: {arquivo.size}")
+    
+    try:
+        # Ler conteúdo
+        conteudo = await arquivo.read()
+        
+        # Decodificar
+        try:
+            texto = conteudo.decode('utf-8')
+        except UnicodeDecodeError:
+            texto = conteudo.decode('latin-1')
+        
+        # Processar linhas
+        linhas = texto.strip().split('\n')
+        linhas = [linha.replace('\r', '').strip() for linha in linhas]
+        linhas_validas = [linha for linha in linhas if linha.strip()]
+        
+        # Amostra das primeiras linhas
+        amostra = linhas_validas[:10]
+        
+        return {
+            "message": "Debug TXT concluído",
+            "filename": arquivo.filename,
+            "size": arquivo.size,
+            "content_type": arquivo.content_type,
+            "total_linhas": len(linhas_validas),
+            "primeiras_linhas": amostra,
+            "linha_exemplo": linhas_validas[0] if linhas_validas else "Nenhuma linha válida",
+            "tem_carriage_return": '\r' in texto,
+            "encoding_usado": "utf-8" if '\r' not in texto else "detectado carriage return"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro no debug TXT: {str(e)}")
+        return {
+            "error": str(e),
+            "message": "Erro no debug TXT"
+        } 
