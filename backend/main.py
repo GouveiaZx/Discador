@@ -47,19 +47,15 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configurar CORS
+# Configurar CORS com configuração mais robusta
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://discador.vercel.app",
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "*"  # Temporário para debug
-    ],
+    allow_origins=["*"],  # Em produção, especificar domínios
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
-    expose_headers=["*"]
+    expose_headers=["*"],
+    max_age=86400,  # Cache preflight por 24 horas
 )
 
 # Prefijo para todas las rutas de la API
@@ -83,23 +79,11 @@ app.include_router(monitoring.router, prefix=f"{api_prefix}")
 # Router para rotas ausentes
 missing_routes = APIRouter()
 
-# Endpoints OPTIONS para CORS
-@missing_routes.options("/multi-sip/provedores")
-async def options_provedores():
-    """Endpoint OPTIONS para CORS"""
-    return {"message": "OK"}
-
-@missing_routes.options("/audio/contextos")
-async def options_audio_contextos():
-    """Endpoint OPTIONS para CORS"""
-    return {"message": "OK"}
-
 @missing_routes.get("/multi-sip/provedores")
 async def listar_provedores():
-    """Lista provedores SIP disponíveis"""
-    logger.info("Endpoint /multi-sip/provedores chamado")
+    """Lista provedores SIP disponíveis - versão simplificada"""
     try:
-        # Implementação simplificada sem dependências de banco
+        logger.info("Listando provedores SIP (mock data)")
         provedores = [
             {
                 "id": 1,
@@ -124,49 +108,62 @@ async def listar_provedores():
                 "ultima_verificacao": datetime.now().isoformat()
             }
         ]
-        logger.info(f"Retornando {len(provedores)} provedores")
         return {
             "status": "success",
             "provedores": provedores,
             "total": len(provedores)
         }
     except Exception as e:
-        logger.error(f"Erro no endpoint /multi-sip/provedores: {e}")
-        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
+        logger.error(f"Erro ao listar provedores: {e}")
+        return {
+            "status": "error",
+            "provedores": [],
+            "total": 0,
+            "error": str(e)
+        }
 
 @missing_routes.get("/code2base/clis")
 async def listar_clis():
     """Lista CLIs disponíveis"""
-    clis = [
-        {
-            "id": 1,
-            "numero": "+5511999887766",
-            "descricao": "CLI Principal",
-            "ativo": True,
-            "tipo": "nacional",
-            "ultima_utilizacao": datetime.now().isoformat()
-        },
-        {
-            "id": 2,
-            "numero": "+5511888776655",
-            "descricao": "CLI Secundário",
-            "ativo": True,
-            "tipo": "nacional", 
-            "ultima_utilizacao": None
+    try:
+        logger.info("Listando CLIs (mock data)")
+        clis = [
+            {
+                "id": 1,
+                "numero": "+5511999887766",
+                "descricao": "CLI Principal",
+                "ativo": True,
+                "tipo": "nacional",
+                "ultima_utilizacao": datetime.now().isoformat()
+            },
+            {
+                "id": 2,
+                "numero": "+5511888776655",
+                "descricao": "CLI Secundário",
+                "ativo": True,
+                "tipo": "nacional", 
+                "ultima_utilizacao": None
+            }
+        ]
+        return {
+            "status": "success",
+            "clis": clis,
+            "total": len(clis)
         }
-    ]
-    return {
-        "status": "success",
-        "clis": clis,
-        "total": len(clis)
-    }
+    except Exception as e:
+        logger.error(f"Erro ao listar CLIs: {e}")
+        return {
+            "status": "error",
+            "clis": [],
+            "total": 0,
+            "error": str(e)
+        }
 
 @missing_routes.get("/audio/contextos")
 async def listar_contextos_audio():
-    """Lista contextos de áudio"""
-    logger.info("Endpoint /audio/contextos chamado")
+    """Lista contextos de áudio - versão simplificada"""
     try:
-        # Implementação simplificada sem dependências de banco
+        logger.info("Listando contextos de áudio (mock data)")
         contextos = [
             {
                 "id": 1,
@@ -181,8 +178,8 @@ async def listar_contextos_audio():
             },
             {
                 "id": 2,
-                "nome": "Contexto Avançado",
-                "descricao": "Contexto com configurações avançadas",
+                "nome": "Contexto Personalizado",
+                "descricao": "Contexto de áudio personalizado",
                 "ativo": True,
                 "configuracoes": {
                     "deteccao_voz": True,
@@ -191,15 +188,19 @@ async def listar_contextos_audio():
                 }
             }
         ]
-        logger.info(f"Retornando {len(contextos)} contextos")
         return {
             "status": "success",
             "contextos": contextos,
             "total": len(contextos)
         }
     except Exception as e:
-        logger.error(f"Erro no endpoint /audio/contextos: {e}")
-        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
+        logger.error(f"Erro ao listar contextos de áudio: {e}")
+        return {
+            "status": "error",
+            "contextos": [],
+            "total": 0,
+            "error": str(e)
+        }
 
 # Endpoints adicionais que o frontend está tentando acessar
 @missing_routes.get("/stats")
