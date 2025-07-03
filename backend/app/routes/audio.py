@@ -5,7 +5,7 @@ from datetime import datetime
 
 from app.database import get_db
 from app.services.audio_service import AudioService
-from app.schemas.audio import AudioCreate, AudioUpdate, AudioResponse
+from app.schemas.audio import AudioCreate, AudioUpdate, AudioOut
 from app.utils.logger import logger
 
 router = APIRouter(prefix="/audio", tags=["Audio"])
@@ -53,7 +53,7 @@ async def listar_contextos_mock():
             "error": str(e)
         }
 
-@router.post("/", response_model=AudioResponse)
+@router.post("/", response_model=AudioOut)
 async def criar_audio(
     audio_data: AudioCreate,
     db: Session = Depends(get_db)
@@ -62,12 +62,12 @@ async def criar_audio(
     try:
         service = AudioService(db)
         audio = service.create_audio(audio_data)
-        return AudioResponse.from_orm(audio)
+        return AudioOut.from_orm(audio)
     except Exception as e:
         logger.error(f"Erro ao criar áudio: {e}")
         raise HTTPException(status_code=500, detail="Erro interno ao criar áudio")
 
-@router.get("/{audio_id}", response_model=AudioResponse)
+@router.get("/{audio_id}", response_model=AudioOut)
 async def obter_audio(
     audio_id: int,
     db: Session = Depends(get_db)
@@ -78,14 +78,14 @@ async def obter_audio(
         audio = service.get_audio(audio_id)
         if not audio:
             raise HTTPException(status_code=404, detail="Áudio não encontrado")
-        return AudioResponse.from_orm(audio)
+        return AudioOut.from_orm(audio)
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Erro ao obter áudio {audio_id}: {e}")
         raise HTTPException(status_code=500, detail="Erro interno ao obter áudio")
 
-@router.get("/", response_model=List[AudioResponse])
+@router.get("/", response_model=List[AudioOut])
 async def listar_audios(
     campaign_id: Optional[int] = None,
     db: Session = Depends(get_db)
@@ -94,12 +94,12 @@ async def listar_audios(
     try:
         service = AudioService(db)
         audios = service.list_audios(campaign_id)
-        return [AudioResponse.from_orm(audio) for audio in audios]
+        return [AudioOut.from_orm(audio) for audio in audios]
     except Exception as e:
         logger.error(f"Erro ao listar áudios: {e}")
         raise HTTPException(status_code=500, detail="Erro interno ao listar áudios")
 
-@router.put("/{audio_id}", response_model=AudioResponse)
+@router.put("/{audio_id}", response_model=AudioOut)
 async def atualizar_audio(
     audio_id: int,
     audio_data: AudioUpdate,
@@ -111,7 +111,7 @@ async def atualizar_audio(
         audio = service.update_audio(audio_id, audio_data)
         if not audio:
             raise HTTPException(status_code=404, detail="Áudio não encontrado")
-        return AudioResponse.from_orm(audio)
+        return AudioOut.from_orm(audio)
     except HTTPException:
         raise
     except Exception as e:

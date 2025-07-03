@@ -291,7 +291,7 @@ const DashboardProfessional = () => {
         makeApiRequest('/multi-sip/provedores'),
         makeApiRequest('/api/v1/campaigns'),
         makeApiRequest('/code2base/clis'),
-        makeApiRequest('/audio/contextos')
+        makeApiRequest('/audios/contextos')
       ];
 
       const results = await Promise.allSettled(requests);
