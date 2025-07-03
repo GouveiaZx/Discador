@@ -176,6 +176,66 @@ async def listar_campaigns_alias():
         "message": "Use /api/v1/campanhas para acessar as campanhas"
     }
 
+# Endpoint de campanhas direto
+@missing_routes.get("/campanhas")
+async def listar_campanhas_direto():
+    """Lista campanhas - dados mock"""
+    campanhas = [
+        {
+            "id": 1,
+            "nome": "Campanha Principal",
+            "descricao": "Campanha de discado principal",
+            "status": "ativa",
+            "data_inicio": datetime.now().isoformat(),
+            "data_fim": None,
+            "total_contatos": 1000,
+            "contatos_discados": 250,
+            "taxa_sucesso": 15.5
+        },
+        {
+            "id": 2,
+            "nome": "Campanha Secundária", 
+            "descricao": "Campanha de follow-up",
+            "status": "pausada",
+            "data_inicio": datetime.now().isoformat(),
+            "data_fim": None,
+            "total_contatos": 500,
+            "contatos_discados": 100,
+            "taxa_sucesso": 12.0
+        }
+    ]
+    return {
+        "status": "success",
+        "campanhas": campanhas,
+        "total": len(campanhas)
+    }
+
+# Endpoint de blacklist
+@missing_routes.get("/blacklist")
+async def listar_blacklist_direto():
+    """Lista blacklist - dados mock"""
+    blacklist = [
+        {
+            "id": 1,
+            "numero": "+5511999888777",
+            "motivo": "Solicitação do cliente",
+            "data_inclusao": datetime.now().isoformat(),
+            "ativo": True
+        },
+        {
+            "id": 2,
+            "numero": "+5511888777666",
+            "motivo": "Número inválido",
+            "data_inclusao": datetime.now().isoformat(),
+            "ativo": True
+        }
+    ]
+    return {
+        "status": "success",
+        "blacklist": blacklist,
+        "total": len(blacklist)
+    }
+
 # Endpoint de configuração
 @missing_routes.get("/configuracion")
 async def obter_configuracion():
