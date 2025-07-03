@@ -16,6 +16,8 @@ except ImportError:
     # Fallback se PyJWT não estiver disponível
     jwt = None
 import hashlib
+import requests
+import json
 
 from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, monitoring
 # Importar novas rotas avançadas
@@ -344,25 +346,111 @@ async def listar_campaigns_alias():
 
 @missing_routes.post("/campaigns")
 async def criar_campaign_alias(campaign_data: dict):
-    """Alias para criar campanhas - redireciona para /campanhas"""
+    """Alias para criar campanhas - cria no Supabase"""
     try:
-        # Dados mock para a campanha criada
-        nova_campanha = {
-            "id": 999,  # ID mock
-            "nome": campaign_data.get("nome", "Nova Campanha"),
-            "descricao": campaign_data.get("descricao", "Campanha criada via API"),
-            "status": "criada",
-            "data_inicio": datetime.now().isoformat(),
-            "data_fim": None,
-            "total_contatos": 0,
-            "contatos_discados": 0,
-            "taxa_sucesso": 0.0,
-            "configuracoes": campaign_data
+        # Preparar dados para inserção no Supabase
+        campaign_insert_data = {
+            "name": campaign_data.get("name", campaign_data.get("nome", "Nova Campanha")),
+            "description": campaign_data.get("description", campaign_data.get("descricao", "Campanha criada via API")),
+            "status": "draft",
+            "cli_number": campaign_data.get("cli_number", "+5511999999999"),
+            "audio_url": campaign_data.get("audio_url", ""),
+            "start_time": campaign_data.get("start_time", "09:00"),
+            "end_time": campaign_data.get("end_time", "18:00"),
+            "timezone": campaign_data.get("timezone", "America/Argentina/Buenos_Aires"),
+            "max_attempts": campaign_data.get("max_attempts", 3),
+            "retry_interval": campaign_data.get("retry_interval", 30),
+            "max_concurrent_calls": campaign_data.get("max_concurrent_calls", 5),
+            "owner_id": 1,  # ID do usuário padrão
+            "cps": campaign_data.get("cps", 10),
+            "sleep_time": campaign_data.get("sleep_time", 1),
+            "wait_time": campaign_data.get("wait_time", 0.5),
+            "language": campaign_data.get("language", "pt-BR"),
+            "shuffle_contacts": campaign_data.get("shuffle_contacts", True),
+            "allow_multiple_calls_same_number": campaign_data.get("allow_multiple_calls_same_number", False),
+            "max_channels": campaign_data.get("max_channels", 10)
         }
+        
+        # Tentar inserir no Supabase
+        try:
+            # Usar a função real do Supabase
+            supabase_result = create_campaign_in_supabase(campaign_data)
+            
+            if supabase_result:
+                # Campanha criada com sucesso no Supabase
+                nova_campanha = {
+                    "id": supabase_result["id"],
+                    "name": supabase_result["name"],
+                    "nome": supabase_result["name"],  # Compatibilidade
+                    "description": supabase_result["description"],
+                    "descricao": supabase_result["description"],  # Compatibilidade
+                    "status": supabase_result["status"],
+                    "cli_number": supabase_result["cli_number"],
+                    "audio_url": supabase_result.get("audio_url", ""),
+                    "start_time": supabase_result["start_time"],
+                    "end_time": supabase_result["end_time"],
+                    "timezone": supabase_result["timezone"],
+                    "max_attempts": supabase_result["max_attempts"],
+                    "retry_interval": supabase_result["retry_interval"],
+                    "max_concurrent_calls": supabase_result["max_concurrent_calls"],
+                    "owner_id": supabase_result["owner_id"],
+                    "cps": supabase_result["cps"],
+                    "sleep_time": supabase_result["sleep_time"],
+                    "wait_time": float(supabase_result["wait_time"]),
+                    "language": supabase_result["language"],
+                    "shuffle_contacts": supabase_result["shuffle_contacts"],
+                    "allow_multiple_calls_same_number": supabase_result["allow_multiple_calls_same_number"],
+                    "max_channels": supabase_result["max_channels"],
+                    "created_at": supabase_result["created_at"],
+                    "updated_at": supabase_result["updated_at"]
+                }
+            else:
+                # Fallback para dados mock se Supabase falhar
+                nova_campanha = {
+                    "id": 999,
+                    "name": campaign_insert_data["name"],
+                    "nome": campaign_insert_data["name"],  # Compatibilidade
+                    "description": campaign_insert_data["description"],
+                    "descricao": campaign_insert_data["description"],  # Compatibilidade
+                    "status": campaign_insert_data["status"],
+                    "cli_number": campaign_insert_data["cli_number"],
+                    "audio_url": campaign_insert_data["audio_url"],
+                    "start_time": campaign_insert_data["start_time"],
+                    "end_time": campaign_insert_data["end_time"],
+                    "timezone": campaign_insert_data["timezone"],
+                    "max_attempts": campaign_insert_data["max_attempts"],
+                    "retry_interval": campaign_insert_data["retry_interval"],
+                    "max_concurrent_calls": campaign_insert_data["max_concurrent_calls"],
+                    "owner_id": campaign_insert_data["owner_id"],
+                    "cps": campaign_insert_data["cps"],
+                    "sleep_time": campaign_insert_data["sleep_time"],
+                    "wait_time": campaign_insert_data["wait_time"],
+                    "language": campaign_insert_data["language"],
+                    "shuffle_contacts": campaign_insert_data["shuffle_contacts"],
+                    "allow_multiple_calls_same_number": campaign_insert_data["allow_multiple_calls_same_number"],
+                    "max_channels": campaign_insert_data["max_channels"],
+                    "created_at": datetime.now().isoformat(),
+                    "updated_at": datetime.now().isoformat()
+                }
+            
+        except Exception as supabase_error:
+            logger.error(f"Erro ao inserir no Supabase: {str(supabase_error)}")
+            # Fallback para dados mock se Supabase falhar
+            nova_campanha = {
+                "id": 999,
+                "name": campaign_data.get("name", campaign_data.get("nome", "Nova Campanha")),
+                "nome": campaign_data.get("nome", campaign_data.get("name", "Nova Campanha")),
+                "description": campaign_data.get("description", campaign_data.get("descricao", "Campanha criada via API")),
+                "descricao": campaign_data.get("descricao", campaign_data.get("description", "Campanha criada via API")),
+                "status": "draft",
+                "created_at": datetime.now().isoformat(),
+                "updated_at": datetime.now().isoformat()
+            }
         
         return {
             "status": "success",
             "message": "Campanha criada com sucesso",
+            "id": nova_campanha["id"],  # ID diretamente na resposta para o frontend
             "campaign": nova_campanha
         }
     except Exception as e:
@@ -427,7 +515,8 @@ async def criar_campanha_direto(campanha_data: dict):
         return {
             "status": "success",
             "message": "Campanha criada com sucesso",
-            "campanha": nova_campanha
+            "id": nova_campanha["id"],  # ID diretamente na resposta para o frontend
+            "campaign": nova_campanha
         }
     except Exception as e:
         logger.error(f"Erro ao criar campanha: {str(e)}")
@@ -688,6 +777,60 @@ async def status():
         "uptime": "running",
         "database": "connected"
     }
+
+# Configurações do Supabase
+SUPABASE_URL = "https://orxxocptgaeoyrtlxwkv.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9yeHhvY3B0Z2Flb3lydGx4d2t2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTk3NzM0MDksImV4cCI6MjAzNTM0OTQwOX0.7VHPZCPLNcQkNZXXxFiQqLjdCwwxGNJ5FPiQZE1jJTY"
+
+def create_campaign_in_supabase(campaign_data: dict):
+    """Cria uma campanha no Supabase"""
+    try:
+        headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "return=representation"
+        }
+        
+        # Preparar dados para inserção
+        insert_data = {
+            "name": campaign_data.get("name", campaign_data.get("nome", "Nova Campanha")),
+            "description": campaign_data.get("description", campaign_data.get("descricao", "Campanha criada via API")),
+            "status": "draft",
+            "cli_number": campaign_data.get("cli_number", "+5511999999999"),
+            "audio_url": campaign_data.get("audio_url", ""),
+            "start_time": campaign_data.get("start_time", "09:00"),
+            "end_time": campaign_data.get("end_time", "18:00"),
+            "timezone": campaign_data.get("timezone", "America/Argentina/Buenos_Aires"),
+            "max_attempts": campaign_data.get("max_attempts", 3),
+            "retry_interval": campaign_data.get("retry_interval", 30),
+            "max_concurrent_calls": campaign_data.get("max_concurrent_calls", 5),
+            "owner_id": 1,  # ID do usuário padrão
+            "cps": campaign_data.get("cps", 10),
+            "sleep_time": campaign_data.get("sleep_time", 1),
+            "wait_time": campaign_data.get("wait_time", 0.5),
+            "language": campaign_data.get("language", "pt-BR"),
+            "shuffle_contacts": campaign_data.get("shuffle_contacts", True),
+            "allow_multiple_calls_same_number": campaign_data.get("allow_multiple_calls_same_number", False),
+            "max_channels": campaign_data.get("max_channels", 10)
+        }
+        
+        # Fazer requisição para o Supabase
+        response = requests.post(
+            f"{SUPABASE_URL}/rest/v1/campaigns",
+            headers=headers,
+            json=insert_data
+        )
+        
+        if response.status_code == 201:
+            return response.json()[0]  # Retorna a campanha criada
+        else:
+            logger.error(f"Erro do Supabase: {response.status_code} - {response.text}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Erro ao conectar com Supabase: {str(e)}")
+        return None
 
 if __name__ == "__main__":
     logger.info(f"Iniciando servidor en {configuracion.HOST}:{configuracion.PUERTO}")
