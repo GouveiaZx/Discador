@@ -72,6 +72,18 @@ function UploadListas() {
     loadCampaigns();
   }, []);
 
+  // Debug: Log dos estados principais
+  useEffect(() => {
+    console.log('🔍 Estado atual:', {
+      fileState,
+      uploading,
+      selectedCampaign,
+      file: file?.name,
+      campaigns: campaigns.length,
+      previewData: !!previewData
+    });
+  }, [fileState, uploading, selectedCampaign, file, campaigns, previewData]);
+
   /**
    * Buscar campañas de la API
    */
@@ -79,9 +91,59 @@ function UploadListas() {
     try {
       const data = await makeApiRequest('/campaigns');
       console.log('📋 Campanhas carregadas:', data);
-      setCampaigns(data.campaigns || []);
+      const campaignsList = data.campaigns || [];
+      setCampaigns(campaignsList);
+      
+      // Se não há campanhas, criar uma campanha padrão automaticamente
+      if (campaignsList.length === 0) {
+        console.log('🏗️ Criando campanha padrão...');
+        await createDefaultCampaign();
+      } else {
+        // Se há campanhas, selecionar a primeira automaticamente
+        setSelectedCampaign(campaignsList[0].id.toString());
+      }
     } catch (err) {
-      setError('Error al cargar campañas: ' + err.message);
+      console.error('❌ Erro ao carregar campanhas:', err);
+      // Se falhar ao carregar campanhas, criar uma padrão
+      await createDefaultCampaign();
+    }
+  };
+
+  /**
+   * Criar campanha padrão para upload
+   */
+  const createDefaultCampaign = async () => {
+    try {
+      const defaultCampaign = {
+        name: 'Campanha Upload Automático',
+        description: 'Campanha criada automaticamente para uploads de listas',
+        status: 'active',
+        wait_time: 2.0
+      };
+
+      console.log('🎯 Criando campanha padrão:', defaultCampaign);
+      const response = await makeApiRequest('/campaigns', 'POST', defaultCampaign);
+      
+      if (response && response.id) {
+        const newCampaign = {
+          id: response.id,
+          name: defaultCampaign.name,
+          status: defaultCampaign.status
+        };
+        
+        setCampaigns([newCampaign]);
+        setSelectedCampaign(response.id.toString());
+        console.log('✅ Campanha padrão criada:', newCampaign);
+      }
+    } catch (err) {
+      console.error('❌ Erro ao criar campanha padrão:', err);
+      // Se falhar, permitir upload sem campanha
+      setCampaigns([{
+        id: 'default',
+        name: 'Sem Campanha (Upload Direto)',
+        status: 'active'
+      }]);
+      setSelectedCampaign('default');
     }
   };
 
@@ -138,10 +200,13 @@ function UploadListas() {
   };
 
   const handleUpload = async () => {
-    if (!file || !selectedCampaign) {
-      setError('Seleccioná un archivo y una campaña');
+    if (!file) {
+      setError('Seleccioná un archivo para subir');
       return;
     }
+
+    // Se não há campanha selecionada, usar "default"
+    const campaignId = selectedCampaign || 'default';
 
     setUploading(true);
     setFileState(FileStates.UPLOADING);
@@ -149,12 +214,14 @@ function UploadListas() {
 
     try {
       const formData = new FormData();
-      formData.append('file', file); // O backend principal espera 'file'
-      formData.append('campaign_id', selectedCampaign);
+      formData.append('archivo', file); // Usar 'archivo' que é o que o endpoint espera
+      formData.append('incluir_nome', 'true');
+      formData.append('pais_preferido', 'auto');
 
       console.log('📤 Enviando upload:', {
         file: file.name,
-        campaign: selectedCampaign
+        campaign: campaignId,
+        size: file.size
       });
 
       const response = await makeApiRequest('/contacts/upload', 'POST', formData);
@@ -162,14 +229,15 @@ function UploadListas() {
       console.log('📥 Resposta do upload:', response);
       
       setUploadResult({
-        total_lines: response.total_numeros_archivo || 0,
-        contacts_added: response.numeros_validos || 0,
-        errors_count: response.numeros_invalidos || 0,
+        total_lines: response.total_lineas_archivo || 0,
+        contacts_added: response.contatos_validos || 0,
+        errors_count: response.contatos_invalidos || 0,
+        duplicates_count: response.contatos_duplicados || 0,
         message: response.mensaje || 'Upload realizado com sucesso'
       });
-        setFileState(FileStates.SUCCESS);
-        setFile(null);
-        setPreviewData(null);
+      setFileState(FileStates.SUCCESS);
+      setFile(null);
+      setPreviewData(null);
     } catch (error) {
       console.error('❌ Erro no upload:', error);
       setError('Error al cargar el archivo: ' + error.message);
@@ -266,6 +334,17 @@ function UploadListas() {
                 color="warning"
               />
               <UploadStatusCard
+                title="Duplicados"
+                value={uploadResult.duplicates_count || 0}
+                subtitle="Removidos automáticamente"
+                icon={
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                }
+                color="info"
+              />
+              <UploadStatusCard
                 title="Errores"
                 value={uploadResult.errors_count || 0}
                 icon={
@@ -277,38 +356,60 @@ function UploadListas() {
               />
             </div>
             
-            <div className="bg-green-500/20 border border-green-500/50 text-green-200 px-6 py-4 rounded-xl text-center">
-              <svg className="w-6 h-6 text-green-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Lista subida con éxito! {uploadResult.contacts_added} contactos procesados.
+            <div className="bg-gray-700/50 rounded-lg p-4">
+              <p className="text-green-400 font-medium">{uploadResult.message}</p>
             </div>
           </div>
         )}
 
-        {/* Error message */}
+        {/* Error Display */}
         {error && (
-          <div className="bg-error-500/20 border border-error-500/50 text-error-200 px-6 py-4 rounded-xl text-sm backdrop-blur-sm animate-fade-in mb-6">
+          <div className="mb-8 bg-gradient-to-r from-red-500/20 to-red-600/20 border border-red-500/50 rounded-xl p-6 backdrop-blur-sm">
             <div className="flex items-center">
-              <svg className="w-5 h-5 text-error-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="font-medium">{error}</span>
+              <p className="text-red-400 font-medium">{error}</p>
             </div>
           </div>
         )}
 
-        {/* Main Upload Form */}
-        <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 overflow-hidden">
-          <div className="bg-gradient-to-r from-primary-600/20 to-primary-800/20 p-6 border-b border-gray-700/50">
-            <h3 className="text-xl font-bold text-white">Cargar Nueva Lista</h3>
-          </div>
-          
-          <div className="p-6 space-y-6">
+        {/* Upload Form */}
+        <div className="bg-gray-800/50 backdrop-blur-xl rounded-xl border border-gray-700/50 p-8">
+          <div className="space-y-6">
+            {/* Campaign Status */}
+            <div className="bg-gray-700/30 rounded-lg p-4 border border-gray-600/50">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-semibold text-white">Status da Campanha</h3>
+                <button
+                  onClick={loadCampaigns}
+                  className="px-3 py-1 bg-primary-600 hover:bg-primary-700 text-white text-sm rounded-lg transition-colors"
+                  disabled={uploading}
+                >
+                  🔄 Atualizar
+                </button>
+              </div>
+              {campaigns.length > 0 ? (
+                <div className="flex items-center text-green-400">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Campanha ativa: {campaigns.find(c => c.id.toString() === selectedCampaign)?.name || 'Carregando...'}</span>
+                </div>
+              ) : (
+                <div className="flex items-center text-yellow-400">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Criando campanha automática...</span>
+                </div>
+              )}
+            </div>
+
             {/* Campaign Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Seleccionar Campaña
+                Seleccionar Campaña {campaigns.length === 0 && <span className="text-gray-500">(Opcional - será criada automaticamente)</span>}
               </label>
               <select
                 value={selectedCampaign}
@@ -316,12 +417,17 @@ function UploadListas() {
                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 disabled={uploading}
               >
-                <option value="">Elegí una campaña...</option>
-                {campaigns.map((campaign) => (
-                  <option key={campaign.id} value={campaign.id}>
-                    {campaign.name} ({campaign.status})
-                  </option>
-                ))}
+                {campaigns.length === 0 ? (
+                  <option value="">Carregando campanhas...</option>
+                ) : (
+                  <>
+                    {campaigns.map((campaign) => (
+                      <option key={campaign.id} value={campaign.id}>
+                        {campaign.name} ({campaign.status})
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
             </div>
 
@@ -396,20 +502,20 @@ function UploadListas() {
                 </button>
                 <button
                   onClick={handleUpload}
-                  disabled={uploading || !selectedCampaign}
+                  disabled={uploading}
                   className="px-8 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-medium rounded-lg transition-all duration-200 flex items-center"
                 >
                   {uploading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Cargando...
+                      Subiendo...
                     </>
                   ) : (
                     <>
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      {uploading ? 'Cargando...' : 'Subir Lista'}
+                      Subir Lista
                     </>
                   )}
                 </button>
