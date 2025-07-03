@@ -22,6 +22,9 @@ from .audio_sistema import (
     AudioEvento, AudioTemplate, EstadoAudio, TipoOperadorRegra
 )
 
+# Importar novos modelos de configuração avançada
+from .configuracao_discagem import ConfiguracaoDiscagem, HistoricoConfiguracaoDiscagem, CampanhaConfiguracaoDiscagem
+
 # Lista de todos os modelos para facilitar importações
 __all__ = [
     "Audio",
@@ -72,5 +75,8 @@ __all__ = [
     "AudioEvento",
     "AudioTemplate",
     "EstadoAudio",
-    "TipoOperadorRegra"
+    "TipoOperadorRegra",
+    "ConfiguracaoDiscagem",
+    "HistoricoConfiguracaoDiscagem",
+    "CampanhaConfiguracaoDiscagem"
 ] 

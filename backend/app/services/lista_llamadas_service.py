@@ -4,6 +4,7 @@ Servico para processar listas de llamadas a partir de arquivos CSV/TXT.
 
 import csv
 import io
+import random
 from typing import List, Set, Tuple, Dict, Any
 from fastapi import UploadFile, HTTPException
 from sqlalchemy.orm import Session
@@ -65,6 +66,11 @@ class ListaLlamadasService:
             # Procesar numeros
             estadisticas = await self._procesar_numeros(contenido_texto, archivo.filename)
             
+            # RANDOMIZAR NÚMEROS PARA EVITAR DISCAGEM SEQUENCIAL
+            if estadisticas['numeros_validos']:
+                random.shuffle(estadisticas['numeros_validos'])
+                logger.info(f"Números randomizados: {len(estadisticas['numeros_validos'])} números misturados")
+            
             # Crear lista en la base de datos
             lista = self._crear_lista(
                 nombre_lista, 
@@ -85,7 +91,7 @@ class ListaLlamadasService:
             return {
                 'lista_id': lista.id,
                 'nombre_lista': lista.nombre,
-                'archivo_original': lista.archivo_original,
+                'archivo_original': lista.archivo_origen,
                 'total_numeros_archivo': estadisticas['total_lineas'],
                 'numeros_validos': numeros_guardados,
                 'numeros_invalidos': estadisticas['numeros_invalidos'],
@@ -126,14 +132,14 @@ class ListaLlamadasService:
         Returns:
             Diccionario con estadisticas del procesamiento
         """
-        numeros_raw = []
+        contactos_raw = []
         errores = []
         
         try:
             if filename.lower().endswith('.csv'):
-                numeros_raw = self._procesar_csv(contenido)
+                contactos_raw = self._procesar_csv(contenido)
             else:
-                numeros_raw = self._procesar_txt(contenido)
+                contactos_raw = self._procesar_txt(contenido)
         except Exception as e:
             errores.append(f"Error al parsear archivo: {str(e)}")
             return {
@@ -150,8 +156,10 @@ class ListaLlamadasService:
         numeros_vistos: Set[str] = set()
         numeros_duplicados = 0
         
-        for i, numero_raw in enumerate(numeros_raw, 1):
-            if not numero_raw.strip():
+        for i, contacto in enumerate(contactos_raw, 1):
+            numero_raw = contacto.get('telefono', '').strip()
+            
+            if not numero_raw:
                 continue
                 
             validacion = validar_numero_telefone(numero_raw)
@@ -170,20 +178,32 @@ class ListaLlamadasService:
             numeros_vistos.add(validacion.numero_normalizado)
             numeros_validos.append({
                 'numero_original': validacion.numero_original,
-                'numero_normalizado': validacion.numero_normalizado
+                'numero_normalizado': validacion.numero_normalizado,
+                'nombre': contacto.get('nombre', '').strip(),
+                'apellido': contacto.get('apellido', '').strip(),
+                'empresa': contacto.get('empresa', '').strip()
             })
         
         return {
-            'total_lineas': len(numeros_raw),
+            'total_lineas': len(contactos_raw),
             'numeros_validos': numeros_validos,
             'numeros_invalidos': numeros_invalidos,
             'numeros_duplicados': numeros_duplicados,
             'errores': errores
         }
     
-    def _procesar_csv(self, contenido: str) -> List[str]:
-        """Procesa archivo CSV y extrae numeros."""
-        numeros = []
+    def _procesar_csv(self, contenido: str) -> List[Dict[str, str]]:
+        """
+        Procesa archivo CSV y extrae contactos con múltiples columnas.
+        
+        Formatos soportados:
+        1. telefono,nombre,apellido
+        2. nombre,apellido,telefono  
+        3. telefono,nombre
+        4. nome,telefone (português)
+        5. phone_number,name,last_name (inglés)
+        """
+        contactos = []
         
         # Detectar si tiene header
         sniffer = csv.Sniffer()
@@ -192,20 +212,122 @@ class ListaLlamadasService:
         
         reader = csv.reader(io.StringIO(contenido))
         
+        headers = []
         if has_header:
-            next(reader)  # Saltar header
+            headers = [h.strip().lower() for h in next(reader)]
+            logger.info(f"Headers detectados: {headers}")
         
-        for row in reader:
-            if row:  # Ignorar filas vacias
-                # Tomar el primer campo como numero
-                numeros.append(row[0].strip())
+        # Mapear headers para campos conhecidos
+        campo_telefone = self._detectar_campo_telefone(headers)
+        campo_nombre = self._detectar_campo_nombre(headers) 
+        campo_apellido = self._detectar_campo_apellido(headers)
+        campo_empresa = self._detectar_campo_empresa(headers)
         
-        return numeros
+        for row_num, row in enumerate(reader, 2):  # Começar em 2 por causa do header
+            if not row or not any(cell.strip() for cell in row):  # Ignorar filas vazias
+                continue
+                
+            contacto = {}
+            
+            if headers and len(row) >= len(headers):
+                # Usar headers detectados
+                for i, header in enumerate(headers):
+                    if i < len(row):
+                        if header == campo_telefone:
+                            contacto['telefono'] = row[i].strip()
+                        elif header == campo_nombre:
+                            contacto['nombre'] = row[i].strip()
+                        elif header == campo_apellido:
+                            contacto['apellido'] = row[i].strip()
+                        elif header == campo_empresa:
+                            contacto['empresa'] = row[i].strip()
+            else:
+                # Fallback: assumir primeira coluna como telefone
+                if len(row) >= 1:
+                    contacto['telefono'] = row[0].strip()
+                if len(row) >= 2:
+                    contacto['nombre'] = row[1].strip()
+                if len(row) >= 3:
+                    contacto['apellido'] = row[2].strip()
+                if len(row) >= 4:
+                    contacto['empresa'] = row[3].strip()
+            
+            if contacto.get('telefono'):  # Só adicionar se tiver telefone
+                contactos.append(contacto)
+        
+        logger.info(f"CSV processado: {len(contactos)} contactos extraídos")
+        return contactos
     
-    def _procesar_txt(self, contenido: str) -> List[str]:
+    def _detectar_campo_telefone(self, headers: List[str]) -> str:
+        """Detecta qual campo contém o telefone."""
+        campos_telefone = [
+            'telefono', 'phone', 'phone_number', 'numero', 'tel', 'celular',
+            'mobile', 'whatsapp', 'fone', 'telefone'
+        ]
+        
+        for header in headers:
+            if any(campo in header for campo in campos_telefone):
+                return header
+        
+        # Se não encontrar, assumir primeira coluna
+        return headers[0] if headers else None
+    
+    def _detectar_campo_nombre(self, headers: List[str]) -> str:
+        """Detecta qual campo contém o nome."""
+        campos_nombre = [
+            'nombre', 'name', 'first_name', 'nome', 'primeiro_nome',
+            'firstname', 'given_name'
+        ]
+        
+        for header in headers:
+            if any(campo in header for campo in campos_nombre):
+                return header
+        
+        return None
+    
+    def _detectar_campo_apellido(self, headers: List[str]) -> str:
+        """Detecta qual campo contém o sobrenome."""
+        campos_apellido = [
+            'apellido', 'last_name', 'surname', 'sobrenome', 'lastname',
+            'family_name', 'segundo_nome'
+        ]
+        
+        for header in headers:
+            if any(campo in header for campo in campos_apellido):
+                return header
+        
+        return None
+    
+    def _detectar_campo_empresa(self, headers: List[str]) -> str:
+        """Detecta qual campo contém a empresa."""
+        campos_empresa = [
+            'empresa', 'company', 'organizacion', 'organization',
+            'negocio', 'business', 'firma'
+        ]
+        
+        for header in headers:
+            if any(campo in header for campo in campos_empresa):
+                return header
+        
+        return None
+    
+    def _procesar_txt(self, contenido: str) -> List[Dict[str, str]]:
         """Procesa archivo TXT y extrae numeros (uno por linea)."""
         lineas = contenido.strip().split('\n')
-        return [linea.strip() for linea in lineas if linea.strip()]
+        contactos = []
+        
+        for linea in lineas:
+            linea = linea.strip()
+            if linea:
+                # Para TXT, assumir que só tem telefone
+                contactos.append({
+                    'telefono': linea,
+                    'nombre': '',
+                    'apellido': '',
+                    'empresa': ''
+                })
+        
+        return contactos
     
     def _crear_lista(
         self, 
@@ -219,10 +341,9 @@ class ListaLlamadasService:
         lista = ListaLlamadas(
             nombre=nombre,
             descripcion=descripcion,
-            archivo_original=archivo_original,
-            total_numeros=estadisticas['total_lineas'],
-            numeros_validos=len(estadisticas['numeros_validos']),
-            numeros_duplicados=estadisticas['numeros_duplicados']
+            archivo_origen=archivo_original,
+            total_contactos=estadisticas['total_lineas'],
+            contactos_pendientes=len(estadisticas['numeros_validos'])
         )
         
         self.db.add(lista)
@@ -244,7 +365,10 @@ class ListaLlamadasService:
                 numero = NumeroLlamada(
                     numero=numero_data['numero_original'],
                     numero_normalizado=numero_data['numero_normalizado'],
-                    id_lista=lista_id,
+                    lista_id=lista_id,  # Corrigido: era id_lista
+                    nombre=numero_data.get('nombre', ''),
+                    apellido=numero_data.get('apellido', ''),
+                    empresa=numero_data.get('empresa', ''),
                     valido=True
                 )
                 
