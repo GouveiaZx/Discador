@@ -708,28 +708,6 @@ async def multi_sip_provedores_direto():
             "data": []
         }
 
-@missing_routes.options("/contacts/upload")
-async def options_contacts_upload():
-    """Endpoint OPTIONS para CORS - contacts upload."""
-    return {"message": "OK"}
-
-@missing_routes.post("/contacts/upload")
-async def test_contacts_upload():
-    """Endpoint de teste para upload de contatos."""
-    return {
-        "status": "success",
-        "message": "Endpoint /contacts/upload está funcionando! Implementação completa disponível.",
-        "features": [
-            "Suporte a CSV e TXT",
-            "Validação de telefones EUA/Argentina",
-            "Detecção automática de colunas",
-            "Integração com Supabase",
-            "Remoção de duplicados",
-            "Relatório de erros detalhado"
-        ],
-        "usage": "Use POST com multipart/form-data contendo o arquivo"
-    }
-
 # Incluir rotas ausentes
 app.include_router(missing_routes, prefix=f"{api_prefix}")
 

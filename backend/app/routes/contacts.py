@@ -1,19 +1,27 @@
-from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException
-from sqlalchemy.orm import Session
-from app.database import get_db
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from app.utils.logger import logger
+import requests
+import re
 
 router = APIRouter(prefix="/contacts", tags=["Contacts"])
+
+# Configurações do Supabase
+SUPABASE_URL = "https://orxxocptgaeoyrtlxwkv.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9yeHhvY3B0Z2Flb3lydGx4d2t2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyOTk0MDksImV4cCI6MjA2Njg3NTQwOX0.hJ5vXcLBiSE0TjVzdbZcnlN_jiT1mNijqWEWylVrhdQ"
+
+def validar_telefone(numero: str) -> bool:
+    """Validar número de telefone."""
+    numero_limpo = re.sub(r'[^\d]', '', numero)
+    return len(numero_limpo) >= 10
 
 @router.post("/upload")
 async def upload_contatos(
     arquivo: UploadFile = File(...),
     incluir_nome: bool = Form(True),
-    pais_preferido: str = Form("auto"),
-    db: Session = Depends(get_db)
+    pais_preferido: str = Form("auto")
 ):
     """
-    Upload de contatos - Versão simplificada e funcional.
+    Upload de contatos - Versão simplificada sem dependência de database.
     """
     logger.info(f"🚀 [UPLOAD] Iniciando upload: {arquivo.filename}")
     
@@ -47,7 +55,7 @@ async def upload_contatos(
         
         for linha in linhas:
             linha_limpa = linha.replace('\r', '').strip()
-            if linha_limpa and len(linha_limpa) >= 10:  # Mínimo 10 dígitos
+            if linha_limpa and validar_telefone(linha_limpa):
                 linhas_limpas.append(linha_limpa)
         
         total_linhas = len(linhas_limpas)
@@ -63,38 +71,54 @@ async def upload_contatos(
         else:
             linhas_processadas = linhas_limpas
         
-        # 6. Inserir contatos no Supabase
+        # 6. Inserir contatos no Supabase via API REST
         contatos_inseridos = 0
         contatos_duplicados = 0
         contatos_invalidos = 0
         
-        for linha in linhas_processadas:
-            if len(linha) >= 10:
-                try:
-                    # Inserir no Supabase
-                    query = """
-                        INSERT INTO contacts (phone_number, name, campaign_id, status, attempts, created_at, updated_at) 
-                        VALUES (:phone, :name, :campaign_id, 'not_started', 0, NOW(), NOW())
-                        ON CONFLICT (phone_number, campaign_id) DO NOTHING
-                        RETURNING id
-                    """
-                    
-                    result = db.execute(query, {
-                        "phone": linha,
-                        "name": "",  # Nome vazio por enquanto
-                        "campaign_id": 1  # Campanha padrão
+        # Preparar headers para Supabase
+        headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "resolution=merge-duplicates"
+        }
+        
+        # Inserir em lotes de 100
+        lote_size = 100
+        for i in range(0, len(linhas_processadas), lote_size):
+            lote = linhas_processadas[i:i+lote_size]
+            
+            # Preparar dados para inserção
+            dados_insercao = []
+            for linha in lote:
+                if validar_telefone(linha):
+                    dados_insercao.append({
+                        "phone_number": linha,
+                        "name": "",
+                        "campaign_id": 1,
+                        "status": "not_started",
+                        "attempts": 0
                     })
+            
+            try:
+                # Fazer inserção no Supabase
+                response = requests.post(
+                    f"{SUPABASE_URL}/rest/v1/contacts",
+                    headers=headers,
+                    json=dados_insercao
+                )
+                
+                if response.status_code in [200, 201]:
+                    contatos_inseridos += len(dados_insercao)
+                    logger.info(f"✅ Lote inserido: {len(dados_insercao)} contatos")
+                else:
+                    logger.error(f"❌ Erro no lote: {response.status_code} - {response.text}")
+                    contatos_invalidos += len(dados_insercao)
                     
-                    if result.fetchone():
-                        contatos_inseridos += 1
-                    else:
-                        contatos_duplicados += 1
-                        
-                except Exception as e:
-                    logger.error(f"❌ Erro ao inserir {linha}: {str(e)}")
-                    contatos_invalidos += 1
-            else:
-                contatos_invalidos += 1
+            except Exception as e:
+                logger.error(f"❌ Erro na inserção do lote: {str(e)}")
+                contatos_invalidos += len(dados_insercao)
         
         # 7. Preparar resposta
         resultado = {
@@ -121,8 +145,10 @@ async def test_endpoint():
     """Endpoint de teste."""
     return {
         "message": "Endpoint funcionando!",
-        "version": "2.0.0",
-        "timestamp": "2025-01-08"
+        "version": "3.0.0",
+        "timestamp": "2025-01-08",
+        "supabase_url": SUPABASE_URL[:50] + "...",
+        "status": "OK"
     }
 
 @router.post("/debug-txt")
@@ -144,7 +170,7 @@ async def debug_txt_upload(
         
         linhas = texto.strip().split('\n')
         linhas_limpas = [linha.replace('\r', '').strip() for linha in linhas]
-        linhas_validas = [linha for linha in linhas_limpas if linha.strip()]
+        linhas_validas = [linha for linha in linhas_limpas if linha.strip() and validar_telefone(linha)]
         
         return {
             "message": "Debug concluído",
@@ -163,12 +189,21 @@ async def debug_txt_upload(
 @router.get("/")
 async def listar_contatos(skip: int = 0, limit: int = 100):
     """Lista contatos."""
-    return []
+    return {"message": "Endpoint disponível", "total": 0, "contatos": []}
 
 @router.options("/upload")
 async def options_upload():
     """CORS para upload."""
     return {"message": "OK"}
+
+@router.post("/test-simple")
+async def test_simple():
+    """Endpoint POST simples para testar."""
+    return {
+        "message": "Endpoint POST simples funcionando!",
+        "status": "success",
+        "timestamp": "2025-01-08"
+    }
 
 @router.options("/")
 async def options_root():
