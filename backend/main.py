@@ -239,6 +239,40 @@ async def audio_contextos_direto():
         "total": len(contextos)
     }
 
+# Endpoint alternativo para áudio
+@missing_routes.get("/audios/contextos")
+async def audio_contextos_alternativo():
+    """Contextos de áudio - endpoint alternativo"""
+    contextos = [
+        {
+            "id": 1,
+            "nome": "Contexto Padrão",
+            "descricao": "Contexto de áudio padrão para campanhas",
+            "ativo": True,
+            "configuracoes": {
+                "deteccao_voz": True,
+                "timeout_resposta": 5,
+                "max_tentativas": 3
+            }
+        },
+        {
+            "id": 2,
+            "nome": "Contexto Personalizado", 
+            "descricao": "Contexto de áudio personalizado",
+            "ativo": True,
+            "configuracoes": {
+                "deteccao_voz": True,
+                "timeout_resposta": 10,
+                "max_tentativas": 5
+            }
+        }
+    ]
+    return {
+        "status": "success",
+        "contextos": contextos,
+        "total": len(contextos)
+    }
+
 @missing_routes.get("/multi-sip/provedores")
 async def multi_sip_provedores_direto():
     """Provedores SIP - versão direta sem dependências"""
