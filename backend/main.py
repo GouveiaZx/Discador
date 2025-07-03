@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from fastapi import FastAPI, APIRouter, Depends, HTTPException
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 import uvicorn
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
+from pydantic import BaseModel
+import jwt
+import hashlib
 
 from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, monitoring
 from app.database import inicializar_bd, get_db
@@ -15,6 +19,113 @@ from app.config import configuracion
 from app.utils.logger import logger
 # Importar modelos para asegurar que esten disponibles para SQLAlchemy
 import app.models
+
+# Modelos para autenticação
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: dict
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    is_admin: bool
+    is_active: bool
+    role: str
+
+# Configuração JWT
+SECRET_KEY = "sua-chave-secreta-muito-segura-aqui"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# Usuários simulados para teste
+USERS_DB = {
+    "admin": {
+        "id": 1,
+        "username": "admin", 
+        "email": "admin@discador.com",
+        "hashed_password": hashlib.sha256("admin123".encode()).hexdigest(),
+        "is_admin": True,
+        "is_active": True,
+        "role": "admin"
+    },
+    "supervisor": {
+        "id": 2,
+        "username": "supervisor",
+        "email": "supervisor@discador.com", 
+        "hashed_password": hashlib.sha256("supervisor123".encode()).hexdigest(),
+        "is_admin": False,
+        "is_active": True,
+        "role": "supervisor"
+    },
+    "operador": {
+        "id": 3,
+        "username": "operador",
+        "email": "operador@discador.com",
+        "hashed_password": hashlib.sha256("operador123".encode()).hexdigest(), 
+        "is_admin": False,
+        "is_active": True,
+        "role": "operator"
+    }
+}
+
+security = HTTPBearer()
+
+def create_access_token(data: dict, expires_delta: timedelta = None):
+    """Criar token JWT"""
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verificar senha"""
+    return hashlib.sha256(plain_password.encode()).hexdigest() == hashed_password
+
+def authenticate_user(username: str, password: str):
+    """Autenticar usuário"""
+    user = USERS_DB.get(username)
+    if not user:
+        return False
+    if not verify_password(password, user["hashed_password"]):
+        return False
+    return user
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Obter usuário atual do token"""
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token inválido",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except jwt.PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido", 
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    user = USERS_DB.get(username)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuário não encontrado",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user
 
 # Rotas de correção rápida implementadas diretamente
 from fastapi import APIRouter
@@ -378,6 +489,47 @@ async def multi_sip_provedores_direto():
 
 # Incluir rotas ausentes
 app.include_router(missing_routes, prefix=f"{api_prefix}")
+
+# Router para autenticação
+auth_router = APIRouter()
+
+@auth_router.post("/login", response_model=LoginResponse)
+async def login(request: LoginRequest):
+    """Endpoint de login"""
+    user = authenticate_user(request.username, request.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciais inválidas",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user["username"]}, expires_delta=access_token_expires
+    )
+    
+    # Remover senha do retorno
+    user_data = {k: v for k, v in user.items() if k != "hashed_password"}
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user_data
+    }
+
+@auth_router.get("/me", response_model=UserResponse)
+async def read_users_me(current_user: dict = Depends(get_current_user)):
+    """Obter dados do usuário atual"""
+    return {k: v for k, v in current_user.items() if k != "hashed_password"}
+
+@auth_router.post("/logout")
+async def logout():
+    """Endpoint de logout (apenas retorna sucesso, o frontend deve remover o token)"""
+    return {"message": "Logout realizado com sucesso"}
+
+# Incluir router de autenticação
+app.include_router(auth_router, prefix=f"{api_prefix}/auth")
 
 # Health check endpoints para Render.com
 @app.get("/")
