@@ -1,5 +1,10 @@
 # 🎯 SISTEMA DISCADOR PREDITIVO - DOCUMENTAÇÃO COMPLETA
 
+## 🌍 IDIOMAS / LANGUAGES / IDIOMAS
+
+- 🇧🇷 **Português**: [README_SISTEMA_COMPLETO.md](README_SISTEMA_COMPLETO.md) (este arquivo)
+- 🇦🇷 **Español Argentino**: [README_SISTEMA_COMPLETO-ES.md](README_SISTEMA_COMPLETO-ES.md)
+
 ## 📋 VISÃO GERAL
 
 Sistema completo de discado preditivo com interface web moderna, backend robusto e integração com Asterisk. Desenvolvido para operações de telemarketing, cobrança e pesquisas telefônicas.

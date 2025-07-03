@@ -1,12 +1,6 @@
 # 🎯 SISTEMA DISCADOR PREDITIVO
 
-> Sistema completo de discado preditivo com interface web moderna, backend robusto e integração com Asterisk.
-
-## 🌍 IDIOMAS / LANGUAGES / IDIOMAS
-
-- 🇧🇷 **Português**: [README.md](README.md) (este arquivo)
-- 🇦🇷 **Español Argentino**: [README-ES.md](README-ES.md)
-- 🇺🇸 **English**: [README-EN.md](README-EN.md) *(em breve)*
+> Sistema completo de discagem preditiva com interface web moderna, backend robusto e integração com Asterisk.
 
 ## 🌟 CARACTERÍSTICAS PRINCIPAIS
 
@@ -93,10 +87,10 @@ asterisk -rx "dialplan reload"
 - Alertas e notificações
 - Monitoramento de chamadas
 
-### 📞 Discado Preditivo
+### 📞 Discagem Preditiva
 - Algoritmo inteligente de predição
-- Detecção automática de voicemail (AMD)
-- Sistema "Presione 1" completo
+- Detecção automática de secretária eletrônica (AMD)
+- Sistema "Pressione 1" completo
 - Rotação inteligente de CLIs
 - Balanceamento de carga
 
@@ -123,7 +117,7 @@ asterisk -rx "dialplan reload"
 
 ### Frontend
 - **React 18** + **Vite** + **TailwindCSS**
-- **Axios** para API calls
+- **Axios** para chamadas API
 - **React Router** para navegação
 - **Lucide React** para ícones
 
@@ -161,7 +155,7 @@ O sistema já vem configurado com:
 
 ### Problemas Comuns
 - **Login falha**: Aguarde 1-2 min (backend reiniciando)
-- **Dados não carregam**: Verifique conexão internet
+- **Dados não carregam**: Verifique conexão com internet
 - **Upload falha**: Formato CSV correto (phone_number, name)
 
 ### Contato

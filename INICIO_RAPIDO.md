@@ -1,4 +1,11 @@
-# 🚀 GUIA DE INÍCIO RÁPIDO - SISTEMA DISCADOR PREDITIVO
+# 🚀 INÍCIO RÁPIDO - SISTEMA DISCADOR PREDITIVO
+
+> Comece a usar o sistema em 5 minutos! Guia passo a passo para sua primeira experiência.
+
+## 🌍 IDIOMAS
+
+- 🇧🇷 **Português**: [INICIO_RAPIDO.md](INICIO_RAPIDO.md) (este arquivo)
+- 🇦🇷 **Español Argentino**: [INICIO_RAPIDO-ES.md](INICIO_RAPIDO-ES.md)
 
 ## ⚡ ACESSO IMEDIATO
 
