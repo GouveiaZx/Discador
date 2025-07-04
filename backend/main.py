@@ -201,7 +201,8 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "https://localhost:3000",
         "http://localhost:5173",
-        "https://localhost:5173"
+        "https://localhost:5173",
+        "*"  # Permitir todas as origens temporariamente para debugging
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],

@@ -240,50 +240,24 @@ function UploadListas() {
   };
 
   const handleUpload = async () => {
-    if (!file) {
-      setError('Seleccioná un archivo para subir');
-      return;
-    }
-
-    // Se não há campanha selecionada, usar "default"
-    const campaignId = selectedCampaign || 'default';
+    if (!file) return;
 
     setUploading(true);
     setFileState(FileStates.UPLOADING);
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('arquivo', file); // Usar 'arquivo' que é o que o endpoint espera
-      formData.append('incluir_nome', 'true');
-      formData.append('pais_preferido', 'auto');
+      // NOVO: Detectar arquivos grandes e fazer upload em chunks
+      const isLargeFile = file.size > 5 * 1024 * 1024; // 5MB
       
-      // CORREÇÃO CRÍTICA: Sempre incluir campaign_id se disponível
-      if (campaignId && campaignId !== 'default') {
-        formData.append('campaign_id', campaignId);
+      if (isLargeFile) {
+        console.log(`📦 Arquivo grande detectado (${(file.size / 1024 / 1024).toFixed(1)}MB) - Upload em chunks`);
+        await handleLargeFileUpload();
+      } else {
+        console.log('📄 Arquivo normal - Upload direto');
+        await handleNormalUpload();
       }
 
-      console.log('📤 Enviando upload:', {
-        file: file.name,
-        campaign: campaignId,
-        size: file.size,
-        campaign_id_included: !!(campaignId && campaignId !== 'default')
-      });
-
-      const response = await makeApiRequest('/contacts/upload', 'POST', formData);
-      
-      console.log('📥 Resposta do upload:', response);
-      
-      setUploadResult({
-        total_lines: response.total_lineas_archivo || 0,
-        contacts_added: response.contatos_validos || 0,
-        errors_count: response.contatos_invalidos || 0,
-        duplicates_count: response.contatos_duplicados || 0,
-        message: response.mensaje || 'Upload realizado com sucesso'
-      });
-      setFileState(FileStates.SUCCESS);
-      setFile(null);
-      setPreviewData(null);
     } catch (error) {
       console.error('❌ Erro no upload:', error);
       setError('Error al cargar el archivo: ' + error.message);
@@ -291,6 +265,123 @@ function UploadListas() {
     } finally {
       setUploading(false);
     }
+  };
+
+  // Upload normal para arquivos pequenos
+  const handleNormalUpload = async () => {
+    // Se não há campanha selecionada, usar "default"
+    const campaignId = selectedCampaign || 'default';
+    
+    const formData = new FormData();
+    formData.append('arquivo', file);
+    formData.append('incluir_nome', 'true');
+    formData.append('pais_preferido', 'auto');
+    
+    if (campaignId && campaignId !== 'default') {
+      formData.append('campaign_id', campaignId);
+    }
+
+    console.log('📤 Enviando upload:', {
+      file: file.name,
+      campaign: campaignId,
+      size: file.size,
+      campaign_id_included: !!(campaignId && campaignId !== 'default')
+    });
+
+    const response = await makeApiRequest('/contacts/upload', 'POST', formData);
+    
+    console.log('📥 Resposta do upload:', response);
+    
+    setUploadResult({
+      total_lines: response.total_linhas_arquivo_original || response.total_lineas_archivo || 0,
+      contacts_added: response.contatos_validos || 0,
+      errors_count: response.contatos_invalidos || 0,
+      duplicates_count: response.contatos_duplicados || 0,
+      message: response.mensaje || 'Upload realizado com sucesso'
+    });
+    setFileState(FileStates.SUCCESS);
+    setFile(null);
+    setPreviewData(null);
+  };
+
+  // Upload em chunks para arquivos grandes
+  const handleLargeFileUpload = async () => {
+    // Se não há campanha selecionada, usar "default"
+    const campaignId = selectedCampaign || 'default';
+    
+    const text = await file.text();
+    const lines = text.split('\n').filter(line => line.trim());
+    
+    console.log(`📊 Processando ${lines.length} linhas em chunks`);
+    
+    const CHUNK_SIZE = 500; // 500 números por chunk para evitar timeout
+    const chunks = [];
+    
+    // Dividir em chunks
+    for (let i = 0; i < lines.length; i += CHUNK_SIZE) {
+      chunks.push(lines.slice(i, i + CHUNK_SIZE));
+    }
+    
+    console.log(`📦 Arquivo dividido em ${chunks.length} chunks de até ${CHUNK_SIZE} linhas`);
+    
+    let totalProcessed = 0;
+    let totalErrors = 0;
+    let totalDuplicates = 0;
+    
+    // Processar cada chunk
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const chunkNumber = i + 1;
+      
+      console.log(`📤 Enviando chunk ${chunkNumber}/${chunks.length} (${chunk.length} linhas)`);
+      
+      // Criar arquivo temporário para o chunk
+      const chunkContent = chunk.join('\n');
+      const chunkBlob = new Blob([chunkContent], { type: 'text/plain' });
+      const chunkFile = new File([chunkBlob], `chunk_${chunkNumber}_${file.name}`, { type: 'text/plain' });
+      
+      const formData = new FormData();
+      formData.append('arquivo', chunkFile);
+      formData.append('incluir_nome', 'true');
+      formData.append('pais_preferido', 'auto');
+      
+      if (campaignId && campaignId !== 'default') {
+        formData.append('campaign_id', campaignId);
+      }
+      
+      try {
+        const response = await makeApiRequest('/contacts/upload', 'POST', formData);
+        
+        totalProcessed += response.contatos_validos || 0;
+        totalErrors += response.contatos_invalidos || 0;
+        totalDuplicates += response.contatos_duplicados || 0;
+        
+        console.log(`✅ Chunk ${chunkNumber} processado: +${response.contatos_validos} contatos`);
+        
+        // Pequena pausa entre chunks para não sobrecarregar o servidor
+        if (i < chunks.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000)); // 1 segundo de pausa
+        }
+        
+      } catch (error) {
+        console.error(`❌ Erro no chunk ${chunkNumber}:`, error);
+        totalErrors += chunk.length; // Considerar todas as linhas do chunk como erro
+      }
+    }
+    
+    // Resultado final
+    console.log(`🎉 Upload em chunks concluído: ${totalProcessed} processados, ${totalErrors} erros, ${totalDuplicates} duplicados`);
+    
+    setUploadResult({
+      total_lines: lines.length,
+      contacts_added: totalProcessed,
+      errors_count: totalErrors,
+      duplicates_count: totalDuplicates,
+      message: `🚀 Upload em chunks concluído! ${totalProcessed} contatos processados de ${lines.length} linhas (${chunks.length} chunks)`
+    });
+    setFileState(FileStates.SUCCESS);
+    setFile(null);
+    setPreviewData(null);
   };
 
   const resetForm = () => {
