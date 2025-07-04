@@ -89,9 +89,12 @@ async def upload_contatos(
                 detail="Tipo de arquivo não suportado. Use apenas arquivos .txt ou .csv"
             )
         
-        if arquivo.size and arquivo.size > 50 * 1024 * 1024:  # 50MB
+        if arquivo.size and arquivo.size > 10 * 1024 * 1024:  # 10MB
             logger.error(f"❌ [UPLOAD] Arquivo muito grande: {arquivo.size} bytes")
-            raise HTTPException(status_code=413, detail="Arquivo muito grande (máximo 50MB)")
+            raise HTTPException(
+                status_code=413, 
+                detail="Arquivo muito grande (máximo 10MB). Para arquivos maiores, divida em partes menores."
+            )
         
         # 2. Ler e processar arquivo
         logger.info(f"📖 [UPLOAD] Lendo arquivo: {arquivo.size} bytes")
@@ -126,6 +129,14 @@ async def upload_contatos(
         linhas = texto.strip().split('\n')
         logger.info(f"📄 [UPLOAD] Total de linhas no arquivo: {len(linhas)}")
         
+        # Para arquivos muito grandes, processar apenas uma amostra primeiro
+        if len(linhas) > 100000:  # Mais de 100k linhas
+            logger.warning(f"⚠️ [UPLOAD] Arquivo muito grande ({len(linhas)} linhas), processando apenas primeiros 10.000 registros")
+            linhas = linhas[:10000]
+        elif len(linhas) > 10000:  # Mais de 10k linhas
+            logger.warning(f"⚠️ [UPLOAD] Arquivo grande ({len(linhas)} linhas), processando apenas primeiros 5.000 registros")
+            linhas = linhas[:5000]
+        
         # Log das primeiras linhas para debug
         for i, linha in enumerate(linhas[:5]):
             logger.debug(f"📝 [UPLOAD] Linha {i+1} (sample): '{linha.strip()}'")
@@ -134,7 +145,9 @@ async def upload_contatos(
         linhas_invalidas = []
         
         for i, linha in enumerate(linhas):
-            linha_limpa = linha.replace('\r', '').strip()
+            # Limpar caracteres especiais (\r, \n, espaços extras)
+            linha_limpa = linha.replace('\r', '').replace('\n', '').strip()
+            
             if linha_limpa:
                 # Normalizar o número
                 numero_normalizado = normalizar_telefone(linha_limpa)
@@ -155,10 +168,10 @@ async def upload_contatos(
             logger.error(f"❌ [UPLOAD] {error_msg}")
             raise HTTPException(status_code=400, detail=error_msg)
         
-        # 5. Para arquivos grandes, processar em lotes
-        if total_linhas > 1000:
-            logger.info("⚠️ [UPLOAD] Arquivo grande - processando primeiros 1000 registros")
-            linhas_processadas = linhas_limpas[:1000]
+        # 5. Processar em lotes menores para arquivos grandes
+        if total_linhas > 2000:
+            logger.info("⚠️ [UPLOAD] Arquivo grande - processando primeiros 2000 registros para evitar timeout")
+            linhas_processadas = linhas_limpas[:2000]
         else:
             linhas_processadas = linhas_limpas
         
@@ -200,8 +213,8 @@ async def upload_contatos(
             campaign_id = 1
             logger.warning(f"⚠️ [UPLOAD] Erro ao buscar campanhas: {str(e)}, usando ID padrão")
         
-        # Inserir em lotes de 50 (reduzido para evitar timeouts)
-        lote_size = 50
+        # Inserir em lotes de 25 (reduzido para evitar timeouts com arquivos grandes)
+        lote_size = 25
         for i in range(0, len(linhas_processadas), lote_size):
             lote = linhas_processadas[i:i+lote_size]
             
