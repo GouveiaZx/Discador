@@ -66,13 +66,14 @@ def normalizar_telefone(numero: str) -> str:
 async def upload_contatos(
     arquivo: UploadFile = File(...),
     incluir_nome: bool = Form(True),
-    pais_preferido: str = Form("auto")
+    pais_preferido: str = Form("auto"),
+    campaign_id: int = Form(None)  # CORREÇÃO: Aceitar campaign_id
 ):
     """
     Upload de contatos - Versão com validação melhorada.
     """
     logger.info(f"🚀 [UPLOAD] Iniciando upload: {arquivo.filename}")
-    logger.info(f"📋 [UPLOAD] Params: incluir_nome={incluir_nome}, pais_preferido={pais_preferido}")
+    logger.info(f"📋 [UPLOAD] Params: incluir_nome={incluir_nome}, pais_preferido={pais_preferido}, campaign_id={campaign_id}")
     
     try:
         # 1. Validações básicas
@@ -203,25 +204,31 @@ async def upload_contatos(
         
         logger.info("📡 [UPLOAD] Conectando ao Supabase...")
         
-        # Verificar se existe campanha ativa
-        try:
-            campaign_response = requests.get(
-                f"{SUPABASE_URL}/rest/v1/campaigns?limit=1",
-                headers=headers,
-                timeout=10
-            )
-            
-            if campaign_response.status_code == 200:
-                campaigns = campaign_response.json()
-                campaign_id = campaigns[0]["id"] if campaigns else 1
-                logger.info(f"📋 [UPLOAD] Usando campanha ID: {campaign_id}")
-            else:
-                campaign_id = 1
-                logger.warning("⚠️ [UPLOAD] Não foi possível buscar campanhas, usando ID padrão")
+        # Definir campaign_id a ser usado
+        if campaign_id:
+            # Usar campaign_id fornecido pelo frontend
+            logger.info(f"📋 [UPLOAD] Usando campaign_id fornecido: {campaign_id}")
+            final_campaign_id = campaign_id
+        else:
+            # Buscar campanha ativa automaticamente
+            try:
+                campaign_response = requests.get(
+                    f"{SUPABASE_URL}/rest/v1/campaigns?limit=1",
+                    headers=headers,
+                    timeout=10
+                )
                 
-        except Exception as e:
-            campaign_id = 1
-            logger.warning(f"⚠️ [UPLOAD] Erro ao buscar campanhas: {str(e)}, usando ID padrão")
+                if campaign_response.status_code == 200:
+                    campaigns = campaign_response.json()
+                    final_campaign_id = campaigns[0]["id"] if campaigns else 1
+                    logger.info(f"📋 [UPLOAD] Usando campanha automaticamente: {final_campaign_id}")
+                else:
+                    final_campaign_id = 1
+                    logger.warning("⚠️ [UPLOAD] Não foi possível buscar campanhas, usando ID padrão")
+                    
+            except Exception as e:
+                final_campaign_id = 1
+                logger.warning(f"⚠️ [UPLOAD] Erro ao buscar campanhas: {str(e)}, usando ID padrão")
         
         # Inserir em lotes ULTRA-conservadores para máxima estabilidade
         if len(linhas_processadas) > 200:
@@ -246,7 +253,7 @@ async def upload_contatos(
                 dados_insercao.append({
                     "phone_number": linha,
                     "name": "",
-                    "campaign_id": campaign_id,
+                    "campaign_id": final_campaign_id,
                     "status": "not_started",
                     "attempts": 0
                 })

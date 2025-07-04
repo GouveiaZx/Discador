@@ -161,7 +161,7 @@ function UploadListas() {
     setError(null);
     setUploadResult(null);
 
-    // Leer archivo para preview
+    // Leer arquivo para preview
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -254,14 +254,20 @@ function UploadListas() {
 
     try {
       const formData = new FormData();
-      formData.append('archivo', file); // Usar 'archivo' que é o que o endpoint espera
+      formData.append('arquivo', file); // Usar 'arquivo' que é o que o endpoint espera
       formData.append('incluir_nome', 'true');
       formData.append('pais_preferido', 'auto');
+      
+      // CORREÇÃO CRÍTICA: Sempre incluir campaign_id se disponível
+      if (campaignId && campaignId !== 'default') {
+        formData.append('campaign_id', campaignId);
+      }
 
       console.log('📤 Enviando upload:', {
         file: file.name,
         campaign: campaignId,
-        size: file.size
+        size: file.size,
+        campaign_id_included: !!(campaignId && campaignId !== 'default')
       });
 
       const response = await makeApiRequest('/contacts/upload', 'POST', formData);
