@@ -129,16 +129,20 @@ async def upload_contatos(
         linhas = texto.strip().split('\n')
         logger.info(f"📄 [UPLOAD] Total de linhas no arquivo: {len(linhas)}")
         
-        # Para arquivos muito grandes, processar de forma inteligente
-        arquivo_muito_grande = len(linhas) > 50000
-        arquivo_grande = len(linhas) > 10000
+        # Para arquivos muito grandes, processar de forma ultra-conservadora
+        arquivo_gigante = len(linhas) > 100000  # Mais de 100k linhas
+        arquivo_muito_grande = len(linhas) > 10000  # Mais de 10k linhas
+        arquivo_grande = len(linhas) > 2000  # Mais de 2k linhas
         
-        if arquivo_muito_grande:
-            logger.warning(f"⚠️ [UPLOAD] Arquivo muito grande ({len(linhas)} linhas), processando primeiros 20.000 registros")
-            linhas = linhas[:20000]
+        if arquivo_gigante:
+            logger.warning(f"⚠️ [UPLOAD] Arquivo GIGANTE ({len(linhas)} linhas), processando apenas primeiros 1.000 registros")
+            linhas = linhas[:1000]
+        elif arquivo_muito_grande:
+            logger.warning(f"⚠️ [UPLOAD] Arquivo muito grande ({len(linhas)} linhas), processando primeiros 2.000 registros")
+            linhas = linhas[:2000]
         elif arquivo_grande:
-            logger.warning(f"⚠️ [UPLOAD] Arquivo grande ({len(linhas)} linhas), processando primeiros 10.000 registros")
-            linhas = linhas[:10000]
+            logger.warning(f"⚠️ [UPLOAD] Arquivo grande ({len(linhas)} linhas), processando primeiros 5.000 registros")
+            linhas = linhas[:5000]
         
         # Log das primeiras linhas para debug
         for i, linha in enumerate(linhas[:5]):
@@ -171,13 +175,13 @@ async def upload_contatos(
             logger.error(f"❌ [UPLOAD] {error_msg}")
             raise HTTPException(status_code=400, detail=error_msg)
         
-        # 5. Processar em lotes otimizados para arquivos grandes
-        if total_linhas > 5000:
-            logger.info("⚠️ [UPLOAD] Arquivo muito grande - processando primeiros 5000 registros para evitar timeout")
-            linhas_processadas = linhas_limpas[:5000]
-        elif total_linhas > 2000:
-            logger.info("⚠️ [UPLOAD] Arquivo grande - processando primeiros 2000 registros para evitar timeout")
-            linhas_processadas = linhas_limpas[:2000]
+        # 5. Processar em lotes ultra-conservadores para evitar timeout
+        if total_linhas > 1000:
+            logger.info("⚠️ [UPLOAD] Arquivo gigante - processando primeiros 1000 registros para evitar timeout")
+            linhas_processadas = linhas_limpas[:1000]
+        elif total_linhas > 500:
+            logger.info("⚠️ [UPLOAD] Arquivo grande - processando primeiros 500 registros para evitar timeout")
+            linhas_processadas = linhas_limpas[:500]
         else:
             linhas_processadas = linhas_limpas
         
@@ -219,15 +223,18 @@ async def upload_contatos(
             campaign_id = 1
             logger.warning(f"⚠️ [UPLOAD] Erro ao buscar campanhas: {str(e)}, usando ID padrão")
         
-        # Inserir em lotes otimizados baseados no tamanho do arquivo
-        if len(linhas_processadas) > 2000:
-            lote_size = 10  # Lotes pequenos para arquivos grandes
+        # Inserir em lotes ultra-conservadores para máxima estabilidade
+        if len(linhas_processadas) > 500:
+            lote_size = 3  # Lotes micro para arquivos gigantes
+            logger.info(f"📦 [UPLOAD] Usando lotes de {lote_size} para arquivo gigante")
+        elif len(linhas_processadas) > 100:
+            lote_size = 5  # Lotes pequenos para arquivos grandes
             logger.info(f"📦 [UPLOAD] Usando lotes de {lote_size} para arquivo grande")
-        elif len(linhas_processadas) > 500:
-            lote_size = 20  # Lotes médios
+        elif len(linhas_processadas) > 50:
+            lote_size = 10  # Lotes médios
             logger.info(f"📦 [UPLOAD] Usando lotes de {lote_size} para arquivo médio")
         else:
-            lote_size = 50  # Lotes normais para arquivos pequenos
+            lote_size = 25  # Lotes normais para arquivos pequenos
             logger.info(f"📦 [UPLOAD] Usando lotes de {lote_size} para arquivo pequeno")
         
         for i in range(0, len(linhas_processadas), lote_size):
