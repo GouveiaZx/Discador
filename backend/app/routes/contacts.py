@@ -89,11 +89,11 @@ async def upload_contatos(
                 detail="Tipo de arquivo não suportado. Use apenas arquivos .txt ou .csv"
             )
         
-        if arquivo.size and arquivo.size > 10 * 1024 * 1024:  # 10MB
+        if arquivo.size and arquivo.size > 50 * 1024 * 1024:  # 50MB
             logger.error(f"❌ [UPLOAD] Arquivo muito grande: {arquivo.size} bytes")
             raise HTTPException(
                 status_code=413, 
-                detail="Arquivo muito grande (máximo 10MB). Para arquivos maiores, divida em partes menores."
+                detail="Arquivo muito grande (máximo 50MB). Para arquivos maiores, divida em partes menores."
             )
         
         # 2. Ler e processar arquivo
@@ -129,13 +129,16 @@ async def upload_contatos(
         linhas = texto.strip().split('\n')
         logger.info(f"📄 [UPLOAD] Total de linhas no arquivo: {len(linhas)}")
         
-        # Para arquivos muito grandes, processar apenas uma amostra primeiro
-        if len(linhas) > 100000:  # Mais de 100k linhas
-            logger.warning(f"⚠️ [UPLOAD] Arquivo muito grande ({len(linhas)} linhas), processando apenas primeiros 10.000 registros")
+        # Para arquivos muito grandes, processar de forma inteligente
+        arquivo_muito_grande = len(linhas) > 50000
+        arquivo_grande = len(linhas) > 10000
+        
+        if arquivo_muito_grande:
+            logger.warning(f"⚠️ [UPLOAD] Arquivo muito grande ({len(linhas)} linhas), processando primeiros 20.000 registros")
+            linhas = linhas[:20000]
+        elif arquivo_grande:
+            logger.warning(f"⚠️ [UPLOAD] Arquivo grande ({len(linhas)} linhas), processando primeiros 10.000 registros")
             linhas = linhas[:10000]
-        elif len(linhas) > 10000:  # Mais de 10k linhas
-            logger.warning(f"⚠️ [UPLOAD] Arquivo grande ({len(linhas)} linhas), processando apenas primeiros 5.000 registros")
-            linhas = linhas[:5000]
         
         # Log das primeiras linhas para debug
         for i, linha in enumerate(linhas[:5]):
@@ -168,8 +171,11 @@ async def upload_contatos(
             logger.error(f"❌ [UPLOAD] {error_msg}")
             raise HTTPException(status_code=400, detail=error_msg)
         
-        # 5. Processar em lotes menores para arquivos grandes
-        if total_linhas > 2000:
+        # 5. Processar em lotes otimizados para arquivos grandes
+        if total_linhas > 5000:
+            logger.info("⚠️ [UPLOAD] Arquivo muito grande - processando primeiros 5000 registros para evitar timeout")
+            linhas_processadas = linhas_limpas[:5000]
+        elif total_linhas > 2000:
             logger.info("⚠️ [UPLOAD] Arquivo grande - processando primeiros 2000 registros para evitar timeout")
             linhas_processadas = linhas_limpas[:2000]
         else:
@@ -213,8 +219,17 @@ async def upload_contatos(
             campaign_id = 1
             logger.warning(f"⚠️ [UPLOAD] Erro ao buscar campanhas: {str(e)}, usando ID padrão")
         
-        # Inserir em lotes de 25 (reduzido para evitar timeouts com arquivos grandes)
-        lote_size = 25
+        # Inserir em lotes otimizados baseados no tamanho do arquivo
+        if len(linhas_processadas) > 2000:
+            lote_size = 10  # Lotes pequenos para arquivos grandes
+            logger.info(f"📦 [UPLOAD] Usando lotes de {lote_size} para arquivo grande")
+        elif len(linhas_processadas) > 500:
+            lote_size = 20  # Lotes médios
+            logger.info(f"📦 [UPLOAD] Usando lotes de {lote_size} para arquivo médio")
+        else:
+            lote_size = 50  # Lotes normais para arquivos pequenos
+            logger.info(f"📦 [UPLOAD] Usando lotes de {lote_size} para arquivo pequeno")
+        
         for i in range(0, len(linhas_processadas), lote_size):
             lote = linhas_processadas[i:i+lote_size]
             
@@ -433,6 +448,157 @@ async def options_upload():
 async def test_simple():
     """Teste simples do endpoint."""
     return {"message": "Endpoint funcionando", "status": "OK"}
+
+@router.post("/upload-large")
+async def upload_large_file(
+    arquivo: UploadFile = File(...),
+    incluir_nome: bool = Form(True),
+    pais_preferido: str = Form("auto"),
+    max_registros: int = Form(10000)
+):
+    """
+    Upload de arquivos grandes - Processamento otimizado.
+    Especificamente para arquivos como Slackall.txt
+    """
+    logger.info(f"🚀 [UPLOAD-LARGE] Iniciando upload de arquivo grande: {arquivo.filename}")
+    logger.info(f"📋 [UPLOAD-LARGE] Max registros: {max_registros}")
+    
+    try:
+        # Usar o mesmo processamento do upload normal, mas otimizado
+        if not arquivo or not arquivo.filename:
+            raise HTTPException(status_code=400, detail="Arquivo não enviado")
+        
+        # Verificar extensão
+        filename = arquivo.filename.lower()
+        if not (filename.endswith('.txt') or filename.endswith('.csv')):
+            raise HTTPException(
+                status_code=400, 
+                detail="Tipo de arquivo não suportado. Use apenas arquivos .txt ou .csv"
+            )
+        
+        # Limite aumentado para arquivos grandes
+        if arquivo.size and arquivo.size > 100 * 1024 * 1024:  # 100MB
+            raise HTTPException(
+                status_code=413, 
+                detail="Arquivo muito grande (máximo 100MB para este endpoint)."
+            )
+        
+        # Processar arquivo
+        logger.info(f"📖 [UPLOAD-LARGE] Lendo arquivo: {arquivo.size} bytes")
+        conteudo = await arquivo.read()
+        
+        # Decodificar
+        encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+        texto = None
+        
+        for encoding in encodings:
+            try:
+                texto = conteudo.decode(encoding)
+                logger.info(f"✅ [UPLOAD-LARGE] Decodificado como {encoding}")
+                break
+            except UnicodeDecodeError:
+                continue
+        
+        if not texto:
+            raise HTTPException(
+                status_code=400, 
+                detail="Não foi possível decodificar o arquivo"
+            )
+        
+        # Processar linhas
+        linhas = texto.strip().split('\n')
+        logger.info(f"📄 [UPLOAD-LARGE] Total de linhas: {len(linhas)}")
+        
+        # Processar apenas o máximo solicitado
+        if len(linhas) > max_registros:
+            logger.info(f"⚠️ [UPLOAD-LARGE] Limitando a {max_registros} registros")
+            linhas = linhas[:max_registros]
+        
+        # Processar números
+        numeros_validos = []
+        for i, linha in enumerate(linhas):
+            linha_limpa = linha.replace('\r', '').replace('\n', '').strip()
+            if linha_limpa:
+                numero_normalizado = normalizar_telefone(linha_limpa)
+                if validar_telefone_melhorado(numero_normalizado):
+                    numeros_validos.append(numero_normalizado)
+        
+        logger.info(f"📊 [UPLOAD-LARGE] Números válidos: {len(numeros_validos)}")
+        
+        if not numeros_validos:
+            raise HTTPException(
+                status_code=400, 
+                detail="Nenhum número válido encontrado"
+            )
+        
+        # Processar em lotes muito pequenos (5 por vez)
+        headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+        }
+        
+        contatos_inseridos = 0
+        erros = []
+        
+        # Lotes de 5 para arquivos grandes
+        lote_size = 5
+        total_lotes = (len(numeros_validos) + lote_size - 1) // lote_size
+        
+        for i in range(0, len(numeros_validos), lote_size):
+            lote = numeros_validos[i:i+lote_size]
+            lote_num = (i // lote_size) + 1
+            
+            logger.info(f"📦 [UPLOAD-LARGE] Processando lote {lote_num}/{total_lotes}")
+            
+            dados_lote = []
+            for numero in lote:
+                dados_lote.append({
+                    "phone_number": numero,
+                    "name": "",
+                    "campaign_id": 1,
+                    "status": "pending",
+                    "attempts": 0
+                })
+            
+            try:
+                response = requests.post(
+                    f"{SUPABASE_URL}/rest/v1/contacts",
+                    headers=headers,
+                    json=dados_lote,
+                    timeout=30
+                )
+                
+                if response.status_code == 201:
+                    contatos_inseridos += len(lote)
+                    logger.info(f"✅ [UPLOAD-LARGE] Lote {lote_num} inserido com sucesso")
+                else:
+                    logger.error(f"❌ [UPLOAD-LARGE] Erro no lote {lote_num}: {response.status_code}")
+                    erros.append(f"Lote {lote_num}: {response.text}")
+                    
+            except Exception as e:
+                logger.error(f"❌ [UPLOAD-LARGE] Erro no lote {lote_num}: {str(e)}")
+                erros.append(f"Lote {lote_num}: {str(e)}")
+        
+        logger.info(f"🎉 [UPLOAD-LARGE] Concluído: {contatos_inseridos} contatos inseridos")
+        
+        return {
+            "mensaje": f"Upload de arquivo grande concluído! {contatos_inseridos} contatos processados.",
+            "archivo_original": arquivo.filename,
+            "total_linhas_arquivo": len(linhas),
+            "contatos_validos": len(numeros_validos),
+            "contatos_inseridos": contatos_inseridos,
+            "total_lotes": total_lotes,
+            "erros": erros[:5],  # Apenas primeiros 5 erros
+            "max_registros_processados": max_registros
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ [UPLOAD-LARGE] Erro inesperado: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro no processamento: {str(e)}")
 
 @router.options("/")
 async def options_root():
