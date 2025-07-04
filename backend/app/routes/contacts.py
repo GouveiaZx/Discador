@@ -3,6 +3,7 @@ from app.utils.logger import logger
 import requests
 import re
 import json
+import time
 
 router = APIRouter(prefix="/contacts", tags=["Contacts"])
 
@@ -67,16 +68,17 @@ async def upload_contatos(
     arquivo: UploadFile = File(...),
     incluir_nome: bool = Form(True),
     pais_preferido: str = Form("auto"),
-    campaign_id: int = Form(None)  # CORREÇÃO: Aceitar campaign_id
+    campaign_id: int = Form(None)
 ):
     """
-    Upload de contatos - Processamento completo de listas pequenas e grandes.
+    Upload de contatos - SISTEMA ULTRA-RÁPIDO para arquivos grandes.
+    Processamento otimizado para Slackall.txt (671k números) em minutos.
     """
-    logger.info(f"🚀 [UPLOAD] Iniciando upload: {arquivo.filename}")
+    logger.info(f"🚀 [UPLOAD ULTRA-RÁPIDO] Iniciando: {arquivo.filename}")
     logger.info(f"📋 [UPLOAD] Params: incluir_nome={incluir_nome}, pais_preferido={pais_preferido}, campaign_id={campaign_id}")
     
     try:
-        # 1. Validações básicas
+        # 1. Validações básicas rápidas
         if not arquivo or not arquivo.filename:
             logger.error("❌ [UPLOAD] Arquivo não enviado")
             raise HTTPException(status_code=400, detail="Arquivo não enviado")
@@ -90,15 +92,16 @@ async def upload_contatos(
                 detail="Tipo de arquivo não suportado. Use apenas arquivos .txt ou .csv"
             )
         
-        # Limite aumentado para 100MB para suportar listas realmente grandes
-        if arquivo.size and arquivo.size > 100 * 1024 * 1024:  # 100MB
+        # Limite MASSIVO para arquivos realmente grandes (sem limitações artificiais)
+        MAX_SIZE = 500 * 1024 * 1024  # 500MB
+        if arquivo.size and arquivo.size > MAX_SIZE:
             logger.error(f"❌ [UPLOAD] Arquivo muito grande: {arquivo.size} bytes")
             raise HTTPException(
                 status_code=413, 
-                detail="Arquivo muito grande (máximo 100MB)."
+                detail=f"Arquivo muito grande (máximo 500MB). Atual: {arquivo.size/1024/1024:.1f}MB"
             )
         
-        # 2. Ler e processar arquivo
+        # 2. Leitura ultra-rápida do arquivo
         logger.info(f"📖 [UPLOAD] Lendo arquivo: {arquivo.size} bytes")
         conteudo = await arquivo.read()
         
@@ -106,99 +109,93 @@ async def upload_contatos(
             logger.error("❌ [UPLOAD] Arquivo vazio")
             raise HTTPException(status_code=400, detail="Arquivo vazio")
         
-        # 3. Decodificar conteúdo com múltiplas tentativas
-        encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+        # 3. Decodificação otimizada
         texto = None
         encoding_used = None
         
-        for encoding in encodings:
-            try:
-                texto = conteudo.decode(encoding)
-                encoding_used = encoding
-                logger.info(f"✅ [UPLOAD] Decodificado como {encoding}")
-                break
-            except UnicodeDecodeError:
-                continue
+        # Tentar UTF-8 primeiro (mais comum e rápido)
+        try:
+            texto = conteudo.decode('utf-8')
+            encoding_used = 'utf-8'
+            logger.info(f"✅ [UPLOAD] Decodificado como UTF-8 (rápido)")
+        except UnicodeDecodeError:
+            # Fallback para outras codificações
+            for encoding in ['latin-1', 'cp1252', 'iso-8859-1']:
+                try:
+                    texto = conteudo.decode(encoding)
+                    encoding_used = encoding
+                    logger.info(f"✅ [UPLOAD] Decodificado como {encoding}")
+                    break
+                except UnicodeDecodeError:
+                    continue
         
         if texto is None:
             logger.error("❌ [UPLOAD] Não foi possível decodificar o arquivo")
             raise HTTPException(
                 status_code=400, 
-                detail="Não foi possível decodificar o arquivo. Verifique a codificação (use UTF-8 ou ISO-8859-1)"
+                detail="Não foi possível decodificar o arquivo. Verifique a codificação."
             )
         
-        # 4. Processar todas as linhas (SEM LIMITAÇÕES)
+        # 4. Processamento ULTRA-RÁPIDO de todas as linhas
         linhas = texto.strip().split('\n')
-        logger.info(f"📄 [UPLOAD] Total de linhas no arquivo: {len(linhas)} - PROCESSANDO TODAS!")
+        total_linhas_arquivo = len(linhas)
+        logger.info(f"📄 [UPLOAD] PROCESSANDO TODAS AS {total_linhas_arquivo} LINHAS - MODO ULTRA-RÁPIDO!")
         
-        # Log das primeiras linhas para debug
-        for i, linha in enumerate(linhas[:5]):
-            logger.debug(f"📝 [UPLOAD] Linha {i+1} (sample): '{linha.strip()}'")
+        # Log apenas das primeiras 3 linhas para não poluir
+        for i, linha in enumerate(linhas[:3]):
+            logger.debug(f"📝 [UPLOAD] Amostra linha {i+1}: '{linha.strip()}'")
         
-        linhas_limpas = []
-        linhas_invalidas = []
+        # 5. VALIDAÇÃO EM LOTE ULTRA-OTIMIZADA
+        logger.info("⚡ [UPLOAD] Iniciando validação em lote ultra-rápida...")
+        start_validation = time.time()
         
-        for i, linha in enumerate(linhas):
-            # Limpar caracteres especiais (\r, \n, espaços extras)
+        linhas_validas = []
+        numeros_invalidos = 0
+        
+        # Regex pré-compilada para máxima velocidade
+        import re
+        telefone_regex = re.compile(r'^[\d\s\+\-\(\)]{8,15}$')
+        numero_regex = re.compile(r'\d')
+        
+        for linha in linhas:
+            # Limpeza ultra-rápida
             linha_limpa = linha.replace('\r', '').replace('\n', '').strip()
             
             if linha_limpa:
-                # Normalizar o número
-                numero_normalizado = normalizar_telefone(linha_limpa)
-                if validar_telefone_melhorado(numero_normalizado):
-                    linhas_limpas.append(numero_normalizado)
-                    if i < 10:  # Log apenas primeiras 10 para não poluir
-                        logger.debug(f"📝 [UPLOAD] Linha {i+1}: '{linha_limpa}' -> '{numero_normalizado}' ✅")
+                # Validação ultra-rápida com regex pré-compilada
+                if telefone_regex.match(linha_limpa) and len(numero_regex.findall(linha_limpa)) >= 8:
+                    # Normalização mínima (apenas remover caracteres não-numéricos)
+                    numero_limpo = re.sub(r'[^\d]', '', linha_limpa)
+                    if 8 <= len(numero_limpo) <= 15:
+                        linhas_validas.append(numero_limpo)
+                    else:
+                        numeros_invalidos += 1
                 else:
-                    linhas_invalidas.append(f"Linha {i+1}: '{linha_limpa}' - formato inválido")
-                    if len(linhas_invalidas) <= 10:  # Log apenas primeiros 10 erros
-                        logger.debug(f"📝 [UPLOAD] Linha {i+1}: '{linha_limpa}' ❌ inválida")
+                    numeros_invalidos += 1
         
-        total_linhas = len(linhas_limpas)
-        logger.info(f"📊 [UPLOAD] Processadas {total_linhas} linhas válidas de {len(linhas)} total")
+        validation_time = time.time() - start_validation
+        total_validos = len(linhas_validas)
         
-        if total_linhas == 0:
-            error_msg = "Nenhuma linha válida encontrada no arquivo."
-            if linhas_invalidas:
-                error_msg += f" Primeiros erros: {'; '.join(linhas_invalidas[:3])}"
+        logger.info(f"⚡ [UPLOAD] Validação concluída em {validation_time:.2f}s: {total_validos} válidos, {numeros_invalidos} inválidos")
+        
+        if total_validos == 0:
+            error_msg = f"Nenhum número válido encontrado no arquivo. {numeros_invalidos} números inválidos."
             logger.error(f"❌ [UPLOAD] {error_msg}")
             raise HTTPException(status_code=400, detail=error_msg)
         
-        # 5. Verificar limite prático para evitar timeout do servidor
-        if len(linhas_limpas) > 150:
-            logger.warning(f"⚠️ [UPLOAD] Arquivo muito grande ({len(linhas_limpas)} registros). Processando primeiros 150 para evitar timeout do servidor.")
-            linhas_processadas = linhas_limpas[:150]
-            arquivo_truncado = True
-        else:
-            linhas_processadas = linhas_limpas
-            arquivo_truncado = False
-            
-        logger.info(f"📋 [UPLOAD] Processando {len(linhas_processadas)} de {len(linhas_limpas)} linhas")
-        
-        # 6. Verificar se existe uma campanha ativa para associar os contatos
-        contatos_inseridos = 0
-        contatos_duplicados = 0
-        contatos_invalidos = 0
-        erros_detalhados = []
-        
-        # Preparar headers para Supabase
-        headers = {
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
-            "Content-Type": "application/json",
-            "Prefer": "return=minimal"
-        }
-        
-        logger.info("📡 [UPLOAD] Conectando ao Supabase...")
-        
-        # Definir campaign_id a ser usado
+        # 6. Configurar campaign_id
         if campaign_id:
-            # Usar campaign_id fornecido pelo frontend
-            logger.info(f"📋 [UPLOAD] Usando campaign_id fornecido: {campaign_id}")
             final_campaign_id = campaign_id
+            logger.info(f"📋 [UPLOAD] Usando campaign_id fornecido: {campaign_id}")
         else:
-            # Buscar campanha ativa automaticamente
+            # Busca rápida de campanha
             try:
+                headers = {
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                    "Content-Type": "application/json"
+                }
+                
                 campaign_response = requests.get(
                     f"{SUPABASE_URL}/rest/v1/campaigns?limit=1",
                     headers=headers,
@@ -208,116 +205,137 @@ async def upload_contatos(
                 if campaign_response.status_code == 200:
                     campaigns = campaign_response.json()
                     final_campaign_id = campaigns[0]["id"] if campaigns else 1
-                    logger.info(f"📋 [UPLOAD] Usando campanha automaticamente: {final_campaign_id}")
                 else:
                     final_campaign_id = 1
-                    logger.warning("⚠️ [UPLOAD] Não foi possível buscar campanhas, usando ID padrão")
                     
             except Exception as e:
                 final_campaign_id = 1
                 logger.warning(f"⚠️ [UPLOAD] Erro ao buscar campanhas: {str(e)}, usando ID padrão")
         
-        # 7. Inserir em lotes otimizados para evitar timeout
-        if len(linhas_processadas) > 100:
-            lote_size = 25  # Lotes pequenos para arquivos médios/grandes 
-            logger.info(f"📦 [UPLOAD] Arquivo médio/grande ({len(linhas_processadas)} registros) - Lotes de {lote_size}")
-        elif len(linhas_processadas) > 50:
-            lote_size = 50  # Lotes médios para arquivos pequenos/médios
-            logger.info(f"📦 [UPLOAD] Arquivo pequeno/médio ({len(linhas_processadas)} registros) - Lotes de {lote_size}")
+        # 7. INSERÇÃO EM MASSA ULTRA-OTIMIZADA
+        logger.info("🚀 [UPLOAD] Iniciando inserção em massa ultra-rápida...")
+        start_insert = time.time()
+        
+        contatos_inseridos = 0
+        contatos_duplicados = 0
+        contatos_invalidos = 0
+        erros_detalhados = []
+        
+        # Headers otimizados para Supabase
+        headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"  # Não retornar dados, apenas confirmar inserção
+        }
+        
+        # LOTES MASSIVOS para máxima velocidade
+        if total_validos > 50000:
+            lote_size = 2000  # Lotes gigantes para arquivos enormes
+            logger.info(f"📦 [UPLOAD] Arquivo GIGANTE ({total_validos:,} registros) - Lotes MASSIVOS de {lote_size:,}")
+        elif total_validos > 10000:
+            lote_size = 1500  # Lotes grandes para arquivos grandes
+            logger.info(f"📦 [UPLOAD] Arquivo GRANDE ({total_validos:,} registros) - Lotes GRANDES de {lote_size:,}")
+        elif total_validos > 1000:
+            lote_size = 1000  # Lotes médios para arquivos médios
+            logger.info(f"📦 [UPLOAD] Arquivo MÉDIO ({total_validos:,} registros) - Lotes de {lote_size:,}")
         else:
-            lote_size = len(linhas_processadas)  # Tudo de uma vez para arquivos muito pequenos
-            logger.info(f"📦 [UPLOAD] Arquivo pequeno ({len(linhas_processadas)} registros) - Processando tudo de uma vez")
+            lote_size = total_validos  # Tudo de uma vez para arquivos pequenos
+            logger.info(f"📦 [UPLOAD] Arquivo PEQUENO ({total_validos:,} registros) - Processando TUDO de uma vez")
         
-        total_lotes = (len(linhas_processadas) + lote_size - 1) // lote_size
-        logger.info(f"📊 [UPLOAD] Total de lotes a processar: {total_lotes}")
+        total_lotes = (total_validos + lote_size - 1) // lote_size
+        logger.info(f"📊 [UPLOAD] Total de lotes: {total_lotes:,}")
         
-        for i in range(0, len(linhas_processadas), lote_size):
+        # Processamento em lotes massivos
+        for i in range(0, total_validos, lote_size):
             lote_atual = (i // lote_size) + 1
-            lote = linhas_processadas[i:i+lote_size]
+            lote = linhas_validas[i:i+lote_size]
             
-            # Preparar dados para inserção
-            dados_insercao = []
-            for linha in lote:
-                dados_insercao.append({
-                    "phone_number": linha,
+            # Preparar dados em massa
+            dados_insercao = [
+                {
+                    "phone_number": numero,
                     "name": "",
                     "campaign_id": final_campaign_id,
                     "status": "not_started",
                     "attempts": 0
-                })
+                }
+                for numero in lote
+            ]
             
-            logger.info(f"📤 [UPLOAD] Enviando lote {lote_atual}/{total_lotes} com {len(dados_insercao)} contatos")
+            logger.info(f"📤 [UPLOAD] Lote {lote_atual:,}/{total_lotes:,}: {len(dados_insercao):,} contatos")
             
             try:
-                # Fazer inserção no Supabase com timeout conservador
+                # Inserção ULTRA-RÁPIDA com timeout generoso
                 response = requests.post(
                     f"{SUPABASE_URL}/rest/v1/contacts",
                     headers=headers,
                     json=dados_insercao,
-                    timeout=60  # Timeout conservador de 1 minuto por lote
+                    timeout=300  # 5 minutos para lotes grandes
                 )
-                
-                logger.info(f"📥 [UPLOAD] Lote {lote_atual}: Status {response.status_code}")
                 
                 if response.status_code in [200, 201]:
                     contatos_inseridos += len(dados_insercao)
-                    logger.info(f"✅ [UPLOAD] Lote {lote_atual} inserido: {len(dados_insercao)} contatos")
+                    logger.info(f"✅ [UPLOAD] Lote {lote_atual:,} inserido: {len(dados_insercao):,} contatos")
                 elif response.status_code == 409:
                     # Conflito - números duplicados
                     contatos_duplicados += len(dados_insercao)
-                    logger.info(f"⚠️ [UPLOAD] Lote {lote_atual} com duplicados: {len(dados_insercao)} contatos")
+                    logger.info(f"⚠️ [UPLOAD] Lote {lote_atual:,} com duplicados: {len(dados_insercao):,} contatos")
                 else:
-                    logger.error(f"❌ [UPLOAD] Erro no lote {lote_atual}: {response.status_code}")
-                    logger.error(f"❌ [UPLOAD] Resposta: {response.text}")
+                    logger.error(f"❌ [UPLOAD] Erro no lote {lote_atual:,}: {response.status_code}")
+                    logger.error(f"❌ [UPLOAD] Resposta: {response.text[:200]}")
                     contatos_invalidos += len(dados_insercao)
-                    erros_detalhados.append(f"Lote {lote_atual}: Status {response.status_code} - {response.text[:100]}")
+                    erros_detalhados.append(f"Lote {lote_atual:,}: Status {response.status_code}")
                     
             except requests.exceptions.Timeout:
-                logger.error(f"❌ [UPLOAD] Timeout no lote {lote_atual}")
+                logger.error(f"❌ [UPLOAD] Timeout no lote {lote_atual:,}")
                 contatos_invalidos += len(dados_insercao)
-                erros_detalhados.append(f"Lote {lote_atual}: Timeout na conexão")
+                erros_detalhados.append(f"Lote {lote_atual:,}: Timeout na conexão")
             except Exception as e:
-                logger.error(f"❌ [UPLOAD] Erro no lote {lote_atual}: {str(e)}")
+                logger.error(f"❌ [UPLOAD] Erro no lote {lote_atual:,}: {str(e)}")
                 contatos_invalidos += len(dados_insercao)
-                erros_detalhados.append(f"Lote {lote_atual}: {str(e)}")
+                erros_detalhados.append(f"Lote {lote_atual:,}: {str(e)}")
         
-        # 8. Preparar resposta
-        total_processados = contatos_inseridos + contatos_duplicados
+        insert_time = time.time() - start_insert
+        total_time = time.time() - start_validation
         
+        # 8. Preparar resposta otimizada
         if contatos_inseridos > 0:
-            if arquivo_truncado:
-                message = f"Upload parcial concluído! {contatos_inseridos} contatos processados dos primeiros 150 registros. ARQUIVO GRANDE: Para processar todos os {len(linhas_limpas)} registros, divida o arquivo em partes menores (máximo 150 por arquivo)."
-            else:
-                message = f"Upload concluído com sucesso! {contatos_inseridos} contatos novos processados."
+            message = f"🚀 UPLOAD ULTRA-RÁPIDO CONCLUÍDO! {contatos_inseridos:,} contatos processados em {total_time:.2f}s"
         else:
             message = "Upload processado, mas nenhum contato novo foi inserido."
         
         if contatos_duplicados > 0:
-            message += f" {contatos_duplicados} contatos já existentes."
+            message += f" {contatos_duplicados:,} contatos já existentes."
         
         if contatos_invalidos > 0:
-            message += f" {contatos_invalidos} contatos falharam na inserção."
+            message += f" {contatos_invalidos:,} contatos falharam na inserção."
         
-        if arquivo_truncado:
-            message += f" ⚠️ ATENÇÃO: Arquivo original tem {len(linhas_limpas)} registros, mas apenas 150 foram processados devido ao limite do servidor."
+        # Performance stats
+        velocidade = total_validos / total_time if total_time > 0 else 0
+        message += f" Velocidade: {velocidade:.0f} números/segundo"
         
         resultado = {
             "mensaje": message,
             "archivo_original": arquivo.filename,
-            "total_lineas_archivo": len(linhas_processadas),
+            "total_linhas_arquivo_original": total_linhas_arquivo,
+            "total_numeros_validos": total_validos,
             "contatos_validos": contatos_inseridos,
             "contatos_invalidos": contatos_invalidos,
             "contatos_duplicados": contatos_duplicados,
-            "errores": erros_detalhados[:5],  # Primeiros 5 erros
-            "linhas_invalidas_sample": linhas_invalidas[:10] if linhas_invalidas else [],  # Primeiras 10 linhas inválidas
+            "numeros_invalidos_no_arquivo": numeros_invalidos,
+            "errores": erros_detalhados[:3],
             "encoding_usado": encoding_used,
-            "total_linhas_arquivo_original": len(linhas),
             "lotes_processados": total_lotes,
             "lote_size_usado": lote_size,
-            "arquivo_truncado": arquivo_truncado
+            "tempo_validacao_segundos": round(validation_time, 2),
+            "tempo_insercao_segundos": round(insert_time, 2),
+            "tempo_total_segundos": round(total_time, 2),
+            "velocidade_numeros_por_segundo": round(velocidade, 0),
+            "arquivo_truncado": False  # Nunca mais trunca
         }
         
-        logger.info(f"✅ [UPLOAD] FINALIZADO: {contatos_inseridos} inseridos, {contatos_duplicados} duplicados, {contatos_invalidos} com erro")
+        logger.info(f"🎉 [UPLOAD] ULTRA-RÁPIDO FINALIZADO: {contatos_inseridos:,} inseridos em {total_time:.2f}s ({velocidade:.0f} números/s)")
         return resultado
         
     except HTTPException:
