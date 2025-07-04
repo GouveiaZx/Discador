@@ -7,7 +7,7 @@ Para upload no sistema de discado
 import os
 import sys
 
-def dividir_arquivo_slackall(arquivo_original, linhas_por_parte=1000):
+def dividir_arquivo_slackall(arquivo_original, linhas_por_parte=300):
     """
     Divide o arquivo Slackall.txt em partes menores
     
@@ -110,7 +110,7 @@ def criar_instrucoes(dir_partes, partes_criadas, total_linhas):
 - Faça upload de UMA parte por vez
 - Aguarde cada upload terminar antes do próximo
 - Cada parte será processada em lotes pequenos automaticamente
-- O sistema está otimizado para processar até 1.000 registros por upload
+- O sistema está otimizado para processar até 300 registros por upload
 
 🎯 RESULTADO ESPERADO:
 - Cada upload processará todos os números da parte
@@ -162,10 +162,10 @@ def main():
     print(f"📊 Tamanho: {tamanho_mb:.1f} MB")
     
     # Perguntar confirmação
-    resposta = input("\n🤔 Deseja dividir o arquivo em partes de 1.000 linhas? (s/n): ")
+    resposta = input("\n🤔 Deseja dividir o arquivo em partes de 300 linhas? (s/n): ")
     
     if resposta.lower() in ['s', 'sim', 'y', 'yes']:
-        sucesso = dividir_arquivo_slackall(arquivo_original, 1000)
+        sucesso = dividir_arquivo_slackall(arquivo_original, 300)
         
         if sucesso:
             print("\n🎉 PRONTO!")
