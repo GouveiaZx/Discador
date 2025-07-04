@@ -870,6 +870,20 @@ def get_campaigns_from_supabase():
             # Converter para formato compatível com frontend
             formatted_campaigns = []
             for campaign in campaigns:
+                # Buscar total de contatos para esta campanha
+                contacts_total = 0
+                try:
+                    contacts_response = requests.get(
+                        f"{SUPABASE_URL}/rest/v1/contacts?campaign_id=eq.{campaign['id']}&select=count",
+                        headers={**headers, "Prefer": "count=exact"}
+                    )
+                    if contacts_response.status_code == 200:
+                        # O total vem no header content-range
+                        content_range = contacts_response.headers.get('content-range', '0')
+                        contacts_total = int(content_range.split('/')[-1]) if '/' in content_range else 0
+                except Exception as e:
+                    logger.warning(f"Erro ao contar contatos da campanha {campaign['id']}: {str(e)}")
+                
                 formatted_campaign = {
                     "id": campaign["id"],
                     "name": campaign["name"],
@@ -894,7 +908,8 @@ def get_campaigns_from_supabase():
                     "allow_multiple_calls_same_number": campaign["allow_multiple_calls_same_number"],
                     "max_channels": campaign["max_channels"],
                     "created_at": campaign["created_at"],
-                    "updated_at": campaign["updated_at"]
+                    "updated_at": campaign["updated_at"],
+                    "contacts_total": contacts_total  # NOVO: Total de contatos
                 }
                 formatted_campaigns.append(formatted_campaign)
             

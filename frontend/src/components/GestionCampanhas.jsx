@@ -277,6 +277,67 @@ function GestionCampanhas() {
     }
   };
 
+  const handleStartCampaign = async (campaignId) => {
+    try {
+      setError('');
+      setSuccess('');
+      setActionLoading({ ...actionLoading, [`starting_${campaignId}`]: true });
+      
+      console.log('🚀 Iniciando campanha:', campaignId);
+      
+      // Endpoint para iniciar campanha Presione 1
+      const startResponse = await makeApiRequest(`/presione1/campanhas/${campaignId}/iniciar`, 'POST', {
+        usuario_id: 1 // ID do usuário - você pode pegar do contexto de autenticação
+      });
+      
+      console.log('✅ Resposta de iniciar:', startResponse);
+      
+      if (startResponse && startResponse.message) {
+        setSuccess('Campaña iniciada con éxito');
+        await fetchCampanhas();
+        
+        // Limpar mensagem de sucesso após 5 segundos
+        setTimeout(() => setSuccess(''), 5000);
+      } else {
+        setError('Error al iniciar campaña');
+      }
+    } catch (err) {
+      console.error('Erro ao iniciar campanha:', err);
+      setError(`Error al iniciar campaña: ${err.message || 'Error desconocido'}`);
+    } finally {
+      setActionLoading({ ...actionLoading, [`starting_${campaignId}`]: false });
+    }
+  };
+
+  const handlePauseCampaign = async (campaignId) => {
+    try {
+      setError('');
+      setSuccess('');
+      setActionLoading({ ...actionLoading, [`pausing_${campaignId}`]: true });
+      
+      console.log('⏸️ Pausando campanha:', campaignId);
+      
+      const pauseResponse = await makeApiRequest(`/presione1/campanhas/${campaignId}/pausar`, 'POST');
+      
+      console.log('✅ Resposta de pausar:', pauseResponse);
+      
+      if (pauseResponse && pauseResponse.message) {
+        setSuccess('Campaña pausada con éxito');
+        await fetchCampanhas();
+        
+        // Limpar mensagem de sucesso após 5 segundos
+        setTimeout(() => setSuccess(''), 5000);
+      } else {
+        setError('Error al pausar campaña');
+      }
+    } catch (err) {
+      console.error('Erro ao pausar campanha:', err);
+      setError(`Error al pausar campaña: ${err.message || 'Error desconocido'}`);
+    } finally {
+      setActionLoading({ ...actionLoading, [`pausing_${campaignId}`]: false });
+    }
+  };
+
   const renderStatusBadge = (status) => {
     const statusConfig = {
       active: { color: 'text-success-400', bg: 'bg-success-500/20', label: 'Activa' },
@@ -465,25 +526,56 @@ function GestionCampanhas() {
                       </td>
                       <td>
                         <div className="flex items-center space-x-2">
+                          {/* Botão Iniciar (só aparece se tem contatos) */}
+                          {campanha.contacts_total > 0 && campanha.status !== 'active' && (
+                            <button 
+                              onClick={() => handleStartCampaign(campanha.id)}
+                              className="btn-sm bg-success-500 hover:bg-success-600 text-white"
+                              title="Iniciar campanha"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                              </svg>
+                            </button>
+                          )}
+                          
+                          {/* Botão Pausar (só aparece se está ativa) */}
+                          {campanha.status === 'active' && (
+                            <button 
+                              onClick={() => handlePauseCampaign(campanha.id)}
+                              className="btn-sm bg-warning-500 hover:bg-warning-600 text-white"
+                              title="Pausar campanha"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                              </svg>
+                            </button>
+                          )}
+                          
                           <button 
                             onClick={() => handleEditCampaign(campanha)}
                             className="btn-sm btn-primary"
                             disabled={actionLoading.updating}
+                            title="Editar campanha"
                           >
-                            {actionLoading.updating ? 'Editando...' : 'Editar'}
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
                           </button>
+                          
                           <button 
                             onClick={() => handleDeleteCampaign(campanha.id)}
                             className="btn-sm btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={actionLoading[`deleting_${campanha.id}`]}
+                            title="Eliminar campanha"
                           >
                             {actionLoading[`deleting_${campanha.id}`] ? (
-                              <div className="flex items-center space-x-1">
-                                <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
-                                <span>...</span>
-                              </div>
+                              <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
                             ) : (
-                              'Eliminar'
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                              </svg>
                             )}
                           </button>
                         </div>
@@ -540,6 +632,23 @@ function GestionCampanhas() {
                     rows="3"
                     placeholder="Descripción de la campaña (opcional)"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-300 mb-2">
+                    Número CLI (Origen)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.cli_number}
+                    onChange={(e) => setFormData({ ...formData, cli_number: e.target.value })}
+                    className="input-modern"
+                    placeholder="+5511999999999"
+                    required
+                  />
+                  <p className="text-xs text-secondary-400 mt-1">
+                    Número que aparecerá como origen de las llamadas
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
