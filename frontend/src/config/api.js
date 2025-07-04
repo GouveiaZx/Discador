@@ -41,25 +41,40 @@ export const makeApiRequest = async (endpoint, methodOrOptions = {}, data = null
     config = {
       method: methodOrOptions,
       timeout: API_TIMEOUT,
-      headers: {
-        ...DEFAULT_HEADERS
-      }
+      headers: {}
     };
     
     // Se há dados, adicionar ao body
     if (data && (methodOrOptions === 'POST' || methodOrOptions === 'PUT' || methodOrOptions === 'PATCH')) {
-      config.body = JSON.stringify(data);
+      // Se é FormData, não definir Content-Type (browser define automaticamente)
+      if (data instanceof FormData) {
+        config.body = data;
+      } else {
+        // Se não é FormData, definir Content-Type como JSON
+        config.headers['Content-Type'] = 'application/json';
+        config.body = JSON.stringify(data);
+      }
+    } else {
+      // Para GET requests, definir Content-Type padrão
+      config.headers = { ...DEFAULT_HEADERS };
     }
   } else {
     // Forma tradicional: segundo parâmetro é um objeto de opções
     config = {
-    timeout: API_TIMEOUT,
-    headers: {
-      ...DEFAULT_HEADERS,
-        ...methodOrOptions.headers
-    },
+      timeout: API_TIMEOUT,
+      headers: {},
       ...methodOrOptions
-  };
+    };
+    
+    // Se há body e não é FormData, definir Content-Type
+    if (config.body && !(config.body instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json';
+    }
+    
+    // Adicionar headers padrão apenas se não conflitarem
+    if (!config.body || !(config.body instanceof FormData)) {
+      config.headers = { ...DEFAULT_HEADERS, ...config.headers };
+    }
   }
 
   console.log('🚀 Making API request:', { url, method: config.method || 'GET', hasBody: !!config.body });
