@@ -22,7 +22,6 @@ from app.schemas.presione1 import (
 from app.services.cli_service import CliService
 from app.services.blacklist_service import BlacklistService
 from app.services.asterisk import asterisk_service
-from app.schemas.lista_llamadas import validar_numero_telefono
 from app.utils.logger import logger
 
 
