@@ -811,6 +811,16 @@ async def status():
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY')
 
+# Debug: Log das configurações do Supabase para diagnosticar problemas de produção
+logger.info(f"🔧 [SUPABASE-CONFIG] SUPABASE_URL configurada: {'✅ SIM' if SUPABASE_URL else '❌ NÃO'}")
+logger.info(f"🔧 [SUPABASE-CONFIG] SUPABASE_ANON_KEY configurada: {'✅ SIM' if SUPABASE_ANON_KEY else '❌ NÃO'}")
+if SUPABASE_URL:
+    logger.info(f"🔧 [SUPABASE-CONFIG] URL: {SUPABASE_URL}")
+if SUPABASE_ANON_KEY:
+    logger.info(f"🔧 [SUPABASE-CONFIG] API Key: {SUPABASE_ANON_KEY[:20]}...{SUPABASE_ANON_KEY[-10:] if len(SUPABASE_ANON_KEY) > 30 else SUPABASE_ANON_KEY}")
+else:
+    logger.error("❌ [SUPABASE-CONFIG] CRITICAL: Variáveis do Supabase não configuradas! Backend não funcionará corretamente.")
+
 def create_campaign_in_supabase(campaign_data: dict):
     """Cria uma campanha no Supabase"""
     try:
