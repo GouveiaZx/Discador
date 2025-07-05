@@ -397,7 +397,7 @@ class PresionE1Service:
             # Criar registro da chamada
             nueva_llamada = LlamadaPresione1(
                 campana_id=campana_id,
-                numero_destino=numero_info["numero"],
+                numero_destino=numero_info["numero_original"],
                 numero_normalizado=numero_info["numero_normalizado"],
                 cli_utilizado=cli,
                 estado="marcando",
