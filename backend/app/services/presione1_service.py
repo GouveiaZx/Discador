@@ -577,22 +577,34 @@ class PresionE1Service:
             except Exception:
                 cli = "+5491122334455"  # CLI de fallback
             
-            # Criar registro da chamada
-            nueva_llamada = LlamadaPresione1(
-                campana_id=campana_id,
-                numero_destino=numero_info["numero_original"],
-                numero_normalizado=numero_info["numero_normalizado"],
-                cli_utilizado=cli,
-                estado="marcando",
-                fecha_inicio=datetime.now()
+            # Criar registro da chamada no Supabase
+            llamada_data = {
+                "campana_id": campana_id,
+                "numero_destino": numero_info["numero_original"],
+                "numero_normalizado": numero_info["numero_normalizado"],
+                "cli_utilizado": cli,
+                "estado": "marcando",
+                "fecha_inicio": datetime.now().isoformat(),
+                "voicemail_detectado": False,
+                "presiono_1": False,
+                "transferencia_exitosa": False
+            }
+            
+            nueva_llamada_response = self._supabase_request(
+                "POST",
+                "llamadas_presione1",
+                data=llamada_data
             )
             
-            self.db.add(nueva_llamada)
-            self.db.commit()
-            self.db.refresh(nueva_llamada)
+            if not nueva_llamada_response:
+                raise Exception("Erro ao criar chamada no Supabase")
+            
+            # Pegar dados da chamada criada
+            nueva_llamada = nueva_llamada_response[0] if isinstance(nueva_llamada_response, list) else nueva_llamada_response
+            llamada_id = nueva_llamada.get("id")
             
             # Adicionar à lista de chamadas ativas
-            self.campanhas_ativas[campana_id]["llamadas_activas"][nueva_llamada.id] = nueva_llamada
+            self.campanhas_ativas[campana_id]["llamadas_activas"][llamada_id] = nueva_llamada
             
             # TODO: Iniciar chamada via Asterisk com suporte a voicemail (não implementado)
             # respuesta_asterisk = await asterisk_service.originar_llamada_presione1(
@@ -608,25 +620,37 @@ class PresionE1Service:
             
             # Simulação para teste
             respuesta_asterisk = {
-                "UniqueID": f"sim_{nueva_llamada.id}_{int(datetime.now().timestamp())}",
-                "Channel": f"SIP/teste-{nueva_llamada.id}"
+                "UniqueID": f"sim_{llamada_id}_{int(datetime.now().timestamp())}",
+                "Channel": f"SIP/teste-{llamada_id}"
             }
             
-            # Atualizar dados técnicos
-            nueva_llamada.unique_id_asterisk = respuesta_asterisk.get("UniqueID")
-            nueva_llamada.channel = respuesta_asterisk.get("Channel")
-            self.db.commit()
+            # Atualizar dados técnicos no Supabase
+            self._supabase_request(
+                "PATCH",
+                "llamadas_presione1",
+                data={
+                    "unique_id_asterisk": respuesta_asterisk.get("UniqueID"),
+                    "channel": respuesta_asterisk.get("Channel")
+                },
+                filters={"id": llamada_id}
+            )
             
             logger.info(f"Chamada iniciada para {numero_info['numero_normalizado']} na campanha {campana_id}")
             
         except Exception as e:
             logger.error(f"Erro ao iniciar chamada: {str(e)}")
             # Marcar chamada como erro se foi criada
-            if 'nueva_llamada' in locals():
-                nueva_llamada.estado = "error"
-                nueva_llamada.motivo_finalizacion = str(e)
-                nueva_llamada.fecha_fin = datetime.now()
-                self.db.commit()
+            if 'llamada_id' in locals() and llamada_id:
+                self._supabase_request(
+                    "PATCH",
+                    "llamadas_presione1",
+                    data={
+                        "estado": "error",
+                        "motivo_finalizacion": str(e),
+                        "fecha_fin": datetime.now().isoformat()
+                    },
+                    filters={"id": llamada_id}
+                )
     
     async def processar_evento_asterisk(self, evento: Dict[str, Any]):
         """
@@ -641,153 +665,258 @@ class PresionE1Service:
         if not llamada_id:
             return
         
-        llamada = self.db.query(LlamadaPresione1).filter(
-            LlamadaPresione1.id == llamada_id
-        ).first()
+        llamadas = self._supabase_request(
+            "GET",
+            "llamadas_presione1",
+            filters={"id": llamada_id}
+        )
         
-        if not llamada:
+        if not llamadas:
             return
+        
+        llamada = llamadas[0]
+        
+        # Preparar dados para atualização
+        updates = {}
         
         if evento_tipo == "CallAnswered":
             answer_type = evento.get("AnswerType", "Unknown")
             if answer_type == "Human":
-                llamada.estado = "contestada"
-                llamada.fecha_contestada = datetime.now()
-                llamada.voicemail_detectado = False
+                updates.update({
+                    "estado": "contestada",
+                    "fecha_contestada": datetime.now().isoformat(),
+                    "voicemail_detectado": False
+                })
             
         elif evento_tipo == "VoicemailDetected":
-            llamada.estado = "voicemail_detectado"
-            llamada.voicemail_detectado = True
-            llamada.fecha_voicemail_detectado = datetime.now()
-            llamada.fecha_contestada = datetime.now()  # Considerar como atendida para estatísticas
+            updates.update({
+                "estado": "voicemail_detectado",
+                "voicemail_detectado": True,
+                "fecha_voicemail_detectado": datetime.now().isoformat(),
+                "fecha_contestada": datetime.now().isoformat()  # Considerar como atendida para estatísticas
+            })
             logger.info(f"Voicemail detectado na chamada {llamada_id}")
             
         elif evento_tipo == "VoicemailAudioStarted":
-            llamada.estado = "voicemail_audio_reproducido"
-            llamada.fecha_voicemail_audio_inicio = datetime.now()
+            updates.update({
+                "estado": "voicemail_audio_reproducido",
+                "fecha_voicemail_audio_inicio": datetime.now().isoformat()
+            })
             audio_url = evento.get("AudioURL")
             max_duration = evento.get("MaxDuration")
             logger.info(f"Reproduzindo áudio no voicemail da chamada {llamada_id}: {audio_url}")
             
         elif evento_tipo == "VoicemailAudioFinished":
-            llamada.fecha_voicemail_audio_fin = datetime.now()
             audio_duration = evento.get("AudioDuration", 0)
-            llamada.duracion_mensaje_voicemail = int(audio_duration)
             reason = evento.get("Reason", "Unknown")
             
+            updates.update({
+                "fecha_voicemail_audio_fin": datetime.now().isoformat(),
+                "duracion_mensaje_voicemail": int(audio_duration)
+            })
+            
             if reason == "Completed":
-                llamada.estado = "voicemail_finalizado"
-                await self._finalizar_llamada(llamada.id, "voicemail_mensaje_dejado")
+                updates["estado"] = "voicemail_finalizado"
+                await self._finalizar_llamada(llamada_id, "voicemail_mensaje_dejado")
             else:
-                await self._finalizar_llamada(llamada.id, f"voicemail_error_{reason}")
+                await self._finalizar_llamada(llamada_id, f"voicemail_error_{reason}")
                 
             logger.info(f"Áudio do voicemail finalizado para chamada {llamada_id}. Duração: {audio_duration}s")
             
         elif evento_tipo == "AudioStarted":
-            llamada.estado = "audio_reproducido"
-            llamada.fecha_audio_inicio = datetime.now()
+            updates.update({
+                "estado": "audio_reproducido",
+                "fecha_audio_inicio": datetime.now().isoformat()
+            })
             
         elif evento_tipo == "WaitingDTMF":
-            llamada.estado = "esperando_dtmf"
+            updates["estado"] = "esperando_dtmf"
             
         elif evento_tipo == "DTMFReceived":
             dtmf = evento.get("DTMF")
-            llamada.dtmf_recibido = dtmf
-            llamada.fecha_dtmf_recibido = datetime.now()
+            fecha_dtmf = datetime.now()
+            
+            updates.update({
+                "dtmf_recibido": dtmf,
+                "fecha_dtmf_recibido": fecha_dtmf.isoformat()
+            })
             
             # Calcular tempo de resposta
-            if llamada.fecha_audio_inicio:
-                tiempo_respuesta = (datetime.now() - llamada.fecha_audio_inicio).total_seconds()
-                llamada.tiempo_respuesta_dtmf = tiempo_respuesta
+            fecha_audio_inicio = llamada.get("fecha_audio_inicio")
+            if fecha_audio_inicio:
+                try:
+                    # Parse da data ISO
+                    inicio = datetime.fromisoformat(fecha_audio_inicio.replace('Z', '+00:00'))
+                    tiempo_respuesta = (fecha_dtmf - inicio).total_seconds()
+                    updates["tiempo_respuesta_dtmf"] = tiempo_respuesta
+                except:
+                    pass
             
             if dtmf == "1":
-                llamada.presiono_1 = True
-                llamada.estado = "presiono_1"
-                # Transferir chamada
-                await self._transferir_llamada(llamada)
+                updates.update({
+                    "presiono_1": True,
+                    "estado": "presiono_1"
+                })
+                # Atualizar primeiro, depois transferir
+                if updates:
+                    self._supabase_request("PATCH", "llamadas_presione1", data=updates, filters={"id": llamada_id})
+                await self._transferir_llamada(llamada_id)
+                return  # Já atualizou
             else:
-                llamada.presiono_1 = False
-                llamada.estado = "no_presiono"
-                await self._finalizar_llamada(llamada.id, "no_presiono_1")
+                updates.update({
+                    "presiono_1": False,
+                    "estado": "no_presiono"
+                })
+                # Atualizar primeiro, depois finalizar
+                if updates:
+                    self._supabase_request("PATCH", "llamadas_presione1", data=updates, filters={"id": llamada_id})
+                await self._finalizar_llamada(llamada_id, "no_presiono_1")
+                return  # Já atualizou
                 
         elif evento_tipo == "DTMFTimeout":
-            llamada.estado = "no_presiono"
-            llamada.presiono_1 = False
-            await self._finalizar_llamada(llamada.id, "timeout_dtmf")
+            updates.update({
+                "estado": "no_presiono",
+                "presiono_1": False
+            })
+            # Atualizar primeiro, depois finalizar
+            if updates:
+                self._supabase_request("PATCH", "llamadas_presione1", data=updates, filters={"id": llamada_id})
+            await self._finalizar_llamada(llamada_id, "timeout_dtmf")
+            return  # Já atualizou
             
         elif evento_tipo == "CallHangup":
             # Determinar motivo baseado no estado atual
-            if llamada.estado == "voicemail_detectado" and not evento.get("CauseTxt", "").find("Voicemail") >= 0:
-                await self._finalizar_llamada(llamada.id, "voicemail_colgado_sem_mensagem")
+            estado_atual = llamada.get("estado")
+            if estado_atual == "voicemail_detectado" and not evento.get("CauseTxt", "").find("Voicemail") >= 0:
+                await self._finalizar_llamada(llamada_id, "voicemail_colgado_sem_mensagem")
             else:
-                await self._finalizar_llamada(llamada.id, "colgado")
+                await self._finalizar_llamada(llamada_id, "colgado")
+            return  # Já atualizou
         
-        self.db.commit()
+        # Aplicar atualizações se houver
+        if updates:
+            self._supabase_request(
+                "PATCH",
+                "llamadas_presione1",
+                data=updates,
+                filters={"id": llamada_id}
+            )
     
-    async def _transferir_llamada(self, llamada: LlamadaPresione1):
+    async def _transferir_llamada(self, llamada_id: int):
         """Transfere chamada que pressionou 1."""
         try:
-            campana = self.obter_campana(llamada.campana_id)
+            # Buscar dados da chamada
+            llamadas = self._supabase_request("GET", "llamadas_presione1", filters={"id": llamada_id})
+            if not llamadas:
+                logger.error(f"Chamada {llamada_id} não encontrada para transferência")
+                return
             
-            if campana.extension_transferencia:
+            llamada = llamadas[0]
+            campana = self.obter_campana(llamada.get("campana_id"))
+            
+            extension_transferencia = campana.get("extension_transferencia")
+            cola_transferencia = campana.get("cola_transferencia")
+            
+            if extension_transferencia:
                 # TODO: Transferir para extensão específica (não implementado)
                 # await asterisk_service.transferir_llamada(
-                #     channel=llamada.channel,
-                #     destino=campana.extension_transferencia
+                #     channel=llamada.get("channel"),
+                #     destino=extension_transferencia
                 # )
-                logger.info(f"Simulação: transferindo para extensão {campana.extension_transferencia}")
-            elif campana.cola_transferencia:
+                logger.info(f"Simulação: transferindo para extensão {extension_transferencia}")
+            elif cola_transferencia:
                 # TODO: Transferir para fila de agentes (não implementado)
                 # await asterisk_service.transferir_a_cola(
-                #     channel=llamada.channel,
-                #     cola=campana.cola_transferencia
+                #     channel=llamada.get("channel"),
+                #     cola=cola_transferencia
                 # )
-                logger.info(f"Simulação: transferindo para fila {campana.cola_transferencia}")
+                logger.info(f"Simulação: transferindo para fila {cola_transferencia}")
             
-            llamada.estado = "transferida"
-            llamada.fecha_transferencia = datetime.now()
-            llamada.transferencia_exitosa = True
-            llamada.motivo_finalizacion = "presiono_1_transferido"
+            # Atualizar estado no Supabase
+            self._supabase_request(
+                "PATCH",
+                "llamadas_presione1",
+                data={
+                    "estado": "transferida",
+                    "fecha_transferencia": datetime.now().isoformat(),
+                    "transferencia_exitosa": True,
+                    "motivo_finalizacion": "presiono_1_transferido"
+                },
+                filters={"id": llamada_id}
+            )
             
-            logger.info(f"Chamada {llamada.id} transferida com sucesso")
+            logger.info(f"Chamada {llamada_id} transferida com sucesso")
             
         except Exception as e:
-            logger.error(f"Erro ao transferir chamada {llamada.id}: {str(e)}")
-            llamada.transferencia_exitosa = False
-            await self._finalizar_llamada(llamada.id, "erro_transferencia")
+            logger.error(f"Erro ao transferir chamada {llamada_id}: {str(e)}")
+            # Marcar transferência como falhada
+            self._supabase_request(
+                "PATCH",
+                "llamadas_presione1",
+                data={"transferencia_exitosa": False},
+                filters={"id": llamada_id}
+            )
+            await self._finalizar_llamada(llamada_id, "erro_transferencia")
     
     async def _finalizar_llamada(self, llamada_id: int, motivo: str):
         """Finaliza uma chamada."""
-        llamada = self.db.query(LlamadaPresione1).filter(
-            LlamadaPresione1.id == llamada_id
-        ).first()
-        
-        if not llamada:
-            return
-        
-        llamada.estado = "finalizada"
-        llamada.fecha_fin = datetime.now()
-        llamada.motivo_finalizacion = motivo
-        
-        # Calcular duração total
-        if llamada.fecha_inicio:
-            duracao = (datetime.now() - llamada.fecha_inicio).total_seconds()
-            llamada.duracion_total = int(duracao)
-        
-        # Calcular duração do áudio
-        if llamada.fecha_audio_inicio and llamada.fecha_dtmf_recibido:
-            duracao_audio = (llamada.fecha_dtmf_recibido - llamada.fecha_audio_inicio).total_seconds()
-            llamada.duracion_audio = int(duracao_audio)
-        
-        self.db.commit()
-        
-        # Remover da lista de chamadas ativas
-        campana_id = llamada.campana_id
-        if campana_id in self.campanhas_ativas:
-            if llamada_id in self.campanhas_ativas[campana_id]["llamadas_activas"]:
-                del self.campanhas_ativas[campana_id]["llamadas_activas"][llamada_id]
-        
-        logger.info(f"Chamada {llamada_id} finalizada. Motivo: {motivo}")
+        try:
+            # Buscar dados da chamada
+            llamadas = self._supabase_request("GET", "llamadas_presione1", filters={"id": llamada_id})
+            if not llamadas:
+                logger.error(f"Chamada {llamada_id} não encontrada para finalização")
+                return
+            
+            llamada = llamadas[0]
+            agora = datetime.now()
+            
+            # Preparar dados para atualização
+            updates = {
+                "estado": "finalizada",
+                "fecha_fin": agora.isoformat(),
+                "motivo_finalizacion": motivo
+            }
+            
+            # Calcular duração total
+            fecha_inicio = llamada.get("fecha_inicio")
+            if fecha_inicio:
+                try:
+                    inicio = datetime.fromisoformat(fecha_inicio.replace('Z', '+00:00'))
+                    duracao = (agora - inicio).total_seconds()
+                    updates["duracion_total"] = int(duracao)
+                except:
+                    pass
+            
+            # Calcular duração do áudio
+            fecha_audio_inicio = llamada.get("fecha_audio_inicio")
+            fecha_dtmf_recibido = llamada.get("fecha_dtmf_recibido")
+            if fecha_audio_inicio and fecha_dtmf_recibido:
+                try:
+                    inicio_audio = datetime.fromisoformat(fecha_audio_inicio.replace('Z', '+00:00'))
+                    fin_audio = datetime.fromisoformat(fecha_dtmf_recibido.replace('Z', '+00:00'))
+                    duracao_audio = (fin_audio - inicio_audio).total_seconds()
+                    updates["duracion_audio"] = int(duracao_audio)
+                except:
+                    pass
+            
+            # Atualizar no Supabase
+            self._supabase_request(
+                "PATCH", 
+                "llamadas_presione1", 
+                data=updates, 
+                filters={"id": llamada_id}
+            )
+            
+            # Remover da lista de chamadas ativas
+            campana_id = llamada.get("campana_id")
+            if campana_id and campana_id in self.campanhas_ativas:
+                if llamada_id in self.campanhas_ativas[campana_id]["llamadas_activas"]:
+                    del self.campanhas_ativas[campana_id]["llamadas_activas"][llamada_id]
+            
+            logger.info(f"Chamada {llamada_id} finalizada: {motivo}")
+            
+        except Exception as e:
+            logger.error(f"Erro ao finalizar chamada {llamada_id}: {str(e)}")
     
     def obter_estadisticas_campana(self, campana_id: int) -> EstadisticasCampanaResponse:
         """Obtém estatísticas detalhadas de uma campanha."""
