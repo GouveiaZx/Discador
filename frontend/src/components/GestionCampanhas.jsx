@@ -285,14 +285,14 @@ function GestionCampanhas() {
       
       console.log('🚀 Iniciando campanha:', campaignId);
       
-      // Endpoint para iniciar campanha Presione 1
+      // Endpoint para iniciar campanha Presione 1 - FIX: usuario_id como string
       const startResponse = await makeApiRequest(`/presione1/campanhas/${campaignId}/iniciar`, 'POST', {
-        usuario_id: 1 // ID do usuário - você pode pegar do contexto de autenticação
+        usuario_id: "1" // FIX: Mudado de número para string
       });
       
       console.log('✅ Resposta de iniciar:', startResponse);
       
-      if (startResponse && startResponse.message) {
+      if (startResponse && (startResponse.message || startResponse.success)) {
         setSuccess('Campaña iniciada con éxito');
         await fetchCampanhas();
         
@@ -317,7 +317,10 @@ function GestionCampanhas() {
       
       console.log('⏸️ Pausando campanha:', campaignId);
       
-      const pauseResponse = await makeApiRequest(`/presione1/campanhas/${campaignId}/pausar`, 'POST');
+      const pauseResponse = await makeApiRequest(`/presione1/campanhas/${campaignId}/pausar`, 'POST', {
+        pausar: true,
+        motivo: "Pausada pelo usuário"
+      });
       
       console.log('✅ Resposta de pausar:', pauseResponse);
       
@@ -526,24 +529,42 @@ function GestionCampanhas() {
                       </td>
                       <td>
                         <div className="flex items-center space-x-2">
-                          {/* Botão Iniciar (só aparece se tem contatos) */}
+                          {/* Botão Iniciar - NOVO DESIGN MODERNO */}
                           {campanha.contacts_total > 0 && campanha.status !== 'active' && (
                             <button 
                               onClick={() => handleStartCampaign(campanha.id)}
                               disabled={actionLoading[`starting_${campanha.id}`]}
-                              className="btn-sm bg-success-500 hover:bg-success-600 text-white disabled:opacity-50 disabled:cursor-not-allowed relative"
-                              title={actionLoading[`starting_${campanha.id}`] ? "Iniciando campaña..." : "Iniciar campanha"}
+                              className="group relative inline-flex items-center justify-center px-4 py-2 font-medium text-white transition-all duration-300 ease-in-out transform bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 rounded-lg shadow-lg hover:shadow-emerald-500/25 hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+                              title={actionLoading[`starting_${campanha.id}`] ? "Iniciando campaña..." : "Iniciar Campaña"}
                             >
-                              {actionLoading[`starting_${campanha.id}`] ? (
-                                <div className="flex items-center space-x-1">
-                                  <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
-                                  <span className="text-xs">Iniciando...</span>
-                                </div>
-                              ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
+                              {/* Overlay de brilho */}
+                              <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/10 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                              
+                              {/* Conteúdo do botão */}
+                              <div className="relative flex items-center space-x-2">
+                                {actionLoading[`starting_${campanha.id}`] ? (
+                                  <>
+                                    <div className="flex items-center space-x-2">
+                                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                      <span className="text-sm font-semibold">Iniciando...</span>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="flex items-center">
+                                      <svg className="w-4 h-4 mr-1 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                      </svg>
+                                    </div>
+                                    <span className="text-sm font-semibold">Iniciar</span>
+                                  </>
+                                )}
+                              </div>
+                              
+                              {/* Animação de pulse no estado loading */}
+                              {actionLoading[`starting_${campanha.id}`] && (
+                                <div className="absolute inset-0 rounded-lg bg-emerald-400/30 animate-pulse"></div>
                               )}
                             </button>
                           )}

@@ -11,7 +11,7 @@ class CampanaPresione1Base(BaseModel):
     """Schema base para campanhas Presione 1."""
     nombre: str = Field(..., min_length=1, max_length=100, description="Nome da campanha")
     descripcion: Optional[str] = Field(None, max_length=255, description="Descrição da campanha")
-    lista_llamadas_id: int = Field(..., description="ID da lista de chamadas a utilizar")
+    campaign_id: int = Field(..., description="ID da campanha principal no sistema")
     mensaje_audio_url: str = Field(..., description="URL do arquivo de áudio a reproduzir")
     timeout_presione1: int = Field(10, ge=3, le=60, description="Segundos para aguardar DTMF")
     

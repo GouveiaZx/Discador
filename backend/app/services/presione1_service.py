@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func, and_, or_
 from fastapi import HTTPException
+from sqlalchemy.sql import text
 
 from app.models.campana_presione1 import CampanaPresione1, LlamadaPresione1
 from app.models.lista_llamadas import ListaLlamadas, NumeroLlamada
@@ -144,47 +145,60 @@ class PresionE1Service:
     
     def obter_proximo_numero(self, campana_id: int) -> Optional[Dict[str, Any]]:
         """
-        Obtém o próximo número para chamar na campanha.
+        Obtém o próximo número para discagem de uma campanha.
         
         Args:
-            campana_id: ID da campanha
+            campana_id: ID da campanha presione1
             
         Returns:
-            Dados do próximo número ou None se não há mais números
+            Dict com informações do número ou None se não há números disponíveis
         """
-        campana = self.obter_campana(campana_id)
-        
-        # Buscar números da lista que ainda não foram chamados nesta campanha
-        subquery_chamados = self.db.query(LlamadaPresione1.numero_normalizado).filter(
-            LlamadaPresione1.campana_id == campana_id
-        )
-        
-        query = self.db.query(NumeroLlamada).filter(
-            NumeroLlamada.id_lista == campana.lista_llamadas_id,
-            NumeroLlamada.valido == True,
-            ~NumeroLlamada.numero_normalizado.in_(subquery_chamados)
-        )
-        
-        # Excluir números da blacklist
-        from app.models.lista_negra import ListaNegra
-        subquery_blacklist = self.db.query(ListaNegra.numero_normalizado).filter(
-            ListaNegra.activo == True
-        )
-        
-        query = query.filter(
-            ~NumeroLlamada.numero_normalizado.in_(subquery_blacklist)
-        )
-        
-        proximo_numero = query.first()
-        
-        if not proximo_numero:
+        try:
+            # Buscar campanha
+            campana = self.obter_campana(campana_id)
+            
+            # Buscar números da campanha principal que ainda não foram discados nesta campanha presione1
+            query = """
+            SELECT c.phone_number, c.id as contact_id
+            FROM contacts c
+            WHERE c.campaign_id = :campaign_id
+            AND c.phone_number IS NOT NULL 
+            AND c.phone_number != ''
+            AND NOT EXISTS (
+                SELECT 1 FROM llamadas_presione1 ll 
+                WHERE ll.campana_id = :campana_id 
+                AND ll.numero_normalizado = c.phone_number
+                AND ll.estado != 'error'
+            )
+            ORDER BY c.id
+            LIMIT 1
+            """
+            
+            resultado = self.db.execute(
+                text(query), 
+                {"campaign_id": campana.campaign_id, "campana_id": campana_id}
+            ).fetchone()
+            
+            if not resultado:
+                logger.info(f"Não há números disponíveis para campanha {campana_id}")
+                return None
+            
+            phone_number = resultado[0]
+            contact_id = resultado[1]
+            
+            # Normalizar número (remover caracteres especiais, etc.)
+            numero_normalizado = self._normalizar_numero(phone_number)
+            
+            return {
+                "numero_original": phone_number,
+                "numero_normalizado": numero_normalizado,
+                "contact_id": contact_id,
+                "valido": True
+            }
+            
+        except Exception as e:
+            logger.error(f"Erro ao obter próximo número para campanha {campana_id}: {str(e)}")
             return None
-        
-        return {
-            "numero_id": proximo_numero.id,
-            "numero": proximo_numero.numero,
-            "numero_normalizado": proximo_numero.numero_normalizado
-        }
     
     async def iniciar_campana(self, campana_id: int, usuario_id: Optional[str] = None) -> Dict[str, Any]:
         """
