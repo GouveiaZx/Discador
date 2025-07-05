@@ -27,117 +27,189 @@ from app.utils.logger import logger
 
 
 class PresionE1Service:
-    """Serviço para campanhas de discado preditivo con modo 'Presione 1'."""
+    """Serviço para campanhas de discado preditivo con modo 'Presione 1' - 100% Supabase."""
     
-    def __init__(self, db: Session):
-        self.db = db
-        self.cli_service = CliService(db)
-        self.blacklist_service = BlacklistService(db)
+    def __init__(self, db: Session = None):
+        # db mantido para compatibilidade, mas não usado para presione1
+        self.cli_service = CliService(db) if db else None
+        self.blacklist_service = BlacklistService(db) if db else None
         self.campanhas_ativas = {}  # Armazena campanhas em execução
+        self._supabase_config = self._init_supabase()
     
-    def crear_campana(self, campana_data: CampanaPresione1Create) -> CampanaPresione1:
+    def _init_supabase(self) -> Dict[str, str]:
+        """Inicializa configuração do Supabase."""
+        import os
+        
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_ANON_KEY")
+        
+        if not supabase_url or not supabase_key:
+            logger.error("Configuração do Supabase não encontrada")
+            raise Exception("SUPABASE_URL e SUPABASE_ANON_KEY são obrigatórios")
+        
+        return {
+            "url": supabase_url,
+            "key": supabase_key,
+            "headers": {
+                "apikey": supabase_key,
+                "Authorization": f"Bearer {supabase_key}",
+                "Content-Type": "application/json"
+            }
+        }
+    
+    def _supabase_request(self, method: str, table: str, data=None, filters=None, select=None) -> Dict[str, Any]:
+        """Método centralizado para requests ao Supabase."""
+        import requests
+        
+        url = f"{self._supabase_config['url']}/rest/v1/{table}"
+        headers = self._supabase_config['headers'].copy()
+        
+        # Adicionar filtros na URL
+        if filters:
+            filter_params = []
+            for key, value in filters.items():
+                if "=" in str(key):
+                    # Filtro já formatado (ex: "id=eq.1")
+                    filter_params.append(f"{key}")
+                else:
+                    # Filtro simples (ex: {"id": 1} -> "id=eq.1")
+                    filter_params.append(f"{key}=eq.{value}")
+            if filter_params:
+                url += "?" + "&".join(filter_params)
+        
+        # Adicionar select
+        if select:
+            separator = "?" if "?" not in url else "&"
+            url += f"{separator}select={select}"
+        
+        # Configurar headers específicos por método
+        if method.upper() in ["PATCH", "PUT"]:
+            headers["Prefer"] = "return=representation"
+        elif method.upper() == "POST":
+            headers["Prefer"] = "return=representation"
+        
+        try:
+            if method.upper() == "GET":
+                response = requests.get(url, headers=headers)
+            elif method.upper() == "POST":
+                response = requests.post(url, headers=headers, json=data)
+            elif method.upper() == "PATCH":
+                response = requests.patch(url, headers=headers, json=data)
+            elif method.upper() == "DELETE":
+                response = requests.delete(url, headers=headers)
+            else:
+                raise ValueError(f"Método HTTP não suportado: {method}")
+            
+            if response.status_code not in [200, 201, 204, 206]:
+                logger.error(f"Erro Supabase {method} {table}: {response.status_code} - {response.text}")
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"Erro do Supabase: {response.text}"
+                )
+            
+            if response.status_code == 204:
+                return {"success": True}
+            
+            return response.json()
+            
+        except requests.RequestException as e:
+            logger.error(f"Erro de conexão Supabase: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Erro de conexão com Supabase: {str(e)}"
+            )
+    
+    def crear_campana(self, campana_data: CampanaPresione1Create) -> Dict[str, Any]:
         """
-        Cria uma nova campanha Presione 1.
+        Cria uma nova campanha Presione 1 no Supabase.
         
         Args:
             campana_data: Dados da campanha a criar
             
         Returns:
-            CampanaPresione1 criada
+            Dict com dados da campanha criada
         """
-        # Verificar se a campanha principal existe
-        query_campanha = """
-        SELECT id, name FROM campaigns WHERE id = :campaign_id
-        """
+        # Verificar se a campanha principal existe no Supabase
+        campanhas_principais = self._supabase_request(
+            "GET", 
+            "campaigns", 
+            filters={"id": campana_data.campaign_id},
+            select="id,name"
+        )
         
-        resultado = self.db.execute(
-            text(query_campanha), 
-            {"campaign_id": campana_data.campaign_id}
-        ).fetchone()
-        
-        if not resultado:
+        if not campanhas_principais:
             raise HTTPException(
                 status_code=404,
                 detail=f"Campanha principal {campana_data.campaign_id} não encontrada"
             )
         
         # Verificar se já existe uma campanha presione1 ativa para esta campanha principal
-        campana_existente = self.db.query(CampanaPresione1).filter(
-            CampanaPresione1.campaign_id == campana_data.campaign_id,
-            CampanaPresione1.activa == True
-        ).first()
+        campanhas_existentes = self._supabase_request(
+            "GET",
+            "campanas_presione1",
+            filters={
+                "campaign_id": campana_data.campaign_id,
+                "activa": "eq.true"
+            }
+        )
         
-        if campana_existente:
+        if campanhas_existentes:
             raise HTTPException(
                 status_code=400,
                 detail=f"Já existe uma campanha presione1 ativa para a campanha {campana_data.campaign_id}"
             )
         
-        # Crear nova campanha
-        nova_campana = CampanaPresione1(
-            nombre=campana_data.nombre,
-            descripcion=campana_data.descripcion,
-            campaign_id=campana_data.campaign_id,
-            mensaje_audio_url=campana_data.mensaje_audio_url,
-            timeout_presione1=campana_data.timeout_presione1,
-            detectar_voicemail=campana_data.detectar_voicemail,
-            mensaje_voicemail_url=campana_data.mensaje_voicemail_url,
-            duracion_minima_voicemail=campana_data.duracion_minima_voicemail,
-            duracion_maxima_voicemail=campana_data.duracion_maxima_voicemail,
-            extension_transferencia=campana_data.extension_transferencia,
-            cola_transferencia=campana_data.cola_transferencia,
-            llamadas_simultaneas=campana_data.llamadas_simultaneas,
-            tiempo_entre_llamadas=campana_data.tiempo_entre_llamadas,
-            notas=campana_data.notas
+        # Preparar dados para inserção
+        nova_campana_data = {
+            "nombre": campana_data.nombre,
+            "descripcion": campana_data.descripcion,
+            "campaign_id": campana_data.campaign_id,
+            "mensaje_audio_url": campana_data.mensaje_audio_url,
+            "timeout_presione1": campana_data.timeout_presione1,
+            "detectar_voicemail": campana_data.detectar_voicemail,
+            "mensaje_voicemail_url": campana_data.mensaje_voicemail_url,
+            "duracion_minima_voicemail": campana_data.duracion_minima_voicemail,
+            "duracion_maxima_voicemail": campana_data.duracion_maxima_voicemail,
+            "extension_transferencia": campana_data.extension_transferencia,
+            "cola_transferencia": campana_data.cola_transferencia,
+            "llamadas_simultaneas": campana_data.llamadas_simultaneas,
+            "tiempo_entre_llamadas": campana_data.tiempo_entre_llamadas,
+            "notas": campana_data.notas,
+            "activa": False,
+            "pausada": False,
+            "fecha_creacion": datetime.utcnow().isoformat(),
+            "fecha_actualizacion": datetime.utcnow().isoformat()
+        }
+        
+        # Criar campanha no Supabase
+        nova_campana = self._supabase_request(
+            "POST",
+            "campanas_presione1",
+            data=nova_campana_data
         )
         
-        try:
-            self.db.add(nova_campana)
-            self.db.commit()
-            self.db.refresh(nova_campana)
-            
-            logger.info(f"Campanha Presione 1 criada: {nova_campana.nombre} [ID: {nova_campana.id}]")
-            return nova_campana
-            
-        except IntegrityError:
-            self.db.rollback()
+        if not nova_campana:
             raise HTTPException(
                 status_code=400,
-                detail="Erro ao criar campanha"
+                detail="Erro ao criar campanha no Supabase"
             )
+        
+        # Como pode retornar uma lista, pegar o primeiro elemento
+        if isinstance(nova_campana, list):
+            nova_campana = nova_campana[0]
+        
+        logger.info(f"Campanha Presione 1 criada: {nova_campana.get('nombre')} [ID: {nova_campana.get('id')}]")
+        return nova_campana
     
     def obter_campana(self, campana_id: int) -> Dict[str, Any]:
         """Obtém uma campanha por ID do Supabase."""
         try:
-            import os
-            import requests
+            campanhas = self._supabase_request(
+                "GET",
+                "campanas_presione1",
+                filters={"id": campana_id}
+            )
             
-            supabase_url = os.getenv("SUPABASE_URL")
-            supabase_key = os.getenv("SUPABASE_ANON_KEY")
-            
-            if not supabase_url or not supabase_key:
-                raise HTTPException(
-                    status_code=500,
-                    detail="Configuração do Supabase não encontrada"
-                )
-            
-            headers = {
-                "apikey": supabase_key,
-                "Authorization": f"Bearer {supabase_key}",
-                "Content-Type": "application/json"
-            }
-            
-            # Buscar campanha presione1
-            url = f"{supabase_url}/rest/v1/campanas_presione1?id=eq.{campana_id}"
-            response = requests.get(url, headers=headers)
-            
-            if response.status_code != 200:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Erro ao buscar campanha {campana_id}: {response.status_code}"
-                )
-            
-            campanhas = response.json()
             if not campanhas:
                 raise HTTPException(
                     status_code=404,
@@ -146,6 +218,8 @@ class PresionE1Service:
             
             return campanhas[0]
             
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Erro ao obter campanha {campana_id}: {str(e)}")
             raise HTTPException(
@@ -153,40 +227,79 @@ class PresionE1Service:
                 detail=f"Erro interno ao buscar campanha: {str(e)}"
             )
     
-    def listar_campanas(self, skip: int = 0, limit: int = 100, apenas_ativas: bool = False) -> List[CampanaPresione1]:
-        """Lista campanhas."""
-        query = self.db.query(CampanaPresione1)
-        
-        if apenas_ativas:
-            query = query.filter(CampanaPresione1.activa == True)
-        
-        return query.order_by(CampanaPresione1.fecha_creacion.desc()).offset(skip).limit(limit).all()
+    def listar_campanas(self, skip: int = 0, limit: int = 100, apenas_ativas: bool = False) -> List[Dict[str, Any]]:
+        """Lista campanhas do Supabase."""
+        try:
+            filters = {}
+            if apenas_ativas:
+                filters["activa"] = "eq.true"
+                
+            # Supabase não suporta offset diretamente, usamos range
+            range_header = None
+            if skip > 0 or limit < 100:
+                end = skip + limit - 1
+                range_header = f"{skip}-{end}"
+            
+            # Para agora vou simplificar sem range, implementar depois se necessário
+            campanhas = self._supabase_request(
+                "GET",
+                "campanas_presione1",
+                filters=filters,
+                select="*"
+            )
+            
+            # Ordenar por fecha_creacion desc (mais recentes primeiro)
+            if campanhas:
+                campanhas.sort(key=lambda x: x.get('fecha_creacion', ''), reverse=True)
+            
+            # Aplicar skip e limit manualmente se necessário
+            if skip > 0 or limit < 100:
+                campanhas = campanhas[skip:skip+limit]
+            
+            return campanhas or []
+            
+        except Exception as e:
+            logger.error(f"Erro ao listar campanhas: {str(e)}")
+            return []
     
-    def atualizar_campana(self, campana_id: int, dados_atualizacao: CampanaPresione1Update) -> CampanaPresione1:
-        """Atualiza uma campanha."""
+    def atualizar_campana(self, campana_id: int, dados_atualizacao: CampanaPresione1Update) -> Dict[str, Any]:
+        """Atualiza uma campanha no Supabase."""
         campana = self.obter_campana(campana_id)
         
         # Verificar se pode atualizar (não pode estar ativa)
-        if campana.activa and not dados_atualizacao.activa is False:
+        if campana.get("activa") and not dados_atualizacao.activa is False:
             raise HTTPException(
                 status_code=400,
                 detail="Não é possível atualizar campanha ativa. Pare a campanha primeiro."
             )
         
-        # Atualizar campos fornecidos
-        for campo, valor in dados_atualizacao.dict(exclude_unset=True).items():
-            setattr(campana, campo, valor)
+        # Preparar dados para atualização
+        dados_para_atualizar = dados_atualizacao.dict(exclude_unset=True)
+        dados_para_atualizar["fecha_actualizacion"] = datetime.utcnow().isoformat()
         
-        campana.fecha_actualizacion = func.now()
-        self.db.commit()
-        self.db.refresh(campana)
+        # Atualizar no Supabase
+        campanhas_atualizadas = self._supabase_request(
+            "PATCH",
+            "campanas_presione1",
+            data=dados_para_atualizar,
+            filters={"id": campana_id}
+        )
         
-        logger.info(f"Campanha {campana_id} atualizada")
-        return campana
+        if not campanhas_atualizadas:
+            raise HTTPException(
+                status_code=500,
+                detail="Erro ao atualizar campanha no Supabase"
+            )
+        
+        # Pegar primeiro resultado se for lista
+        campanha_atualizada = campanhas_atualizadas[0] if isinstance(campanhas_atualizadas, list) else campanhas_atualizadas
+        
+        logger.info(f"Campanha {campana_id} atualizada no Supabase")
+        return campanha_atualizada
     
     def obter_proximo_numero(self, campana_id: int) -> Optional[Dict[str, Any]]:
         """
-        Obtém o próximo número para discagem de uma campanha.
+        Obtém o próximo número para discagem de uma campanha via Supabase.
         
         Args:
             campana_id: ID da campanha presione1
@@ -197,45 +310,65 @@ class PresionE1Service:
         try:
             # Buscar campanha
             campana = self.obter_campana(campana_id)
+            campaign_id = campana.get("campaign_id")
             
-            # Buscar números da campanha principal que ainda não foram discados nesta campanha presione1
-            query = """
-            SELECT c.phone_number, c.id as contact_id
-            FROM contacts c
-            WHERE c.campaign_id = :campaign_id
-            AND c.phone_number IS NOT NULL 
-            AND c.phone_number != ''
-            AND NOT EXISTS (
-                SELECT 1 FROM llamadas_presione1 ll 
-                WHERE ll.campana_id = :campana_id 
-                AND ll.numero_normalizado = c.phone_number
-                AND ll.estado != 'error'
-            )
-            ORDER BY c.id
-            LIMIT 1
-            """
-            
-            resultado = self.db.execute(
-                text(query), 
-                {"campaign_id": campana.get("campaign_id"), "campana_id": campana_id}
-            ).fetchone()
-            
-            if not resultado:
-                logger.info(f"Não há números disponíveis para campanha {campana_id}")
+            if not campaign_id:
+                logger.error(f"Campanha {campana_id} não tem campaign_id associado")
                 return None
             
-            phone_number = resultado[0]
-            contact_id = resultado[1]
+            # Buscar contatos da campanha principal
+            contatos = self._supabase_request(
+                "GET",
+                "contacts",
+                filters={
+                    "campaign_id": campaign_id,
+                    "phone_number": "not.is.null"
+                },
+                select="id,phone_number"
+            )
             
-            # Normalizar número (remover caracteres especiais, etc.)
-            numero_normalizado = self._normalizar_numero(phone_number)
+            if not contatos:
+                logger.info(f"Não há contatos para campaign_id {campaign_id}")
+                return None
             
-            return {
-                "numero_original": phone_number,
-                "numero_normalizado": numero_normalizado,
-                "contact_id": contact_id,
-                "valido": True
-            }
+            # Buscar chamadas já realizadas para esta campanha presione1
+            llamadas_existentes = self._supabase_request(
+                "GET",
+                "llamadas_presione1",
+                filters={
+                    "campana_id": campana_id,
+                    "estado": "not.eq.error"
+                },
+                select="numero_normalizado"
+            )
+            
+            # Criar set dos números já discados para busca rápida
+            numeros_discados = set()
+            if llamadas_existentes:
+                for llamada in llamadas_existentes:
+                    numero = llamada.get("numero_normalizado")
+                    if numero:
+                        numeros_discados.add(numero)
+            
+            # Buscar primeiro contato não discado
+            for contato in contatos:
+                phone_number = contato.get("phone_number")
+                if not phone_number or phone_number.strip() == "":
+                    continue
+                
+                numero_normalizado = self._normalizar_numero(phone_number)
+                
+                # Verificar se já foi discado
+                if numero_normalizado not in numeros_discados:
+                    return {
+                        "numero_original": phone_number,
+                        "numero_normalizado": numero_normalizado,
+                        "contact_id": contato.get("id"),
+                        "valido": True
+                    }
+            
+            logger.info(f"Não há números disponíveis para campanha {campana_id}")
+            return None
             
         except Exception as e:
             logger.error(f"Erro ao obter próximo número para campanha {campana_id}: {str(e)}")
@@ -263,30 +396,21 @@ class PresionE1Service:
         return numero_limpo
     
     def _atualizar_campana_supabase(self, campana_id: int, dados: Dict[str, Any]) -> bool:
-        """Atualiza uma campanha no Supabase."""
+        """Atualiza uma campanha no Supabase usando método centralizado."""
         try:
-            import os
-            import requests
+            resultado = self._supabase_request(
+                "PATCH",
+                "campanas_presione1",
+                data=dados,
+                filters={"id": campana_id}
+            )
             
-            supabase_url = os.getenv("SUPABASE_URL")
-            supabase_key = os.getenv("SUPABASE_ANON_KEY")
-            
-            headers = {
-                "apikey": supabase_key,
-                "Authorization": f"Bearer {supabase_key}",
-                "Content-Type": "application/json",
-                "Prefer": "return=minimal"
-            }
-            
-            url = f"{supabase_url}/rest/v1/campanas_presione1?id=eq.{campana_id}"
-            response = requests.patch(url, headers=headers, json=dados)
-            
-            if response.status_code not in [200, 204]:
-                logger.error(f"Erro ao atualizar campanha {campana_id}: {response.status_code}")
+            if resultado:
+                logger.info(f"Campanha {campana_id} atualizada no Supabase: {dados}")
+                return True
+            else:
+                logger.error(f"Erro ao atualizar campanha {campana_id}")
                 return False
-            
-            logger.info(f"Campanha {campana_id} atualizada no Supabase: {dados}")
-            return True
             
         except Exception as e:
             logger.error(f"Erro ao atualizar campanha {campana_id}: {str(e)}")
