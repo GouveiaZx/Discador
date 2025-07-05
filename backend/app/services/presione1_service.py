@@ -106,19 +106,52 @@ class PresionE1Service:
                 detail="Erro ao criar campanha"
             )
     
-    def obter_campana(self, campana_id: int) -> CampanaPresione1:
-        """Obtém uma campanha por ID."""
-        campana = self.db.query(CampanaPresione1).filter(
-            CampanaPresione1.id == campana_id
-        ).first()
-        
-        if not campana:
+    def obter_campana(self, campana_id: int) -> Dict[str, Any]:
+        """Obtém uma campanha por ID do Supabase."""
+        try:
+            import os
+            import requests
+            
+            supabase_url = os.getenv("SUPABASE_URL")
+            supabase_key = os.getenv("SUPABASE_ANON_KEY")
+            
+            if not supabase_url or not supabase_key:
+                raise HTTPException(
+                    status_code=500,
+                    detail="Configuração do Supabase não encontrada"
+                )
+            
+            headers = {
+                "apikey": supabase_key,
+                "Authorization": f"Bearer {supabase_key}",
+                "Content-Type": "application/json"
+            }
+            
+            # Buscar campanha presione1
+            url = f"{supabase_url}/rest/v1/campanas_presione1?id=eq.{campana_id}"
+            response = requests.get(url, headers=headers)
+            
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Erro ao buscar campanha {campana_id}: {response.status_code}"
+                )
+            
+            campanhas = response.json()
+            if not campanhas:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Campanha {campana_id} não encontrada"
+                )
+            
+            return campanhas[0]
+            
+        except Exception as e:
+            logger.error(f"Erro ao obter campanha {campana_id}: {str(e)}")
             raise HTTPException(
-                status_code=404,
-                detail=f"Campanha {campana_id} não encontrada"
+                status_code=500,
+                detail=f"Erro interno ao buscar campanha: {str(e)}"
             )
-        
-        return campana
     
     def listar_campanas(self, skip: int = 0, limit: int = 100, apenas_ativas: bool = False) -> List[CampanaPresione1]:
         """Lista campanhas."""
@@ -184,7 +217,7 @@ class PresionE1Service:
             
             resultado = self.db.execute(
                 text(query), 
-                {"campaign_id": campana.campaign_id, "campana_id": campana_id}
+                {"campaign_id": campana.get("campaign_id"), "campana_id": campana_id}
             ).fetchone()
             
             if not resultado:
@@ -229,6 +262,36 @@ class PresionE1Service:
         
         return numero_limpo
     
+    def _atualizar_campana_supabase(self, campana_id: int, dados: Dict[str, Any]) -> bool:
+        """Atualiza uma campanha no Supabase."""
+        try:
+            import os
+            import requests
+            
+            supabase_url = os.getenv("SUPABASE_URL")
+            supabase_key = os.getenv("SUPABASE_ANON_KEY")
+            
+            headers = {
+                "apikey": supabase_key,
+                "Authorization": f"Bearer {supabase_key}",
+                "Content-Type": "application/json",
+                "Prefer": "return=minimal"
+            }
+            
+            url = f"{supabase_url}/rest/v1/campanas_presione1?id=eq.{campana_id}"
+            response = requests.patch(url, headers=headers, json=dados)
+            
+            if response.status_code not in [200, 204]:
+                logger.error(f"Erro ao atualizar campanha {campana_id}: {response.status_code}")
+                return False
+            
+            logger.info(f"Campanha {campana_id} atualizada no Supabase: {dados}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Erro ao atualizar campanha {campana_id}: {str(e)}")
+            return False
+    
     async def iniciar_campana(self, campana_id: int, usuario_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Inicia uma campanha de discado preditivo.
@@ -242,7 +305,7 @@ class PresionE1Service:
         """
         campana = self.obter_campana(campana_id)
         
-        if campana.activa:
+        if campana.get("activa"):
             raise HTTPException(
                 status_code=400,
                 detail="Campanha já está ativa"
@@ -256,10 +319,8 @@ class PresionE1Service:
                 detail="Não há números disponíveis para discado nesta campanha"
             )
         
-        # Marcar campanha como ativa
-        campana.activa = True
-        campana.pausada = False
-        self.db.commit()
+        # Marcar campanha como ativa no Supabase
+        self._atualizar_campana_supabase(campana_id, {"activa": True, "pausada": False})
         
         # Iniciar processo de discado em background
         self.campanhas_ativas[campana_id] = {
@@ -276,24 +337,24 @@ class PresionE1Service:
         logger.info(f"Campanha {campana_id} iniciada por usuário {usuario_id}")
         
         return {
-            "mensaje": f"Campanha '{campana.nombre}' iniciada com sucesso",
+            "mensaje": f"Campanha '{campana.get('nombre', 'Sem nome')}' iniciada com sucesso",
             "campana_id": campana_id,
-            "llamadas_simultaneas": campana.llamadas_simultaneas,
-            "tiempo_entre_llamadas": campana.tiempo_entre_llamadas
+            "llamadas_simultaneas": campana.get("llamadas_simultaneas", 5),
+            "tiempo_entre_llamadas": campana.get("tiempo_entre_llamadas", 1.0)
         }
     
     async def pausar_campana(self, campana_id: int, pausar: bool, motivo: Optional[str] = None) -> Dict[str, Any]:
         """Pausa ou retoma uma campanha."""
         campana = self.obter_campana(campana_id)
         
-        if not campana.activa:
+        if not campana.get("activa"):
             raise HTTPException(
                 status_code=400,
                 detail="Campanha não está ativa"
             )
         
-        campana.pausada = pausar
-        self.db.commit()
+        # Atualizar no Supabase
+        self._atualizar_campana_supabase(campana_id, {"pausada": pausar})
         
         # Atualizar estado em memória
         if campana_id in self.campanhas_ativas:
@@ -313,16 +374,14 @@ class PresionE1Service:
         """Para completamente uma campanha."""
         campana = self.obter_campana(campana_id)
         
-        if not campana.activa:
+        if not campana.get("activa"):
             raise HTTPException(
                 status_code=400,
                 detail="Campanha não está ativa"
             )
         
-        # Marcar como inativa
-        campana.activa = False
-        campana.pausada = False
-        self.db.commit()
+        # Marcar como inativa no Supabase
+        self._atualizar_campana_supabase(campana_id, {"activa": False, "pausada": False})
         
         # Remover de campanhas ativas
         if campana_id in self.campanhas_ativas:
