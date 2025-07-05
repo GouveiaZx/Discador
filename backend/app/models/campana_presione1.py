@@ -20,7 +20,7 @@ class CampanaPresione1(Base):
     descripcion = Column(Text)
     
     # Configurações da campanha
-    lista_llamadas_id = Column(Integer, ForeignKey("listas_llamadas.id"), nullable=False)
+    campaign_id = Column(Integer, nullable=False, index=True)  # Referência para campaigns do Supabase
     mensaje_audio_url = Column(String(500))  # URL do áudio a reproduzir
     timeout_presione1 = Column(Integer, default=10)  # Segundos para esperar tecla 1
     extension_transferencia = Column(String(50))  # Extensão para transferir
@@ -50,7 +50,6 @@ class CampanaPresione1(Base):
     notas = Column(Text)
     
     # Relacionamentos
-    lista_llamadas = relationship("ListaLlamadas", back_populates="campanas_presione1")
     llamadas = relationship("LlamadaPresione1", back_populates="campana", cascade="all, delete-orphan")
 
 
@@ -115,22 +114,4 @@ class LlamadaPresione1(Base):
     notas = Column(Text)
     
     # Relacionamentos
-    campana = relationship("CampanaPresione1", back_populates="llamadas")
-
-
-# Adicionar relacionamento nos modelos existentes se necessário
-def setup_relationships():
-    """Configurar relacionamentos com outros modelos."""
-    try:
-        from app.models.lista_llamadas import ListaLlamadas
-        
-        # Adicionar relacionamento se não existir
-        if not hasattr(ListaLlamadas, 'campanas_presione1'):
-            ListaLlamadas.campanas_presione1 = relationship(
-                "CampanaPresione1", 
-                back_populates="lista_llamadas"
-            )
-            
-    except ImportError:
-        # Se não conseguir importar, não há problema
-        pass 
+    campana = relationship("CampanaPresione1", back_populates="llamadas") 

@@ -544,7 +544,7 @@ class PresionE1Service:
     async def _transferir_llamada(self, llamada: LlamadaPresione1):
         """Transfere chamada que pressionou 1."""
         try:
-            campana = llamada.campana
+            campana = self.obter_campana(llamada.campana_id)
             
             if campana.extension_transferencia:
                 # TODO: Transferir para extensão específica (não implementado)
