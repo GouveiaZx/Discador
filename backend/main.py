@@ -236,7 +236,7 @@ app.include_router(code2base.router, prefix=f"{api_prefix}")
 app.include_router(campanha_politica.router, prefix=f"{api_prefix}/campanha-politica")
 app.include_router(monitoring.router, prefix=f"{api_prefix}")
 app.include_router(contacts.router, prefix=f"{api_prefix}")
-app.include_router(presione1.router, prefix=f"{api_prefix}/presione1")  # Habilitado agora que os modelos existem
+app.include_router(presione1.router, prefix=f"{api_prefix}")  # Router já tem prefix /presione1
 
 # Router para rotas ausentes deve ser definido antes de ser usado
 
