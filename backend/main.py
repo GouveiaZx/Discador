@@ -19,7 +19,7 @@ import hashlib
 import requests
 import json
 
-from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, monitoring, contacts
+from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, monitoring, contacts, presione1
 # from app.routes import presione1  # Temporariamente comentado para resolver dependências
 # Importar novas rotas avançadas
 try:
@@ -236,31 +236,9 @@ app.include_router(code2base.router, prefix=f"{api_prefix}")
 app.include_router(campanha_politica.router, prefix=f"{api_prefix}/campanha-politica")
 app.include_router(monitoring.router, prefix=f"{api_prefix}")
 app.include_router(contacts.router, prefix=f"{api_prefix}")
-# app.include_router(presione1.router, prefix=f"{api_prefix}/presione1")  # Temporariamente comentado
+app.include_router(presione1.router, prefix=f"{api_prefix}/presione1")  # Habilitado agora que os modelos existem
 
-# ENDPOINT TEMPORÁRIO PARA PRESIONE1 (enquanto resolvemos dependências)
-@missing_routes.post("/presione1/campanhas/{campana_id}/iniciar")
-async def iniciar_campana_presione1_temp(campana_id: int, request_data: dict):
-    """Endpoint temporário para iniciar campanha presione1"""
-    try:
-        logger.info(f"🚀 Tentativa de iniciar campanha {campana_id} com dados: {request_data}")
-        
-        # Simular resposta de sucesso por enquanto
-        return {
-            "success": True,
-            "message": f"Campanha {campana_id} iniciada com sucesso (modo temporário)",
-            "campana_id": campana_id,
-            "status": "ativa",
-            "usuario_id": request_data.get("usuario_id"),
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
-    except Exception as e:
-        logger.error(f"Erro no endpoint temporário presione1: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erro temporário: {str(e)}"
-        )
+# Router para rotas ausentes deve ser definido antes de ser usado
 
 # Incluir novas rotas avançadas se disponíveis
 if configuracao_discagem:
