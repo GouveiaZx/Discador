@@ -13,7 +13,7 @@ from fastapi import HTTPException
 from sqlalchemy.sql import text
 
 from app.models.campana_presione1 import CampanaPresione1, LlamadaPresione1
-from app.models.lista_llamadas import ListaLlamadas, NumeroLlamada
+# Removido: from app.models.lista_llamadas import ListaLlamadas, NumeroLlamada
 from app.schemas.presione1 import (
     CampanaPresione1Create,
     CampanaPresione1Update,
@@ -45,37 +45,45 @@ class PresionE1Service:
         Returns:
             CampanaPresione1 criada
         """
-        # Verificar se a lista de chamadas existe
-        lista = self.db.query(ListaLlamadas).filter(
-            ListaLlamadas.id == campana_data.lista_llamadas_id,
-            ListaLlamadas.activa == True
-        ).first()
+        # Verificar se a campanha principal existe
+        query_campanha = """
+        SELECT id, name FROM campaigns WHERE id = :campaign_id
+        """
         
-        if not lista:
+        resultado = self.db.execute(
+            text(query_campanha), 
+            {"campaign_id": campana_data.campaign_id}
+        ).fetchone()
+        
+        if not resultado:
             raise HTTPException(
                 status_code=404,
-                detail=f"Lista de chamadas {campana_data.lista_llamadas_id} não encontrada ou inativa"
+                detail=f"Campanha principal {campana_data.campaign_id} não encontrada"
             )
         
-        # Verificar se já existe uma campanha ativa para esta lista
+        # Verificar se já existe uma campanha presione1 ativa para esta campanha principal
         campana_existente = self.db.query(CampanaPresione1).filter(
-            CampanaPresione1.lista_llamadas_id == campana_data.lista_llamadas_id,
+            CampanaPresione1.campaign_id == campana_data.campaign_id,
             CampanaPresione1.activa == True
         ).first()
         
         if campana_existente:
             raise HTTPException(
                 status_code=400,
-                detail=f"Já existe uma campanha ativa para a lista {campana_data.lista_llamadas_id}"
+                detail=f"Já existe uma campanha presione1 ativa para a campanha {campana_data.campaign_id}"
             )
         
         # Crear nova campanha
         nova_campana = CampanaPresione1(
             nombre=campana_data.nombre,
             descripcion=campana_data.descripcion,
-            lista_llamadas_id=campana_data.lista_llamadas_id,
+            campaign_id=campana_data.campaign_id,
             mensaje_audio_url=campana_data.mensaje_audio_url,
             timeout_presione1=campana_data.timeout_presione1,
+            detectar_voicemail=campana_data.detectar_voicemail,
+            mensaje_voicemail_url=campana_data.mensaje_voicemail_url,
+            duracion_minima_voicemail=campana_data.duracion_minima_voicemail,
+            duracion_maxima_voicemail=campana_data.duracion_maxima_voicemail,
             extension_transferencia=campana_data.extension_transferencia,
             cola_transferencia=campana_data.cola_transferencia,
             llamadas_simultaneas=campana_data.llamadas_simultaneas,
@@ -199,6 +207,27 @@ class PresionE1Service:
         except Exception as e:
             logger.error(f"Erro ao obter próximo número para campanha {campana_id}: {str(e)}")
             return None
+    
+    def _normalizar_numero(self, numero: str) -> str:
+        """
+        Normaliza um número de telefone removendo caracteres especiais.
+        
+        Args:
+            numero: Número original
+            
+        Returns:
+            Número normalizado (apenas dígitos)
+        """
+        if not numero:
+            return ""
+        
+        # Remover todos os caracteres exceto dígitos
+        numero_limpo = ''.join(filter(str.isdigit, str(numero)))
+        
+        # Se começar com 0, assumir que é código de país e manter
+        # Se não tiver código de país, pode adicionar lógica específica aqui
+        
+        return numero_limpo
     
     async def iniciar_campana(self, campana_id: int, usuario_id: Optional[str] = None) -> Dict[str, Any]:
         """
