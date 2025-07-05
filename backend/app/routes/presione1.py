@@ -8,7 +8,6 @@ from sqlalchemy.orm import Session
 
 from app.database import obtener_sesion
 from app.services.presione1_service import PresionE1Service
-from app.services.asterisk import asterisk_service
 from app.schemas.presione1 import (
     CampanaPresione1Create,
     CampanaPresione1Update,
@@ -33,12 +32,12 @@ def get_presione1_service(db: Session = Depends(obtener_sesion)) -> PresionE1Ser
     
     if presione1_service_instance is None:
         presione1_service_instance = PresionE1Service(db)
-        # Registrar callback para eventos do Asterisk
-        asterisk_service.registrar_callback_evento(
-            "presione1", 
-            presione1_service_instance.processar_evento_asterisk
-        )
-        logger.info("Serviço Presione1 inicializado e integrado com Asterisk")
+        # TODO: Registrar callback para eventos do Asterisk (não implementado ainda)
+        # AsteriskMonitoringService.registrar_callback_evento(
+        #     "presione1", 
+        #     presione1_service_instance.processar_evento_asterisk
+        # )
+        logger.info("Serviço Presione1 inicializado")
     
     # Atualizar sessão DB
     presione1_service_instance.db = db
