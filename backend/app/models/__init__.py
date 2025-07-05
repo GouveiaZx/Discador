@@ -21,6 +21,7 @@ from .audio_sistema import (
     TipoEvento, AudioSistema, AudioContexto, AudioRegra, AudioSessao, 
     AudioEvento, AudioTemplate, EstadoAudio, TipoOperadorRegra
 )
+from .campana_presione1 import CampanaPresione1, LlamadaPresione1
 
 # Importar novos modelos de configuração avançada (com fallback)
 try:
@@ -81,7 +82,9 @@ __all__ = [
     "AudioEvento",
     "AudioTemplate",
     "EstadoAudio",
-    "TipoOperadorRegra"
+    "TipoOperadorRegra",
+    "CampanaPresione1",
+    "LlamadaPresione1"
 ]
 
 # Adicionar modelos de configuração apenas se estiverem disponíveis
