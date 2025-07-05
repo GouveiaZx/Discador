@@ -21,7 +21,7 @@ from app.schemas.presione1 import (
 )
 from app.services.cli_service import CliService
 from app.services.blacklist_service import BlacklistService
-from app.services.asterisk import asterisk_service
+# from app.services.asterisk import asterisk_service  # TODO: Implementar integração com Asterisk
 from app.utils.logger import logger
 
 
@@ -368,17 +368,23 @@ class PresionE1Service:
             # Adicionar à lista de chamadas ativas
             self.campanhas_ativas[campana_id]["llamadas_activas"][nueva_llamada.id] = nueva_llamada
             
-            # Iniciar chamada via Asterisk com suporte a voicemail
-            respuesta_asterisk = await asterisk_service.originar_llamada_presione1(
-                numero_destino=numero_info["numero_normalizado"],
-                cli=cli,
-                audio_url=campana.mensaje_audio_url,
-                timeout_dtmf=campana.timeout_presione1,
-                llamada_id=nueva_llamada.id,
-                detectar_voicemail=campana.detectar_voicemail,
-                mensaje_voicemail_url=campana.mensaje_voicemail_url,
-                duracion_maxima_voicemail=campana.duracion_maxima_voicemail
-            )
+            # TODO: Iniciar chamada via Asterisk com suporte a voicemail (não implementado)
+            # respuesta_asterisk = await asterisk_service.originar_llamada_presione1(
+            #     numero_destino=numero_info["numero_normalizado"],
+            #     cli=cli,
+            #     audio_url=campana.mensaje_audio_url,
+            #     timeout_dtmf=campana.timeout_presione1,
+            #     llamada_id=nueva_llamada.id,
+            #     detectar_voicemail=campana.detectar_voicemail,
+            #     mensaje_voicemail_url=campana.mensaje_voicemail_url,
+            #     duracion_maxima_voicemail=campana.duracion_maxima_voicemail
+            # )
+            
+            # Simulação para teste
+            respuesta_asterisk = {
+                "UniqueID": f"sim_{nueva_llamada.id}_{int(datetime.now().timestamp())}",
+                "Channel": f"SIP/teste-{nueva_llamada.id}"
+            }
             
             # Atualizar dados técnicos
             nueva_llamada.unique_id_asterisk = respuesta_asterisk.get("UniqueID")
@@ -498,17 +504,19 @@ class PresionE1Service:
             campana = llamada.campana
             
             if campana.extension_transferencia:
-                # Transferir para extensão específica
-                await asterisk_service.transferir_llamada(
-                    channel=llamada.channel,
-                    destino=campana.extension_transferencia
-                )
+                # TODO: Transferir para extensão específica (não implementado)
+                # await asterisk_service.transferir_llamada(
+                #     channel=llamada.channel,
+                #     destino=campana.extension_transferencia
+                # )
+                logger.info(f"Simulação: transferindo para extensão {campana.extension_transferencia}")
             elif campana.cola_transferencia:
-                # Transferir para fila de agentes
-                await asterisk_service.transferir_a_cola(
-                    channel=llamada.channel,
-                    cola=campana.cola_transferencia
-                )
+                # TODO: Transferir para fila de agentes (não implementado)
+                # await asterisk_service.transferir_a_cola(
+                #     channel=llamada.channel,
+                #     cola=campana.cola_transferencia
+                # )
+                logger.info(f"Simulação: transferindo para fila {campana.cola_transferencia}")
             
             llamada.estado = "transferida"
             llamada.fecha_transferencia = datetime.now()
