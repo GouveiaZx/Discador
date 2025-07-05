@@ -30,11 +30,19 @@ try:
     from app.routes import asterisk_monitoring
 except ImportError:
     asterisk_monitoring = None
+
+try:
+    from app.routes import dialer_control
+except ImportError:
+    dialer_control = None
 from app.database import inicializar_bd, get_db
 from app.config import configuracion
 from app.utils.logger import logger
 # Importar modelos para asegurar que esten disponibles para SQLAlchemy
 import app.models
+
+# Importar as novas rotas
+# from app.routes import audio_routes, reports  # Comentado temporariamente devido a problema com audioop no Python 3.13
 
 # Modelos para autenticação
 class LoginRequest(BaseModel):
@@ -234,6 +242,9 @@ if configuracao_discagem:
 
 if asterisk_monitoring:
     app.include_router(asterisk_monitoring.router, prefix=f"{api_prefix}")
+
+if dialer_control:
+    app.include_router(dialer_control.router, prefix=f"{api_prefix}")
 
 # Router para rotas ausentes
 missing_routes = APIRouter()
@@ -796,9 +807,9 @@ async def status():
         "database": "connected"
     }
 
-# Configurações do Supabase
-SUPABASE_URL = "https://orxxocptgaeoyrtlxwkv.supabase.co"
-SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9yeHhvY3B0Z2Flb3lydGx4d2t2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyOTk0MDksImV4cCI6MjA2Njg3NTQwOX0.hJ5vXcLBiSE0TjVzdbZcnlN_jiT1mNijqWEWylVrhdQ"
+# Configurações do Supabase (carregadas do .env)
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY')
 
 def create_campaign_in_supabase(campaign_data: dict):
     """Cria uma campanha no Supabase"""
@@ -859,30 +870,107 @@ def get_campaigns_from_supabase():
             "Content-Type": "application/json"
         }
         
+        logger.info(f"🔍 [DEBUG] Buscando campanhas do Supabase: {SUPABASE_URL}")
+        
         # Buscar campanhas do Supabase
         response = requests.get(
             f"{SUPABASE_URL}/rest/v1/campaigns",
             headers=headers
         )
         
+        logger.info(f"🔍 [DEBUG] Status da resposta campanhas: {response.status_code}")
+        
         if response.status_code == 200:
             campaigns = response.json()
+            logger.info(f"🔍 [DEBUG] Campanhas recebidas: {len(campaigns)}")
+            
             # Converter para formato compatível com frontend
             formatted_campaigns = []
             for campaign in campaigns:
-                # Buscar total de contatos para esta campanha
+                logger.info(f"🔍 [DEBUG] Processando campanha ID {campaign['id']}: {campaign['name']}")
+                
+                # CORREÇÃO: Buscar total de contatos usando método content-range (método agregação removido porque não é suportado)
                 contacts_total = 0
+                
+                # Método 1: Content-range (método principal e confiável)
                 try:
+                    range_url = f"{SUPABASE_URL}/rest/v1/contacts?campaign_id=eq.{campaign['id']}&select=id&limit=1"
+                    logger.info(f"🔍 [DEBUG] URL range: {range_url}")
+                    
                     contacts_response = requests.get(
-                        f"{SUPABASE_URL}/rest/v1/contacts?campaign_id=eq.{campaign['id']}&select=count",
-                        headers={**headers, "Prefer": "count=exact"}
+                        range_url,
+                        headers={**headers, "Prefer": "count=exact"},
+                        timeout=10
                     )
-                    if contacts_response.status_code == 200:
-                        # O total vem no header content-range
+                    
+                    logger.info(f"🔍 [DEBUG] Status range: {contacts_response.status_code}")
+                    logger.info(f"🔍 [DEBUG] Headers range: {dict(contacts_response.headers)}")
+                    
+                    if contacts_response.status_code == 200 or contacts_response.status_code == 206:
                         content_range = contacts_response.headers.get('content-range', '0')
-                        contacts_total = int(content_range.split('/')[-1]) if '/' in content_range else 0
-                except Exception as e:
-                    logger.warning(f"Erro ao contar contatos da campanha {campaign['id']}: {str(e)}")
+                        logger.info(f"📊 [CONTAGEM-RANGE] Campanha {campaign['id']}: content-range = '{content_range}'")
+                        
+                        # Parsing robusto do content-range: formatos "0-0/N" ou "*/N"
+                        if '/' in content_range:
+                            try:
+                                total_str = content_range.split('/')[-1].strip()
+                                logger.info(f"🔍 [DEBUG] Total string extraída: '{total_str}'")
+                                if total_str.isdigit():
+                                    contacts_total = int(total_str)
+                                    logger.info(f"✅ [CONTAGEM-RANGE] Campanha {campaign['id']}: {contacts_total:,} contatos")
+                                else:
+                                    logger.warning(f"⚠️ [CONTAGEM-RANGE] Total não numérico: '{total_str}'")
+                                    contacts_total = 0
+                            except (ValueError, IndexError) as parse_error:
+                                logger.warning(f"⚠️ [CONTAGEM-RANGE] Erro parsing: {parse_error}")
+                                contacts_total = 0
+                        else:
+                            logger.warning(f"⚠️ [CONTAGEM-RANGE] Formato inválido: '{content_range}'")
+                            contacts_total = 0
+                    else:
+                        logger.warning(f"⚠️ [CONTAGEM-RANGE] Status erro: {contacts_response.status_code}")
+                        # Fallback para método 2
+                        raise Exception(f"Content-range falhou com status {contacts_response.status_code}")
+                        
+                except Exception as range_error:
+                    logger.warning(f"⚠️ [CONTAGEM-RANGE] Erro geral: {range_error}")
+                    
+                    # Método 2: Fallback - buscar amostra de contatos
+                    try:
+                        fallback_url = f"{SUPABASE_URL}/rest/v1/contacts?campaign_id=eq.{campaign['id']}&limit=5"
+                        logger.info(f"🔍 [DEBUG] URL fallback: {fallback_url}")
+                        
+                        contacts_response = requests.get(
+                            fallback_url,
+                            headers=headers,
+                            timeout=10
+                        )
+                        
+                        logger.info(f"🔍 [DEBUG] Status fallback: {contacts_response.status_code}")
+                        logger.info(f"🔍 [DEBUG] Resposta fallback: {contacts_response.text[:200]}")
+                        
+                        if contacts_response.status_code == 200:
+                            contacts_list = contacts_response.json()
+                            logger.info(f"🔍 [DEBUG] Lista contatos (amostra): {type(contacts_list)} - {len(contacts_list) if isinstance(contacts_list, list) else 'N/A'}")
+                            
+                            if isinstance(contacts_list, list):
+                                if len(contacts_list) > 0:
+                                    logger.info(f"🔍 [DEBUG] Amostra do primeiro contato: {contacts_list[0]}")
+                                    # Se encontrou contatos, usar valor estimado
+                                    contacts_total = 999  # Indicar que há contatos mas não sabemos quantos
+                                    logger.info(f"✅ [CONTAGEM-FALLBACK] Campanha {campaign['id']}: {len(contacts_list)} contatos na amostra (999 = há contatos)")
+                                else:
+                                    contacts_total = 0
+                                    logger.info(f"✅ [CONTAGEM-FALLBACK] Campanha {campaign['id']}: 0 contatos")
+                            else:
+                                contacts_total = 0
+                        else:
+                            contacts_total = 0
+                    except Exception as fallback_error:
+                        logger.error(f"❌ [CONTAGEM-FALLBACK] Erro final: {fallback_error}")
+                        contacts_total = 0
+                
+                logger.info(f"🎯 [RESULTADO] Campanha {campaign['id']} ({campaign['name']}): {contacts_total} contatos")
                 
                 formatted_campaign = {
                     "id": campaign["id"],
@@ -909,9 +997,14 @@ def get_campaigns_from_supabase():
                     "max_channels": campaign["max_channels"],
                     "created_at": campaign["created_at"],
                     "updated_at": campaign["updated_at"],
-                    "contacts_total": contacts_total  # NOVO: Total de contatos
+                    "contacts_total": contacts_total  # CORRIGIDO: Contagem usando content-range
                 }
                 formatted_campaigns.append(formatted_campaign)
+            
+            # Log do resultado final
+            total_campaigns = len(formatted_campaigns)
+            total_contacts = sum(c.get('contacts_total', 0) for c in formatted_campaigns)
+            logger.info(f"🎯 [CAMPANHAS] Retornando {total_campaigns} campanhas com {total_contacts:,} contatos total")
             
             return formatted_campaigns
         else:
