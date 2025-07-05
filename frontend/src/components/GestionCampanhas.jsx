@@ -530,13 +530,21 @@ function GestionCampanhas() {
                           {campanha.contacts_total > 0 && campanha.status !== 'active' && (
                             <button 
                               onClick={() => handleStartCampaign(campanha.id)}
-                              className="btn-sm bg-success-500 hover:bg-success-600 text-white"
-                              title="Iniciar campanha"
+                              disabled={actionLoading[`starting_${campanha.id}`]}
+                              className="btn-sm bg-success-500 hover:bg-success-600 text-white disabled:opacity-50 disabled:cursor-not-allowed relative"
+                              title={actionLoading[`starting_${campanha.id}`] ? "Iniciando campaña..." : "Iniciar campanha"}
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                              </svg>
+                              {actionLoading[`starting_${campanha.id}`] ? (
+                                <div className="flex items-center space-x-1">
+                                  <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
+                                  <span className="text-xs">Iniciando...</span>
+                                </div>
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                              )}
                             </button>
                           )}
                           
