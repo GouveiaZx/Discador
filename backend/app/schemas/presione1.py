@@ -156,13 +156,11 @@ class LlamadaPresione1Response(LlamadaPresione1Base):
 
 class IniciarCampanaRequest(BaseModel):
     """Schema para iniciar campanha preditiva."""
-    campana_id: int = Field(..., description="ID da campanha a iniciar")
     usuario_id: Optional[str] = Field(None, description="ID do usuário que inicia")
 
 
 class PausarCampanaRequest(BaseModel):
     """Schema para pausar/retomar campanha."""
-    campana_id: int = Field(..., description="ID da campanha")
     pausar: bool = Field(..., description="True para pausar, False para retomar")
     motivo: Optional[str] = Field(None, description="Motivo da pausa")
 
