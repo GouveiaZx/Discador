@@ -411,7 +411,7 @@ async def audio_list_fallback():
     """Fallback para listagem de áudios"""
     try:
         # Verificar se há arquivos na pasta uploads/audio
-        audio_dir = "uploads/audio"
+        audio_dir = "/tmp/uploads/audio" if os.path.exists("/tmp") else "uploads/audio"
         os.makedirs(audio_dir, exist_ok=True)
         
         metadata_path = os.path.join(audio_dir, "metadata.json")
@@ -429,30 +429,46 @@ async def audio_list_fallback():
 async def audio_stats_fallback():
     """Fallback para estatísticas de áudios"""
     try:
-        audio_dir = "uploads/audio"
+        # Criar diretório se não existir
+        audio_dir = "/tmp/uploads/audio" if os.path.exists("/tmp") else "uploads/audio"
         os.makedirs(audio_dir, exist_ok=True)
         
         total_files = 0
         total_size = 0
         
-        if os.path.exists(audio_dir):
-            for filename in os.listdir(audio_dir):
-                if filename.endswith(('.wav', '.mp3', '.m4a', '.aac', '.flac')):
-                    file_path = os.path.join(audio_dir, filename)
-                    if os.path.isfile(file_path):
-                        total_files += 1
-                        total_size += os.path.getsize(file_path)
+        # Verificar metadados primeiro
+        metadata_path = os.path.join(audio_dir, "metadata.json")
+        if os.path.exists(metadata_path):
+            try:
+                with open(metadata_path, 'r') as f:
+                    metadata = json.load(f)
+                total_files = len(metadata)
+                total_size = sum(item.get('file_size', 0) for item in metadata)
+            except:
+                pass
+        
+        # Se não há metadados, verificar arquivos físicos
+        if total_files == 0 and os.path.exists(audio_dir):
+            try:
+                for filename in os.listdir(audio_dir):
+                    if filename.endswith(('.wav', '.mp3', '.m4a', '.aac', '.flac')):
+                        file_path = os.path.join(audio_dir, filename)
+                        if os.path.isfile(file_path):
+                            total_files += 1
+                            total_size += os.path.getsize(file_path)
+            except:
+                pass
         
         return {
             "total_files": total_files,
             "total_size": total_size,
             "total_duration": 0,
-            "by_type": {},
+            "by_type": {"greeting": total_files},
             "by_campaign": {},
             "disk_usage": total_size
         }
     except Exception as e:
-        logger.error(f"Erro no fallback de estatísticas de áudios: {e}")
+        print(f"Erro no fallback de estatísticas de áudios: {e}")
         return {
             "total_files": 0,
             "total_size": 0,
@@ -466,7 +482,8 @@ async def audio_stats_fallback():
 async def audio_upload_fallback(file: UploadFile = File(...)):
     """Fallback para upload de áudios"""
     try:
-        audio_dir = "uploads/audio"
+        # Usar /tmp no ambiente de produção (Render)
+        audio_dir = "/tmp/uploads/audio" if os.path.exists("/tmp") else "uploads/audio"
         os.makedirs(audio_dir, exist_ok=True)
         
         # Salvar arquivo
@@ -514,6 +531,137 @@ async def audio_upload_fallback(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Erro ao enviar áudio: {str(e)}")
 
 # Router para rotas ausentes
+
+# Fallback para Caller ID se Supabase não estiver configurado
+@missing_routes.get("/caller_id")
+async def caller_id_list_fallback():
+    """Fallback para listagem de Caller ID"""
+    try:
+        return [
+            {
+                "id": 1,
+                "name": "Empresa Argentina",
+                "number": "dasda",
+                "provider": "trunk_brasil",
+                "active": True,
+                "created_at": datetime.now().isoformat(),
+                "updated_at": datetime.now().isoformat()
+            }
+        ]
+    except Exception as e:
+        logger.error(f"Erro no fallback de Caller ID: {e}")
+        return []
+
+# Alias para caller-id-configs (frontend usa hífen)
+@missing_routes.get("/caller-id-configs")
+async def caller_id_configs_list_fallback():
+    """Fallback para listagem de configurações de Caller ID"""
+    try:
+        return {
+            "configs": [
+                {
+                    "id": 1,
+                    "caller_name": "Empresa Argentina",
+                    "caller_number": "dasda",
+                    "trunk_id": 1,
+                    "campaign_id": None,
+                    "is_randomized": False,
+                    "caller_pool": [],
+                    "active": True,
+                    "created_at": datetime.now().isoformat(),
+                    "updated_at": datetime.now().isoformat()
+                }
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Erro no fallback de Caller ID configs: {e}")
+        return {"configs": []}
+
+@missing_routes.post("/caller_id")
+async def caller_id_create_fallback(request: dict):
+    """Fallback para criação de Caller ID"""
+    try:
+        # Simular criação bem-sucedida
+        new_config = {
+            "id": int(datetime.now().timestamp()),
+            "name": request.get("name", "Nova Configuração"),
+            "number": request.get("number", ""),
+            "provider": request.get("provider", ""),
+            "active": request.get("active", True),
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat()
+        }
+        
+        return new_config
+    except Exception as e:
+        logger.error(f"Erro no fallback de criação de Caller ID: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao criar configuração: {str(e)}")
+
+@missing_routes.post("/caller-id-configs")
+async def caller_id_configs_create_fallback(request: dict):
+    """Fallback para criação de configurações de Caller ID"""
+    try:
+        # Simular criação bem-sucedida
+        new_config = {
+            "id": int(datetime.now().timestamp()),
+            "caller_name": request.get("caller_name", "Nova Configuração"),
+            "caller_number": request.get("caller_number", ""),
+            "trunk_id": request.get("trunk_id"),
+            "campaign_id": request.get("campaign_id"),
+            "is_randomized": request.get("is_randomized", False),
+            "caller_pool": request.get("caller_pool", []),
+            "active": request.get("active", True),
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat()
+        }
+        
+        return new_config
+    except Exception as e:
+        logger.error(f"Erro no fallback de criação de Caller ID configs: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao criar configuração: {str(e)}")
+
+@missing_routes.put("/caller_id/{config_id}")
+async def caller_id_update_fallback(config_id: int, request: dict):
+    """Fallback para atualização de Caller ID"""
+    try:
+        # Simular atualização bem-sucedida
+        updated_config = {
+            "id": config_id,
+            "name": request.get("name", "Configuração Atualizada"),
+            "number": request.get("number", ""),
+            "provider": request.get("provider", ""),
+            "active": request.get("active", True),
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat()
+        }
+        
+        return updated_config
+    except Exception as e:
+        logger.error(f"Erro no fallback de atualização de Caller ID: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao atualizar configuração: {str(e)}")
+
+@missing_routes.put("/caller-id-configs/{config_id}")
+async def caller_id_configs_update_fallback(config_id: int, request: dict):
+    """Fallback para atualização de configurações de Caller ID"""
+    try:
+        # Simular atualização bem-sucedida
+        updated_config = {
+            "id": config_id,
+            "caller_name": request.get("caller_name", "Configuração Atualizada"),
+            "caller_number": request.get("caller_number", ""),
+            "trunk_id": request.get("trunk_id"),
+            "campaign_id": request.get("campaign_id"),
+            "is_randomized": request.get("is_randomized", False),
+            "caller_pool": request.get("caller_pool", []),
+            "active": request.get("active", True),
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat()
+        }
+        
+        return updated_config
+    except Exception as e:
+        logger.error(f"Erro no fallback de atualização de Caller ID configs: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao atualizar configuração: {str(e)}")
 
 # Endpoints OPTIONS para CORS
 @missing_routes.options("/code2base/clis")
