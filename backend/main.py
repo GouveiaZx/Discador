@@ -950,6 +950,12 @@ async def listar_campanhas_presione1_fallback():
     logger.info(f"✅ [PRESIONE1-FALLBACK] Retornando {len(campanhas_exemplo)} campanhas")
     return campanhas_exemplo
 
+# Endpoint super simples para testar missing_routes
+@missing_routes.get("/hello")
+async def hello_test():
+    """Endpoint super simples para testar se missing_routes funciona"""
+    return {"message": "Hello from missing_routes!", "status": "working"}
+
 # Endpoint completamente diferente para testar roteamento
 @missing_routes.get("/test-roteamento/campanhas")
 async def test_roteamento_campanhas():
