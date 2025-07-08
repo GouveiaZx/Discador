@@ -372,12 +372,21 @@ if dialer_control:
 # Incluir novas rotas de configuração se disponíveis
 if trunk:
     app.include_router(trunk.router, prefix=f"{api_prefix}")
+    print(f"✅ Trunk router included with prefix: {api_prefix}")
+else:
+    print("⚠️ Trunk router NOT available")
 
 if caller_id:
     app.include_router(caller_id.router, prefix=f"{api_prefix}")
+    print(f"✅ Caller ID router included with prefix: {api_prefix}")
+else:
+    print("⚠️ Caller ID router NOT available")
 
 if timing:
     app.include_router(timing.router, prefix=f"{api_prefix}")
+    print(f"✅ Timing router included with prefix: {api_prefix}")
+else:
+    print("⚠️ Timing router NOT available")
 
 # Router para rotas ausentes
 missing_routes = APIRouter()
