@@ -4,7 +4,13 @@
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+try:
+    from sqlalchemy.orm import Session
+    print("✅ SQLAlchemy imported successfully")
+except ImportError as e:
+    print(f"⚠️ Warning: Could not import SQLAlchemy: {e}")
+    # Criar fallback para tipagem
+    Session = object
 import uvicorn
 import os
 from datetime import datetime, timedelta
@@ -46,11 +52,43 @@ try:
     from app.routes import dialer_control
 except ImportError:
     dialer_control = None
-from app.database import inicializar_bd, get_db
-from app.config import configuracion
-from app.utils.logger import logger
+try:
+    from app.database import inicializar_bd, get_db
+    print("✅ Database imports successful")
+except ImportError as e:
+    print(f"⚠️ Warning: Could not import database functions: {e}")
+    # Criar fallbacks se necessário
+    inicializar_bd = None
+    get_db = None
+try:
+    from app.config import configuracion
+    print("✅ Config imported successfully")
+except ImportError as e:
+    print(f"⚠️ Warning: Could not import config: {e}")
+    # Criar configuração fallback
+    class FallbackConfig:
+        APP_NAME = "Discador Predictivo"
+        APP_VERSION = "1.0.0"
+        DEBUG = False
+        HOST = "0.0.0.0"
+        PUERTO = 8000
+        LOG_ARQUIVO = None
+    configuracion = FallbackConfig()
+
+try:
+    from app.utils.logger import logger
+    print("✅ Logger imported successfully")
+except ImportError as e:
+    print(f"⚠️ Warning: Could not import logger: {e}")
+    import logging
+    logger = logging.getLogger(__name__)
 # Importar modelos para asegurar que esten disponibles para SQLAlchemy
-import app.models
+try:
+    import app.models
+    print("✅ Models imported successfully")
+except ImportError as e:
+    print(f"⚠️ Warning: Could not import models: {e}")
+    # Sistema continua funcionando sem os models do SQLAlchemy
 
 # Importar as novas rotas
 # from app.routes import audio_routes, reports  # Comentado temporariamente devido a problema com audioop no Python 3.13
