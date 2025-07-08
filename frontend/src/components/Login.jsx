@@ -52,21 +52,19 @@ function Login() {
   };
 
   /**
-   * Login rápido com credenciais predefinidas - VERSÃO GARANTIDA
+   * Login rápido com credenciais predefinidas
    */
   const quickLogin = (username, password) => {
-    console.log('🎯 Quick Login chamado:', { username, password });
     setFormData({ username, password });
     login(username, password);
   };
 
-  // CREDENCIAIS HARDCODED - GARANTIDAS E SINCRONIZADAS
   const testAccounts = [
     {
       username: 'admin',
       password: 'admin123',
       role: 'Administrador',
-      description: 'Acesso completo ao sistema',
+      description: 'Acceso completo al sistema',
       badge: 'ADMIN',
       badgeColor: 'bg-error-500/20 text-error-300 border-error-500/30',
       icon: '👑'
@@ -75,7 +73,7 @@ function Login() {
       username: 'supervisor',
       password: 'supervisor123',
       role: 'Supervisor',
-      description: 'Gestão de campanhas e listas',
+      description: 'Gestión de campañas y listas',
       badge: 'SUPERVISOR',
       badgeColor: 'bg-warning-500/20 text-warning-300 border-warning-500/30',
       icon: '👨‍💼'
@@ -84,7 +82,7 @@ function Login() {
       username: 'operador',
       password: 'operador123',
       role: 'Operador',
-      description: 'Monitoramento e operação básica',
+      description: 'Monitoreo y operación básica',
       badge: 'OPERADOR',
       badgeColor: 'bg-primary-500/20 text-primary-300 border-primary-500/30',
       icon: '👨‍💻'
@@ -132,21 +130,24 @@ function Login() {
                 Usuario
               </label>
               <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none z-10">
+                  <svg className="w-4 h-4 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                </div>
                 <input
                   id="username"
                   name="username"
                   type="text"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className="input-modern pl-12 pr-4 h-12"
+                  className="w-full pl-12 pr-4 py-3 text-white bg-secondary-800/60 border border-secondary-600/50 rounded-xl 
+                           focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50
+                           placeholder-secondary-500 transition-all duration-200 backdrop-blur-sm
+                           disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Ingresá tu usuario"
                   disabled={loading}
                 />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="w-5 h-5 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                  </svg>
-                </div>
               </div>
             </div>
 
@@ -156,32 +157,35 @@ function Login() {
                 Contraseña
               </label>
               <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none z-10">
+                  <svg className="w-4 h-4 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+                </div>
                 <input
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="input-modern pl-12 pr-12 h-12"
+                  className="w-full pl-12 pr-12 py-3 text-white bg-secondary-800/60 border border-secondary-600/50 rounded-xl 
+                           focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50
+                           placeholder-secondary-500 transition-all duration-200 backdrop-blur-sm
+                           disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Ingresá tu contraseña"
                   disabled={loading}
                 />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="w-5 h-5 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                  </svg>
-                </div>
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-secondary-400 hover:text-white transition-colors"
+                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-secondary-400 hover:text-white transition-colors z-10"
                 >
                   {showPassword ? (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
                     </svg>
                   ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                     </svg>
@@ -286,43 +290,6 @@ function Login() {
             )}
         </div>
 
-        {/* TESTE DIRETO - BOTÕES DE EMERGÊNCIA */}
-        <div className="card-glass p-4 mb-6 border-2 border-warning-500/30">
-          <h3 className="text-warning-300 text-sm font-bold mb-3 text-center">🚨 TESTE DIRETO - EMERGÊNCIA</h3>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => {
-                console.log('🔥 TESTE DIRETO ADMIN');
-                login('admin', 'admin123');
-              }}
-              className="btn-danger btn-sm text-xs"
-              disabled={loading}
-            >
-              ADMIN
-            </button>
-            <button
-              onClick={() => {
-                console.log('🔥 TESTE DIRETO SUPERVISOR');
-                login('supervisor', 'supervisor123');
-              }}
-              className="btn-warning btn-sm text-xs"
-              disabled={loading}
-            >
-              SUPER
-            </button>
-            <button
-              onClick={() => {
-                console.log('🔥 TESTE DIRETO OPERADOR');
-                login('operador', 'operador123');
-              }}
-              className="btn-primary btn-sm text-xs"
-              disabled={loading}
-            >
-              OPER
-            </button>
-          </div>
-        </div>
-
         {/* Footer */}
         <div className="text-center mt-8 space-y-2">
           <div className="flex items-center justify-center space-x-4 text-xs text-secondary-500">
@@ -336,7 +303,7 @@ function Login() {
             </span>
           </div>
           <p className="text-xs text-secondary-600">
-            &copy; 2025 Discador Preditivo • Tecnologia Avançada
+            &copy; 2025 Discador Preditivo • Tecnología Avanzada
           </p>
         </div>
       </div>

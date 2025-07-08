@@ -109,7 +109,7 @@ const AudioManager = () => {
       const response = await makeApiRequest('/audio/list');
       setAudioFiles(response.files || response || []);
     } catch (error) {
-      setError('Error al cargar archivos de audio');
+              setError('Error al cargar archivos de audio');
       console.error('Erro ao carregar áudios:', error);
     } finally {
       setLoading(false);
@@ -221,14 +221,14 @@ const AudioManager = () => {
         setCurrentlyPlaying(null);
       } else {
         // Tocar áudio
-        if (audioRef.current) {
+      if (audioRef.current) {
           audioRef.current.src = audioFile.url || `/api/v1/audio/play/${audioFile.filename}`;
           await audioRef.current.play();
-          setCurrentlyPlaying(audioFile.filename);
+        setCurrentlyPlaying(audioFile.filename);
         }
       }
     } catch (error) {
-      setError('Error al reproducir audio');
+              setError('Error al reproducir audio');
       console.error('Erro ao reproduzir áudio:', error);
     }
   };
@@ -246,7 +246,7 @@ const AudioManager = () => {
       setSuccess('Archivo eliminado correctamente');
       loadAudioFiles();
     } catch (error) {
-      setError('Error al eliminar archivo');
+              setError('Error al eliminar archivo');
     }
   };
 
@@ -254,7 +254,7 @@ const AudioManager = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/audio/download/${audioFile.filename}`);
       const blob = await response.blob();
-      
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -264,7 +264,7 @@ const AudioManager = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      setError('Error al descargar archivo');
+              setError('Error al descargar archivo');
     }
   };
 
@@ -311,30 +311,30 @@ const AudioManager = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
+      {/* Header */}
         <div className="text-center">
           <h2 className="text-3xl font-bold text-white mb-4">🎵 Gestión de Audios</h2>
           <p className="text-gray-400">Gestione archivos de audio para campañas y sistema de discado</p>
         </div>
 
         {/* Mensajes */}
-        {error && (
+      {error && (
           <div className="p-4 rounded-lg border bg-red-500/10 border-red-500/30 text-red-400">
             <div className="flex items-center">
               <span className="mr-2">❌</span>
-              {error}
+          {error}
             </div>
           </div>
-        )}
-
-        {success && (
+      )}
+      
+      {success && (
           <div className="p-4 rounded-lg border bg-green-500/10 border-green-500/30 text-green-400">
             <div className="flex items-center">
               <span className="mr-2">✅</span>
-              {success}
+          {success}
             </div>
           </div>
-        )}
+      )}
 
         {/* Barra de Ações */}
         <div className="bg-gray-800/40 backdrop-blur-xl rounded-xl border border-gray-700/50 p-6">
@@ -386,7 +386,7 @@ const AudioManager = () => {
               <p className="mt-4">No hay archivos de audio</p>
               <p className="text-sm">Suba el primer archivo de audio</p>
             </div>
-          ) : (
+        ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {audioFiles.map((audio, index) => (
                 <div key={index} className="bg-gray-700/30 border border-gray-600/30 rounded-lg p-4">
@@ -399,7 +399,7 @@ const AudioManager = () => {
                       {audio.audio_type}
                     </span>
                   </div>
-
+                    
                   <div className="space-y-2 text-sm text-gray-400 mb-4">
                     <div className="flex justify-between">
                       <span>Tamaño:</span>
@@ -429,14 +429,14 @@ const AudioManager = () => {
                       {currentlyPlaying === audio.filename ? <Icons.Stop /> : <Icons.Play />}
                       <span>{currentlyPlaying === audio.filename ? 'Parar' : 'Tocar'}</span>
                     </button>
-
+                    
                     <button
                       onClick={() => handleDownload(audio)}
                       className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition-colors duration-200"
                     >
                       <Icons.Download />
                     </button>
-
+                    
                     <button
                       onClick={() => handleDelete(audio)}
                       className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium transition-colors duration-200"
@@ -445,12 +445,12 @@ const AudioManager = () => {
                     </button>
                   </div>
                 </div>
-              ))}
+            ))}
             </div>
-          )}
+        )}
         </div>
 
-        {/* Dialog de Upload */}
+      {/* Dialog de Upload */}
         {openUploadDialog && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 w-full max-w-md">
@@ -468,9 +468,9 @@ const AudioManager = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Archivo de Audio</label>
                   <input
-                    type="file"
+                type="file"
                     accept="audio/*"
-                    onChange={handleFileSelect}
+                onChange={handleFileSelect}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
                   />
                 </div>
@@ -479,13 +479,13 @@ const AudioManager = () => {
                   <label className="block text-sm font-medium text-gray-300 mb-2">Nombre</label>
                   <input
                     type="text"
-                    value={uploadForm.name}
-                    onChange={(e) => setUploadForm({...uploadForm, name: e.target.value})}
+                  value={uploadForm.name}
+                  onChange={(e) => setUploadForm({...uploadForm, name: e.target.value})}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
                     placeholder="Nombre del archivo"
-                  />
+                />
                 </div>
-
+              
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Descripción</label>
                   <textarea
@@ -522,7 +522,7 @@ const AudioManager = () => {
                       <div 
                         className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
-                      />
+                />
                     </div>
                   </div>
                 )}
@@ -539,7 +539,7 @@ const AudioManager = () => {
                     disabled={loading || !uploadForm.file}
                     className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors duration-200"
                   >
-                    {loading ? 'Enviando...' : 'Enviar'}
+            {loading ? 'Enviando...' : 'Enviar'}
                   </button>
                 </div>
               </div>
