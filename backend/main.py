@@ -2588,9 +2588,7 @@ async def atribuir_campanha_agente(agente_id: int, campanha_data: dict):
 async def raiz(campanhas: str = None):
     """Endpoint raiz com informações da API"""
     if campanhas == "presione1":
-        # Retornar campanhas de exemplo quando solicitado
-        from datetime import datetime
-        
+        # Retornar campanhas de exemplo quando solicitado        
         campanhas_exemplo = [
             {
                 "id": 1,
@@ -2647,7 +2645,7 @@ async def raiz(campanhas: str = None):
     return {
         "status": "healthy",
         "mensaje": f"API de {configuracion.APP_NAME}",
-        "version": configuracion.APP_VERSION,
+        "version": configuracao.APP_VERSION,
         "timestamp": datetime.now().isoformat(),
         "estado": "activo"
     }
