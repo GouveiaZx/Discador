@@ -834,6 +834,64 @@ async def multi_sip_provedores_direto():
         }
 
 # Endpoint presione1 de fallback - versão robusta
+@missing_routes.get("/presione1-test/campanhas")
+async def listar_campanhas_presione1_test():
+    """Endpoint de teste para campanhas presione1"""
+    import logging
+    from datetime import datetime
+    
+    logger = logging.getLogger(__name__)
+    logger.info("🚀 [PRESIONE1-TEST] Endpoint de teste sendo executado!")
+    
+    # Sempre retornar campanhas de exemplo para garantir que funcione
+    campanhas_exemplo = [
+        {
+            "id": 1,
+            "nombre": "Campanha Presione 1 - Teste",
+            "descripcion": "Campanha de exemplo para discado Presione 1",
+            "campaign_id": 1,
+            "activa": False,
+            "pausada": False,
+            "fecha_creacion": datetime.now().isoformat(),
+            "llamadas_simultaneas": 5,
+            "mensaje_audio_url": "https://example.com/audio1.wav",
+            "timeout_presione1": 10,
+            "extension_transferencia": "1001",
+            "cola_transferencia": "ventas"
+        },
+        {
+            "id": 2,
+            "nombre": "Campanha Promocional",
+            "descripcion": "Campanha promocional com Presione 1",
+            "campaign_id": 2,
+            "activa": True,
+            "pausada": False,
+            "fecha_creacion": datetime.now().isoformat(),
+            "llamadas_simultaneas": 3,
+            "mensaje_audio_url": "https://example.com/audio2.wav",
+            "timeout_presione1": 15,
+            "extension_transferencia": "1002",
+            "cola_transferencia": "soporte"
+        },
+        {
+            "id": 3,
+            "nombre": "Campanha Informativa",
+            "descripcion": "Campanha informativa para clientes",
+            "campaign_id": 3,
+            "activa": False,
+            "pausada": True,
+            "fecha_creacion": datetime.now().isoformat(),
+            "llamadas_simultaneas": 8,
+            "mensaje_audio_url": "https://example.com/audio3.wav",
+            "timeout_presione1": 12,
+            "extension_transferencia": "1003",
+            "cola_transferencia": "info"
+        }
+    ]
+    
+    logger.info(f"✅ [PRESIONE1-TEST] Retornando {len(campanhas_exemplo)} campanhas")
+    return campanhas_exemplo
+
 @missing_routes.get("/presione1/campanhas")
 async def listar_campanhas_presione1_fallback():
     """Lista campanhas presione1 - fallback robusta"""
