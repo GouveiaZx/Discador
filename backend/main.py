@@ -273,9 +273,10 @@ api_prefix = "/api/v1"
 # Incluir las rutas de forma condicional
 try:
     # Incluir apenas as rotas essenciais primeiro
-    if presione1:
-        app.include_router(presione1.router, prefix=f"{api_prefix}")
-        print("✅ Presione1 router included successfully")
+    # Comentado para usar endpoint de fallback
+    # if presione1:
+    #     app.include_router(presione1.router, prefix=f"{api_prefix}")
+    #     print("✅ Presione1 router included successfully")
     
     # Incluir outras rotas se disponíveis
     if 'llamadas' in globals():
@@ -337,13 +338,14 @@ except Exception as e:
     logger.warning(f"Could not include some routers: {e}")
     
     # Incluir apenas as rotas essenciais que funcionam
-    if presione1:
-        try:
-            app.include_router(presione1.router, prefix=f"{api_prefix}")
-            print("✅ Presione1 router included as fallback")
-        except Exception as presione1_error:
-            print(f"❌ Error including presione1 router: {presione1_error}")
-            logger.error(f"Error including presione1 router: {presione1_error}")
+    # Comentado para usar endpoint de fallback no missing_routes
+    # if presione1:
+    #     try:
+    #         app.include_router(presione1.router, prefix=f"{api_prefix}")
+    #         print("✅ Presione1 router included as fallback")
+    #     except Exception as presione1_error:
+    #         print(f"❌ Error including presione1 router: {presione1_error}")
+    #         logger.error(f"Error including presione1 router: {presione1_error}")
 
 # Router para rotas ausentes deve ser definido antes de ser usado
 
