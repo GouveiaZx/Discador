@@ -8,125 +8,58 @@ const RealtimeCallDisplay = () => {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(2000); // 2 segundos
   const [totalCalls, setTotalCalls] = useState(0);
-  const [totalDuration, setTotalDuration] = useState(0);
+  const [error, setError] = useState(null);
   const intervalRef = useRef(null);
-  const wsRef = useRef(null);
 
-  // Simular dados de chamadas para desenvolvimento
-  const mockCalls = [
-    {
-      id: '1',
-      sip_channel: 'SIP/liza/7508',
-      client_name: 'liza',
-      extension: '7508',
-      numero_discado: '8323870217',
-      duracao: 47,
-      flags: 'tTr',
-      status: 'conectada',
-      caller_id: 'Discador',
-      trunk: 'trunk_brasil',
-      start_time: new Date(Date.now() - 47000).toISOString()
-    },
-    {
-      id: '2', 
-      sip_channel: 'SIP/maria/3401',
-      client_name: 'maria',
-      extension: '3401',
-      numero_discado: '1155987654321',
-      duracao: 128,
-      flags: 'tT',
-      status: 'conectada',
-      caller_id: 'Campanha',
-      trunk: 'trunk_brasil',
-      start_time: new Date(Date.now() - 128000).toISOString()
-    },
-    {
-      id: '3',
-      sip_channel: 'SIP/carlos/9876',
-      client_name: 'carlos', 
-      extension: '9876',
-      numero_discado: '573001234567',
-      duracao: 23,
-      flags: 'tTr',
-      status: 'conectada',
-      caller_id: 'Discador',
-      trunk: 'trunk_colombia',
-      start_time: new Date(Date.now() - 23000).toISOString()
-    }
-  ];
+  // Flags de países para exibir no display
+  const countryFlags = {
+    '1': '🇺🇸', // EUA
+    '55': '🇧🇷', // Brasil
+    '52': '🇲🇽', // México
+    '57': '🇨🇴', // Colômbia
+    '51': '🇵🇪', // Peru
+    '34': '🇪🇸', // Espanha
+    '33': '🇫🇷', // França
+    '44': '🇬🇧', // Reino Unido
+  };
 
   const fetchActiveCalls = async () => {
     try {
-      // Tentar buscar dados reais da API
+      setError(null);
+      
+      // Buscar dados reais da API
       const response = await makeApiRequest('/monitoring/llamadas-activas');
       
-      if (response && response.active_calls) {
+      if (response.active_calls) {
         setActiveCalls(response.active_calls);
-        setTotalCalls(response.total_active || 0);
+        setTotalCalls(response.total_active);
+        setLastUpdate(new Date(response.last_update));
       } else {
-        // Usar dados mock se não houver dados reais
-        setActiveCalls(mockCalls);
-        setTotalCalls(mockCalls.length);
+        setActiveCalls([]);
+        setTotalCalls(0);
       }
       
-      // Calcular duração total
-      const total = activeCalls.reduce((sum, call) => sum + (call.duracao || 0), 0);
-      setTotalDuration(total);
-      
-      setLastUpdate(new Date());
-      setLoading(false);
-    } catch (error) {
-      console.warn('Usando dados mock para demonstração:', error.message);
-      setActiveCalls(mockCalls);
-      setTotalCalls(mockCalls.length);
+    } catch (err) {
+      console.error('Erro ao buscar chamadas ativas:', err);
+      setError('Erro ao conectar com o servidor');
+      setActiveCalls([]);
+      setTotalCalls(0);
+    } finally {
       setLoading(false);
     }
   };
 
-  const formatDuration = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const formatCallDisplay = (call) => {
-    // Formato: SIP/cliente/ext,duração,flags número 00:00:47
-    return `${call.sip_channel},${call.duracao},${call.flags}      ${call.numero_discado}      ${formatDuration(call.duracao)}`;
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'conectada': return 'text-green-600 bg-green-50';
-      case 'tocando': return 'text-yellow-600 bg-yellow-50';
-      case 'ocupado': return 'text-red-600 bg-red-50';
-      default: return 'text-gray-600 bg-gray-50';
-    }
-  };
-
-  const getTrunkFlag = (trunk) => {
-    if (trunk?.includes('brasil')) return '🇧🇷';
-    if (trunk?.includes('colombia')) return '🇨🇴';
-    if (trunk?.includes('mexico')) return '🇲🇽';
-    if (trunk?.includes('usa')) return '🇺🇸';
-    return '🌐';
-  };
-
-  // Auto-refresh das chamadas
   useEffect(() => {
     fetchActiveCalls();
-    
+  }, []);
+
+  useEffect(() => {
     if (autoRefresh) {
-      intervalRef.current = setInterval(() => {
-        fetchActiveCalls();
-        
-        // Incrementar duração das chamadas localmente para parecer mais real
-        setActiveCalls(prevCalls => 
-          prevCalls.map(call => ({
-            ...call,
-            duracao: call.duracao + (refreshInterval / 1000)
-          }))
-        );
-      }, refreshInterval);
+      intervalRef.current = setInterval(fetchActiveCalls, refreshInterval);
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     }
 
     return () => {
@@ -136,211 +69,234 @@ const RealtimeCallDisplay = () => {
     };
   }, [autoRefresh, refreshInterval]);
 
-  // Atualizar duração em tempo real
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveCalls(prevCalls => 
-        prevCalls.map(call => ({
-          ...call,
-          duracao: call.duracao + 1
-        }))
-      );
-    }, 1000);
+  const formatCallDisplay = (call) => {
+    const flag = countryFlags[call.codigo_pais] || '🌐';
+    // Formato exato: SIP/cliente/ext,duração,flags → número → 00:00:47
+    return `${call.canal},${call.duracao_segundos},${call.flags}      ${call.numero}      ${call.duracao_formatada}`;
+  };
 
-    return () => clearInterval(timer);
-  }, []);
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'atendida':
+        return 'text-green-400';
+      case 'tocando':
+        return 'text-yellow-400';
+      case 'iniciando':
+        return 'text-blue-400';
+      case 'transferindo':
+        return 'text-purple-400';
+      case 'ocupado':
+        return 'text-red-400';
+      default:
+        return 'text-gray-400';
+    }
+  };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Carregando chamadas ativas...</span>
-      </div>
-    );
-  }
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'atendida':
+        return 'CONECTADA';
+      case 'tocando':
+        return 'TOCANDO';
+      case 'iniciando':
+        return 'LLAMANDO';
+      case 'transferindo':
+        return 'TRANSFIRIENDO';
+      case 'ocupado':
+        return 'OCUPADO';
+      default:
+        return 'DESCONOCIDO';
+    }
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      {/* Cabeçalho */}
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">📞 Chamadas Ativas em Tempo Real</h2>
-          <p className="text-gray-600 mt-1">Monitoramento detalhado de todas as chamadas em andamento</p>
+          <h1 className="text-2xl font-bold text-gradient-primary">
+            📞 Llamadas en Tiempo Real
+          </h1>
+          <p className="text-secondary-400 mt-1">
+            Monitoreo en vivo de todas las llamadas activas
+          </p>
         </div>
+        
+        {/* Controls */}
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <label className="text-sm font-medium text-gray-600">Auto-refresh:</label>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
+            <span className="text-sm text-secondary-300">Auto-refresh:</span>
+            <button
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                autoRefresh 
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-secondary-700 text-secondary-300 hover:bg-secondary-600'
+              }`}
+            >
+              {autoRefresh ? 'ON' : 'OFF'}
+            </button>
           </div>
+          
           <select
             value={refreshInterval}
             onChange={(e) => setRefreshInterval(Number(e.target.value))}
-            className="text-sm border border-gray-300 rounded-lg px-3 py-1"
+            className="bg-secondary-700 border border-secondary-600 text-white text-sm rounded px-3 py-1 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value={1000}>1s</option>
             <option value={2000}>2s</option>
             <option value={5000}>5s</option>
             <option value={10000}>10s</option>
           </select>
+          
+          <button
+            onClick={fetchActiveCalls}
+            disabled={loading}
+            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+          >
+            {loading ? '🔄' : '⟳'} Actualizar
+          </button>
         </div>
       </div>
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 rounded-lg p-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="glass-panel p-4">
           <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-              </div>
+            <div className="p-2 bg-green-600/20 rounded-lg">
+              <span className="text-2xl">📞</span>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-blue-600">Chamadas Ativas</p>
-              <p className="text-2xl font-semibold text-blue-900">{totalCalls}</p>
+            <div className="ml-3">
+              <p className="text-sm text-secondary-400">Llamadas Activas</p>
+              <p className="text-2xl font-bold text-white">{totalCalls}</p>
             </div>
           </div>
         </div>
-
-        <div className="bg-green-50 rounded-lg p-4">
+        
+        <div className="glass-panel p-4">
           <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
+            <div className="p-2 bg-blue-600/20 rounded-lg">
+              <span className="text-2xl">⏱️</span>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-green-600">Duração Total</p>
-              <p className="text-2xl font-semibold text-green-900">{formatDuration(totalDuration)}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-yellow-50 rounded-lg p-4">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-yellow-600 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-yellow-600">Última Atualização</p>
-              <p className="text-sm font-semibold text-yellow-900">
+            <div className="ml-3">
+              <p className="text-sm text-secondary-400">Última Actualización</p>
+              <p className="text-sm font-medium text-white">
                 {lastUpdate ? lastUpdate.toLocaleTimeString() : '--:--:--'}
               </p>
             </div>
           </div>
         </div>
-
-        <div className="bg-purple-50 rounded-lg p-4">
+        
+        <div className="glass-panel p-4">
           <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
+            <div className="p-2 bg-yellow-600/20 rounded-lg">
+              <span className="text-2xl">🔄</span>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-purple-600">Duração Média</p>
-              <p className="text-2xl font-semibold text-purple-900">
-                {totalCalls > 0 ? formatDuration(Math.floor(totalDuration / totalCalls)) : '--:--'}
+            <div className="ml-3">
+              <p className="text-sm text-secondary-400">Auto-refresh</p>
+              <p className="text-sm font-medium text-white">
+                {autoRefresh ? `${refreshInterval/1000}s` : 'Desactivado'}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="glass-panel p-4">
+          <div className="flex items-center">
+            <div className="p-2 bg-purple-600/20 rounded-lg">
+              <span className="text-2xl">📊</span>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-secondary-400">Estado</p>
+              <p className="text-sm font-medium text-white">
+                {error ? 'Error' : 'Conectado'}
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Lista de Chamadas - Estilo Terminal */}
-      <div className="bg-black rounded-lg p-4 font-mono text-sm">
-        <div className="text-green-400 mb-4 border-b border-gray-700 pb-2">
-          <div className="flex justify-between items-center">
-            <span>📟 DISCADOR PREDITIVO - CHAMADAS ATIVAS</span>
-            <span className="text-xs">
-              {new Date().toLocaleString()} | Total: {totalCalls} chamadas
-            </span>
+      {/* Error Message */}
+      {error && (
+        <div className="glass-panel border-red-500/20 bg-red-900/10 p-4">
+          <div className="flex items-center">
+            <span className="text-red-400 text-xl mr-3">⚠️</span>
+            <div>
+              <h3 className="text-red-400 font-medium">Error de Conexión</h3>
+              <p className="text-red-300 text-sm mt-1">{error}</p>
+            </div>
           </div>
         </div>
-        
-        {activeCalls.length === 0 ? (
-          <div className="text-yellow-400 text-center py-8">
-            <div className="text-4xl mb-2">📱</div>
-            <p>Nenhuma chamada ativa no momento</p>
-            <p className="text-xs text-gray-400 mt-2">As chamadas aparecerão aqui em tempo real</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {activeCalls.map((call, index) => (
-              <div 
-                key={call.id || index}
-                className="grid grid-cols-12 gap-2 text-white hover:bg-gray-800 p-2 rounded transition-colors"
-              >
-                <div className="col-span-1 text-yellow-400">
-                  {getTrunkFlag(call.trunk)}
-                </div>
-                <div className="col-span-5 text-green-400">
-                  {formatCallDisplay(call)}
-                </div>
-                <div className="col-span-2 text-blue-400">
-                  {call.client_name}
-                </div>
-                <div className="col-span-2 text-purple-400">
-                  {call.caller_id}
-                </div>
-                <div className="col-span-1 text-orange-400">
-                  {call.flags}
-                </div>
-                <div className="col-span-1">
-                  <span className={`px-2 py-1 rounded text-xs ${getStatusColor(call.status)}`}>
-                    {call.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+      )}
 
-        {/* Rodapé do Terminal */}
-        <div className="border-t border-gray-700 mt-4 pt-2 text-gray-400 text-xs">
-          <div className="flex justify-between">
-            <span>Sistema ativo - Monitoramento em tempo real</span>
-            <span>Press CTRL+C to stop | Auto-refresh: {autoRefresh ? 'ON' : 'OFF'}</span>
-          </div>
+      {/* Terminal Display */}
+      <div className="glass-panel">
+        <div className="border-b border-secondary-700 p-4">
+          <h2 className="text-lg font-semibold text-white flex items-center">
+            <span className="text-green-400 mr-2">●</span>
+            Monitor de Llamadas - Terminal
+            <span className="ml-auto text-sm text-secondary-400">
+              Formato: SIP/cliente/ext,duración,flags → número → 00:00:47
+            </span>
+          </h2>
+        </div>
+        
+        <div className="p-4">
+          {loading && activeCalls.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="animate-spin w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-secondary-400">Cargando llamadas activas...</p>
+            </div>
+          ) : activeCalls.length === 0 ? (
+            <div className="text-center py-12">
+              <span className="text-6xl mb-4 block">📵</span>
+              <h3 className="text-xl font-semibold text-white mb-2">Sin Llamadas Activas</h3>
+              <p className="text-secondary-400">No hay llamadas en progreso en este momento</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="font-mono text-sm bg-black/30 p-4 rounded-lg border border-secondary-700">
+                <div className="text-green-400 mb-3 border-b border-secondary-700 pb-2">
+                  === TERMINAL DE MONITOREO DE LLAMADAS ===
+                </div>
+                {activeCalls.map((call, index) => {
+                  const flag = countryFlags[call.codigo_pais] || '🌐';
+                  return (
+                    <div key={call.id || index} className="mb-2 group hover:bg-secondary-800/30 p-2 rounded transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-lg">{flag}</span>
+                          <span className="text-green-400 font-mono text-sm">
+                            {formatCallDisplay(call)}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-4 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className={`px-2 py-1 rounded ${getStatusColor(call.status)} bg-black/20`}>
+                            {getStatusText(call.status)}
+                          </span>
+                          {call.agente && (
+                            <span className="text-blue-400">👤 {call.agente}</span>
+                          )}
+                          {call.campanha && (
+                            <span className="text-purple-400">📋 {call.campanha}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Legenda */}
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-        <div className="bg-gray-50 rounded-lg p-3">
-          <h4 className="font-semibold text-gray-800 mb-2">📋 Formato da Exibição</h4>
-          <p className="text-gray-600 font-mono text-xs mb-1">
-            SIP/cliente/extensão,duração,flags → número → 00:00:47
-          </p>
-          <p className="text-gray-500 text-xs">
-            Exemplo: SIP/liza/7508,35,tTr → 8323870217 → 00:00:47
-          </p>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-3">
-          <h4 className="font-semibold text-gray-800 mb-2">🏁 Flags de Chamada</h4>
-          <div className="text-xs text-gray-600 space-y-1">
-            <p><span className="font-mono bg-yellow-100 px-1">t</span> - Transferência habilitada</p>
-            <p><span className="font-mono bg-blue-100 px-1">T</span> - Timeout ativo</p>
-            <p><span className="font-mono bg-green-100 px-1">r</span> - Ringing (tocando)</p>
-          </div>
-        </div>
+      {/* Footer Info */}
+      <div className="text-center text-sm text-secondary-400">
+        <p>
+          🔄 Actualización automática cada {refreshInterval/1000} segundos 
+          {lastUpdate && ` • Última actualización: ${lastUpdate.toLocaleString()}`}
+        </p>
       </div>
     </div>
   );

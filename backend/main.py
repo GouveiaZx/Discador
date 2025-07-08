@@ -37,6 +37,16 @@ except ImportError as e:
     except ImportError:
         presione1 = None
         print("Warning: Could not import presione1 route")
+
+# Importar novas rotas para configuração
+try:
+    from app.routes import trunk, caller_id, timing
+    print("✅ Advanced config routes imported successfully")
+except ImportError as e:
+    print(f"⚠️ Warning: Could not import advanced config routes: {e}")
+    trunk = None
+    caller_id = None
+    timing = None
 # Importar novas rotas avançadas
 try:
     from app.routes import configuracao_discagem
@@ -358,6 +368,16 @@ if asterisk_monitoring:
 
 if dialer_control:
     app.include_router(dialer_control.router, prefix=f"{api_prefix}")
+
+# Incluir novas rotas de configuração se disponíveis
+if trunk:
+    app.include_router(trunk.router, prefix=f"{api_prefix}")
+
+if caller_id:
+    app.include_router(caller_id.router, prefix=f"{api_prefix}")
+
+if timing:
+    app.include_router(timing.router, prefix=f"{api_prefix}")
 
 # Router para rotas ausentes
 missing_routes = APIRouter()
@@ -1432,6 +1452,91 @@ async def listar_agentes_monitoring():
         "agentes": agentes,
         "timestamp": now.isoformat()
     }
+
+@app.get(f"{api_prefix}/monitoring/llamadas-activas")
+async def listar_llamadas_activas():
+    """Lista todas las llamadas activas en tiempo real desde Supabase"""
+    try:
+        from datetime import datetime
+        
+        # Buscar chamadas ativas no Supabase
+        supabase_data = await database_execute_query("""
+            SELECT 
+                cm.call_id,
+                cm.numero_origem,
+                cm.numero_destino, 
+                cm.cli_utilizado,
+                cm.canal_asterisk,
+                cm.status_atual,
+                cm.inicio_chamada,
+                cm.duracao_total,
+                cm.duracao_conversa,
+                EXTRACT(EPOCH FROM (NOW() - cm.inicio_chamada))::integer as duracao_atual,
+                ag.nome as agente_nome,
+                cp.nome as campanha_nome,
+                tr.nome as trunk_nome,
+                tr.codigo_pais
+            FROM chamada_monitoramento cm
+            LEFT JOIN agentes ag ON cm.agente_id = ag.id
+            LEFT JOIN campanhas cp ON cm.campaign_id = cp.id  
+            LEFT JOIN trunks tr ON cp.trunk_id = tr.id
+            WHERE cm.status_atual IN ('iniciando', 'tocando', 'atendida', 'transferindo')
+            AND cm.fim_chamada IS NULL
+            ORDER BY cm.inicio_chamada DESC
+        """)
+        
+        # Converter para formato esperado pelo frontend
+        calls_data = []
+        for row in supabase_data:
+            # Formato: SIP/cliente/ext,duração,flags → número → 00:00:47
+            canal = row.get('canal_asterisk') or f"SIP/{row.get('trunk_nome', 'unknown')}/{row.get('numero_origem', '0000')}"
+            duracao_segundos = row.get('duracao_atual', 0) or 0
+            
+            # Formatar duração como 00:00:47
+            horas = duracao_segundos // 3600
+            minutos = (duracao_segundos % 3600) // 60
+            segundos = duracao_segundos % 60
+            duracao_formatada = f"{horas:02d}:{minutos:02d}:{segundos:02d}"
+            
+            # Flags baseadas no status
+            flags = "tTr"
+            if row.get('status_atual') == 'tocando':
+                flags = "r"
+            elif row.get('status_atual') == 'atendida':
+                flags = "tT"
+            elif row.get('status_atual') == 'transferindo':
+                flags = "tTr"
+                
+            call_display = {
+                'id': row.get('call_id'),
+                'canal': canal,
+                'numero': row.get('numero_destino'),
+                'duracao_formatada': duracao_formatada,
+                'duracao_segundos': duracao_segundos,
+                'flags': flags,
+                'status': row.get('status_atual'),
+                'cli': row.get('cli_utilizado'),
+                'agente': row.get('agente_nome'),
+                'campanha': row.get('campanha_nome'),
+                'inicio': row.get('inicio_chamada'),
+                'codigo_pais': row.get('codigo_pais', '55')
+            }
+            calls_data.append(call_display)
+        
+        return {
+            "active_calls": calls_data,
+            "total_active": len(calls_data),
+            "last_update": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar chamadas ativas: {e}")
+        return {
+            "active_calls": [],
+            "total_active": 0,
+            "last_update": datetime.now().isoformat(),
+            "error": str(e)
+        }
 
 # ============================================================================
 # ENDPOINTS AUDIO INTELIGENTE
