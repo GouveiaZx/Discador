@@ -16,7 +16,6 @@ import SipTrunkConfig from './components/SipTrunkConfig';
 import TrunkCountryManager from './components/TrunkCountryManager';
 import DNCMultiLanguageManager from './components/DNCMultiLanguageManager';
 import RealtimeCallDisplay from './components/RealtimeCallDisplay';
-import ConfiguracionAvanzada from './components/ConfiguracionAvanzada';
 import AudioManager from './components/AudioManager';
 
 /**
