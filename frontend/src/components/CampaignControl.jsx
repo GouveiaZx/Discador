@@ -166,7 +166,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
       
     } catch (err) {
       console.error('❌ Erro ao pausar campanha:', err);
-      setError(`Erro ao pausar campanha: ${err.message}`);
+              setError(`Error al pausar campaña: ${err.message}`);
     } finally {
       setActionLoading(prev => ({ ...prev, pausing: false }));
     }
@@ -195,14 +195,14 @@ const CampaignControl = ({ campaignId, onClose }) => {
       
     } catch (err) {
       console.error('❌ Erro ao retomar campanha:', err);
-      setError(`Erro ao retomar campanha: ${err.message}`);
+              setError(`Error al reanudar campaña: ${err.message}`);
     } finally {
       setActionLoading(prev => ({ ...prev, resuming: false }));
     }
   };
 
   const handleStopCampaign = async () => {
-    if (!confirm('🛑 Tem certeza que deseja PARAR completamente a campanha?\n\nEsta ação irá:\n• Parar todas as chamadas ativas\n• Marcar a campanha como inativa\n• Não poderá ser retomada automaticamente')) return;
+    if (!confirm('🛑 ¿Está seguro que desea DETENER completamente la campaña?\n\nEsta acción:\n• Detendrá todas las llamadas activas\n• Marcará la campaña como inactiva\n• No podrá ser reanudada automáticamente')) return;
     
     try {
       setActionLoading(prev => ({ ...prev, stopping: true }));
@@ -223,7 +223,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
       
     } catch (err) {
       console.error('❌ Erro ao parar campanha:', err);
-      setError(`Erro ao parar campanha: ${err.message}`);
+              setError(`Error al detener campaña: ${err.message}`);
     } finally {
       setActionLoading(prev => ({ ...prev, stopping: false }));
     }
@@ -236,7 +236,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
       });
       await fetchCampaignData();
     } catch (err) {
-      setError(`Erro ao transferir chamada: ${err.message}`);
+      setError(`Error al transferir llamada: ${err.message}`);
     }
   };
 
@@ -245,7 +245,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
       await makeApiRequest(`/presione1/llamadas/${callId}/finalizar`, 'POST');
       await fetchCampaignData();
     } catch (err) {
-      setError(`Erro ao finalizar chamada: ${err.message}`);
+      setError(`Error al finalizar llamada: ${err.message}`);
     }
   };
 
@@ -393,7 +393,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
       {/* Métricas Principais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
-          title="Chamadas Realizadas"
+                      title="Llamadas Realizadas"
           value={statistics?.llamadas_realizadas || 0}
           icon={<PhoneIcon className="w-6 h-6" />}
           color="blue"
@@ -424,12 +424,12 @@ const CampaignControl = ({ campaignId, onClose }) => {
       {/* Chamadas Ativas */}
       <div className="card-glass rounded-lg shadow-lg border border-white/10 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white">
-            Chamadas Ativas ({activeCalls.length})
-          </h3>
+                  <h3 className="text-lg font-semibold text-white">
+          Llamadas Activas ({activeCalls.length})
+        </h3>
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-sm text-secondary-300">Tempo real</span>
+            <span className="text-sm text-secondary-300">Tiempo real</span>
           </div>
         </div>
         
@@ -438,10 +438,10 @@ const CampaignControl = ({ campaignId, onClose }) => {
             <thead>
               <tr className="text-left text-sm font-medium text-secondary-300 border-b border-white/10">
                 <th className="pb-2">Número</th>
-                <th className="pb-2">Status</th>
-                <th className="pb-2">Duração</th>
+                <th className="pb-2">Estado</th>
+                <th className="pb-2">Duración</th>
                 <th className="pb-2">CLI</th>
-                <th className="pb-2">Ações</th>
+                <th className="pb-2">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
@@ -478,7 +478,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
           
           {activeCalls.length === 0 && (
             <div className="text-center py-8 text-secondary-400">
-              Nenhuma chamada ativa no momento
+              No hay llamadas activas en este momento
             </div>
           )}
         </div>
@@ -489,11 +489,11 @@ const CampaignControl = ({ campaignId, onClose }) => {
   const AudioTab = () => (
     <div className="space-y-6">
       <div className="card-glass rounded-lg shadow-lg border border-white/10 p-6">
-        <h3 className="text-lg font-semibold text-white mb-4">Sistema Áudio Inteligente</h3>
+        <h3 className="text-lg font-semibold text-white mb-4">Sistema de Audio Inteligente</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <MetricCard
-            title="Sessões Ativas"
+            title="Sesiones Activas"
             value={audioSessions.filter(s => s.estado === 'ativa').length}
             icon={<MicrophoneIcon className="w-6 h-6" />}
             color="green"
@@ -505,7 +505,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
             color="blue"
           />
           <MetricCard
-            title="Voicemails"
+            title="Buzones de Voz"
             value={audioSessions.filter(s => s.voicemail_detectado).length}
             icon={<SpeakerWaveIcon className="w-6 h-6" />}
             color="purple"
@@ -516,11 +516,11 @@ const CampaignControl = ({ campaignId, onClose }) => {
           <table className="min-w-full">
             <thead>
               <tr className="text-left text-sm font-medium text-secondary-300 border-b border-white/10">
-                <th className="pb-2">Chamada</th>
+                <th className="pb-2">Llamada</th>
                 <th className="pb-2">Estado</th>
                 <th className="pb-2">DTMF</th>
-                <th className="pb-2">Voicemail</th>
-                <th className="pb-2">Duração</th>
+                <th className="pb-2">Buzón</th>
+                <th className="pb-2">Duración</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
@@ -583,8 +583,8 @@ const CampaignControl = ({ campaignId, onClose }) => {
               </div>
               <p className="text-sm text-secondary-300">ID: {agent.id}</p>
               <p className="text-sm text-secondary-300">Ext: {agent.extensao}</p>
-              <p className="text-sm text-secondary-300">Chamadas hoje: {agent.chamadas_hoje}</p>
-              <p className="text-sm text-secondary-300">Tempo online: {agent.tempo_online}</p>
+              <p className="text-sm text-secondary-300">Llamadas hoy: {agent.llamadas_hoje}</p>
+              <p className="text-sm text-secondary-300">Tiempo en línea: {agent.tempo_online}</p>
             </div>
           ))}
         </div>

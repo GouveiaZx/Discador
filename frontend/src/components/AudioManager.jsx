@@ -90,7 +90,7 @@ const AudioManager = () => {
       const response = await api.get('/audio/list');
       setAudioFiles(response.data.files || response.data || []);
     } catch (error) {
-      setError('Erro ao carregar arquivos de áudio');
+              setError('Error al cargar archivos de audio');
       console.error('Erro ao carregar áudios:', error);
     } finally {
       setLoading(false);
@@ -179,11 +179,11 @@ const AudioManager = () => {
         });
         loadAudioFiles();
       } else {
-        setError(response.data.message || 'Erro ao enviar arquivo');
+        setError(response.data.message || 'Error al enviar archivo');
       }
 
     } catch (error) {
-      setError(error.response?.data?.detail || 'Erro ao enviar arquivo');
+              setError(error.response?.data?.detail || 'Error al enviar archivo');
     } finally {
       setLoading(false);
       setUploadProgress(0);
@@ -227,7 +227,7 @@ const AudioManager = () => {
       }
 
     } catch (error) {
-      setError('Erro ao reproduzir áudio');
+              setError('Error al reproducir audio');
       console.error('Erro ao reproduzir:', error);
     }
   };
@@ -242,7 +242,7 @@ const AudioManager = () => {
       setSuccess('¡Archivo eliminado con éxito!');
       loadAudioFiles();
     } catch (error) {
-      setError('Erro ao deletar arquivo');
+              setError('Error al eliminar archivo');
       console.error('Erro ao deletar:', error);
     }
   };
@@ -264,7 +264,7 @@ const AudioManager = () => {
       window.URL.revokeObjectURL(url);
 
     } catch (error) {
-      setError('Erro ao baixar arquivo');
+              setError('Error al descargar archivo');
       console.error('Erro ao baixar:', error);
     }
   };

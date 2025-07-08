@@ -14,7 +14,7 @@ function CallHistory() {
       const data = await res.json();
       setCalls(data);
     } catch (err) {
-      setError('Erro ao carregar histórico de chamadas');
+      setError('Error al cargar historial de llamadas');
     } finally {
       setLoading(false);
     }

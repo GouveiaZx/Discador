@@ -20,7 +20,7 @@ const AudiosManager = () => {
     { value: 'hold', label: 'Música de Espera' },
     { value: 'voicemail', label: 'Caixa Postal' },
     { value: 'dtmf', label: 'Menu DTMF' },
-    { value: 'error', label: 'Mensagem de Erro' }
+    { value: 'error', label: 'Mensaje de Error' }
   ];
 
   const loadAudios = async () => {
