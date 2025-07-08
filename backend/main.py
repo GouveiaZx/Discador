@@ -950,6 +950,24 @@ async def listar_campanhas_presione1_fallback():
     logger.info(f"✅ [PRESIONE1-FALLBACK] Retornando {len(campanhas_exemplo)} campanhas")
     return campanhas_exemplo
 
+# Endpoint completamente diferente para testar roteamento
+@missing_routes.get("/test-roteamento/campanhas")
+async def test_roteamento_campanhas():
+    """Endpoint de teste para verificar se o roteamento funciona"""
+    return {
+        "status": "success",
+        "message": "Roteamento funcionando!",
+        "timestamp": datetime.now().isoformat(),
+        "campanhas_teste": [
+            {
+                "id": 999,
+                "nome": "Campanha Teste Roteamento",
+                "descricao": "Se você está vendo isso, o roteamento funciona!",
+                "ativo": True
+            }
+        ]
+    }
+
 # Endpoint alternativo para debug
 @missing_routes.get("/presione1-debug/campanhas")
 async def debug_presione1_campanhas():
