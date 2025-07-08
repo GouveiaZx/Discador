@@ -108,14 +108,23 @@ async def create_trunk(trunk_data: dict):
         url = f"{SUPABASE_URL}/rest/v1/trunks"
         print(f"🔵 [TRUNK-CREATE] URL Supabase: {url}")
         
-        response = requests.post(url, headers=headers, json=insert_data)
+        # Adicionar header para retornar os dados criados
+        create_headers = {**headers, "Prefer": "return=representation"}
+        response = requests.post(url, headers=create_headers, json=insert_data)
         
         print(f"🔵 [TRUNK-CREATE] Resposta Supabase: Status={response.status_code}, Text={response.text[:200]}")
         
         if response.status_code == 201:
             created_trunk = response.json()
-            print(f"✅ [TRUNK-CREATE] Trunk criado com sucesso: ID={created_trunk[0]['id'] if created_trunk else 'N/A'}")
-            return {"message": "Trunk criado com sucesso", "trunk": created_trunk}
+            print(f"🔵 [TRUNK-CREATE] Resposta completa: {created_trunk}")
+            
+            if created_trunk and len(created_trunk) > 0:
+                trunk_id = created_trunk[0].get('id', 'N/A')
+                print(f"✅ [TRUNK-CREATE] Trunk criado com sucesso: ID={trunk_id}")
+                return {"message": "Trunk criado com sucesso", "trunk": created_trunk[0]}
+            else:
+                print("✅ [TRUNK-CREATE] Trunk criado (sem dados de retorno)")
+                return {"message": "Trunk criado com sucesso", "trunk": None}
         else:
             error_detail = f"Erro ao criar trunk no Supabase. Status: {response.status_code}, Response: {response.text}"
             print(f"❌ [TRUNK-CREATE] {error_detail}")
