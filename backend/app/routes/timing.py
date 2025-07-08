@@ -14,17 +14,21 @@ router = APIRouter()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 
-if not SUPABASE_URL or not SUPABASE_ANON_KEY:
-    logger.error("❌ Variáveis de ambiente SUPABASE_URL ou SUPABASE_ANON_KEY não configuradas")
-    raise ValueError("Configuração do Supabase incompleta")
-
-# Headers para requests do Supabase
-SUPABASE_HEADERS = {
-    "apikey": SUPABASE_ANON_KEY,
-    "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
-    "Content-Type": "application/json",
-    "Prefer": "return=representation"
-}
+def get_supabase_config():
+    """Obter configuração do Supabase com validação"""
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        logger.error("❌ Variáveis de ambiente SUPABASE_URL ou SUPABASE_ANON_KEY não configuradas")
+        raise HTTPException(status_code=500, detail="Configuração do Supabase incompleta")
+    
+    return {
+        "url": SUPABASE_URL,
+        "headers": {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "return=representation"
+        }
+    }
 
 class TimingConfig(BaseModel):
     id: Optional[int] = None
@@ -59,8 +63,9 @@ async def get_timing_configs():
     try:
         logger.info("🔍 Buscando configurações de timing no Supabase")
         
-        url = f"{SUPABASE_URL}/rest/v1/timing_configs"
-        response = requests.get(url, headers=SUPABASE_HEADERS)
+        supabase_config = get_supabase_config()
+        url = f"{supabase_config['url']}/rest/v1/timing_configs"
+        response = requests.get(url, headers=supabase_config['headers'])
         
         if response.status_code == 200:
             data = response.json()
@@ -83,6 +88,7 @@ async def create_timing_config(config: TimingConfigCreate):
     try:
         logger.info(f"🔧 Criando nova configuração de timing: {config.name}")
         
+        supabase_config = get_supabase_config()
         # Preparar dados para inserção
         insert_data = {
             "name": config.name,
@@ -95,8 +101,8 @@ async def create_timing_config(config: TimingConfigCreate):
             "updated_at": datetime.utcnow().isoformat()
         }
         
-        url = f"{SUPABASE_URL}/rest/v1/timing_configs"
-        response = requests.post(url, json=insert_data, headers=SUPABASE_HEADERS)
+        url = f"{supabase_config['url']}/rest/v1/timing_configs"
+        response = requests.post(url, json=insert_data, headers=supabase_config['headers'])
         
         if response.status_code == 201:
             data = response.json()
@@ -119,8 +125,9 @@ async def get_timing_config(config_id: int):
     try:
         logger.info(f"🔍 Buscando configuração de timing ID: {config_id}")
         
-        url = f"{SUPABASE_URL}/rest/v1/timing_configs?id=eq.{config_id}"
-        response = requests.get(url, headers=SUPABASE_HEADERS)
+        supabase_config = get_supabase_config()
+        url = f"{supabase_config['url']}/rest/v1/timing_configs?id=eq.{config_id}"
+        response = requests.get(url, headers=supabase_config['headers'])
         
         if response.status_code == 200:
             data = response.json()
@@ -147,6 +154,7 @@ async def update_timing_config(config_id: int, config: TimingConfigUpdate):
     try:
         logger.info(f"🔧 Atualizando configuração de timing ID: {config_id}")
         
+        supabase_config = get_supabase_config()
         # Preparar dados para atualização (apenas campos não nulos)
         update_data = {}
         if config.name is not None:
@@ -164,8 +172,8 @@ async def update_timing_config(config_id: int, config: TimingConfigUpdate):
             
         update_data["updated_at"] = datetime.utcnow().isoformat()
         
-        url = f"{SUPABASE_URL}/rest/v1/timing_configs?id=eq.{config_id}"
-        response = requests.patch(url, json=update_data, headers=SUPABASE_HEADERS)
+        url = f"{supabase_config['url']}/rest/v1/timing_configs?id=eq.{config_id}"
+        response = requests.patch(url, json=update_data, headers=supabase_config['headers'])
         
         if response.status_code == 200:
             data = response.json()
@@ -192,8 +200,9 @@ async def delete_timing_config(config_id: int):
     try:
         logger.info(f"🗑️ Deletando configuração de timing ID: {config_id}")
         
-        url = f"{SUPABASE_URL}/rest/v1/timing_configs?id=eq.{config_id}"
-        response = requests.delete(url, headers=SUPABASE_HEADERS)
+        supabase_config = get_supabase_config()
+        url = f"{supabase_config['url']}/rest/v1/timing_configs?id=eq.{config_id}"
+        response = requests.delete(url, headers=supabase_config['headers'])
         
         if response.status_code == 204:
             logger.info(f"✅ Configuração de timing deletada com sucesso: ID {config_id}")

@@ -3,25 +3,39 @@ from typing import List, Optional
 import json
 import os
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/trunks", tags=["trunks"])
 
 # Configuração do Supabase
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://orxxocptgaeoyrtlxwkv.supabase.co")
-SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9yeHhvY3B0Z2Flb3lydGx4d2t2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyOTk0MDksImV4cCI6MjA2Njg3NTQwOX0.hJ5vXcLBiSE0TjVzdbZcnlN_jiT1mNijqWEWylVrhdQ")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 
-headers = {
-    "apikey": SUPABASE_ANON_KEY,
-    "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
-    "Content-Type": "application/json"
-}
+def get_supabase_config():
+    """Obter configuração do Supabase com validação"""
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        logger.error("❌ Variáveis de ambiente SUPABASE_URL ou SUPABASE_ANON_KEY não configuradas")
+        raise HTTPException(status_code=500, detail="Configuração do Supabase incompleta")
+    
+    return {
+        "url": SUPABASE_URL,
+        "headers": {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "return=representation"
+        }
+    }
 
 @router.get("/", response_model=dict)
 async def get_trunks():
     """Buscar todos os trunks"""
     try:
-        url = f"{SUPABASE_URL}/rest/v1/trunks"
-        response = requests.get(url, headers=headers)
+        supabase_config = get_supabase_config()
+        url = f"{supabase_config['url']}/rest/v1/trunks"
+        response = requests.get(url, headers=supabase_config['headers'])
         
         if response.status_code == 200:
             trunks = response.json()
@@ -44,8 +58,9 @@ async def get_trunks():
 async def get_trunk(trunk_id: int):
     """Buscar trunk por ID"""
     try:
-        url = f"{SUPABASE_URL}/rest/v1/trunks?id=eq.{trunk_id}"
-        response = requests.get(url, headers=headers)
+        supabase_config = get_supabase_config()
+        url = f"{supabase_config['url']}/rest/v1/trunks?id=eq.{trunk_id}"
+        response = requests.get(url, headers=supabase_config['headers'])
         
         if response.status_code == 200:
             trunks = response.json()
@@ -105,11 +120,12 @@ async def create_trunk(trunk_data: dict):
         
         print(f"🔵 [TRUNK-CREATE] Dados para inserção: {insert_data}")
         
-        url = f"{SUPABASE_URL}/rest/v1/trunks"
+        supabase_config = get_supabase_config()
+        url = f"{supabase_config['url']}/rest/v1/trunks"
         print(f"🔵 [TRUNK-CREATE] URL Supabase: {url}")
         
         # Adicionar header para retornar os dados criados
-        create_headers = {**headers, "Prefer": "return=representation"}
+        create_headers = supabase_config['headers']
         response = requests.post(url, headers=create_headers, json=insert_data)
         
         print(f"🔵 [TRUNK-CREATE] Resposta Supabase: Status={response.status_code}, Text={response.text[:200]}")
@@ -165,8 +181,9 @@ async def update_trunk(trunk_id: int, trunk_data: dict):
         if 'is_active' in trunk_data:
             update_data['is_active'] = trunk_data['is_active']
         
-        url = f"{SUPABASE_URL}/rest/v1/trunks?id=eq.{trunk_id}"
-        response = requests.patch(url, headers=headers, json=update_data)
+        supabase_config = get_supabase_config()
+        url = f"{supabase_config['url']}/rest/v1/trunks?id=eq.{trunk_id}"
+        response = requests.patch(url, headers=supabase_config['headers'], json=update_data)
         
         if response.status_code == 204:
             return {"message": "Trunk atualizado com sucesso"}
@@ -186,8 +203,9 @@ async def update_trunk(trunk_id: int, trunk_data: dict):
 async def delete_trunk(trunk_id: int):
     """Deletar trunk"""
     try:
-        url = f"{SUPABASE_URL}/rest/v1/trunks?id=eq.{trunk_id}"
-        response = requests.delete(url, headers=headers)
+        supabase_config = get_supabase_config()
+        url = f"{supabase_config['url']}/rest/v1/trunks?id=eq.{trunk_id}"
+        response = requests.delete(url, headers=supabase_config['headers'])
         
         if response.status_code == 204:
             return {"message": "Trunk deletado com sucesso"}
@@ -207,8 +225,9 @@ async def delete_trunk(trunk_id: int):
 async def get_trunks_by_country(country_code: str):
     """Buscar trunks por código do país"""
     try:
-        url = f"{SUPABASE_URL}/rest/v1/trunks?country_code=eq.{country_code}"
-        response = requests.get(url, headers=headers)
+        supabase_config = get_supabase_config()
+        url = f"{supabase_config['url']}/rest/v1/trunks?country_code=eq.{country_code}"
+        response = requests.get(url, headers=supabase_config['headers'])
         
         if response.status_code == 200:
             trunks = response.json()
@@ -232,8 +251,9 @@ async def get_trunk_asterisk_config(trunk_id: int):
     """Gerar configuração do Asterisk para o trunk"""
     try:
         # Buscar trunk primeiro
-        url = f"{SUPABASE_URL}/rest/v1/trunks?id=eq.{trunk_id}&is_active=eq.true"
-        response = requests.get(url, headers=headers)
+        supabase_config = get_supabase_config()
+        url = f"{supabase_config['url']}/rest/v1/trunks?id=eq.{trunk_id}&is_active=eq.true"
+        response = requests.get(url, headers=supabase_config['headers'])
         
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code, detail="Erro ao buscar trunk do Supabase")
