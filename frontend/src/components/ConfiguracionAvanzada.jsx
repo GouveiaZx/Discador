@@ -50,8 +50,18 @@ function ConfiguracionAvanzada() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    cargarCLIs();
-    cargarContextos();
+    const cargarDatos = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([cargarCLIs(), cargarContextos()]);
+      } catch (error) {
+        console.error('Error al cargar datos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    cargarDatos();
   }, []);
 
   const showMessage = (type, text) => {
@@ -163,6 +173,19 @@ function ConfiguracionAvanzada() {
       setLoading(false);
     }
   };
+
+  // Tela de loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-white mb-2">Cargando Configuración</h2>
+          <p className="text-gray-400">Obteniendo datos del sistema...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
