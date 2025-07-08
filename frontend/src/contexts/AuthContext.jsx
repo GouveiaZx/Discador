@@ -84,9 +84,14 @@ export const AuthProvider = ({ children }) => {
         { id: 4, username: 'demo', password: 'demo', role: 'demo', name: 'Demo' }
       ];
 
+      console.log('🔍 Tentativa de login:', { username, password });
+      console.log('👥 Usuários disponíveis:', defaultUsers);
+      
       const foundUser = defaultUsers.find(u => 
         u.username === username && u.password === password
       );
+
+      console.log('✅ Usuário encontrado:', foundUser);
 
       if (foundUser) {
         // Token simulado
