@@ -163,7 +163,7 @@ const UploadListasFixed = () => {
       const isValid = file.type === 'text/plain' || file.type === 'text/csv' || 
                      file.name.endsWith('.txt') || file.name.endsWith('.csv');
       if (!isValid) {
-        setError(`${file.name} não é um arquivo válido. Use apenas .txt ou .csv`);
+        setError(`${file.name} no es un archivo válido. Use solo .txt o .csv`);
       }
       return isValid;
     });

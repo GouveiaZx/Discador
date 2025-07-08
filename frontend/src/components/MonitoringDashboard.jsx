@@ -400,7 +400,7 @@ const MonitoringDashboard = () => {
                       ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300' 
                       : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
                   }`}
-                  title={autoRefresh ? 'Pausar atualizações' : 'Iniciar atualizações'}
+                  title={autoRefresh ? 'Pausar actualizaciones' : 'Iniciar actualizaciones'}
                 >
                   {autoRefresh ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
                 </button>

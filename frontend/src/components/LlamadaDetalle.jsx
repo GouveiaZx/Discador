@@ -92,7 +92,7 @@ const LlamadaDetalle = ({ llamadaId, isOpen, onClose }) => {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-lg font-medium text-gray-300 mb-4">Informações Gerais</h3>
+                  <h3 className="text-lg font-medium text-gray-300 mb-4">Información General</h3>
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm text-gray-400">ID de la Llamada</p>
@@ -124,7 +124,7 @@ const LlamadaDetalle = ({ llamadaId, isOpen, onClose }) => {
                   <h3 className="text-lg font-medium text-gray-300 mb-4">Tempos</h3>
                   <div className="space-y-3">
                     <div>
-                      <p className="text-sm text-gray-400">Data de Criação</p>
+                      <p className="text-sm text-gray-400">Fecha de Creación</p>
                       <p className="font-medium">{formatarData(llamada.fecha_creacion)}</p>
                     </div>
                     <div>
@@ -132,11 +132,11 @@ const LlamadaDetalle = ({ llamadaId, isOpen, onClose }) => {
                       <p className="font-medium">{formatarData(llamada.fecha_asignacion)}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-400">Finalização</p>
+                      <p className="text-sm text-gray-400">Finalización</p>
                       <p className="font-medium">{formatarData(llamada.fecha_finalizacion)}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-400">Duração</p>
+                      <p className="text-sm text-gray-400">Duración</p>
                       <p className="font-medium">{
                         calcularDuracao(llamada.fecha_asignacion, llamada.fecha_finalizacion || new Date())
                       }</p>
@@ -161,7 +161,7 @@ const LlamadaDetalle = ({ llamadaId, isOpen, onClose }) => {
               
               {llamada.metadatos && (
                 <div>
-                  <h3 className="text-lg font-medium text-gray-300 mb-4">Metadados</h3>
+                  <h3 className="text-lg font-medium text-gray-300 mb-4">Metadatos</h3>
                   <pre className="bg-gray-900 p-4 rounded-lg overflow-x-auto text-sm">
                     {JSON.stringify(llamada.metadatos, null, 2)}
                   </pre>
@@ -170,7 +170,7 @@ const LlamadaDetalle = ({ llamadaId, isOpen, onClose }) => {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-400">
-              <p>Nenhum dado disponível</p>
+              <p>No hay datos disponibles</p>
             </div>
           )}
         </div>
@@ -181,7 +181,7 @@ const LlamadaDetalle = ({ llamadaId, isOpen, onClose }) => {
             className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
             onClick={onClose}
           >
-            Fechar
+                          Cerrar
           </button>
         </div>
       </div>

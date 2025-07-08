@@ -121,13 +121,13 @@ const AudioManager = () => {
       // Validar formato
       const allowedFormats = ['audio/wav', 'audio/mp3', 'audio/m4a', 'audio/aac', 'audio/flac'];
       if (!allowedFormats.includes(file.type)) {
-        setError('Formato não suportado. Use: WAV, MP3, M4A, AAC, FLAC');
+        setError('Formato no soportado. Use: WAV, MP3, M4A, AAC, FLAC');
         return;
       }
 
       // Validar tamanho (50MB)
       if (file.size > 50 * 1024 * 1024) {
-        setError('Arquivo muito grande. Máximo: 50MB');
+        setError('Archivo muy grande. Máximo: 50MB');
         return;
       }
 
@@ -142,7 +142,7 @@ const AudioManager = () => {
 
   const handleUpload = async () => {
     if (!uploadForm.file) {
-      setError('Selecione um arquivo');
+      setError('Seleccione un archivo');
       return;
     }
 
@@ -168,7 +168,7 @@ const AudioManager = () => {
       });
 
       if (response.data.success) {
-        setSuccess('Arquivo enviado com sucesso!');
+        setSuccess('¡Archivo enviado con éxito!');
         setOpenUploadDialog(false);
         setUploadForm({
           file: null,
@@ -239,7 +239,7 @@ const AudioManager = () => {
 
     try {
       await api.delete(`/audio/delete/${audioFile.id || audioFile.filename}`);
-      setSuccess('Arquivo deletado com sucesso!');
+      setSuccess('¡Archivo eliminado con éxito!');
       loadAudioFiles();
     } catch (error) {
       setError('Erro ao deletar arquivo');

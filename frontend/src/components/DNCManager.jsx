@@ -107,7 +107,7 @@ const DNCManager = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir esta lista DNC?')) {
+    if (window.confirm('¿Está seguro que desea eliminar esta lista DNC?')) {
       try {
         await makeApiRequest(`/dnc/${id}`, { method: 'DELETE' });
         loadDncLists();
@@ -150,7 +150,7 @@ const DNCManager = () => {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Carregando listas DNC...</span>
+                  <span className="ml-2 text-gray-600">Cargando listas DNC...</span>
       </div>
     );
   }
@@ -159,8 +159,8 @@ const DNCManager = () => {
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Gerenciamento DNC</h2>
-          <p className="text-gray-600 mt-1">Gerencie listas de números que não devem ser contactados</p>
+                      <h2 className="text-2xl font-bold text-gray-800">Gestión DNC</h2>
+          <p className="text-gray-600 mt-1">Gestione listas de números que no deben ser contactados</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
@@ -177,12 +177,12 @@ const DNCManager = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">
-              {editingDnc ? 'Editar Lista DNC' : 'Nova Lista DNC'}
+              {editingDnc ? 'Editar Lista DNC' : 'Nueva Lista DNC'}
             </h3>
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Lista</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de la Lista</label>
                   <input
                     type="text"
                     value={formData.name}
@@ -193,13 +193,13 @@ const DNCManager = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
                     rows={2}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Descrição opcional da lista DNC"
+                                          placeholder="Descripción opcional de la lista DNC"
                   />
                 </div>
 
@@ -217,7 +217,7 @@ const DNCManager = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Números (um por linha)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Números (uno por línea)</label>
                   <textarea
                     value={formData.numbers}
                     onChange={(e) => setFormData({...formData, numbers: e.target.value})}
@@ -254,7 +254,7 @@ const DNCManager = () => {
                           onClick={() => setFormData({...formData, file: null})}
                           className="text-red-600 hover:text-red-700 text-sm"
                         >
-                          Remover arquivo
+                          Remover archivo
                         </button>
                       </div>
                     ) : (
@@ -296,7 +296,7 @@ const DNCManager = () => {
                   disabled={uploading}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {uploading ? 'Salvando...' : (editingDnc ? 'Atualizar' : 'Criar')}
+                  {uploading ? 'Guardando...' : (editingDnc ? 'Actualizar' : 'Crear')}
                 </button>
               </div>
             </form>
@@ -310,8 +310,8 @@ const DNCManager = () => {
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma lista DNC configurada</h3>
-            <p className="mt-1 text-sm text-gray-500">Comece criando sua primeira lista de números bloqueados.</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">Ninguna lista DNC configurada</h3>
+            <p className="mt-1 text-sm text-gray-500">Comience creando su primera lista de números bloqueados.</p>
           </div>
         ) : (
           dncLists.map((dnc) => (
@@ -328,7 +328,7 @@ const DNCManager = () => {
                           : 'bg-red-100 text-red-800 hover:bg-red-200'
                       }`}
                     >
-                      {dnc.active ? 'Ativo' : 'Inativo'}
+                      {dnc.active ? 'Activo' : 'Inactivo'}
                     </button>
                   </div>
                   {dnc.description && (
@@ -348,7 +348,7 @@ const DNCManager = () => {
                   <button
                     onClick={() => handleDelete(dnc.id)}
                     className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                    title="Excluir"
+                                          title="Eliminar"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

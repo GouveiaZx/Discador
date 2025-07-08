@@ -531,7 +531,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
                     <StatusBadge status={session.estado}>{session.estado}</StatusBadge>
                   </td>
                   <td className="py-3 text-secondary-300">{session.dtmf_detectado || '-'}</td>
-                  <td className="py-3 text-secondary-300">{session.voicemail_detectado ? 'Sim' : 'Não'}</td>
+                  <td className="py-3 text-secondary-300">{session.voicemail_detectado ? 'Sí' : 'No'}</td>
                   <td className="py-3 text-secondary-300">{session.duracao || '0:00'}</td>
                 </tr>
               ))}
@@ -549,7 +549,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <MetricCard
-            title="Disponíveis"
+            title="Disponibles"
             value={agents.filter(a => a.status === 'disponivel').length}
             icon={<UserGroupIcon className="w-6 h-6" />}
             color="green"
@@ -561,13 +561,13 @@ const CampaignControl = ({ campaignId, onClose }) => {
             color="blue"
           />
           <MetricCard
-            title="Em Pausa"
+            title="En Pausa"
             value={agents.filter(a => a.status === 'pausa').length}
             icon={<PauseIcon className="w-6 h-6" />}
             color="yellow"
           />
           <MetricCard
-            title="Offline"
+            title="Fuera de Línea"
             value={agents.filter(a => a.status === 'offline').length}
             icon={<XCircleIcon className="w-6 h-6" />}
             color="red"
@@ -596,7 +596,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
     return (
       <div className="flex items-center justify-center p-8 min-h-screen bg-gradient-to-br from-secondary-900 via-dark-100 to-secondary-900">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-400"></div>
-        <span className="ml-2 text-white">Carregando controle da campanha...</span>
+        <span className="ml-2 text-white">Cargando control de campaña...</span>
       </div>
     );
   }
@@ -608,7 +608,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">
-              {campaign?.nombre || 'Campanha'}
+              {campaign?.nombre || 'Campaña'}
             </h1>
             <p className="text-secondary-300 mt-1">{campaign?.descripcion}</p>
           </div>
@@ -629,7 +629,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
             
             {lastUpdate && (
               <span className="text-xs text-secondary-400">
-                Última atualização: {lastUpdate.toLocaleTimeString()}
+                Última actualización: {lastUpdate.toLocaleTimeString()}
               </span>
             )}
             
@@ -648,8 +648,8 @@ const CampaignControl = ({ campaignId, onClose }) => {
         <div className="border-b border-white/10">
           <nav className="flex space-x-8 px-6">
             {[
-              { id: 'overview', label: 'Visão Geral', icon: ChartBarIcon },
-              { id: 'audio', label: 'Áudio Inteligente', icon: MicrophoneIcon },
+              { id: 'overview', label: 'Resumen General', icon: ChartBarIcon },
+              { id: 'audio', label: 'Audio Inteligente', icon: MicrophoneIcon },
               { id: 'agents', label: 'Agentes', icon: UserGroupIcon }
             ].map((tab) => (
               <button
@@ -681,7 +681,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
           <div className="flex">
             <XCircleIcon className="w-5 h-5 text-red-400 mr-3 mt-0.5" />
             <div>
-              <h3 className="text-sm font-medium text-red-800">Erro</h3>
+              <h3 className="text-sm font-medium text-red-800">Error</h3>
               <p className="text-sm text-red-700 mt-1">{error}</p>
             </div>
             <button
