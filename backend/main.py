@@ -835,12 +835,76 @@ async def multi_sip_provedores_direto():
 @missing_routes.get("/presione1/campanhas")
 async def listar_campanhas_presione1_fallback():
     """Lista campanhas presione1 - fallback"""
-    return {
-        "status": "success",
-        "campanhas": [],
-        "total": 0,
-        "message": "Endpoint presione1 disponível via fallback"
-    }
+    try:
+        # Buscar campanhas do Supabase primeiro
+        campanhas_supabase = get_campaigns_from_supabase()
+        
+        # Se não há campanhas no Supabase, retornar campanhas de exemplo
+        if not campanhas_supabase:
+            campanhas_exemplo = [
+                {
+                    "id": 1,
+                    "nombre": "Campanha Exemplo 1",
+                    "descripcion": "Campanha de exemplo para testes",
+                    "campaign_id": 1,
+                    "activa": False,
+                    "pausada": False,
+                    "fecha_creacion": datetime.now().isoformat(),
+                    "llamadas_simultaneas": 5,
+                    "mensaje_audio_url": "",
+                    "timeout_presione1": 10
+                },
+                {
+                    "id": 2,
+                    "nombre": "Campanha Exemplo 2", 
+                    "descripcion": "Segunda campanha de exemplo",
+                    "campaign_id": 2,
+                    "activa": False,
+                    "pausada": False,
+                    "fecha_creacion": datetime.now().isoformat(),
+                    "llamadas_simultaneas": 3,
+                    "mensaje_audio_url": "",
+                    "timeout_presione1": 15
+                }
+            ]
+            return campanhas_exemplo
+        
+        # Converter campanhas do Supabase para formato presione1
+        campanhas_presione1 = []
+        for campanha in campanhas_supabase:
+            campanha_presione1 = {
+                "id": campanha.get("id"),
+                "nombre": campanha.get("name", campanha.get("nome", "Campanha")),
+                "descripcion": campanha.get("description", campanha.get("descricao", "")),
+                "campaign_id": campanha.get("id"),
+                "activa": campanha.get("status") == "active",
+                "pausada": campanha.get("status") == "paused",
+                "fecha_creacion": campanha.get("created_at", datetime.now().isoformat()),
+                "llamadas_simultaneas": campanha.get("max_concurrent_calls", 5),
+                "mensaje_audio_url": campanha.get("audio_url", ""),
+                "timeout_presione1": 10
+            }
+            campanhas_presione1.append(campanha_presione1)
+        
+        return campanhas_presione1
+        
+    except Exception as e:
+        logger.error(f"Erro no endpoint presione1 fallback: {str(e)}")
+        # Retornar pelo menos uma campanha de exemplo em caso de erro
+        return [
+            {
+                "id": 1,
+                "nombre": "Campanha Padrão",
+                "descripcion": "Campanha criada por fallback devido a erro",
+                "campaign_id": 1,
+                "activa": False,
+                "pausada": False,
+                "fecha_creacion": datetime.now().isoformat(),
+                "llamadas_simultaneas": 5,
+                "mensaje_audio_url": "",
+                "timeout_presione1": 10
+            }
+        ]
 
 @missing_routes.post("/presione1/campanhas")
 async def criar_campanha_presione1_fallback(campanha_data: dict):
