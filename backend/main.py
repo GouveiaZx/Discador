@@ -2645,7 +2645,7 @@ async def raiz(campanhas: str = None):
     return {
         "status": "healthy",
         "mensaje": f"API de {configuracion.APP_NAME}",
-        "version": configuracao.APP_VERSION,
+        "version": configuracion.APP_VERSION,
         "timestamp": datetime.now().isoformat(),
         "estado": "activo"
     }
