@@ -129,8 +129,10 @@ const CampaignControl = ({ campaignId, onClose }) => {
   const fetchAgents = useCallback(async () => {
     try {
       const response = await makeApiRequest('/monitoring/agentes');
-      setAgents(response.data || response || []);
-      console.log('✅ Agentes carregados:', response.data?.length || response?.length || 0);
+      // Extrair o array de agentes do objeto retornado
+      const agentesArray = response.data?.agentes || response.agentes || [];
+      setAgents(agentesArray);
+      console.log('✅ Agentes carregados:', agentesArray.length);
     } catch (err) {
       console.warn('⚠️ Erro ao carregar agentes:', err.message);
       setAgents([]);
@@ -281,13 +283,19 @@ const CampaignControl = ({ campaignId, onClose }) => {
 
   const StatusBadge = ({ status, children }) => {
     const colors = {
+      // Status de campanhas
       'ativa': 'bg-green-500',
       'pausada': 'bg-yellow-500',
       'parada': 'bg-red-500',
       'em_andamento': 'bg-blue-500',
       'aguardando_dtmf': 'bg-purple-500',
       'transferindo': 'bg-orange-500',
-      'finalizada': 'bg-gray-500'
+      'finalizada': 'bg-gray-500',
+      // Status de agentes
+      'disponivel': 'bg-green-500',
+      'ocupado': 'bg-blue-500',
+      'pausa': 'bg-yellow-500',
+      'offline': 'bg-red-500'
     };
     
     return (
@@ -539,24 +547,30 @@ const CampaignControl = ({ campaignId, onClose }) => {
       <div className="card-glass rounded-lg shadow-lg border border-white/10 p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Agentes Conectados</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <MetricCard
-            title="Online"
-            value={agents.filter(a => a.status === 'online').length}
+            title="Disponíveis"
+            value={agents.filter(a => a.status === 'disponivel').length}
             icon={<UserGroupIcon className="w-6 h-6" />}
             color="green"
           />
           <MetricCard
-            title="Em Chamada"
-            value={agents.filter(a => a.status === 'em_chamada').length}
+            title="Ocupados"
+            value={agents.filter(a => a.status === 'ocupado').length}
             icon={<PhoneIcon className="w-6 h-6" />}
             color="blue"
           />
           <MetricCard
-            title="Pausados"
-            value={agents.filter(a => a.status === 'pausado').length}
+            title="Em Pausa"
+            value={agents.filter(a => a.status === 'pausa').length}
             icon={<PauseIcon className="w-6 h-6" />}
             color="yellow"
+          />
+          <MetricCard
+            title="Offline"
+            value={agents.filter(a => a.status === 'offline').length}
+            icon={<XCircleIcon className="w-6 h-6" />}
+            color="red"
           />
         </div>
         
@@ -567,8 +581,10 @@ const CampaignControl = ({ campaignId, onClose }) => {
                 <h4 className="font-medium text-white">{agent.nome}</h4>
                 <StatusBadge status={agent.status}>{agent.status}</StatusBadge>
               </div>
-              <p className="text-sm text-secondary-300">ID: {agent.codigo}</p>
-              <p className="text-sm text-secondary-300">Ext: {agent.extension}</p>
+              <p className="text-sm text-secondary-300">ID: {agent.id}</p>
+              <p className="text-sm text-secondary-300">Ext: {agent.extensao}</p>
+              <p className="text-sm text-secondary-300">Chamadas hoje: {agent.chamadas_hoje}</p>
+              <p className="text-sm text-secondary-300">Tempo online: {agent.tempo_online}</p>
             </div>
           ))}
         </div>
