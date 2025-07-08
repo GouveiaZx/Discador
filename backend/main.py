@@ -26,17 +26,18 @@ import requests
 import json
 
 try:
-    from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, monitoring, contacts, presione1
+    from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, monitoring, contacts, presione1, audio_routes
     print("All routes imported successfully")
 except ImportError as e:
     print(f"Warning: Could not import all routes: {e}")
     # Importar somente as rotas essenciais
     try:
-        from app.routes import presione1
-        print("Presione1 route imported successfully")
+        from app.routes import presione1, audio_routes
+        print("Presione1 and audio routes imported successfully")
     except ImportError:
         presione1 = None
-        print("Warning: Could not import presione1 route")
+        audio_routes = None
+        print("Warning: Could not import presione1 or audio routes")
 
 # Importar novas rotas para configuração
 try:
@@ -343,6 +344,10 @@ try:
     if 'contacts' in globals():
         app.include_router(contacts.router, prefix=f"{api_prefix}")
         print("✅ Contacts router included successfully")
+    
+    if 'audio_routes' in globals():
+        app.include_router(audio_routes.router, prefix=f"{api_prefix}/audio", tags=["Audio"])
+        print("✅ Audio routes router included successfully")
     
     print("✅ All available routers included successfully")
     
