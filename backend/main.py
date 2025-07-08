@@ -831,10 +831,16 @@ async def multi_sip_provedores_direto():
             "data": []
         }
 
-# Endpoint presione1 de fallback - versão simplificada
+# Endpoint presione1 de fallback - versão robusta
 @missing_routes.get("/presione1/campanhas")
 async def listar_campanhas_presione1_fallback():
-    """Lista campanhas presione1 - fallback simplificado"""
+    """Lista campanhas presione1 - fallback robusta"""
+    import logging
+    from datetime import datetime
+    
+    logger = logging.getLogger(__name__)
+    logger.info("🚀 [PRESIONE1-FALLBACK] Endpoint sendo executado!")
+    
     # Sempre retornar campanhas de exemplo para garantir que funcione
     campanhas_exemplo = [
         {
@@ -881,7 +887,31 @@ async def listar_campanhas_presione1_fallback():
         }
     ]
     
+    logger.info(f"✅ [PRESIONE1-FALLBACK] Retornando {len(campanhas_exemplo)} campanhas")
     return campanhas_exemplo
+
+# Endpoint alternativo para debug
+@missing_routes.get("/presione1-debug/campanhas")
+async def debug_presione1_campanhas():
+    """Debug endpoint para campanhas presione1"""
+    return {
+        "debug": True,
+        "message": "Endpoint de debug ativo",
+        "campanhas": [
+            {
+                "id": 99,
+                "nombre": "Debug Campaign",
+                "descripcion": "Campanha de debug",
+                "campaign_id": 99,
+                "activa": True,
+                "pausada": False,
+                "fecha_creacion": datetime.now().isoformat(),
+                "llamadas_simultaneas": 1,
+                "mensaje_audio_url": "",
+                "timeout_presione1": 5
+            }
+        ]
+    }
 
 @missing_routes.post("/presione1/campanhas")
 async def criar_campanha_presione1_fallback(campanha_data: dict):
