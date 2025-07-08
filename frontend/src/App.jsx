@@ -180,12 +180,12 @@ const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermiss
       
       {/* Sidebar */}
       <aside className={`
-        fixed top-0 left-0 z-50 h-full w-80 sidebar
+        fixed top-0 left-0 z-50 h-screen w-80 sidebar
         transform transition-transform duration-300 ease-in-out lg:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        glass-panel border-r border-white/10
+        glass-panel border-r border-white/10 overflow-hidden
       `}>
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full max-h-screen">
           {/* Header */}
           <div className="p-6 border-b border-white/10">
             <div className="flex items-center justify-between">
@@ -226,7 +226,7 @@ const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermiss
           </div>
           
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
             {navigationItems.map((item) => {
               const hasAccess = !item.permission || hasPermission(item.permission);
               if (!hasAccess) return null;
@@ -272,13 +272,14 @@ const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermiss
           </nav>
           
           {/* Logout Button */}
-          <div className="p-4 border-t border-white/10">
+          <div className="flex-shrink-0 p-4 border-t border-white/10 bg-secondary-900/50 backdrop-blur-sm">
             <button
               onClick={logout}
               className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl
                        bg-error-500/10 text-error-400 hover:bg-error-500/20 
                        transition-all duration-200 border border-error-500/20
-                       hover:border-error-500/40"
+                       hover:border-error-500/40 hover:shadow-lg hover:shadow-error-500/20
+                       hover:scale-[1.02] active:scale-[0.98]"
             >
               <Icons.Logout />
               <span className="font-medium">Cerrar Sesión</span>
