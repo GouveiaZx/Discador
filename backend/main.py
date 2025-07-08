@@ -836,11 +836,16 @@ async def multi_sip_provedores_direto():
 async def listar_campanhas_presione1_fallback():
     """Lista campanhas presione1 - fallback"""
     try:
+        logger.info("🎯 [PRESIONE1] Iniciando busca de campanhas presione1")
+        
         # Buscar campanhas do Supabase primeiro
+        logger.info("🔍 [PRESIONE1] Buscando campanhas do Supabase...")
         campanhas_supabase = get_campaigns_from_supabase()
+        logger.info(f"📊 [PRESIONE1] Campanhas encontradas no Supabase: {len(campanhas_supabase) if campanhas_supabase else 0}")
         
         # Se não há campanhas no Supabase, retornar campanhas de exemplo
         if not campanhas_supabase:
+            logger.info("📝 [PRESIONE1] Nenhuma campanha no Supabase, criando campanhas de exemplo")
             campanhas_exemplo = [
                 {
                     "id": 1,
@@ -867,9 +872,11 @@ async def listar_campanhas_presione1_fallback():
                     "timeout_presione1": 15
                 }
             ]
+            logger.info(f"✅ [PRESIONE1] Retornando {len(campanhas_exemplo)} campanhas de exemplo")
             return campanhas_exemplo
         
         # Converter campanhas do Supabase para formato presione1
+        logger.info("🔄 [PRESIONE1] Convertendo campanhas do Supabase para formato presione1")
         campanhas_presione1 = []
         for campanha in campanhas_supabase:
             campanha_presione1 = {
@@ -886,12 +893,13 @@ async def listar_campanhas_presione1_fallback():
             }
             campanhas_presione1.append(campanha_presione1)
         
+        logger.info(f"✅ [PRESIONE1] Retornando {len(campanhas_presione1)} campanhas do Supabase convertidas")
         return campanhas_presione1
         
     except Exception as e:
-        logger.error(f"Erro no endpoint presione1 fallback: {str(e)}")
+        logger.error(f"❌ [PRESIONE1] Erro no endpoint presione1 fallback: {str(e)}")
         # Retornar pelo menos uma campanha de exemplo em caso de erro
-        return [
+        campanhas_erro = [
             {
                 "id": 1,
                 "nombre": "Campanha Padrão",
@@ -905,6 +913,8 @@ async def listar_campanhas_presione1_fallback():
                 "timeout_presione1": 10
             }
         ]
+        logger.info(f"🆘 [PRESIONE1] Retornando {len(campanhas_erro)} campanha de erro como fallback")
+        return campanhas_erro
 
 @missing_routes.post("/presione1/campanhas")
 async def criar_campanha_presione1_fallback(campanha_data: dict):
