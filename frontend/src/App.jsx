@@ -10,6 +10,13 @@ import UploadListas from './components/UploadListas';
 import GestionBlacklist from './components/GestionBlacklist';
 import ConfiguracionAvanzada from './components/ConfiguracionAvanzada';
 import CampaignControl from './components/CampaignControl';
+import CallerIdManager from './components/CallerIdManager';
+import CallTimingConfig from './components/CallTimingConfig';
+import SipTrunkConfig from './components/SipTrunkConfig';
+import TrunkCountryManager from './components/TrunkCountryManager';
+import DNCMultiLanguageManager from './components/DNCMultiLanguageManager';
+import RealtimeCallDisplay from './components/RealtimeCallDisplay';
+import ConfiguracionConsolidada from './components/ConfiguracionConsolidada';
 
 /**
  * Sistema de Ícones Profissional
@@ -66,6 +73,21 @@ const Icons = {
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
     </svg>
+  ),
+  Phone: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+    </svg>
+  ),
+  RealTime: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+    </svg>
+  ),
+  Trunk: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+    </svg>
   )
   };
 
@@ -115,9 +137,13 @@ const ProfessionalLoader = () => (
 const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermission, sidebarOpen, setSidebarOpen }) => {
   const navigationItems = [
     { id: 'dashboard', label: 'Panel Principal', icon: Icons.Dashboard, permission: null },
-    { id: 'monitor', label: 'Monitoreo', icon: Icons.Monitor, permission: null },
+    { id: 'realtime', label: 'Llamadas en Vivo', icon: Icons.RealTime, permission: null },
+    { id: 'monitor', label: 'Monitor Avanzado', icon: Icons.Monitor, permission: null },
     { id: 'campanhas', label: 'Campañas', icon: Icons.Campaigns, permission: 'supervisor' },
     { id: 'listas', label: 'Listas', icon: Icons.Lists, permission: 'supervisor' },
+    { id: 'trunks', label: 'Gestión Trunks', icon: Icons.Trunk, permission: 'admin' },
+    { id: 'caller-id', label: 'Caller ID', icon: Icons.Phone, permission: 'supervisor' },
+    { id: 'timing', label: 'Wait/Sleep Time', icon: Icons.Settings, permission: 'supervisor' },
     { id: 'blacklist', label: 'Lista Negra', icon: Icons.Blacklist, permission: 'admin' },
     { id: 'configuracion', label: 'Configuración', icon: Icons.Settings, permission: 'admin' },
     { id: 'historico', label: 'Histórico', icon: Icons.History, permission: null },
@@ -265,9 +291,13 @@ const ProfessionalHeader = ({ setSidebarOpen, activeTab }) => {
   const getPageTitle = () => {
     const titles = {
       dashboard: 'Panel Principal',
-      monitor: 'Monitoreo en Tiempo Real',
+      realtime: 'Llamadas en Tiempo Real',
+      monitor: 'Monitor Avanzado',
       campanhas: 'Gestión de Campañas',
       listas: 'Gestión de Listas',
+      trunks: 'Gestión de Trunks SIP',
+      'caller-id': 'Configuración Caller ID',
+      timing: 'Configuración Wait/Sleep Time',
       blacklist: 'Lista Negra',
       configuracion: 'Configuración Avanzada',
       historico: 'Histórico de Llamadas'
@@ -393,22 +423,26 @@ function AuthenticatedApp() {
             {!campaignControlId && (
               <>
                 {activeTab === 'dashboard' && <DashboardProfessional />}
+                {activeTab === 'realtime' && <RealtimeCallDisplay />}
                 {activeTab === 'monitor' && <MonitorLlamadasEnProgreso />}
                 {activeTab === 'campanhas' && hasPermission('supervisor') && (
                   <GestionCampanhas onOpenCampaignControl={setCampaignControlId} />
                 )}
                 {activeTab === 'listas' && hasPermission('supervisor') && <UploadListas />}
+                {activeTab === 'trunks' && hasPermission('admin') && <TrunkCountryManager />}
+                {activeTab === 'caller-id' && hasPermission('supervisor') && <CallerIdManager />}
+                {activeTab === 'timing' && hasPermission('supervisor') && <CallTimingConfig />}
                 {activeTab === 'blacklist' && hasPermission('admin') && <GestionBlacklist />}
-                {activeTab === 'configuracion' && hasPermission('admin') && <ConfiguracionAvanzada />}
+                {activeTab === 'configuracion' && hasPermission('admin') && <ConfiguracionConsolidada />}
                 {activeTab === 'historico' && <HistoricoLlamadas />}
               </>
             )}
         
             {/* Access Denied Messages */}
-        {((activeTab === 'campanhas' || activeTab === 'listas') && !hasPermission('supervisor')) && (
+            {((activeTab === 'campanhas' || activeTab === 'listas' || activeTab === 'caller-id' || activeTab === 'timing') && !hasPermission('supervisor')) && (
               <AccessDenied requiredLevel="Supervisor" />
             )}
-            {((activeTab === 'blacklist' || activeTab === 'configuracion') && !hasPermission('admin')) && (
+            {((activeTab === 'blacklist' || activeTab === 'configuracion' || activeTab === 'trunks') && !hasPermission('admin')) && (
               <AccessDenied requiredLevel="Administrador" />
             )}
           </div>
