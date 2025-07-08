@@ -1056,6 +1056,65 @@ async def logout():
 # Incluir router de autenticação
 app.include_router(auth_router, prefix=f"{api_prefix}/auth")
 
+# Endpoint direto na aplicação principal para campanhas presione1
+@app.get(f"{api_prefix}/presione1/campanhas")
+async def listar_campanhas_presione1_direto():
+    """Lista campanhas presione1 - endpoint direto na aplicação"""
+    from datetime import datetime
+    
+    # Sempre retornar campanhas de exemplo
+    campanhas_exemplo = [
+        {
+            "id": 1,
+            "nombre": "Campanha Presione 1 - Teste",
+            "descripcion": "Campanha de exemplo para discado Presione 1",
+            "campaign_id": 1,
+            "activa": False,
+            "pausada": False,
+            "fecha_creacion": datetime.now().isoformat(),
+            "llamadas_simultaneas": 5,
+            "mensaje_audio_url": "https://example.com/audio1.wav",
+            "timeout_presione1": 10,
+            "extension_transferencia": "1001",
+            "cola_transferencia": "ventas"
+        },
+        {
+            "id": 2,
+            "nombre": "Campanha Promocional",
+            "descripcion": "Campanha promocional com Presione 1",
+            "campaign_id": 2,
+            "activa": True,
+            "pausada": False,
+            "fecha_creacion": datetime.now().isoformat(),
+            "llamadas_simultaneas": 3,
+            "mensaje_audio_url": "https://example.com/audio2.wav",
+            "timeout_presione1": 15,
+            "extension_transferencia": "1002",
+            "cola_transferencia": "soporte"
+        },
+        {
+            "id": 3,
+            "nombre": "Campanha Informativa",
+            "descripcion": "Campanha informativa para clientes",
+            "campaign_id": 3,
+            "activa": False,
+            "pausada": True,
+            "fecha_creacion": datetime.now().isoformat(),
+            "llamadas_simultaneas": 8,
+            "mensaje_audio_url": "https://example.com/audio3.wav",
+            "timeout_presione1": 12,
+            "extension_transferencia": "1003",
+            "cola_transferencia": "info"
+        }
+    ]
+    
+    return campanhas_exemplo
+
+@app.get(f"{api_prefix}/hello-direto")
+async def hello_direto():
+    """Endpoint de teste direto na aplicação"""
+    return {"message": "Hello direto da aplicação!", "status": "working"}
+
 # Health check endpoints para Render.com
 @app.get("/")
 @app.head("/")
