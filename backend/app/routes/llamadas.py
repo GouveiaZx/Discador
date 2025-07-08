@@ -7,8 +7,8 @@ from datetime import datetime
 from app.database import obtener_sesion
 from app.models.llamada import Llamada
 from app.models.usuario import Usuario
-from app.services.llamadas import llamadas_service
-from app.services.distribuidor_llamadas import distribuidor_llamadas_service
+from app.services.llamadas import LlamadasService
+from app.services.distribuidor_llamadas import DistribuidorLlamadasService
 from app.auth.dependencies import get_current_user_simulado
 from app.auth.webhook import verificar_api_key
 from app.schemas.llamada import (
@@ -85,7 +85,7 @@ async def iniciar_llamada(
     """
     try:
         # Usar el servicio para iniciar la llamada
-        nueva_llamada, respuesta_asterisk = await llamadas_service.iniciar_llamada(
+        nueva_llamada, respuesta_asterisk = await LlamadasService.iniciar_llamada(
             db=db,
             numero_destino=datos.numero_destino,
             campana_id=datos.campana_id,
@@ -132,7 +132,7 @@ async def procesar_presione1(
     """
     try:
         # Usar el servicio para procesar la tecla presionada
-        llamada_actualizada = llamadas_service.procesar_tecla_presionada(
+        llamada_actualizada = LlamadasService.procesar_tecla_presionada(
             db=db,
             llamada_id=datos.llamada_id,
             tecla="1"
@@ -195,7 +195,7 @@ async def obtener_proxima_llamada(
             )
         
         # Asignar la proxima llamada pendiente al usuario
-        llamada = distribuidor_llamadas_service.asignar_llamada(db, usuario_actual)
+        llamada = DistribuidorLlamadasService.asignar_llamada(db, usuario_actual)
         
         # Si no hay llamadas pendientes
         if not llamada:
@@ -267,7 +267,7 @@ async def finalizar_llamada(
             )
         
         # Finalizar la llamada
-        llamada_finalizada = llamadas_service.finalizar_llamada(
+        llamada_finalizada = LlamadasService.finalizar_llamada(
             db=db,
             llamada_id=datos.llamada_id,
             resultado=datos.resultado,
@@ -339,7 +339,7 @@ async def obtener_estadisticas_llamadas(
             )
         
         # Obtener las estadisticas
-        estadisticas = llamadas_service.obtener_estadisticas(db)
+        estadisticas = LlamadasService.obtener_estadisticas(db)
         
         # Devolver las estadisticas formateadas
         return EstadisticasLlamadasResponse(
@@ -407,7 +407,7 @@ async def exportar_llamadas_finalizadas(
             )
         
         # Obtener el contenido CSV
-        csv_content = llamadas_service.exportar_llamadas_finalizadas_csv(db)
+        csv_content = LlamadasService.exportar_llamadas_finalizadas_csv(db)
         
         # Generar nombre de archivo con timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -491,7 +491,7 @@ async def actualizar_estado_via_webhook(
     """
     try:
         # Actualizar el estado de la llamada
-        llamada_actualizada = llamadas_service.actualizar_estado_llamada_desde_webhook(
+        llamada_actualizada = LlamadasService.actualizar_estado_llamada_desde_webhook(
             db=db,
             llamada_id=datos.llamada_id,
             nuevo_estado=datos.nuevo_estado

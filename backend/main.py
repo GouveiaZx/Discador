@@ -19,8 +19,18 @@ import hashlib
 import requests
 import json
 
-from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, monitoring, contacts, presione1
-# from app.routes import presione1  # Temporariamente comentado para resolver dependências
+try:
+    from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, monitoring, contacts, presione1
+    print("All routes imported successfully")
+except ImportError as e:
+    print(f"Warning: Could not import all routes: {e}")
+    # Importar somente as rotas essenciais
+    try:
+        from app.routes import presione1
+        print("Presione1 route imported successfully")
+    except ImportError:
+        presione1 = None
+        print("Warning: Could not import presione1 route")
 # Importar novas rotas avançadas
 try:
     from app.routes import configuracao_discagem
@@ -222,21 +232,80 @@ app.add_middleware(
 # Prefijo para todas las rutas de la API
 api_prefix = "/api/v1"
 
-# Incluir las rutas
-app.include_router(llamadas.router, prefix=f"{api_prefix}/llamadas")
-app.include_router(listas.router, prefix=f"{api_prefix}/listas")
-app.include_router(listas_llamadas.router, prefix=f"{api_prefix}")
-app.include_router(blacklist.router, prefix=f"{api_prefix}")
-app.include_router(discado.router, prefix=f"{api_prefix}")
-app.include_router(cli.router, prefix=f"{api_prefix}")
-app.include_router(stt.router, prefix=f"{api_prefix}/stt")
-app.include_router(reportes.router, prefix=f"{api_prefix}/reportes")
-app.include_router(audio_inteligente.router, prefix=f"{api_prefix}")
-app.include_router(code2base.router, prefix=f"{api_prefix}")
-app.include_router(campanha_politica.router, prefix=f"{api_prefix}/campanha-politica")
-app.include_router(monitoring.router, prefix=f"{api_prefix}")
-app.include_router(contacts.router, prefix=f"{api_prefix}")
-app.include_router(presione1.router, prefix=f"{api_prefix}")  # Router já tem prefix /presione1
+# Incluir las rutas de forma condicional
+try:
+    # Incluir apenas as rotas essenciais primeiro
+    if presione1:
+        app.include_router(presione1.router, prefix=f"{api_prefix}")
+        print("✅ Presione1 router included successfully")
+    
+    # Incluir outras rotas se disponíveis
+    if 'llamadas' in globals():
+        app.include_router(llamadas.router, prefix=f"{api_prefix}/llamadas")
+        print("✅ Llamadas router included successfully")
+    
+    if 'listas' in globals():
+        app.include_router(listas.router, prefix=f"{api_prefix}/listas")
+        print("✅ Listas router included successfully")
+    
+    if 'listas_llamadas' in globals():
+        app.include_router(listas_llamadas.router, prefix=f"{api_prefix}")
+        print("✅ Listas_llamadas router included successfully")
+    
+    if 'blacklist' in globals():
+        app.include_router(blacklist.router, prefix=f"{api_prefix}")
+        print("✅ Blacklist router included successfully")
+    
+    if 'discado' in globals():
+        app.include_router(discado.router, prefix=f"{api_prefix}")
+        print("✅ Discado router included successfully")
+    
+    if 'cli' in globals():
+        app.include_router(cli.router, prefix=f"{api_prefix}")
+        print("✅ CLI router included successfully")
+    
+    if 'stt' in globals():
+        app.include_router(stt.router, prefix=f"{api_prefix}/stt")
+        print("✅ STT router included successfully")
+    
+    if 'reportes' in globals():
+        app.include_router(reportes.router, prefix=f"{api_prefix}/reportes")
+        print("✅ Reportes router included successfully")
+    
+    if 'audio_inteligente' in globals():
+        app.include_router(audio_inteligente.router, prefix=f"{api_prefix}")
+        print("✅ Audio_inteligente router included successfully")
+    
+    if 'code2base' in globals():
+        app.include_router(code2base.router, prefix=f"{api_prefix}")
+        print("✅ Code2base router included successfully")
+    
+    if 'campanha_politica' in globals():
+        app.include_router(campanha_politica.router, prefix=f"{api_prefix}/campanha-politica")
+        print("✅ Campanha_politica router included successfully")
+    
+    if 'monitoring' in globals():
+        app.include_router(monitoring.router, prefix=f"{api_prefix}")
+        print("✅ Monitoring router included successfully")
+    
+    if 'contacts' in globals():
+        app.include_router(contacts.router, prefix=f"{api_prefix}")
+        print("✅ Contacts router included successfully")
+    
+    print("✅ All available routers included successfully")
+    
+except Exception as e:
+    print(f"⚠️ Warning: Could not include some routers: {e}")
+    logger.warning(f"Could not include some routers: {e}")
+    
+    # Incluir apenas as rotas essenciais que funcionam
+    if presione1:
+        try:
+            app.include_router(presione1.router, prefix=f"{api_prefix}")
+            print("✅ Presione1 router included as fallback")
+        except Exception as presione1_error:
+            print(f"❌ Error including presione1 router: {presione1_error}")
+            logger.error(f"Error including presione1 router: {presione1_error}")
 
 # Router para rotas ausentes deve ser definido antes de ser usado
 
