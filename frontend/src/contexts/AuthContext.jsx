@@ -79,8 +79,8 @@ export const AuthProvider = ({ children }) => {
       // Usuarios estándar para desarrollo
       const defaultUsers = [
         { id: 1, username: 'admin', password: 'admin123', role: 'admin', name: 'Administrador' },
-        { id: 2, username: 'supervisor', password: 'super123', role: 'supervisor', name: 'Supervisor' },
-        { id: 3, username: 'operador', password: 'oper123', role: 'operator', name: 'Operador' },
+        { id: 2, username: 'supervisor', password: 'supervisor123', role: 'supervisor', name: 'Supervisor' },
+        { id: 3, username: 'operador', password: 'operador123', role: 'operator', name: 'Operador' },
         { id: 4, username: 'demo', password: 'demo', role: 'demo', name: 'Demo' }
       ];
 
