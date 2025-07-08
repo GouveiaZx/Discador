@@ -17,6 +17,7 @@ import TrunkCountryManager from './components/TrunkCountryManager';
 import DNCMultiLanguageManager from './components/DNCMultiLanguageManager';
 import RealtimeCallDisplay from './components/RealtimeCallDisplay';
 import ConfiguracionConsolidada from './components/ConfiguracionConsolidada';
+import AudioManager from './components/AudioManager';
 
 /**
  * Sistema de Ícones Profissional
@@ -88,6 +89,11 @@ const Icons = {
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
     </svg>
+  ),
+  Audio: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
   )
   };
 
@@ -141,6 +147,7 @@ const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermiss
     { id: 'monitor', label: 'Monitor Avanzado', icon: Icons.Monitor, permission: null },
     { id: 'campanhas', label: 'Campañas', icon: Icons.Campaigns, permission: 'supervisor' },
     { id: 'listas', label: 'Listas', icon: Icons.Lists, permission: 'supervisor' },
+    { id: 'audios', label: 'Gestión de Audios', icon: Icons.Audio, permission: 'supervisor' },
     { id: 'trunks', label: 'Gestión Trunks', icon: Icons.Trunk, permission: 'admin' },
     { id: 'caller-id', label: 'Caller ID', icon: Icons.Phone, permission: 'supervisor' },
     { id: 'timing', label: 'Wait/Sleep Time', icon: Icons.Settings, permission: 'supervisor' },
@@ -295,6 +302,7 @@ const ProfessionalHeader = ({ setSidebarOpen, activeTab }) => {
       monitor: 'Monitor Avanzado',
       campanhas: 'Gestión de Campañas',
       listas: 'Gestión de Listas',
+      audios: 'Gestión de Audios',
       trunks: 'Gestión de Trunks SIP',
       'caller-id': 'Configuración Caller ID',
       timing: 'Configuración Wait/Sleep Time',
@@ -429,6 +437,7 @@ function AuthenticatedApp() {
                   <GestionCampanhas onOpenCampaignControl={setCampaignControlId} />
                 )}
                 {activeTab === 'listas' && hasPermission('supervisor') && <UploadListas />}
+                {activeTab === 'audios' && hasPermission('supervisor') && <AudioManager />}
                 {activeTab === 'trunks' && hasPermission('admin') && <TrunkCountryManager />}
                 {activeTab === 'caller-id' && hasPermission('supervisor') && <CallerIdManager />}
                 {activeTab === 'timing' && hasPermission('supervisor') && <CallTimingConfig />}
@@ -439,7 +448,7 @@ function AuthenticatedApp() {
             )}
         
             {/* Access Denied Messages */}
-            {((activeTab === 'campanhas' || activeTab === 'listas' || activeTab === 'caller-id' || activeTab === 'timing') && !hasPermission('supervisor')) && (
+            {((activeTab === 'campanhas' || activeTab === 'listas' || activeTab === 'audios' || activeTab === 'caller-id' || activeTab === 'timing') && !hasPermission('supervisor')) && (
               <AccessDenied requiredLevel="Supervisor" />
             )}
             {((activeTab === 'blacklist' || activeTab === 'configuracion' || activeTab === 'trunks') && !hasPermission('admin')) && (

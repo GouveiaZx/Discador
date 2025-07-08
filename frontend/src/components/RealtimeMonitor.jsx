@@ -93,7 +93,7 @@ const RealtimeMonitor = () => {
   };
 
   const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString('pt-BR');
+    return new Date(timestamp).toLocaleTimeString('es-AR');
   };
 
   const getStatusColor = (status) => {

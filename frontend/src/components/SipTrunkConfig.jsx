@@ -90,33 +90,8 @@ const SipTrunkConfig = () => {
       setTrunks(response.data || []);
     } catch (error) {
       console.error('Erro ao carregar trunks:', error);
-      // Dados mock para desenvolvimento
-      setTrunks([
-        {
-          id: 1,
-          nome: 'trunk_brasil',
-          host: '136.243.32.61',
-          porta: 5060,
-          tipo: 'friend',
-          protocolo: 'UDP',
-          ativo: true,
-          status_conexao: 'online',
-          canais_em_uso: 3,
-          max_canais_simultaneos: 10
-        },
-        {
-          id: 2,
-          nome: 'trunk_colombia',
-          host: '136.243.32.62',
-          porta: 5060,
-          tipo: 'friend',
-          protocolo: 'UDP',
-          ativo: true,
-          status_conexao: 'offline',
-          canais_em_uso: 0,
-          max_canais_simultaneos: 15
-        }
-      ]);
+      // Sistema real - mostrar datos reales del backend
+      setTrunks([]);
     } finally {
       setLoading(false);
     }
@@ -128,18 +103,8 @@ const SipTrunkConfig = () => {
       setTrunkConfig(response || trunkConfig);
     } catch (error) {
       console.error('Erro ao carregar configuração SIP:', error);
-      // Configuração mock baseada no trunk selecionado
-      const trunk = trunks.find(t => t.id === trunkId);
-      if (trunk) {
-        setTrunkConfig(prev => ({
-          ...prev,
-          nome: trunk.nome,
-          host: trunk.host,
-          porta: trunk.porta,
-          tipo: trunk.tipo,
-          protocolo: trunk.protocolo
-        }));
-      }
+      // Mantener configuración por defecto en caso de error
+      console.warn('No se pudo cargar la configuración SIP del trunk');
     }
   };
 

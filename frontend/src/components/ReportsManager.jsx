@@ -177,7 +177,7 @@ const ReportsManager = () => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
+    return new Date(dateString).toLocaleDateString('es-AR', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',

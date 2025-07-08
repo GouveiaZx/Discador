@@ -40,7 +40,7 @@ const LlamadaDetalle = ({ llamadaId, isOpen, onClose }) => {
   // Formatar data para exibição
   const formatarData = (dateString) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleString('pt-BR');
+    return new Date(dateString).toLocaleString('es-AR');
   };
 
   // Calcular duração entre duas datas

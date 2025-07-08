@@ -21,7 +21,7 @@ const DateRangePicker = ({
   const formatDateDisplay = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
+    return date.toLocaleDateString('es-AR');
   };
 
   // Texto a exibir no botão

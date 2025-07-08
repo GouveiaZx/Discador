@@ -22,7 +22,7 @@ const DNCMultiLanguageManager = () => {
   const languages = [
     { code: 'es', name: 'Español', flag: '🇦🇷' },
     { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'pt', name: 'Português', flag: '🇧🇷' },
+    { code: 'pt', name: 'Português (Brasileiro)', flag: '🇧🇷' },
     { code: 'fr', name: 'Français', flag: '🇫🇷' },
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' }
   ];
@@ -58,23 +58,8 @@ const DNCMultiLanguageManager = () => {
       setMessages(response.data || []);
     } catch (error) {
       console.error('Error al cargar mensajes DNC:', error);
-      // Usar datos mock si la API no existe aún
-      const mockMessages = [];
-      Object.keys(templateMessages).forEach(lang => {
-        Object.keys(templateMessages[lang]).forEach(type => {
-          mockMessages.push({
-            id: `${lang}_${type}`,
-            language_code: lang,
-            language_name: languages.find(l => l.code === lang)?.name || lang,
-            message_type: type,
-            title: `${type.charAt(0).toUpperCase() + type.slice(1)} - ${languages.find(l => l.code === lang)?.name}`,
-            message: templateMessages[lang][type],
-            is_active: true,
-            created_at: new Date().toISOString()
-          });
-        });
-      });
-      setMessages(mockMessages);
+      // Sistema real - usar solo datos del backend
+      setMessages([]);
     } finally {
       setLoading(false);
     }

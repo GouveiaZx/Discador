@@ -72,22 +72,22 @@ const DashboardAvanzado = () => {
         if (monitoringResult.status === 'fulfilled' && monitoringResult.value && monitoringResult.value.monitoring) {
           const monitoring = monitoringResult.value.monitoring;
           calculatedStats.agentesOnline = monitoring.active_connections || 0;
-          calculatedStats.agentesDisponibles = Math.max(0, monitoring.active_connections - 5); // Mock de agentes disponibles
-          calculatedStats.agentesOcupados = Math.min(5, monitoring.active_connections); // Mock de agentes ocupados
+          calculatedStats.agentesDisponibles = monitoring.available_agents || 0;
+          calculatedStats.agentesOcupados = monitoring.busy_agents || 0;
         }
 
         if (llamadasProgresoResult.status === 'fulfilled' && llamadasProgresoResult.value && llamadasProgresoResult.value.calls) {
           calculatedStats.llamadasEnProgreso = llamadasProgresoResult.value.calls.length || 0;
           // Calcular algunas estadísticas adicionales basadas en las llamadas en progreso
           calculatedStats.llamadasCompletadas = Math.max(0, calculatedStats.llamadasHoy - calculatedStats.llamadasEnProgreso);
-          calculatedStats.llamadasPerdidas = Math.floor(calculatedStats.llamadasHoy * 0.15); // Mock estimado
+          calculatedStats.llamadasPerdidas = llamadasProgresoResult.value.lost_calls || 0;
         }
 
         if (globalStatsResult.status === 'fulfilled' && globalStatsResult.value && globalStatsResult.value.stats) {
           const gStats = globalStatsResult.value.stats;
           // Usar estadísticas globales si están disponibles
           calculatedStats.tasaConexion = gStats.success_rate || calculatedStats.tasaExito;
-          calculatedStats.promedioEspera = Math.floor(Math.random() * 30) + 10; // Mock temporal
+          calculatedStats.promedioEspera = gStats.average_wait_time || 0;
         }
 
         setStats(calculatedStats);
@@ -95,8 +95,8 @@ const DashboardAvanzado = () => {
 
     } catch (error) {
       console.error('Error cargando dashboard avanzado:', error);
-        // Sistema en modo real - sin datos mockados
-        // Los datos vacíos serán mostrados en la interfaz
+        // Sistema en modo real - mostrar datos reales del backend
+        // En caso de error, mantenemos los stats en 0
     } finally {
       setLoading(false);
     }

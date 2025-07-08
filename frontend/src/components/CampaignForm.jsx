@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { makeApiRequest } from '../config/api';
 
 function CampaignForm({ campaign, onSaved, onCancel }) {
-  const [form, setForm] = useState({
-    nombre: '',
-    descricao: '',
-    trunk_id: '',
-    cps: 10,
+    const [form, setForm] = useState({
+    nombre: '', 
+    descricao: '', 
+    trunk_id: '', 
+    cps: 10, 
     sleep_time: 1,
     wait_time: '0.5',
     dnc_list_id: '',
-    language: 'pt-BR',
+    language: 'es-AR',
     shuffle_contacts: true,
     allow_multiple_calls_same_number: false,
     press_2_audio_id: '',
@@ -117,7 +117,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
           sleep_time: 1, 
           wait_time: '0.5', 
           dnc_list_id: '', 
-          language: 'pt-BR', 
+          language: 'es-AR', 
           shuffle_contacts: true, 
           allow_multiple_calls_same_number: false, 
           press_2_audio_id: '', 
@@ -240,7 +240,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="pt-BR">🇧🇷 Português (Brasil)</option>
+                <option value="pt-BR">🇧🇷 Português (Brasileiro)</option>
                 <option value="es-ES">🇪🇸 Espanhol</option>
                 <option value="en-US">🇺🇸 Inglês</option>
               </select>

@@ -31,16 +31,6 @@ const makeApiRequest = async (endpoint, options = {}) => {
 };
 
 function ConfiguracionAvanzada() {
-  const [provedores, setProvedores] = useState([]);
-  const [nuevoProvedor, setNuevoProvedor] = useState({
-    nombre: '',
-    servidor_sip: '',
-    puerto: 5060,
-    usuario_sip: '',
-    contraseña_sip: '',
-    estado: 'activo'
-  });
-
   const [clis, setClis] = useState([]);
   const [nuevoCLI, setNuevoCLI] = useState({
     numero: '',
@@ -60,7 +50,6 @@ function ConfiguracionAvanzada() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    cargarProvedores();
     cargarCLIs();
     cargarContextos();
   }, []);
@@ -68,60 +57,6 @@ function ConfiguracionAvanzada() {
   const showMessage = (type, text) => {
     setMessage({ type, text });
     setTimeout(() => setMessage(null), 5000);
-  };
-
-  const cargarProvedores = async () => {
-    try {
-      const response = await makeApiRequest('/multi-sip/provedores');
-      if (response && response.provedores) {
-        setProvedores(response.provedores);
-      }
-    } catch (error) {
-      showMessage('error', 'Error al cargar proveedores: ' + error.message);
-    }
-  };
-
-  const crearProvedor = async () => {
-    if (!nuevoProvedor.nombre || !nuevoProvedor.servidor_sip) {
-      showMessage('error', 'Por favor, complete todos los campos obligatorios');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await makeApiRequest('/multi-sip/provedores', {
-        method: 'POST',
-        body: JSON.stringify(nuevoProvedor)
-      });
-
-      if (response && response.status === 'success') {
-        showMessage('success', '¡Proveedor creado exitosamente!');
-        cargarProvedores();
-        setNuevoProvedor({ 
-          nombre: '', 
-          servidor_sip: '', 
-          puerto: 5060, 
-          usuario_sip: '', 
-          contraseña_sip: '', 
-          estado: 'activo' 
-        });
-      }
-    } catch (error) {
-      showMessage('error', 'Error al crear proveedor: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const cargarCLIs = async () => {
-    try {
-      const response = await makeApiRequest('/code2base/clis');
-      if (response && response.clis) {
-        setClis(response.clis);
-      }
-    } catch (error) {
-      showMessage('error', 'Error al cargar CLIs: ' + error.message);
-    }
   };
 
   const crearCLI = async () => {
@@ -146,6 +81,17 @@ function ConfiguracionAvanzada() {
       showMessage('error', 'Error al crear CLI: ' + error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const cargarCLIs = async () => {
+    try {
+      const response = await makeApiRequest('/code2base/clis');
+      if (response && response.clis) {
+        setClis(response.clis);
+      }
+    } catch (error) {
+      showMessage('error', 'Error al cargar CLIs: ' + error.message);
     }
   };
 
@@ -224,7 +170,7 @@ function ConfiguracionAvanzada() {
         {/* Header */}
         <div className="text-center">
           <h2 className="text-3xl font-bold text-white mb-4">⚙️ Configuración Avanzada del Sistema</h2>
-          <p className="text-gray-400">Gestión de proveedores SIP, CLIs y sistema de audio inteligente</p>
+          <p className="text-gray-400">Gestión de CLIs y sistema de audio inteligente</p>
         </div>
 
         {/* Mensajes de estado */}
@@ -243,119 +189,28 @@ function ConfiguracionAvanzada() {
           </div>
         )}
 
-        {/* Grid de configuraciones principales */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          
-          {/* Gestión Multi-SIP */}
-          <div className="bg-gray-800/40 backdrop-blur-xl rounded-xl border border-gray-700/50 p-6">
-            <div className="flex items-center mb-6">
-              <span className="text-2xl mr-3">📡</span>
-              <h3 className="text-xl font-semibold text-white">Gestión Multi-SIP</h3>
-            </div>
-            
-            {/* Formulario de Proveedor */}
-            <div className="space-y-4 mb-6">
-              <input
-                type="text"
-                placeholder="Nombre del Proveedor *"
-                value={nuevoProvedor.nombre}
-                onChange={(e) => setNuevoProvedor({...nuevoProvedor, nombre: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-gray-700/70 transition-all"
-              />
-              
-              <input
-                type="text"
-                placeholder="Servidor SIP *"
-                value={nuevoProvedor.servidor_sip}
-                onChange={(e) => setNuevoProvedor({...nuevoProvedor, servidor_sip: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-gray-700/70 transition-all"
-              />
-              
-              <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="number"
-                  placeholder="Puerto"
-                  value={nuevoProvedor.puerto}
-                  onChange={(e) => setNuevoProvedor({...nuevoProvedor, puerto: parseInt(e.target.value) || 5060})}
-                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-gray-700/70 transition-all"
-                />
-                
-                <select
-                  value={nuevoProvedor.estado}
-                  onChange={(e) => setNuevoProvedor({...nuevoProvedor, estado: e.target.value})}
-                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:border-blue-500 focus:bg-gray-700/70 transition-all"
-                >
-                  <option value="activo">Activo</option>
-                  <option value="inactivo">Inactivo</option>
-                </select>
-              </div>
-              
-              <input
-                type="text"
-                placeholder="Usuario SIP"
-                value={nuevoProvedor.usuario_sip}
-                onChange={(e) => setNuevoProvedor({...nuevoProvedor, usuario_sip: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-gray-700/70 transition-all"
-              />
-              
-              <input
-                type="password"
-                placeholder="Contraseña SIP"
-                value={nuevoProvedor.contraseña_sip}
-                onChange={(e) => setNuevoProvedor({...nuevoProvedor, contraseña_sip: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:bg-gray-700/70 transition-all"
-              />
-              
-              <button
-                onClick={crearProvedor}
-                disabled={loading}
-                className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Creando...
-                  </>
-                ) : (
-                  '+ Crear Proveedor'
-                )}
-              </button>
-            </div>
-
-            {/* Lista de Proveedores */}
-            <div className="space-y-3">
-              <h4 className="text-white font-medium text-sm uppercase tracking-wide">Proveedores Configurados</h4>
-              {provedores.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
-                  <span className="text-4xl block mb-2">🌐</span>
-                  <p>No hay proveedores configurados</p>
-                  <p className="text-sm">Agregue el primer proveedor SIP</p>
-                </div>
-              ) : (
-                provedores.map((proveedor, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-700/30 p-4 rounded-lg border border-gray-600/30">
-                    <div className="flex-1">
-                      <div className="flex items-center">
-                        <span className="text-white font-medium">{proveedor.nombre}</span>
-                        <span className="text-gray-400 text-sm ml-2">({proveedor.servidor_sip}:{proveedor.puerto})</span>
-                      </div>
-                      {proveedor.usuario_sip && (
-                        <p className="text-gray-400 text-sm mt-1">Usuario: {proveedor.usuario_sip}</p>
-                      )}
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      proveedor.estado === 'activo' 
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                    }`}>
-                      {proveedor.estado === 'activo' ? '● Activo' : '○ Inactivo'}
-                    </span>
-                  </div>
-                ))
-              )}
+        {/* Nota sobre Gestión de Trunks */}
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6">
+          <div className="flex items-center mb-4">
+            <span className="text-2xl mr-3">🌐</span>
+            <h3 className="text-xl font-semibold text-blue-100">Gestión de Trunks SIP</h3>
+          </div>
+          <p className="text-blue-200/80 mb-4">
+            Para configurar trunks SIP, proveedores y canales, utilice la sección dedicada <strong>"Gestión Trunks"</strong> en el menú principal.
+          </p>
+          <div className="bg-blue-600/20 border border-blue-500/40 rounded-lg p-4">
+            <div className="flex items-center">
+              <span className="text-blue-300 mr-2">💡</span>
+              <span className="text-blue-200 text-sm">
+                La gestión completa de trunks, incluyendo configuración por país y códigos DV, está disponible en la sección especializada.
+              </span>
             </div>
           </div>
+        </div>
 
+        {/* Grid de configuraciones principales */}
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+          
           {/* Gestión de CLIs */}
           <div className="bg-gray-800/40 backdrop-blur-xl rounded-xl border border-gray-700/50 p-6">
             <div className="flex items-center mb-6">
@@ -372,19 +227,6 @@ function ConfiguracionAvanzada() {
                 onChange={(e) => setNuevoCLI({...nuevoCLI, numero: e.target.value})}
                 className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-green-500 focus:bg-gray-700/70 transition-all"
               />
-              
-              <select
-                value={nuevoCLI.proveedor_id}
-                onChange={(e) => setNuevoCLI({...nuevoCLI, proveedor_id: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:border-green-500 focus:bg-gray-700/70 transition-all"
-              >
-                <option value="">Seleccionar Proveedor (opcional)</option>
-                {provedores.map((proveedor, index) => (
-                  <option key={index} value={proveedor.id || index}>
-                    {proveedor.nombre}
-                  </option>
-                ))}
-              </select>
               
               <div className="flex items-center space-x-2">
                 <input
@@ -610,10 +452,10 @@ function ConfiguracionAvanzada() {
             <div>
               <h4 className="text-blue-100 font-medium mb-2">Información sobre la Configuración</h4>
               <ul className="text-blue-200/80 text-sm space-y-1">
-                <li>• Los proveedores SIP permiten realizar llamadas a través de diferentes operadores</li>
                 <li>• Los CLIs definen qué números aparecerán como identificador de llamada</li>
                 <li>• Los contextos de audio gestionan cómo se reproducen los mensajes durante las llamadas</li>
-                <li>• La gestión de Trunks SIP está disponible en la sección dedicada "Gestión Trunks"</li>
+                <li>• La gestión completa de Trunks SIP está disponible en la sección dedicada "Gestión Trunks"</li>
+                <li>• Use el setup rápido para configurar automáticamente el sistema de audio básico</li>
               </ul>
             </div>
           </div>

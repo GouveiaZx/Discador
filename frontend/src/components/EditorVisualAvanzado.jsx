@@ -291,7 +291,7 @@ const EditorVisualAvanzado = () => {
                   <div className="font-medium">
                     {idioma === 'es' ? '🇪🇸 Español' : 
                      idioma === 'en' ? '🇺🇸 English' : 
-                     idioma === 'pt' ? '🇧🇷 Português' : idioma}
+                     idioma === 'pt' ? '🇧🇷 Português (Brasileiro)' : idioma}
                   </div>
                   <div className="flex space-x-1">
                     <button className="p-1 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded">
@@ -334,7 +334,7 @@ const EditorVisualAvanzado = () => {
               <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800">
                 <option value="es">Español</option>
                 <option value="en">English</option>
-                <option value="pt">Português</option>
+                <option value="pt">Português (Brasileiro)</option>
               </select>
             </div>
             <div className="mb-4">

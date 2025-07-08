@@ -350,7 +350,7 @@ const DashboardProfessional = () => {
           <div className="flex items-center space-x-4">
             <div className="text-xs text-secondary-400">
               <div>Última atualização:</div>
-              <div className="font-mono">{lastUpdate.toLocaleTimeString('pt-BR')}</div>
+                              <div className="font-mono">{lastUpdate.toLocaleTimeString('es-AR')}</div>
             </div>
             <button
               onClick={loadDashboardData}
