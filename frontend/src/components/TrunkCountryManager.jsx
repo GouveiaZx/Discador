@@ -26,23 +26,23 @@ const TrunkCountryManager = () => {
   });
 
   const countryOptions = [
+    { code: '54', name: '🇦🇷 Argentina', flag: '🇦🇷' },
     { code: '55', name: '🇧🇷 Brasil', flag: '🇧🇷' },
-    { code: '1', name: '🇺🇸 Estados Unidos', flag: '🇺🇸' },
     { code: '57', name: '🇨🇴 Colombia', flag: '🇨🇴' },
     { code: '52', name: '🇲🇽 México', flag: '🇲🇽' },
-    { code: '54', name: '🇦🇷 Argentina', flag: '🇦🇷' },
-    { code: '51', name: '🇵🇪 Peru', flag: '🇵🇪' },
+    { code: '1', name: '🇺🇸 Estados Unidos', flag: '🇺🇸' },
+    { code: '51', name: '🇵🇪 Perú', flag: '🇵🇪' },
     { code: '56', name: '🇨🇱 Chile', flag: '🇨🇱' },
     { code: '34', name: '🇪🇸 España', flag: '🇪🇸' }
   ];
 
   const codecOptions = [
-    { value: 'g729', label: 'G.729 (baixa largura de banda)' },
-    { value: 'g722', label: 'G.722 (alta qualidade)' },
-    { value: 'ulaw', label: 'μ-law (padrão NA)' },
-    { value: 'alaw', label: 'A-law (padrão EU)' },
-    { value: 'gsm', label: 'GSM (compatibilidade)' },
-    { value: 'ilbc', label: 'iLBC (baixa largura)' },
+    { value: 'g729', label: 'G.729 (bajo ancho de banda)' },
+    { value: 'g722', label: 'G.722 (alta calidad)' },
+    { value: 'ulaw', label: 'μ-law (estándar NA)' },
+    { value: 'alaw', label: 'A-law (estándar EU)' },
+    { value: 'gsm', label: 'GSM (compatibilidad)' },
+    { value: 'ilbc', label: 'iLBC (bajo ancho)' },
     { value: 'opus', label: 'Opus (moderno)' }
   ];
 
@@ -53,8 +53,8 @@ const TrunkCountryManager = () => {
       const response = await makeApiRequest('trunks', 'GET');
       setTrunks(response.trunks || []);
     } catch (error) {
-      console.error('Erro ao buscar trunks:', error);
-      setError('Erro ao carregar trunks do servidor');
+      console.error('Error al buscar trunks:', error);
+      setError('Error al cargar trunks del servidor');
       setTrunks([]);
     } finally {
       setLoading(false);
@@ -70,9 +70,9 @@ const TrunkCountryManager = () => {
     try {
       setError(null);
       
-      // Validações
+      // Validaciones
       if (!formData.name || !formData.host || !formData.country_code) {
-        setError('Por favor, preencha todos os campos obrigatórios');
+        setError('Por favor, complete todos los campos obligatorios');
         return;
       }
 
@@ -97,8 +97,8 @@ const TrunkCountryManager = () => {
       setShowModal(false);
       resetForm();
     } catch (error) {
-      console.error('Erro ao salvar trunk:', error);
-      setError('Erro ao salvar trunk. Verifique os dados e tente novamente.');
+      console.error('Error al guardar trunk:', error);
+      setError('Error al guardar trunk. Verifique los datos e intente nuevamente.');
     }
   };
 
@@ -124,14 +124,14 @@ const TrunkCountryManager = () => {
   };
 
   const handleDelete = async (trunkId) => {
-    if (!window.confirm('Tem certeza que deseja deletar este trunk?')) return;
+    if (!window.confirm('¿Está seguro que desea eliminar este trunk?')) return;
     
     try {
       await makeApiRequest(`trunks/${trunkId}`, 'DELETE');
       await fetchTrunks();
     } catch (error) {
-      console.error('Erro ao deletar trunk:', error);
-      setError('Erro ao deletar trunk');
+      console.error('Error al eliminar trunk:', error);
+      setError('Error al eliminar trunk');
     }
   };
 
@@ -193,9 +193,9 @@ const TrunkCountryManager = () => {
           <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold">🌐</span>
           </div>
-          <h1 className="text-2xl font-bold text-white">Gerenciamento de Trunks por País</h1>
+          <h1 className="text-2xl font-bold text-white">Gestión de Trunks por País</h1>
         </div>
-        <p className="text-gray-400">Configure trunks SIP com códigos de país e DV</p>
+        <p className="text-gray-400">Configure trunks SIP con códigos de país y DV</p>
       </div>
 
       {/* Error Display */}
@@ -203,7 +203,7 @@ const TrunkCountryManager = () => {
         <div className="mb-6 bg-red-900/20 border border-red-500/50 rounded-lg p-4 flex items-center gap-3">
           <span className="text-red-400">⚠️</span>
           <div>
-            <div className="text-red-400 font-medium">Erro</div>
+            <div className="text-red-400 font-medium">Error</div>
             <div className="text-red-300 text-sm">{error}</div>
           </div>
         </div>
@@ -214,20 +214,20 @@ const TrunkCountryManager = () => {
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <span className="ml-3 text-gray-400">Carregando trunks...</span>
+            <span className="ml-3 text-gray-400">Cargando trunks...</span>
           </div>
         ) : trunks.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">🌐</span>
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">Nenhum trunk configurado</h3>
-            <p className="text-gray-400 mb-6">Comece criando seu primeiro trunk por país</p>
+            <h3 className="text-xl font-semibold text-white mb-2">Ningún trunk configurado</h3>
+            <p className="text-gray-400 mb-6">Comience creando su primer trunk por país</p>
             <button
               onClick={() => setShowModal(true)}
               className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-colors"
             >
-              + Novo Trunk
+              + Nuevo Trunk
             </button>
           </div>
         ) : (
@@ -241,7 +241,7 @@ const TrunkCountryManager = () => {
                 onClick={() => setShowModal(true)}
                 className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium transition-colors"
               >
-                + Novo Trunk
+                + Nuevo Trunk
               </button>
             </div>
 
@@ -256,10 +256,10 @@ const TrunkCountryManager = () => {
                         <div>
                           <h4 className="font-medium text-white">{trunk.name}</h4>
                           <div className="text-sm text-gray-400">
-                            {trunk.host} • +{trunk.country_code} • {trunk.max_channels} canais
+                            {trunk.host} • +{trunk.country_code} • {trunk.max_channels} canales
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
-                            {trunk.dv_codes?.length > 0 ? `Códigos DV: ${trunk.dv_codes.join(', ')}` : 'Sem códigos DV'}
+                            {trunk.dv_codes?.length > 0 ? `Códigos DV: ${trunk.dv_codes.join(', ')}` : 'Sin códigos DV'}
                           </div>
                         </div>
                       </div>
@@ -269,7 +269,7 @@ const TrunkCountryManager = () => {
                             ? 'bg-green-900/30 text-green-400 border border-green-700/50' 
                             : 'bg-gray-900/30 text-gray-400 border border-gray-700/50'
                         }`}>
-                          {trunk.is_active ? 'Ativo' : 'Inativo'}
+                          {trunk.is_active ? 'Activo' : 'Inactivo'}
                         </span>
                         <button
                           onClick={() => handleEdit(trunk)}
@@ -281,7 +281,7 @@ const TrunkCountryManager = () => {
                         <button
                           onClick={() => handleDelete(trunk.id)}
                           className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-900/20 transition-colors"
-                          title="Deletar"
+                          title="Eliminar"
                         >
                           🗑️
                         </button>
@@ -302,7 +302,7 @@ const TrunkCountryManager = () => {
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-700">
               <h2 className="text-xl font-semibold text-white">
-                {editingTrunk ? 'Editar Trunk' : 'Novo Trunk'}
+                {editingTrunk ? 'Editar Trunk' : 'Nuevo Trunk'}
               </h2>
               <button
                 onClick={() => {
@@ -330,7 +330,7 @@ const TrunkCountryManager = () => {
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   >
-                    <option value="">Selecione um país</option>
+                    <option value="">Seleccione un país</option>
                     {countryOptions.map(country => (
                       <option key={country.code} value={country.code}>
                         {country.name}
@@ -342,14 +342,14 @@ const TrunkCountryManager = () => {
                 {/* Nome do Trunk */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Nome do Trunk <span className="text-red-400">*</span>
+                    Nombre del Trunk <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))}
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="ex: trunk_brasil"
+                    placeholder="ej: trunk_argentina"
                     required
                   />
                 </div>
@@ -364,14 +364,14 @@ const TrunkCountryManager = () => {
                     value={formData.host}
                     onChange={(e) => setFormData(prev => ({...prev, host: e.target.value}))}
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="ex: 192.168.1.100"
+                    placeholder="ej: 192.168.1.100"
                     required
                   />
                 </div>
 
                 {/* Máx. Canais */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Máx. Canais</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Máx. Canales</label>
                   <input
                     type="number"
                     value={formData.max_channels}
@@ -407,14 +407,14 @@ const TrunkCountryManager = () => {
                       id="new-dv-code"
                       type="text"
                       className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="ex: 11, 21, 31"
+                      placeholder="ej: 11, 21, 31"
                     />
                     <button
                       type="button"
                       onClick={handleAddDvCode}
                       className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-white transition-colors"
                     >
-                      + Adicionar
+                      + Agregar
                     </button>
                   </div>
                   {formData.dv_codes.length > 0 && (
@@ -441,7 +441,7 @@ const TrunkCountryManager = () => {
 
               {/* Codecs Permitidos */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-3">Codecs Permitidos</label>
+                <label className="block text-sm font-medium text-gray-300 mb-3">Códecs Permitidos</label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {codecOptions.map(codec => (
                     <label key={codec.value} className="flex items-center gap-2 text-sm">
@@ -473,7 +473,7 @@ const TrunkCountryManager = () => {
                   type="submit"
                   className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 >
-                  {editingTrunk ? 'Atualizar' : 'Criar'} Trunk
+                  {editingTrunk ? 'Actualizar' : 'Crear'} Trunk
                 </button>
               </div>
             </form>

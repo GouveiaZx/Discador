@@ -24,8 +24,18 @@ export const API_TIMEOUT = 30000; // 30 segundos
 
 // Função helper para construir URLs corretas
 export const buildApiUrl = (endpoint) => {
-  // Garantir que endpoint começa com /api/v1
-  const cleanEndpoint = endpoint.startsWith('/api/v1') ? endpoint : `/api/v1${endpoint}`;
+  // Garantir que endpoint começa com /api/v1/ (com barra final)
+  let cleanEndpoint;
+  if (endpoint.startsWith('/api/v1/')) {
+    cleanEndpoint = endpoint;
+  } else if (endpoint.startsWith('api/v1/')) {
+    cleanEndpoint = `/${endpoint}`;
+  } else if (endpoint.startsWith('/')) {
+    cleanEndpoint = `/api/v1${endpoint}`;
+  } else {
+    cleanEndpoint = `/api/v1/${endpoint}`;
+  }
+  
   const finalUrl = `${API_BASE_URL}${cleanEndpoint}`;
   console.log('🔗 Building API URL:', { endpoint, cleanEndpoint, finalUrl });
   return finalUrl;
