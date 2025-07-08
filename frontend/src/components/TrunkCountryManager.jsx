@@ -70,8 +70,12 @@ const TrunkCountryManager = () => {
     try {
       setError(null);
       
+      console.log('🔵 [FRONTEND] FormData antes de validação:', formData);
+      
       // Validaciones
       if (!formData.name || !formData.host || !formData.country_code) {
+        const errorMsg = `Campos faltando - name: ${formData.name}, host: ${formData.host}, country_code: ${formData.country_code}`;
+        console.log('❌ [FRONTEND] Validação falhou:', errorMsg);
         setError('Por favor, complete todos los campos obligatorios');
         return;
       }
@@ -87,18 +91,23 @@ const TrunkCountryManager = () => {
         }
       };
 
+      console.log('🔵 [FRONTEND] Dados a serem enviados:', submitData);
+
       if (editingTrunk) {
+        console.log('🔵 [FRONTEND] Editando trunk ID:', editingTrunk.id);
         await makeApiRequest(`trunks/${editingTrunk.id}`, 'PUT', submitData);
       } else {
+        console.log('🔵 [FRONTEND] Criando novo trunk');
         await makeApiRequest('trunks', 'POST', submitData);
       }
 
+      console.log('✅ [FRONTEND] Trunk salvo com sucesso');
       await fetchTrunks();
       setShowModal(false);
       resetForm();
     } catch (error) {
-      console.error('Error al guardar trunk:', error);
-      setError('Error al guardar trunk. Verifique los datos e intente nuevamente.');
+      console.error('❌ [FRONTEND] Error al guardar trunk:', error);
+      setError(`Error al guardar trunk: ${error.message || 'Erro desconhecido'}`);
     }
   };
 
