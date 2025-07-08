@@ -71,7 +71,7 @@ function Login() {
     },
     {
       username: 'supervisor',
-      password: 'super123',
+      password: 'supervisor123',
       role: 'Supervisor',
       description: 'Gestión de campañas y listas',
       badge: 'SUPERVISOR',
@@ -80,7 +80,7 @@ function Login() {
     },
     {
       username: 'operador',
-      password: 'oper123',
+      password: 'operador123',
       role: 'Operador',
       description: 'Monitoreo y operación básica',
       badge: 'OPERADOR',
@@ -90,39 +90,39 @@ function Login() {
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 sm:p-6 lg:p-8">
       {/* Background animado */}
       <div className="absolute inset-0 bg-gradient-to-br from-secondary-900 via-dark-100 to-primary-950"></div>
       
       {/* Elementos decorativos animados */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-500 rounded-full opacity-10 animate-pulse-slow blur-3xl"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent-500 rounded-full opacity-10 animate-pulse-slow blur-3xl" style={{animationDelay: '1s'}}></div>
-      <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-warning-500 rounded-full opacity-5 animate-pulse-slow blur-3xl" style={{animationDelay: '2s'}}></div>
+      <div className="absolute top-1/4 left-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-primary-500 rounded-full opacity-10 animate-pulse-slow blur-3xl"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-48 h-48 sm:w-80 sm:h-80 bg-accent-500 rounded-full opacity-10 animate-pulse-slow blur-3xl" style={{animationDelay: '1s'}}></div>
+      <div className="absolute top-1/2 left-1/2 w-32 h-32 sm:w-64 sm:h-64 bg-warning-500 rounded-full opacity-5 animate-pulse-slow blur-3xl" style={{animationDelay: '2s'}}></div>
       
-      <div className={`relative z-10 w-full max-w-md transition-all duration-1000 ${mounted ? 'animate-fade-in-up' : 'opacity-0'}`}>
+      <div className={`relative z-10 w-full max-w-md mx-auto transition-all duration-1000 ${mounted ? 'animate-fade-in-up' : 'opacity-0'}`}>
         
         {/* Header com logo animado */}
-        <div className="text-center mb-8">
-          <div className="relative mx-auto w-20 h-20 mb-6">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-6">
             <div className="absolute inset-0 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl shadow-glow animate-glow"></div>
             <div className="relative w-full h-full bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
             </svg>
             </div>
           </div>
           
-          <h1 className="text-4xl font-bold text-gradient-primary mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gradient-primary mb-2">
             Discador Pro
           </h1>
-          <p className="text-secondary-400 text-sm">
+          <p className="text-secondary-400 text-sm px-4">
             Sistema de Discado Preditivo Avanzado
           </p>
         </div>
 
         {/* Formulário de Login com Glass Morphism */}
-        <div className="card-glass p-8 mb-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="card-glass p-6 sm:p-8 mb-4 sm:mb-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             
             {/* Campo Usuario */}
             <div className="space-y-2">
@@ -136,11 +136,11 @@ function Login() {
                   type="text"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className="input-modern pl-16 pr-4"
+                  className="input-modern pl-12 pr-4 h-12"
                   placeholder="Ingresá tu usuario"
                   disabled={loading}
                 />
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg className="w-5 h-5 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                   </svg>
@@ -160,11 +160,11 @@ function Login() {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="input-modern pl-16 pr-16"
+                  className="input-modern pl-12 pr-12 h-12"
                   placeholder="Ingresá tu contraseña"
                   disabled={loading}
                 />
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg className="w-5 h-5 text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                   </svg>
@@ -172,7 +172,7 @@ function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-secondary-400 hover:text-white transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-secondary-400 hover:text-white transition-colors"
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,17 +204,17 @@ function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full relative group"
+              className="btn-primary w-full relative group h-12 sm:h-auto"
             >
               {loading ? (
-                <div className="flex items-center justify-center space-x-3">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Ingresando...</span>
+                <div className="flex items-center justify-center space-x-2 sm:space-x-3">
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span className="text-sm sm:text-base">Ingresando...</span>
                 </div>
               ) : (
                 <div className="flex items-center justify-center space-x-2">
-                  <span>Ingresar al Sistema</span>
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span className="text-sm sm:text-base">Ingresar al Sistema</span>
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                   </svg>
                 </div>
@@ -251,7 +251,7 @@ function Login() {
                   key={account.username}
                   onClick={() => quickLogin(account.username, account.password)}
                     disabled={loading}
-                  className="w-full p-4 rounded-xl bg-secondary-800/40 hover:bg-secondary-700/60 
+                  className="w-full p-3 sm:p-4 rounded-xl bg-secondary-800/40 hover:bg-secondary-700/60 
                            disabled:opacity-50 disabled:cursor-not-allowed
                            border border-transparent hover:border-primary-500/30
                            transition-all duration-200 group text-left
@@ -259,19 +259,23 @@ function Login() {
                   style={{ animationDelay: `${index * 100}ms` }}
                   >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="text-2xl">{account.icon}</div>
-                      <div>
-                        <div className="text-sm font-medium text-white group-hover:text-primary-300 transition-colors">
+                    <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                      <div className="text-xl sm:text-2xl flex-shrink-0">{account.icon}</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs sm:text-sm font-medium text-white group-hover:text-primary-300 transition-colors truncate">
                           {account.username} / {account.password}
                       </div>
-                        <div className="text-xs text-secondary-400 mt-1">
+                        <div className="text-xs text-secondary-400 mt-1 hidden sm:block">
                           {account.role} • {account.description}
+                    </div>
+                        <div className="text-xs text-secondary-400 mt-1 sm:hidden">
+                          {account.role}
                     </div>
                       </div>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${account.badgeColor}`}>
-                      {account.badge}
+                    <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${account.badgeColor}`}>
+                      <span className="hidden sm:inline">{account.badge}</span>
+                      <span className="sm:hidden">{account.badge.slice(0, 3)}</span>
                     </span>
                     </div>
                   </button>
