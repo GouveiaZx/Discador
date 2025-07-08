@@ -20,29 +20,29 @@ const DNCMultiLanguageManager = () => {
   });
 
   const languages = [
+    { code: 'es', name: 'Español', flag: '🇦🇷' },
     { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'es', name: 'Español', flag: '🇪🇸' },
     { code: 'pt', name: 'Português', flag: '🇧🇷' },
     { code: 'fr', name: 'Français', flag: '🇫🇷' },
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' }
   ];
 
   const messageTypes = [
-    { value: 'opt_out', label: 'Opt-Out (Pressione 2)', icon: '🚫' },
-    { value: 'confirmation', label: 'Confirmação', icon: '✅' },
-    { value: 'error', label: 'Erro', icon: '❌' }
+    { value: 'opt_out', label: 'Opt-Out (Presione 2)', icon: '🚫' },
+    { value: 'confirmation', label: 'Confirmación', icon: '✅' },
+    { value: 'error', label: 'Error', icon: '❌' }
   ];
 
   const templateMessages = {
-    en: {
-      opt_out: 'Thank you for your call. To remove your number from our calling list, please press 2 now. Your number will be removed within 24 hours. Thank you.',
-      confirmation: 'Your number has been successfully removed from our calling list. You will not receive any more calls from us. Thank you.',
-      error: 'We apologize, but there was an error processing your request. Please try again or contact our support team.'
-    },
     es: {
       opt_out: 'Gracias por su llamada. Para remover su número de nuestra lista de llamadas, presione 2 ahora. Su número será removido en 24 horas. Gracias.',
       confirmation: 'Su número ha sido removido exitosamente de nuestra lista de llamadas. No recibirá más llamadas de nosotros. Gracias.',
       error: 'Disculpe, pero hubo un error procesando su solicitud. Por favor intente nuevamente o contacte nuestro equipo de soporte.'
+    },
+    en: {
+      opt_out: 'Thank you for your call. To remove your number from our calling list, please press 2 now. Your number will be removed within 24 hours. Thank you.',
+      confirmation: 'Your number has been successfully removed from our calling list. You will not receive any more calls from us. Thank you.',
+      error: 'We apologize, but there was an error processing your request. Please try again or contact our support team.'
     },
     pt: {
       opt_out: 'Obrigado pela sua ligação. Para remover seu número da nossa lista de chamadas, pressione 2 agora. Seu número será removido em 24 horas. Obrigado.',
@@ -57,8 +57,8 @@ const DNCMultiLanguageManager = () => {
       const response = await makeApiRequest('/dnc/messages');
       setMessages(response.data || []);
     } catch (error) {
-      console.error('Erro ao carregar mensagens DNC:', error);
-      // Usar dados mock se a API não existir
+      console.error('Error al cargar mensajes DNC:', error);
+      // Usar datos mock si la API no existe aún
       const mockMessages = [];
       Object.keys(templateMessages).forEach(lang => {
         Object.keys(templateMessages[lang]).forEach(type => {
@@ -94,14 +94,14 @@ const DNCMultiLanguageManager = () => {
       };
 
       if (editingMessage) {
-        // Simular atualização
+        // Simular actualización
         setMessages(prev => prev.map(msg => 
           msg.id === editingMessage.id 
             ? { ...msg, ...messageData, updated_at: new Date().toISOString() }
             : msg
         ));
       } else {
-        // Simular criação
+        // Simular creación
         const newMessage = {
           id: Date.now().toString(),
           ...messageData,
@@ -115,8 +115,8 @@ const DNCMultiLanguageManager = () => {
       setEditingMessage(null);
       resetForm();
     } catch (error) {
-      console.error('Erro ao salvar mensagem:', error);
-      alert('Erro ao salvar mensagem. Tente novamente.');
+      console.error('Error al guardar mensaje:', error);
+      alert('Error al guardar mensaje. Intente nuevamente.');
     }
   };
 
@@ -135,7 +135,7 @@ const DNCMultiLanguageManager = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir esta mensagem?')) {
+    if (window.confirm('¿Está seguro que desea eliminar este mensaje?')) {
       setMessages(prev => prev.filter(msg => msg.id !== id));
     }
   };
@@ -184,41 +184,39 @@ const DNCMultiLanguageManager = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Carregando mensagens DNC...</span>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <span className="ml-2 text-gray-400">Cargando mensajes DNC...</span>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      {/* Cabeçalho */}
+    <div className="bg-gray-800/40 backdrop-blur-xl rounded-xl border border-gray-700/50 p-6">
+      {/* Cabecera */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">🌍 Mensagens DNC Multi-idioma</h2>
-          <p className="text-gray-600 mt-1">Configure mensagens de opt-out em diferentes idiomas</p>
+          <h2 className="text-2xl font-bold text-white">🌍 Mensajes DNC Multi-idioma</h2>
+          <p className="text-gray-400 mt-1">Configure mensajes de opt-out en diferentes idiomas</p>
         </div>
         <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center transition-colors"
+          onClick={() => setShowForm(!showForm)}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center"
         >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Nova Mensagem
+          <span className="mr-2">{showForm ? '❌' : '+'}</span>
+          {showForm ? 'Cancelar' : 'Nuevo Mensaje'}
         </button>
       </div>
 
       {/* Filtros */}
-      <div className="flex space-x-4 mb-6">
-        <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filtrar por Idioma</label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+          <label className="block text-sm text-gray-400 mb-2">Filtrar por Idioma</label>
           <select
             value={selectedLanguage}
             onChange={(e) => setSelectedLanguage(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:border-blue-500"
           >
-            <option value="all">Todos os idiomas</option>
+            <option value="all">Todos los idiomas</option>
             {languages.map(lang => (
               <option key={lang.code} value={lang.code}>
                 {lang.flag} {lang.name}
@@ -226,14 +224,15 @@ const DNCMultiLanguageManager = () => {
             ))}
           </select>
         </div>
-        <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filtrar por Tipo</label>
+
+        <div>
+          <label className="block text-sm text-gray-400 mb-2">Filtrar por Tipo</label>
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:border-blue-500"
           >
-            <option value="all">Todos os tipos</option>
+            <option value="all">Todos los tipos</option>
             {messageTypes.map(type => (
               <option key={type.value} value={type.value}>
                 {type.icon} {type.label}
@@ -243,202 +242,210 @@ const DNCMultiLanguageManager = () => {
         </div>
       </div>
 
-      {/* Formulário Modal */}
+      {/* Formulario */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-90vh overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">
-              {editingMessage ? 'Editar Mensagem DNC' : 'Nova Mensagem DNC'}
-            </h3>
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Idioma</label>
-                  <select
-                    value={formData.language_code}
-                    onChange={(e) => setFormData({...formData, language_code: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">Selecione o idioma</option>
-                    {languages.map(lang => (
-                      <option key={lang.code} value={lang.code}>
-                        {lang.flag} {lang.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Mensagem</label>
-                  <select
-                    value={formData.message_type}
-                    onChange={(e) => setFormData({...formData, message_type: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  >
-                    {messageTypes.map(type => (
-                      <option key={type.value} value={type.value}>
-                        {type.icon} {type.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Título da mensagem"
+        <div className="bg-gray-700/30 border border-gray-600/30 rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4">
+            {editingMessage ? 'Editar Mensaje DNC' : 'Nuevo Mensaje DNC'}
+          </h3>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Idioma *</label>
+                <select
+                  value={formData.language_code}
+                  onChange={(e) => setFormData({...formData, language_code: e.target.value})}
+                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:border-blue-500"
                   required
-                />
+                >
+                  <option value="">Seleccionar idioma</option>
+                  {languages.map(lang => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.flag} {lang.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-              
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-gray-700">Mensagem</label>
-                  <button
-                    type="button"
-                    onClick={loadTemplate}
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                  >
-                    📋 Carregar Template
-                  </button>
-                </div>
-                <textarea
-                  value={formData.message}
-                  onChange={(e) => setFormData({...formData, message: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={6}
-                  placeholder="Digite a mensagem que será reproduzida..."
+
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Tipo de Mensaje *</label>
+                <select
+                  value={formData.message_type}
+                  onChange={(e) => setFormData({...formData, message_type: e.target.value})}
+                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:border-blue-500"
                   required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Esta mensagem será convertida em áudio ou reproduzida via TTS
-                </p>
+                >
+                  {messageTypes.map(type => (
+                    <option key={type.value} value={type.value}>
+                      {type.icon} {type.label}
+                    </option>
+                  ))}
+                </select>
               </div>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Arquivo de Áudio (opcional)</label>
-                <input
-                  type="file"
-                  accept="audio/*"
-                  onChange={(e) => setFormData({...formData, audio_file: e.target.files[0]})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Se não fornecido, será usado TTS para gerar o áudio
-                </p>
-              </div>
-              
-              <div className="mb-4">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_active}
-                    onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
-                    className="rounded text-blue-600"
-                  />
-                  <span className="text-sm font-medium text-gray-700">Mensagem ativa</span>
-                </label>
-              </div>
-              
-              <div className="flex justify-end space-x-3">
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Título *</label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                placeholder="Ej: Opt-Out - Español"
+                required
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-sm text-gray-400">Mensaje *</label>
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    resetForm();
-                  }}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  onClick={loadTemplate}
+                  className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded transition-colors"
+                  disabled={!formData.language_code || !formData.message_type}
                 >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  {editingMessage ? 'Atualizar' : 'Criar'}
+                  📝 Cargar Plantilla
                 </button>
               </div>
-            </form>
-          </div>
+              <textarea
+                value={formData.message}
+                onChange={(e) => setFormData({...formData, message: e.target.value})}
+                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                rows={4}
+                placeholder="Escriba el mensaje que se reproducirá..."
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Este mensaje se reproducirá cuando el cliente presione la tecla correspondiente
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="is_active"
+                checked={formData.is_active}
+                onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
+                className="rounded border-gray-600 text-blue-600 focus:ring-blue-500"
+              />
+              <label htmlFor="is_active" className="text-white text-sm">
+                Mensaje activo
+              </label>
+            </div>
+
+            <div className="flex space-x-4">
+              <button
+                type="submit"
+                className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
+              >
+                {editingMessage ? 'Actualizar' : 'Crear'} Mensaje
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false);
+                  resetForm();
+                }}
+                className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
-      {/* Lista de Mensagens */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      {/* Lista de Mensajes */}
+      <div className="space-y-4">
         {filteredMessages.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <div className="text-6xl mb-4 opacity-50">🌐</div>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma mensagem encontrada</h3>
-            <p className="mt-1 text-sm text-gray-500">Crie mensagens DNC para diferentes idiomas</p>
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🌍</div>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              {selectedLanguage !== 'all' || selectedType !== 'all' 
+                ? 'No hay mensajes que coincidan con los filtros'
+                : 'No hay mensajes DNC configurados'
+              }
+            </h3>
+            <p className="text-gray-400 mb-4">
+              {selectedLanguage !== 'all' || selectedType !== 'all'
+                ? 'Pruebe cambiar los filtros o crear un nuevo mensaje'
+                : 'Cree mensajes DNC para diferentes idiomas'
+              }
+            </p>
+            {(selectedLanguage === 'all' && selectedType === 'all') && (
+              <button
+                onClick={() => setShowForm(true)}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              >
+                + Crear Primer Mensaje
+              </button>
+            )}
           </div>
         ) : (
-          filteredMessages.map((message) => (
-            <div key={message.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-2">
-                  <span className="text-2xl">{getLanguageFlag(message.language_code)}</span>
-                  <span className="text-xl">{getTypeIcon(message.message_type)}</span>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">{message.title}</h3>
-                    <p className="text-sm text-gray-500">{message.language_name}</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredMessages.map((message) => (
+              <div key={message.id} className="bg-gray-700/30 border border-gray-600/30 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">{getLanguageFlag(message.language_code)}</span>
+                    <span className="text-sm font-medium text-white">{message.language_name}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">{getTypeIcon(message.message_type)}</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      message.is_active 
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    }`}>
+                      {message.is_active ? 'Activo' : 'Inactivo'}
+                    </span>
                   </div>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  message.is_active 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {message.is_active ? 'Ativa' : 'Inativa'}
-                </span>
-              </div>
-              
-              <div className="space-y-2 text-sm text-gray-600 mb-4">
-                <div className="flex justify-between">
-                  <span className="font-medium">Tipo:</span>
-                  <span className="capitalize">{messageTypes.find(t => t.value === message.message_type)?.label}</span>
+
+                <h4 className="font-medium text-white mb-2 truncate">{message.title}</h4>
+                <p className="text-gray-400 text-sm line-clamp-3 mb-4">{message.message}</p>
+
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleEdit(message)}
+                    className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
+                  >
+                    ✏️ Editar
+                  </button>
+                  <button
+                    onClick={() => handleDelete(message.id)}
+                    className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
+                  >
+                    🗑️ Eliminar
+                  </button>
                 </div>
-                <div>
-                  <span className="font-medium">Mensagem:</span>
-                  <p className="text-xs text-gray-500 mt-1 leading-relaxed line-clamp-3">
-                    {message.message}
+
+                <div className="mt-3 pt-3 border-t border-gray-600/30">
+                  <p className="text-xs text-gray-500">
+                    Tipo: {messageTypes.find(t => t.value === message.message_type)?.label}
                   </p>
                 </div>
               </div>
-              
-              <div className="flex justify-between items-center pt-3 border-t">
-                <button
-                  onClick={() => handleEdit(message)}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => handleDelete(message.id)}
-                  className="text-red-600 hover:text-red-800 text-sm font-medium"
-                >
-                  Excluir
-                </button>
-              </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Demonstração de Uso */}
-      <div className="mt-8 bg-gray-50 rounded-lg p-4">
-        <h4 className="font-semibold text-gray-800 mb-2">💡 Como Funciona</h4>
-        <div className="text-sm text-gray-600 space-y-2">
-          <p><strong>1. Pressionar 2:</strong> Quando o usuário pressiona 2 durante uma chamada, a mensagem de "opt_out" no idioma detectado é reproduzida.</p>
-          <p><strong>2. Confirmação:</strong> Após o processamento, a mensagem de "confirmation" é enviada via SMS ou nova chamada.</p>
-          <p><strong>3. Detecção de Idioma:</strong> O sistema detecta o idioma baseado no código do país ou configuração da campanha.</p>
-          <p><strong>4. TTS Automático:</strong> Se não houver arquivo de áudio, o sistema gera automaticamente usando Text-to-Speech.</p>
+      {/* Información sobre el funcionamiento */}
+      <div className="mt-8 bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+        <div className="flex items-start">
+          <span className="text-xl mr-3">💡</span>
+          <div>
+            <h4 className="text-blue-100 font-medium mb-2">¿Cómo Funciona?</h4>
+            <div className="text-blue-200/80 text-sm space-y-1">
+              <p><strong>1. Presione 2:</strong> Cuando el usuario presiona 2 durante una llamada, la mensagem de "opt_out" en el idioma detectado es reproducida.</p>
+              <p><strong>2. Confirmación:</strong> Após el procesamiento, la mensagem de "confirmation" é enviada via SMS o nova chamada.</p>
+              <p><strong>3. Detección de Idioma:</strong> O sistema detecta el idioma baseado en el código de país ou configuración da campanha.</p>
+              <p><strong>4. TTS Automático:</strong> Se no houver arquivo de áudio, o sistema gera automaticamente usando Text-to-Speech.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

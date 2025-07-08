@@ -1,48 +1,180 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from app.database import obtener_sesion
-from app.schemas.dnc import DNCListCreate, DNCListOut, DNCNumberCreate, DNCNumberOut
-from app.services.dnc_service import DNCService
-from typing import List
+from fastapi import APIRouter, HTTPException, Depends
+from typing import List, Optional
+import httpx
+import os
+from datetime import datetime
+import logging
 
-router = APIRouter(prefix="/dnc", tags=["DNC"])
+# Configuração do Supabase
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://orxxocptgaeoyrtlxwkv.supabase.co")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 
-# DNCList
-@router.post("/lists/", response_model=DNCListOut)
-def create_dnc_list(dnc_list_in: DNCListCreate, db: Session = Depends(obtener_sesion)):
-    service = DNCService(db)
-    return service.create_dnc_list(dnc_list_in)
+logger = logging.getLogger(__name__)
 
-@router.get("/lists/", response_model=List[DNCListOut])
-def list_dnc_lists(db: Session = Depends(obtener_sesion)):
-    service = DNCService(db)
-    return service.list_dnc_lists()
+router = APIRouter(prefix="/dnc", tags=["DNC Management"])
 
-@router.get("/lists/{dnc_list_id}", response_model=DNCListOut)
-def get_dnc_list(dnc_list_id: int, db: Session = Depends(obtener_sesion)):
-    service = DNCService(db)
-    dnc_list = service.get_dnc_list(dnc_list_id)
-    if not dnc_list:
-        raise HTTPException(status_code=404, detail="Lista DNC não encontrada")
-    return dnc_list
+# Headers para Supabase
+def get_supabase_headers():
+    return {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+    }
 
-@router.delete("/lists/{dnc_list_id}", response_model=bool)
-def delete_dnc_list(dnc_list_id: int, db: Session = Depends(obtener_sesion)):
-    service = DNCService(db)
-    return service.delete_dnc_list(dnc_list_id)
+@router.get("/messages")
+async def get_dnc_messages():
+    """Obtém todas as mensagens DNC configuradas"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{SUPABASE_URL}/rest/v1/dnc_messages",
+                headers=get_supabase_headers()
+            )
+            
+            logger.info(f"Supabase DNC messages response: {response.status_code}")
+            
+            if response.status_code == 200:
+                messages = response.json()
+                return {"status": "success", "data": messages}
+            else:
+                # Se não existe tabela, retornar mensagens default
+                default_messages = [
+                    {
+                        "id": "en_opt_out",
+                        "language_code": "en",
+                        "language_name": "English",
+                        "message_type": "opt_out",
+                        "title": "Opt-Out - English",
+                        "message": "Thank you for your call. To remove your number from our calling list, please press 2 now. Your number will be removed within 24 hours. Thank you.",
+                        "is_active": True,
+                        "created_at": datetime.now().isoformat()
+                    },
+                    {
+                        "id": "es_opt_out",
+                        "language_code": "es",
+                        "language_name": "Español",
+                        "message_type": "opt_out",
+                        "title": "Opt-Out - Español",
+                        "message": "Gracias por su llamada. Para remover su número de nuestra lista de llamadas, presione 2 ahora. Su número será removido en 24 horas. Gracias.",
+                        "is_active": True,
+                        "created_at": datetime.now().isoformat()
+                    },
+                    {
+                        "id": "pt_opt_out",
+                        "language_code": "pt",
+                        "language_name": "Português",
+                        "message_type": "opt_out",
+                        "title": "Opt-Out - Português",
+                        "message": "Obrigado pela sua ligação. Para remover seu número da nossa lista de chamadas, pressione 2 agora. Seu número será removido em 24 horas. Obrigado.",
+                        "is_active": True,
+                        "created_at": datetime.now().isoformat()
+                    }
+                ]
+                return {"status": "success", "data": default_messages}
+                
+    except Exception as e:
+        logger.error(f"Erro ao buscar mensagens DNC: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar mensagens DNC: {str(e)}")
 
-# DNCNumber
-@router.post("/lists/{dnc_list_id}/numbers/", response_model=DNCNumberOut)
-def add_dnc_number(dnc_list_id: int, dnc_number_in: DNCNumberCreate, db: Session = Depends(obtener_sesion)):
-    service = DNCService(db)
-    return service.add_dnc_number(dnc_list_id, dnc_number_in)
+@router.post("/messages")
+async def create_dnc_message(message_data: dict):
+    """Cria uma nova mensagem DNC"""
+    try:
+        # Adicionar timestamp
+        message_data["created_at"] = datetime.now().isoformat()
+        message_data["updated_at"] = datetime.now().isoformat()
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{SUPABASE_URL}/rest/v1/dnc_messages",
+                headers=get_supabase_headers(),
+                json=message_data
+            )
+            
+            logger.info(f"Supabase create DNC message response: {response.status_code}")
+            
+            if response.status_code == 201:
+                created_message = response.json()
+                return {"status": "success", "data": created_message}
+            else:
+                error_text = response.text
+                logger.error(f"Erro Supabase create DNC message: {error_text}")
+                raise HTTPException(status_code=response.status_code, detail=error_text)
+                
+    except Exception as e:
+        logger.error(f"Erro ao criar mensagem DNC: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao criar mensagem DNC: {str(e)}")
 
-@router.get("/lists/{dnc_list_id}/numbers/", response_model=List[DNCNumberOut])
-def list_dnc_numbers(dnc_list_id: int, db: Session = Depends(obtener_sesion)):
-    service = DNCService(db)
-    return service.list_dnc_numbers(dnc_list_id)
+@router.put("/messages/{message_id}")
+async def update_dnc_message(message_id: str, message_data: dict):
+    """Atualiza uma mensagem DNC existente"""
+    try:
+        # Adicionar timestamp de atualização
+        message_data["updated_at"] = datetime.now().isoformat()
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.patch(
+                f"{SUPABASE_URL}/rest/v1/dnc_messages?id=eq.{message_id}",
+                headers=get_supabase_headers(),
+                json=message_data
+            )
+            
+            logger.info(f"Supabase update DNC message response: {response.status_code}")
+            
+            if response.status_code == 200:
+                updated_message = response.json()
+                return {"status": "success", "data": updated_message}
+            else:
+                error_text = response.text
+                logger.error(f"Erro Supabase update DNC message: {error_text}")
+                raise HTTPException(status_code=response.status_code, detail=error_text)
+                
+    except Exception as e:
+        logger.error(f"Erro ao atualizar mensagem DNC: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao atualizar mensagem DNC: {str(e)}")
 
-@router.delete("/numbers/{dnc_number_id}", response_model=bool)
-def delete_dnc_number(dnc_number_id: int, db: Session = Depends(obtener_sesion)):
-    service = DNCService(db)
-    return service.delete_dnc_number(dnc_number_id) 
+@router.delete("/messages/{message_id}")
+async def delete_dnc_message(message_id: str):
+    """Exclui uma mensagem DNC"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.delete(
+                f"{SUPABASE_URL}/rest/v1/dnc_messages?id=eq.{message_id}",
+                headers=get_supabase_headers()
+            )
+            
+            logger.info(f"Supabase delete DNC message response: {response.status_code}")
+            
+            if response.status_code == 204:
+                return {"status": "success", "message": "Mensagem DNC removida com sucesso"}
+            else:
+                error_text = response.text
+                logger.error(f"Erro Supabase delete DNC message: {error_text}")
+                raise HTTPException(status_code=response.status_code, detail=error_text)
+                
+    except Exception as e:
+        logger.error(f"Erro ao excluir mensagem DNC: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao excluir mensagem DNC: {str(e)}")
+
+@router.get("/languages")
+async def get_supported_languages():
+    """Retorna os idiomas suportados para mensagens DNC"""
+    languages = [
+        {"code": "en", "name": "English", "flag": "🇺🇸"},
+        {"code": "es", "name": "Español", "flag": "🇪🇸"},
+        {"code": "pt", "name": "Português", "flag": "🇧🇷"},
+        {"code": "fr", "name": "Français", "flag": "🇫🇷"},
+        {"code": "de", "name": "Deutsch", "flag": "🇩🇪"}
+    ]
+    return {"status": "success", "data": languages}
+
+@router.get("/message-types")
+async def get_message_types():
+    """Retorna os tipos de mensagem DNC disponíveis"""
+    message_types = [
+        {"value": "opt_out", "label": "Opt-Out (Pressione 2)", "icon": "🚫"},
+        {"value": "confirmation", "label": "Confirmação", "icon": "✅"},
+        {"value": "error", "label": "Erro", "icon": "❌"}
+    ]
+    return {"status": "success", "data": message_types} 

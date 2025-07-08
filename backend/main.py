@@ -40,13 +40,14 @@ except ImportError as e:
 
 # Importar novas rotas para configuração
 try:
-    from app.routes import trunk, caller_id, timing
+    from app.routes import trunk, caller_id, timing, dnc
     print("✅ Advanced config routes imported successfully")
 except ImportError as e:
     print(f"⚠️ Warning: Could not import advanced config routes: {e}")
     trunk = None
     caller_id = None
     timing = None
+    dnc = None
 # Importar novas rotas avançadas
 try:
     from app.routes import configuracao_discagem
@@ -387,6 +388,12 @@ if timing:
     print(f"✅ Timing router included with prefix: {api_prefix}")
 else:
     print("⚠️ Timing router NOT available")
+
+if dnc:
+    app.include_router(dnc.router, prefix=f"{api_prefix}")
+    print(f"✅ DNC router included with prefix: {api_prefix}")
+else:
+    print("⚠️ DNC router NOT available")
 
 # Router para rotas ausentes
 missing_routes = APIRouter()
