@@ -1120,6 +1120,86 @@ async def hello_direto():
 # ENDPOINTS PRESIONE1 - FUNCIONALIDADES COMPLETAS
 # ============================================================================
 
+@app.get(f"{api_prefix}/presione1/campanhas/{{campana_id}}")
+async def obter_campana_presione1(campana_id: int):
+    """Obter detalhes de uma campanha específica"""
+    from datetime import datetime, timedelta
+    
+    now = datetime.now()
+    
+    # Dados específicos da campanha baseados no ID
+    campanhas_dados = {
+        1: {
+            "id": 1,
+            "nombre": "Campanha Presione 1 - Teste",
+            "descripcion": "Campanha de exemplo para discado Presione 1",
+            "campaign_id": 1,
+            "activa": False,
+            "pausada": False,
+            "mensaje_audio_url": "https://example.com/audio1.wav",
+            "timeout_presione1": 10,
+            "extension_transferencia": "1001",
+            "cola_transferencia": "ventas",
+            "llamadas_simultaneas": 5,
+            "tiempo_entre_llamadas": 3,
+            "detectar_voicemail": True,
+            "mensaje_voicemail_url": "https://example.com/voicemail1.wav"
+        },
+        2: {
+            "id": 2,
+            "nombre": "Campanha Promocional",
+            "descripcion": "Campanha promocional com Presione 1",
+            "campaign_id": 2,
+            "activa": True,
+            "pausada": False,
+            "mensaje_audio_url": "https://example.com/audio2.wav",
+            "timeout_presione1": 15,
+            "extension_transferencia": "1002",
+            "cola_transferencia": "soporte",
+            "llamadas_simultaneas": 3,
+            "tiempo_entre_llamadas": 5,
+            "detectar_voicemail": True,
+            "mensaje_voicemail_url": "https://example.com/voicemail2.wav"
+        },
+        3: {
+            "id": 3,
+            "nombre": "Campanha Informativa",
+            "descripcion": "Campanha informativa para clientes",
+            "campaign_id": 3,
+            "activa": False,
+            "pausada": True,
+            "mensaje_audio_url": "https://example.com/audio3.wav",
+            "timeout_presione1": 12,
+            "extension_transferencia": "1003",
+            "cola_transferencia": "info",
+            "llamadas_simultaneas": 8,
+            "tiempo_entre_llamadas": 2,
+            "detectar_voicemail": False,
+            "mensaje_voicemail_url": None
+        }
+    }
+    
+    if campana_id not in campanhas_dados:
+        return {"error": "Campanha não encontrada", "campana_id": campana_id}
+    
+    campanha = campanhas_dados[campana_id]
+    campanha.update({
+        "fecha_creacion": (now - timedelta(days=campana_id)).isoformat(),
+        "fecha_actualizacion": now.isoformat(),
+        "usuario_creador": f"user_{campana_id}",
+        "total_numeros_lista": 1000 - (campana_id * 100),
+        "numeros_pendientes": 750 - (campana_id * 50),
+        "agentes_asignados": ["100", "101"] if campana_id == 2 else ["102", "103"],
+        "horario_funcionamiento": {
+            "inicio": "09:00",
+            "fin": "18:00",
+            "timezone": "America/Sao_Paulo",
+            "dias_semana": ["segunda", "terca", "quarta", "quinta", "sexta"]
+        }
+    })
+    
+    return campanha
+
 @app.get(f"{api_prefix}/presione1/campanhas/{{campana_id}}/estadisticas")
 async def estadisticas_campana_presione1(campana_id: int):
     """Estatísticas detalhadas da campanha presione1"""
@@ -1420,6 +1500,633 @@ async def sessoes_audio_inteligente(campana_id: int):
         "deteccoes_fax": len([s for s in sessoes if s["tipo_deteccao"] == "fax"]),
         "sessoes": sessoes,
         "timestamp": now.isoformat()
+    }
+
+# ============================================================================
+# ENDPOINTS GESTÃO DE ÁUDIOS
+# ============================================================================
+
+@app.get(f"{api_prefix}/audios")
+async def listar_audios():
+    """Lista todos os áudios disponíveis no sistema"""
+    from datetime import datetime, timedelta
+    
+    now = datetime.now()
+    
+    audios = [
+        {
+            "id": 1,
+            "nome": "presione1_vendas.wav",
+            "titulo": "Áudio Presione 1 - Vendas",
+            "descricao": "Áudio para campanhas de vendas",
+            "url": f"https://discador.onrender.com/audios/presione1_vendas.wav",
+            "url_reproducao": f"https://discador.onrender.com/api/v1/audios/1/play",
+            "duracao": 25.5,
+            "tamanho": "2.3 MB",
+            "formato": "WAV",
+            "qualidade": "16 kHz, 16-bit",
+            "tipo": "presione1",
+            "data_upload": (now - timedelta(days=5)).isoformat(),
+            "usado_em_campanhas": ["Campanha Vendas Q1", "Campanha Promocional"],
+            "status": "ativo"
+        },
+        {
+            "id": 2,
+            "nome": "voicemail_padrao.wav",
+            "titulo": "Mensagem Voicemail Padrão",
+            "descricao": "Mensagem deixada em correios de voz",
+            "url": f"https://discador.onrender.com/audios/voicemail_padrao.wav",
+            "url_reproducao": f"https://discador.onrender.com/api/v1/audios/2/play",
+            "duracao": 18.2,
+            "tamanho": "1.8 MB",
+            "formato": "WAV",
+            "qualidade": "8 kHz, 16-bit",
+            "tipo": "voicemail",
+            "data_upload": (now - timedelta(days=3)).isoformat(),
+            "usado_em_campanhas": ["Campanha Informativa"],
+            "status": "ativo"
+        },
+        {
+            "id": 3,
+            "nome": "musica_espera.mp3",
+            "titulo": "Música de Espera",
+            "descricao": "Música tocada durante transferências",
+            "url": f"https://discador.onrender.com/audios/musica_espera.mp3",
+            "url_reproducao": f"https://discador.onrender.com/api/v1/audios/3/play",
+            "duracao": 180.0,
+            "tamanho": "4.2 MB",
+            "formato": "MP3",
+            "qualidade": "128 kbps",
+            "tipo": "espera",
+            "data_upload": (now - timedelta(days=1)).isoformat(),
+            "usado_em_campanhas": [],
+            "status": "ativo"
+        }
+    ]
+    
+    return {
+        "total": len(audios),
+        "audios": audios,
+        "tipos_disponiveis": ["presione1", "voicemail", "espera", "transferencia"],
+        "formatos_suportados": ["WAV", "MP3", "GSM", "uLaw", "aLaw"],
+        "timestamp": now.isoformat()
+    }
+
+@app.get(f"{api_prefix}/audios/{{audio_id}}")
+async def obter_audio_detalhes(audio_id: int):
+    """Obter detalhes específicos de um áudio"""
+    from datetime import datetime, timedelta
+    
+    if audio_id == 1:
+        return {
+            "id": 1,
+            "nome": "presione1_vendas.wav",
+            "titulo": "Áudio Presione 1 - Vendas",
+            "descricao": "Pressione 1 para falar com um consultor de vendas. Temos ofertas especiais para você!",
+            "url": f"https://discador.onrender.com/audios/presione1_vendas.wav",
+            "url_reproducao": f"https://discador.onrender.com/api/v1/audios/{audio_id}/play",
+            "duracao": 25.5,
+            "tamanho": "2.3 MB",
+            "formato": "WAV",
+            "qualidade": "16 kHz, 16-bit, Mono",
+            "tipo": "presione1",
+            "data_upload": datetime.now().isoformat(),
+            "transcricao": "Olá! Esta é uma chamada da nossa empresa. Se você tem interesse em conhecer nossas promoções e falar com um consultor, pressione a tecla 1 agora. Caso contrário, a chamada será encerrada. Obrigado!",
+            "metadados": {
+                "canal": "mono",
+                "taxa_amostragem": "16000 Hz",
+                "profundidade_bits": 16,
+                "codec": "PCM",
+                "nivel_volume": -12.5
+            },
+            "uso_estatisticas": {
+                "total_reproducoes": 1247,
+                "campanhas_ativas": 2,
+                "ultima_reproducao": datetime.now().isoformat()
+            },
+            "status": "ativo"
+        }
+    elif audio_id == 2:
+        return {
+            "id": 2,
+            "nome": "voicemail_padrao.wav",
+            "titulo": "Mensagem Voicemail Padrão",
+            "descricao": "Mensagem padrão deixada em correios de voz",
+            "url": f"https://discador.onrender.com/audios/voicemail_padrao.wav",
+            "url_reproducao": f"https://discador.onrender.com/api/v1/audios/{audio_id}/play",
+            "duracao": 18.2,
+            "tamanho": "1.8 MB",
+            "formato": "WAV",
+            "qualidade": "8 kHz, 16-bit, Mono",
+            "tipo": "voicemail",
+            "data_upload": datetime.now().isoformat(),
+            "transcricao": "Olá! Você recebeu uma chamada da nossa empresa. Por favor, retorne nossa ligação através do número 0800-123-4567. Obrigado!",
+            "metadados": {
+                "canal": "mono",
+                "taxa_amostragem": "8000 Hz",
+                "profundidade_bits": 16,
+                "codec": "PCM",
+                "nivel_volume": -10.2
+            },
+            "uso_estatisticas": {
+                "total_reproducoes": 456,
+                "campanhas_ativas": 1,
+                "ultima_reproducao": datetime.now().isoformat()
+            },
+            "status": "ativo"
+        }
+    elif audio_id == 3:
+        return {
+            "id": 3,
+            "nome": "musica_espera.mp3",
+            "titulo": "Música de Espera",
+            "descricao": "Música instrumental tocada durante transferências",
+            "url": f"https://discador.onrender.com/audios/musica_espera.mp3",
+            "url_reproducao": f"https://discador.onrender.com/api/v1/audios/{audio_id}/play",
+            "duracao": 180.0,
+            "tamanho": "4.2 MB",
+            "formato": "MP3",
+            "qualidade": "128 kbps, Stereo",
+            "tipo": "espera",
+            "data_upload": datetime.now().isoformat(),
+            "transcricao": "Arquivo de música instrumental sem fala",
+            "metadados": {
+                "canal": "stereo",
+                "taxa_amostragem": "44100 Hz",
+                "bitrate": "128 kbps",
+                "codec": "MP3",
+                "nivel_volume": -8.0
+            },
+            "uso_estatisticas": {
+                "total_reproducoes": 789,
+                "campanhas_ativas": 3,
+                "ultima_reproducao": datetime.now().isoformat()
+            },
+            "status": "ativo"
+        }
+    
+    return {"error": "Áudio não encontrado", "audio_id": audio_id}
+
+@app.get(f"{api_prefix}/audios/{{audio_id}}/play")
+async def reproduzir_audio(audio_id: int):
+    """Endpoint para reproduzir áudio"""
+    return {
+        "audio_id": audio_id,
+        "stream_url": f"https://discador.onrender.com/stream/audio_{audio_id}.wav",
+        "content_type": "audio/wav",
+        "duracao": 25.5,
+        "controles": {
+            "play": True,
+            "pause": True,
+            "volume": True,
+            "download": True
+        },
+        "message": "Use a stream_url para reproduzir o áudio",
+        "player_html": f'<audio controls preload="metadata"><source src="https://discador.onrender.com/stream/audio_{audio_id}.wav" type="audio/wav">Seu navegador não suporta o elemento de áudio.</audio>'
+    }
+
+@app.post(f"{api_prefix}/audios/upload")
+async def upload_audio():
+    """Simula upload de arquivo de áudio"""
+    from datetime import datetime
+    
+    # Simular upload bem-sucedido
+    return {
+        "status": "success",
+        "message": "Áudio enviado com sucesso",
+        "audio": {
+            "id": 4,
+            "nome": "novo_audio.wav",
+            "titulo": "Novo Áudio Enviado",
+            "url": f"https://discador.onrender.com/audios/novo_audio.wav",
+            "url_reproducao": f"https://discador.onrender.com/api/v1/audios/4/play",
+            "duracao": 30.0,
+            "tamanho": "2.8 MB",
+            "formato": "WAV",
+            "data_upload": datetime.now().isoformat(),
+            "status": "processando"
+        },
+        "timestamp": datetime.now().isoformat()
+    }
+
+# ============================================================================
+# ENDPOINTS GRAVAÇÕES DE CHAMADAS
+# ============================================================================
+
+@app.get(f"{api_prefix}/gravacoes")
+async def listar_gravacoes(campana_id: int = None, data_inicio: str = None, data_fim: str = None):
+    """Lista gravações de chamadas com filtros"""
+    from datetime import datetime, timedelta
+    
+    now = datetime.now()
+    
+    gravacoes = []
+    for i in range(10):
+        gravacao_id = 2000 + i
+        gravacoes.append({
+            "id": gravacao_id,
+            "campana_id": campana_id or (i % 3 + 1),
+            "llamada_id": 1000 + i,
+            "numero_destino": f"+5511987654{330 + i}",
+            "agente_id": "100" if i % 2 == 0 else "101",
+            "agente_nome": "Agente João" if i % 2 == 0 else "Agente Maria",
+            "data_gravacao": (now - timedelta(hours=i)).isoformat(),
+            "duracao": 45 + (i * 15),
+            "tamanho": f"{1.2 + (i * 0.3):.1f} MB",
+            "url_gravacao": f"https://discador.onrender.com/gravacoes/chamada_{gravacao_id}.wav",
+            "url_reproducao": f"https://discador.onrender.com/api/v1/gravacoes/{gravacao_id}/play",
+            "url_download": f"https://discador.onrender.com/api/v1/gravacoes/{gravacao_id}/download",
+            "qualidade": "8 kHz, 16-bit",
+            "tipo_chamada": ["entrada", "saida"][i % 2],
+            "resultado_chamada": ["atendida", "nao_atendida", "ocupado", "transferida"][i % 4],
+            "presiono_1": i % 3 == 0,
+            "transferida": i % 4 == 0,
+            "voicemail_detectado": i % 5 == 0,
+            "sentimento_analise": ["positivo", "neutro", "negativo"][i % 3],
+            "score_qualidade": 85.5 + (i * 1.5),
+            "transcricao_disponivel": i % 2 == 0,
+            "status": "processada"
+        })
+    
+    # Aplicar filtros se fornecidos
+    if campana_id:
+        gravacoes = [g for g in gravacoes if g["campana_id"] == campana_id]
+    
+    return {
+        "total": len(gravacoes),
+        "gravacoes": gravacoes,
+        "filtros_aplicados": {
+            "campana_id": campana_id,
+            "data_inicio": data_inicio,
+            "data_fim": data_fim
+        },
+        "estatisticas": {
+            "total_duracao": sum(g["duracao"] for g in gravacoes),
+            "total_tamanho": f"{sum(float(g['tamanho'].split()[0]) for g in gravacoes):.1f} MB",
+            "com_transcricao": len([g for g in gravacoes if g["transcricao_disponivel"]]),
+            "transferidas": len([g for g in gravacoes if g["transferida"]])
+        },
+        "timestamp": now.isoformat()
+    }
+
+@app.get(f"{api_prefix}/gravacoes/{{gravacao_id}}")
+async def obter_gravacao_detalhes(gravacao_id: int):
+    """Obter detalhes completos de uma gravação"""
+    from datetime import datetime, timedelta
+    
+    return {
+        "id": gravacao_id,
+        "campana_id": 2,
+        "llamada_id": 1001,
+        "numero_destino": "+5511987654321",
+        "numero_origem": "+5511999999999",
+        "agente_id": "100",
+        "agente_nome": "Agente João",
+        "data_inicio": (datetime.now() - timedelta(hours=2)).isoformat(),
+        "data_fim": (datetime.now() - timedelta(hours=2, minutes=-3)).isoformat(),
+        "duracao": 180,
+        "tamanho": "1.8 MB",
+        "formato": "WAV",
+        "qualidade": "8 kHz, 16-bit, Mono",
+        "url_gravacao": f"https://discador.onrender.com/gravacoes/chamada_{gravacao_id}.wav",
+        "url_reproducao": f"https://discador.onrender.com/api/v1/gravacoes/{gravacao_id}/play",
+        "url_download": f"https://discador.onrender.com/api/v1/gravacoes/{gravacao_id}/download",
+        "tipo_chamada": "saida",
+        "resultado_chamada": "transferida",
+        "presiono_1": True,
+        "dtmf_detectado": "1",
+        "tempo_resposta_dtmf": 5.2,
+        "transferida": True,
+        "agente_transferencia": "101",
+        "voicemail_detectado": False,
+        "analise_audio": {
+            "sentimento": "positivo",
+            "confianca_sentimento": 87.5,
+            "emocoes_detectadas": ["interesse", "curiosidade"],
+            "palavras_chave": ["promoção", "desconto", "sim", "interessado"],
+            "nivel_ruido": 12.3,
+            "qualidade_audio": 92.1,
+            "silencio_total": 15.2,
+            "tempo_fala_cliente": 85.5,
+            "tempo_fala_agente": 94.5
+        },
+        "transcricao": {
+            "disponivel": True,
+            "idioma": "pt-BR",
+            "confianca": 94.2,
+            "texto_completo": "Cliente: Alô? Agente: Olá, boa tarde! Estou ligando da empresa XYZ para falar sobre nossa promoção especial. Cliente: Ah sim, que tipo de promoção? Agente: Temos descontos de até 50% em nossos produtos. Gostaria de saber mais? Cliente: Sim, tenho interesse...",
+            "segmentos": [
+                {"inicio": 0.0, "fim": 2.5, "falante": "sistema", "texto": "Áudio de apresentação da campanha"},
+                {"inicio": 2.5, "fim": 8.2, "falante": "cliente", "texto": "Alô?"},
+                {"inicio": 8.2, "fim": 15.1, "falante": "agente", "texto": "Olá, boa tarde! Estou ligando da empresa XYZ..."}
+            ]
+        },
+        "metadados": {
+            "codec": "PCM",
+            "taxa_amostragem": "8000 Hz",
+            "canal": "mono",
+            "nivel_volume": -8.5,
+            "picos_audio": [12.3, 15.7, 11.2],
+            "checksum": "a1b2c3d4e5f6",
+            "processado_em": datetime.now().isoformat()
+        },
+        "status": "processada"
+    }
+
+@app.get(f"{api_prefix}/gravacoes/{{gravacao_id}}/play")
+async def reproduzir_gravacao(gravacao_id: int):
+    """Reproduzir gravação de chamada"""
+    return {
+        "gravacao_id": gravacao_id,
+        "stream_url": f"https://discador.onrender.com/stream/gravacao_{gravacao_id}.wav",
+        "content_type": "audio/wav",
+        "duracao": 180,
+        "controles": {
+            "play": True,
+            "pause": True,
+            "seek": True,
+            "download": True,
+            "velocidade": [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
+        },
+        "player_html": f'<audio controls preload="metadata"><source src="https://discador.onrender.com/stream/gravacao_{gravacao_id}.wav" type="audio/wav">Seu navegador não suporta o elemento de áudio.</audio>',
+        "transcricao_sync": True,  # Sincronizar transcricão com áudio
+        "message": "Use a stream_url para reproduzir a gravação"
+    }
+
+@app.get(f"{api_prefix}/gravacoes/{{gravacao_id}}/download")
+async def download_gravacao(gravacao_id: int):
+    """Download de gravação"""
+    return {
+        "gravacao_id": gravacao_id,
+        "download_url": f"https://discador.onrender.com/download/gravacao_{gravacao_id}.wav",
+        "nome_arquivo": f"gravacao_chamada_{gravacao_id}.wav",
+        "tamanho": "1.8 MB",
+        "formato": "WAV",
+        "expires_in": 3600,  # 1 hora
+        "message": "Link de download válido por 1 hora"
+    }
+
+# ============================================================================
+# ENDPOINTS GESTÃO AVANÇADA DE AGENTES
+# ============================================================================
+
+@app.get(f"{api_prefix}/agentes")
+async def listar_agentes_detalhado():
+    """Lista detalhada de todos os agentes"""
+    from datetime import datetime, timedelta
+    
+    now = datetime.now()
+    
+    agentes = [
+        {
+            "id": 1,
+            "nome": "João Silva",
+            "email": "joao.silva@empresa.com",
+            "extensao": "100",
+            "status": "disponivel",
+            "status_detalhado": {
+                "codigo": "READY",
+                "descricao": "Pronto para receber chamadas",
+                "tempo_no_status": "00:05:23",
+                "ultimo_status": "BREAK"
+            },
+            "chamadas_hoje": 23,
+            "chamadas_atendidas": 21,
+            "chamadas_transferidas": 18,
+            "tempo_online": "04:32:15",
+            "tempo_pausa_total": "00:45:30",
+            "tempo_medio_atendimento": "03:25",
+            "ultima_chamada": (now - timedelta(minutes=5)).isoformat(),
+            "skill_level": "senior",
+            "skills": ["vendas", "suporte", "retenção"],
+            "idiomas": ["português", "espanhol"],
+            "campanhas_asignadas": [1, 2],
+            "metas_diarias": {
+                "chamadas_objetivo": 40,
+                "chamadas_atual": 23,
+                "conversao_objetivo": 15.0,
+                "conversao_atual": 18.2
+            },
+            "avaliacao": {
+                "nota_media": 4.8,
+                "total_avaliacoes": 156,
+                "satisfacao_cliente": 94.5
+            },
+            "configuracoes": {
+                "auto_answer": True,
+                "tempo_wrap_up": 30,
+                "tipos_chamada": ["entrada", "saida"],
+                "prioridade": "alta"
+            }
+        },
+        {
+            "id": 2,
+            "nome": "Maria Santos",
+            "email": "maria.santos@empresa.com",
+            "extensao": "101",
+            "status": "ocupado",
+            "status_detalhado": {
+                "codigo": "INCALL",
+                "descricao": "Em chamada",
+                "tempo_no_status": "00:02:15",
+                "numero_atual": "+5511987654321"
+            },
+            "chamadas_hoje": 31,
+            "chamadas_atendidas": 29,
+            "chamadas_transferidas": 25,
+            "tempo_online": "05:15:42",
+            "tempo_pausa_total": "00:30:15",
+            "tempo_medio_atendimento": "04:12",
+            "ultima_chamada": now.isoformat(),
+            "chamada_atual": {
+                "numero": "+5511987654321",
+                "inicio": (now - timedelta(minutes=2)).isoformat(),
+                "duracao": 135,
+                "tipo": "transferencia",
+                "campanha": "Promocional"
+            },
+            "skill_level": "expert",
+            "skills": ["vendas", "retenção", "supervisor"],
+            "idiomas": ["português", "inglês"],
+            "campanhas_asignadas": [2, 3],
+            "metas_diarias": {
+                "chamadas_objetivo": 35,
+                "chamadas_atual": 31,
+                "conversao_objetivo": 20.0,
+                "conversao_atual": 22.8
+            },
+            "avaliacao": {
+                "nota_media": 4.9,
+                "total_avaliacoes": 203,
+                "satisfacao_cliente": 96.2
+            }
+        },
+        {
+            "id": 3,
+            "nome": "Pedro Oliveira",
+            "email": "pedro.oliveira@empresa.com",
+            "extensao": "102",
+            "status": "pausa",
+            "status_detalhado": {
+                "codigo": "BREAK",
+                "descricao": "Em pausa",
+                "tempo_no_status": "00:12:45",
+                "motivo": "Almoço",
+                "retorno_previsto": (now + timedelta(minutes=30)).isoformat()
+            },
+            "chamadas_hoje": 18,
+            "chamadas_atendidas": 16,
+            "chamadas_transferidas": 14,
+            "tempo_online": "03:45:23",
+            "tempo_pausa_total": "01:15:45",
+            "tempo_medio_atendimento": "02:58",
+            "ultima_chamada": (now - timedelta(minutes=15)).isoformat(),
+            "skill_level": "junior",
+            "skills": ["suporte", "tecnico"],
+            "idiomas": ["português"],
+            "campanhas_asignadas": [1],
+            "metas_diarias": {
+                "chamadas_objetivo": 25,
+                "chamadas_atual": 18,
+                "conversao_objetivo": 10.0,
+                "conversao_atual": 12.5
+            },
+            "avaliacao": {
+                "nota_media": 4.6,
+                "total_avaliacoes": 89,
+                "satisfacao_cliente": 92.1
+            }
+        }
+    ]
+    
+    return {
+        "total_agentes": len(agentes),
+        "disponiveis": len([a for a in agentes if a["status"] == "disponivel"]),
+        "ocupados": len([a for a in agentes if a["status"] == "ocupado"]),
+        "em_pausa": len([a for a in agentes if a["status"] == "pausa"]),
+        "offline": len([a for a in agentes if a["status"] == "offline"]),
+        "agentes": agentes,
+        "resumo_performance": {
+            "total_chamadas_hoje": sum(a["chamadas_hoje"] for a in agentes),
+            "media_tempo_atendimento": "03:32",
+            "satisfacao_media": 94.3,
+            "taxa_conversao_media": 17.8
+        },
+        "timestamp": now.isoformat()
+    }
+
+@app.get(f"{api_prefix}/agentes/{{agente_id}}")
+async def obter_agente_detalhes(agente_id: int):
+    """Obter detalhes completos de um agente"""
+    from datetime import datetime, timedelta
+    
+    now = datetime.now()
+    
+    return {
+        "id": agente_id,
+        "nome": "João Silva",
+        "email": "joao.silva@empresa.com",
+        "extensao": "100",
+        "status": "disponivel",
+        "status_detalhado": {
+            "codigo": "READY",
+            "descricao": "Pronto para receber chamadas",
+            "tempo_no_status": "00:05:23",
+            "ultimo_status": "BREAK",
+            "historico_status": [
+                {"status": "READY", "inicio": now.isoformat(), "fim": None},
+                {"status": "BREAK", "inicio": (now - timedelta(minutes=45)).isoformat(), "fim": (now - timedelta(minutes=5)).isoformat()},
+                {"status": "INCALL", "inicio": (now - timedelta(hours=1)).isoformat(), "fim": (now - timedelta(minutes=45)).isoformat()}
+            ]
+        },
+        "estatisticas_detalhadas": {
+            "hoje": {
+                "chamadas_total": 23,
+                "chamadas_atendidas": 21,
+                "chamadas_perdidas": 2,
+                "chamadas_transferidas": 18,
+                "tempo_total_chamadas": "02:45:30",
+                "tempo_medio_chamada": "07:15",
+                "primeiro_login": "08:30:00",
+                "ultimo_logout": None
+            },
+            "semana": {
+                "chamadas_total": 156,
+                "tempo_total_online": "32:15:45",
+                "media_diaria_chamadas": 31.2,
+                "dias_trabalhados": 5
+            },
+            "mes": {
+                "chamadas_total": 634,
+                "tempo_total_online": "152:30:20",
+                "meta_mensal": 800,
+                "progresso_meta": 79.25
+            }
+        },
+        "skills": ["vendas", "suporte", "retenção"],
+        "skill_level": "senior",
+        "certificacoes": ["Atendimento ao Cliente", "Vendas Consultivas", "Retenção de Clientes"],
+        "idiomas": ["português", "espanhol"],
+        "campanhas_asignadas": [1, 2],
+        "horario_trabalho": {
+            "inicio": "08:00",
+            "fim": "17:00",
+            "timezone": "America/Sao_Paulo",
+            "dias_semana": ["segunda", "terca", "quarta", "quinta", "sexta"]
+        },
+        "avaliacoes": {
+            "nota_media": 4.8,
+            "total_avaliacoes": 156,
+            "satisfacao_cliente": 94.5,
+            "ultima_avaliacao": (now - timedelta(days=2)).isoformat(),
+            "comentarios_recentes": [
+                {"data": (now - timedelta(days=1)).isoformat(), "nota": 5, "comentario": "Excelente atendimento, muito educado"},
+                {"data": (now - timedelta(days=3)).isoformat(), "nota": 4, "comentario": "Resolveu minha dúvida rapidamente"}
+            ]
+        },
+        "configuracoes": {
+            "auto_answer": True,
+            "tempo_wrap_up": 30,
+            "tipos_chamada": ["entrada", "saida"],
+            "prioridade": "alta",
+            "modo_pausa_automatica": False,
+            "notificacoes": True,
+            "gravacao_automatica": True
+        },
+        "chamada_atual": None,
+        "timestamp": now.isoformat()
+    }
+
+@app.post(f"{api_prefix}/agentes/{{agente_id}}/status")
+async def alterar_status_agente(agente_id: int, status_data: dict):
+    """Alterar status de um agente"""
+    from datetime import datetime
+    
+    novo_status = status_data.get("status", "disponivel")
+    motivo = status_data.get("motivo", "")
+    
+    return {
+        "agente_id": agente_id,
+        "status_anterior": "disponivel",
+        "status_novo": novo_status,
+        "motivo": motivo,
+        "timestamp": datetime.now().isoformat(),
+        "message": f"Status do agente alterado para {novo_status}"
+    }
+
+@app.post(f"{api_prefix}/agentes/{{agente_id}}/atribuir-campanha")
+async def atribuir_campanha_agente(agente_id: int, campanha_data: dict):
+    """Atribuir agente a uma campanha"""
+    from datetime import datetime
+    
+    campanha_id = campanha_data.get("campanha_id")
+    
+    return {
+        "agente_id": agente_id,
+        "campanha_id": campanha_id,
+        "status": "success",
+        "message": f"Agente {agente_id} atribuído à campanha {campanha_id}",
+        "timestamp": datetime.now().isoformat()
     }
 
 # Health check endpoints para Render.com
