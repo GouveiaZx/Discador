@@ -405,6 +405,116 @@ else:
 # Router para rotas ausentes
 missing_routes = APIRouter()
 
+# Fallback para rotas de áudio se não estiverem funcionando
+@missing_routes.get("/audio/list")
+async def audio_list_fallback():
+    """Fallback para listagem de áudios"""
+    try:
+        # Verificar se há arquivos na pasta uploads/audio
+        audio_dir = "uploads/audio"
+        os.makedirs(audio_dir, exist_ok=True)
+        
+        metadata_path = os.path.join(audio_dir, "metadata.json")
+        if os.path.exists(metadata_path):
+            with open(metadata_path, 'r') as f:
+                metadata = json.load(f)
+            return metadata
+        else:
+            return []
+    except Exception as e:
+        logger.error(f"Erro no fallback de listagem de áudios: {e}")
+        return []
+
+@missing_routes.get("/audio/stats")
+async def audio_stats_fallback():
+    """Fallback para estatísticas de áudios"""
+    try:
+        audio_dir = "uploads/audio"
+        os.makedirs(audio_dir, exist_ok=True)
+        
+        total_files = 0
+        total_size = 0
+        
+        if os.path.exists(audio_dir):
+            for filename in os.listdir(audio_dir):
+                if filename.endswith(('.wav', '.mp3', '.m4a', '.aac', '.flac')):
+                    file_path = os.path.join(audio_dir, filename)
+                    if os.path.isfile(file_path):
+                        total_files += 1
+                        total_size += os.path.getsize(file_path)
+        
+        return {
+            "total_files": total_files,
+            "total_size": total_size,
+            "total_duration": 0,
+            "by_type": {},
+            "by_campaign": {},
+            "disk_usage": total_size
+        }
+    except Exception as e:
+        logger.error(f"Erro no fallback de estatísticas de áudios: {e}")
+        return {
+            "total_files": 0,
+            "total_size": 0,
+            "total_duration": 0,
+            "by_type": {},
+            "by_campaign": {},
+            "disk_usage": 0
+        }
+
+@missing_routes.post("/audio/upload")
+async def audio_upload_fallback(file: UploadFile = File(...)):
+    """Fallback para upload de áudios"""
+    try:
+        audio_dir = "uploads/audio"
+        os.makedirs(audio_dir, exist_ok=True)
+        
+        # Salvar arquivo
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{timestamp}_{file.filename}"
+        file_path = os.path.join(audio_dir, filename)
+        
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+        
+        # Salvar metadados
+        metadata_path = os.path.join(audio_dir, "metadata.json")
+        metadata = []
+        
+        if os.path.exists(metadata_path):
+            with open(metadata_path, 'r') as f:
+                metadata = json.load(f)
+        
+        audio_data = {
+            "id": int(timestamp.replace('_', '')),
+            "filename": filename,
+            "original_name": file.filename,
+            "display_name": file.filename.split('.')[0],
+            "file_path": file_path,
+            "file_size": len(content),
+            "duration": 0,
+            "audio_type": "greeting",
+            "created_at": datetime.now().isoformat()
+        }
+        
+        metadata.append(audio_data)
+        
+        with open(metadata_path, 'w') as f:
+            json.dump(metadata, f, indent=2)
+        
+        return {
+            "success": True,
+            "message": "Arquivo enviado com sucesso",
+            "audio_file": audio_data
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro no fallback de upload de áudios: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao enviar áudio: {str(e)}")
+
+# Router para rotas ausentes
+
 # Endpoints OPTIONS para CORS
 @missing_routes.options("/code2base/clis")
 async def options_code2base_clis():
