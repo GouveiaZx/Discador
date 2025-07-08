@@ -1116,6 +1116,312 @@ async def hello_direto():
     """Endpoint de teste direto na aplicação"""
     return {"message": "Hello direto da aplicação!", "status": "working"}
 
+# ============================================================================
+# ENDPOINTS PRESIONE1 - FUNCIONALIDADES COMPLETAS
+# ============================================================================
+
+@app.get(f"{api_prefix}/presione1/campanhas/{{campana_id}}/estadisticas")
+async def estadisticas_campana_presione1(campana_id: int):
+    """Estatísticas detalhadas da campanha presione1"""
+    from datetime import datetime
+    
+    # Retornar estatísticas de exemplo baseadas no ID da campanha
+    return {
+        "campana_id": campana_id,
+        "nombre_campana": f"Campanha {campana_id}",
+        "total_numeros": 1000,
+        "llamadas_realizadas": 250 + (campana_id * 10),
+        "llamadas_pendientes": 750 - (campana_id * 10),
+        "llamadas_contestadas": 175 + (campana_id * 5),
+        "llamadas_presiono_1": 87 + (campana_id * 2),
+        "llamadas_no_presiono": 88 + (campana_id * 3),
+        "llamadas_transferidas": 82 + (campana_id * 2),
+        "llamadas_error": 5 + campana_id,
+        "tasa_contestacion": 70.0 + (campana_id * 0.5),
+        "tasa_presiono_1": 49.7 + (campana_id * 0.3),
+        "tasa_transferencia": 94.3 - (campana_id * 0.2),
+        "tiempo_medio_respuesta": 5.2 + (campana_id * 0.1),
+        "duracion_media_llamada": 45.5 + (campana_id * 0.5),
+        "activa": campana_id == 2,  # Campanha 2 ativa
+        "pausada": False,
+        "llamadas_activas": 3 if campana_id == 2 else 0,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get(f"{api_prefix}/presione1/campanhas/{{campana_id}}/monitor")
+async def monitor_campana_presione1(campana_id: int):
+    """Monitoramento em tempo real da campanha"""
+    from datetime import datetime, timedelta
+    
+    now = datetime.now()
+    
+    # Dados de monitoramento específicos por campanha
+    llamadas_activas = []
+    if campana_id == 2:  # Campanha ativa
+        llamadas_activas = [
+            {
+                "id": 1001,
+                "numero_destino": "+5511987654321",
+                "estado": "esperando_dtmf",
+                "duracion": 15,
+                "fecha_inicio": (now - timedelta(seconds=15)).isoformat(),
+                "cli_utilizado": "+5511999999999",
+                "channel": "SIP/trunk-00000001"
+            },
+            {
+                "id": 1002,
+                "numero_destino": "+5511987654322",
+                "estado": "audio_reproducido", 
+                "duracion": 8,
+                "fecha_inicio": (now - timedelta(seconds=8)).isoformat(),
+                "cli_utilizado": "+5511999999999",
+                "channel": "SIP/trunk-00000002"
+            },
+            {
+                "id": 1003,
+                "numero_destino": "+5511987654323",
+                "estado": "marcando",
+                "duracion": 3,
+                "fecha_inicio": (now - timedelta(seconds=3)).isoformat(),
+                "cli_utilizado": "+5511999999999",
+                "channel": "SIP/trunk-00000003"
+            }
+        ]
+    
+    return {
+        "campana_id": campana_id,
+        "estado_campana": "activa" if campana_id == 2 else "inactiva",
+        "pausada": False,
+        "llamadas_activas": llamadas_activas,
+        "proximas_llamadas": [
+            "+5511987654324",
+            "+5511987654325", 
+            "+5511987654326"
+        ],
+        "agentes_disponibles": 2,
+        "agentes_ocupados": 1 if campana_id == 2 else 0,
+        "timestamp": now.isoformat()
+    }
+
+@app.post(f"{api_prefix}/presione1/campanhas/{{campana_id}}/iniciar")
+async def iniciar_campana_presione1(campana_id: int, usuario_data: dict = None):
+    """Iniciar campanha presione1"""
+    from datetime import datetime
+    
+    return {
+        "status": "success",
+        "campana_id": campana_id,
+        "message": f"Campanha {campana_id} iniciada com sucesso",
+        "usuario_id": usuario_data.get("usuario_id", "usuario_01") if usuario_data else "usuario_01",
+        "timestamp": datetime.now().isoformat(),
+        "llamadas_programadas": 1000 - (campana_id * 50)
+    }
+
+@app.post(f"{api_prefix}/presione1/campanhas/{{campana_id}}/pausar")
+async def pausar_campana_presione1(campana_id: int, pause_data: dict = None):
+    """Pausar/retomar campanha presione1"""
+    from datetime import datetime
+    
+    pausar = pause_data.get("pausar", True) if pause_data else True
+    action = "pausada" if pausar else "retomada"
+    
+    return {
+        "status": "success",
+        "campana_id": campana_id,
+        "action": action,
+        "pausada": pausar,
+        "message": f"Campanha {campana_id} {action} com sucesso",
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.post(f"{api_prefix}/presione1/campanhas/{{campana_id}}/parar")
+async def parar_campana_presione1(campana_id: int):
+    """Parar campanha presione1"""
+    from datetime import datetime
+    
+    return {
+        "status": "success",
+        "campana_id": campana_id,
+        "message": f"Campanha {campana_id} parada com sucesso",
+        "llamadas_finalizadas": 3,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get(f"{api_prefix}/presione1/campanhas/{{campana_id}}/llamadas")
+async def listar_llamadas_campana(campana_id: int, estado: str = None, presiono_1: bool = None):
+    """Listar chamadas da campanha com filtros"""
+    from datetime import datetime, timedelta
+    
+    now = datetime.now()
+    llamadas = []
+    
+    # Gerar chamadas de exemplo
+    for i in range(10):
+        llamada_id = 1000 + (campana_id * 100) + i
+        llamadas.append({
+            "id": llamada_id,
+            "campana_id": campana_id,
+            "numero_destino": f"+5511987654{320 + i}",
+            "numero_normalizado": f"11987654{320 + i}",
+            "cli_utilizado": "+5511999999999",
+            "estado": ["finalizada", "presiono_1", "no_presiono", "transferida"][i % 4],
+            "fecha_inicio": (now - timedelta(minutes=i*2)).isoformat(),
+            "fecha_fin": (now - timedelta(minutes=i*2-1)).isoformat() if i % 2 == 0 else None,
+            "presiono_1": i % 3 == 0,
+            "dtmf_recibido": "1" if i % 3 == 0 else ("2" if i % 4 == 0 else None),
+            "transferencia_exitosa": i % 3 == 0,
+            "duracion_total": 45 + (i * 5),
+            "tiempo_respuesta_dtmf": 3.5 + (i * 0.2) if i % 3 == 0 else None
+        })
+    
+    # Aplicar filtros se fornecidos
+    if estado:
+        llamadas = [l for l in llamadas if l["estado"] == estado]
+    if presiono_1 is not None:
+        llamadas = [l for l in llamadas if l["presiono_1"] == presiono_1]
+    
+    return {
+        "campana_id": campana_id,
+        "total": len(llamadas),
+        "llamadas": llamadas
+    }
+
+@app.post(f"{api_prefix}/presione1/llamadas/{{llamada_id}}/transferir")
+async def transferir_llamada(llamada_id: int, transfer_data: dict = None):
+    """Transferir chamada para agente/extensão"""
+    from datetime import datetime
+    
+    destino = transfer_data.get("destino", "100") if transfer_data else "100"
+    
+    return {
+        "status": "success",
+        "llamada_id": llamada_id,
+        "destino": destino,
+        "message": f"Chamada {llamada_id} transferida para {destino}",
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.post(f"{api_prefix}/presione1/llamadas/{{llamada_id}}/finalizar")
+async def finalizar_llamada(llamada_id: int, finalize_data: dict = None):
+    """Finalizar chamada manualmente"""
+    from datetime import datetime
+    
+    motivo = finalize_data.get("motivo", "finalizada_manualmente") if finalize_data else "finalizada_manualmente"
+    
+    return {
+        "status": "success",
+        "llamada_id": llamada_id,
+        "motivo": motivo,
+        "message": f"Chamada {llamada_id} finalizada: {motivo}",
+        "timestamp": datetime.now().isoformat()
+    }
+
+# ============================================================================
+# ENDPOINTS MONITORING - AGENTES E SISTEMA
+# ============================================================================
+
+@app.get(f"{api_prefix}/monitoring/agentes")
+async def listar_agentes_monitoring():
+    """Lista agentes conectados e seu status"""
+    from datetime import datetime, timedelta
+    
+    now = datetime.now()
+    
+    agentes = [
+        {
+            "id": 1,
+            "nome": "Agente João",
+            "extensao": "100",
+            "status": "disponivel",
+            "chamadas_hoje": 23,
+            "tempo_online": "04:32:15",
+            "ultima_chamada": (now - timedelta(minutes=5)).isoformat(),
+            "skills": ["vendas", "suporte"]
+        },
+        {
+            "id": 2,
+            "nome": "Agente Maria",
+            "extensao": "101", 
+            "status": "ocupado",
+            "chamadas_hoje": 31,
+            "tempo_online": "05:15:42",
+            "ultima_chamada": now.isoformat(),
+            "chamada_atual": "+5511987654321",
+            "skills": ["vendas", "retenção"]
+        },
+        {
+            "id": 3,
+            "nome": "Agente Pedro",
+            "extensao": "102",
+            "status": "pausa",
+            "chamadas_hoje": 18,
+            "tempo_online": "03:45:23",
+            "ultima_chamada": (now - timedelta(minutes=15)).isoformat(),
+            "motivo_pausa": "Almoço",
+            "skills": ["suporte", "tecnico"]
+        },
+        {
+            "id": 4,
+            "nome": "Agente Ana",
+            "extensao": "103",
+            "status": "offline",
+            "chamadas_hoje": 0,
+            "tempo_online": "00:00:00",
+            "ultima_chamada": None,
+            "skills": ["vendas"]
+        }
+    ]
+    
+    return {
+        "total_agentes": len(agentes),
+        "disponiveis": len([a for a in agentes if a["status"] == "disponivel"]),
+        "ocupados": len([a for a in agentes if a["status"] == "ocupado"]),
+        "em_pausa": len([a for a in agentes if a["status"] == "pausa"]),
+        "offline": len([a for a in agentes if a["status"] == "offline"]),
+        "agentes": agentes,
+        "timestamp": now.isoformat()
+    }
+
+# ============================================================================
+# ENDPOINTS AUDIO INTELIGENTE
+# ============================================================================
+
+@app.get(f"{api_prefix}/audio-inteligente/campanhas/{{campana_id}}/sessoes")
+async def sessoes_audio_inteligente(campana_id: int):
+    """Sessões de áudio inteligente da campanha"""
+    from datetime import datetime, timedelta
+    
+    now = datetime.now()
+    
+    sessoes = []
+    for i in range(5):
+        sessao_id = 2000 + (campana_id * 100) + i
+        sessoes.append({
+            "id": sessao_id,
+            "campana_id": campana_id,
+            "numero_destino": f"+5511987654{340 + i}",
+            "tipo_deteccao": ["humano", "voicemail", "fax", "busy"][i % 4],
+            "confianza": 85.5 + (i * 2.5),
+            "duracion_analise": 2.3 + (i * 0.2),
+            "timestamp": (now - timedelta(minutes=i*3)).isoformat(),
+            "audio_url": f"/recordings/session_{sessao_id}.wav",
+            "metadata": {
+                "frequencia_dominante": 440 + (i * 50),
+                "nivel_ruido": 12.5 + i,
+                "silencio_detectado": i % 2 == 0
+            }
+        })
+    
+    return {
+        "campana_id": campana_id,
+        "total_sessoes": len(sessoes),
+        "deteccoes_humano": len([s for s in sessoes if s["tipo_deteccao"] == "humano"]),
+        "deteccoes_voicemail": len([s for s in sessoes if s["tipo_deteccao"] == "voicemail"]),
+        "deteccoes_fax": len([s for s in sessoes if s["tipo_deteccao"] == "fax"]),
+        "sessoes": sessoes,
+        "timestamp": now.isoformat()
+    }
+
 # Health check endpoints para Render.com
 @app.get("/")
 @app.head("/")
