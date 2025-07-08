@@ -1108,6 +1108,7 @@ async def listar_campanhas_presione1_direto():
         }
     ]
     
+    # Retornar apenas a lista de campanhas (como o frontend espera)
     return campanhas_exemplo
 
 @app.get(f"{api_prefix}/hello-direto")
