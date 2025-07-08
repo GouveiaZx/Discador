@@ -52,19 +52,21 @@ function Login() {
   };
 
   /**
-   * Login rápido com credenciais predefinidas
+   * Login rápido com credenciais predefinidas - VERSÃO GARANTIDA
    */
   const quickLogin = (username, password) => {
+    console.log('🎯 Quick Login chamado:', { username, password });
     setFormData({ username, password });
     login(username, password);
   };
 
+  // CREDENCIAIS HARDCODED - GARANTIDAS E SINCRONIZADAS
   const testAccounts = [
     {
       username: 'admin',
       password: 'admin123',
       role: 'Administrador',
-      description: 'Acceso completo al sistema',
+      description: 'Acesso completo ao sistema',
       badge: 'ADMIN',
       badgeColor: 'bg-error-500/20 text-error-300 border-error-500/30',
       icon: '👑'
@@ -73,7 +75,7 @@ function Login() {
       username: 'supervisor',
       password: 'supervisor123',
       role: 'Supervisor',
-      description: 'Gestión de campañas y listas',
+      description: 'Gestão de campanhas e listas',
       badge: 'SUPERVISOR',
       badgeColor: 'bg-warning-500/20 text-warning-300 border-warning-500/30',
       icon: '👨‍💼'
@@ -82,7 +84,7 @@ function Login() {
       username: 'operador',
       password: 'operador123',
       role: 'Operador',
-      description: 'Monitoreo y operación básica',
+      description: 'Monitoramento e operação básica',
       badge: 'OPERADOR',
       badgeColor: 'bg-primary-500/20 text-primary-300 border-primary-500/30',
       icon: '👨‍💻'
@@ -284,6 +286,43 @@ function Login() {
             )}
         </div>
 
+        {/* TESTE DIRETO - BOTÕES DE EMERGÊNCIA */}
+        <div className="card-glass p-4 mb-6 border-2 border-warning-500/30">
+          <h3 className="text-warning-300 text-sm font-bold mb-3 text-center">🚨 TESTE DIRETO - EMERGÊNCIA</h3>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => {
+                console.log('🔥 TESTE DIRETO ADMIN');
+                login('admin', 'admin123');
+              }}
+              className="btn-danger btn-sm text-xs"
+              disabled={loading}
+            >
+              ADMIN
+            </button>
+            <button
+              onClick={() => {
+                console.log('🔥 TESTE DIRETO SUPERVISOR');
+                login('supervisor', 'supervisor123');
+              }}
+              className="btn-warning btn-sm text-xs"
+              disabled={loading}
+            >
+              SUPER
+            </button>
+            <button
+              onClick={() => {
+                console.log('🔥 TESTE DIRETO OPERADOR');
+                login('operador', 'operador123');
+              }}
+              className="btn-primary btn-sm text-xs"
+              disabled={loading}
+            >
+              OPER
+            </button>
+          </div>
+        </div>
+
         {/* Footer */}
         <div className="text-center mt-8 space-y-2">
           <div className="flex items-center justify-center space-x-4 text-xs text-secondary-500">
@@ -297,7 +336,7 @@ function Login() {
             </span>
           </div>
           <p className="text-xs text-secondary-600">
-            &copy; 2025 Discador Preditivo • Tecnología Avanzada
+            &copy; 2025 Discador Preditivo • Tecnologia Avançada
           </p>
         </div>
       </div>

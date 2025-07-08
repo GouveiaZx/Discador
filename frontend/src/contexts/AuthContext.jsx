@@ -33,101 +33,76 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   /**
-   * Hacer login
+   * Hacer login - VERSÃO SIMPLIFICADA E DIRETA
    */
   const login = async (username, password) => {
     setLoading(true);
     setError(null);
     
-    try {
-      // Hacer petición de login al backend
-      const response = await makeApiRequest('/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username,
-          password
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(response.message || 'Usuario o contraseña incorrectos');
-      }
-
-      const data = await response.json();
+    // FORÇAR AUTENTICAÇÃO LOCAL - SEM API
+    console.log('🚀 LOGIN DIRETO - Dados recebidos:', { username, password });
+    
+    // Limpar espaços e normalizar
+    const cleanUsername = username?.toString().trim().toLowerCase();
+    const cleanPassword = password?.toString().trim();
+    
+    console.log('🧹 Dados limpos:', { cleanUsername, cleanPassword });
+    
+    // CREDENCIAIS HARDCODED - GARANTIDAS
+    const validCredentials = {
+      'admin': { password: 'admin123', role: 'admin', name: 'Administrador', id: 1 },
+      'supervisor': { password: 'supervisor123', role: 'supervisor', name: 'Supervisor', id: 2 },
+      'operador': { password: 'operador123', role: 'operator', name: 'Operador', id: 3 }
+    };
+    
+    console.log('🔑 Credenciais válidas:', validCredentials);
+    
+    // Verificar se usuário existe
+    const userConfig = validCredentials[cleanUsername];
+    console.log('👤 Configuração do usuário encontrada:', userConfig);
+    
+    if (userConfig && userConfig.password === cleanPassword) {
+      console.log('✅ LOGIN APROVADO!');
       
-      if (data.token && data.user) {
-        // Guardar token y usuario en localStorage
-        localStorage.setItem('discador_token', data.token);
-        localStorage.setItem('discador_user', JSON.stringify(data.user));
-        
-        setUser(data.user);
-        setLoading(false);
-        
-        return {
-          success: true,
-          message: 'Login realizado con éxito'
-        };
-      }
-    } catch (err) {
-      // Fallback para usuarios estándar durante desarrollo
-      console.warn('⚠️ Error en la autenticación vía API, usando fallback local:', err.message);
+      // Criar usuário
+      const authenticatedUser = {
+        id: userConfig.id,
+        username: cleanUsername,
+        role: userConfig.role,
+        name: userConfig.name,
+        email: `${cleanUsername}@discador.com`
+      };
       
-      // Usuarios estándar para desarrollo
-      const defaultUsers = [
-        { id: 1, username: 'admin', password: 'admin123', role: 'admin', name: 'Administrador' },
-        { id: 2, username: 'supervisor', password: 'supervisor123', role: 'supervisor', name: 'Supervisor' },
-        { id: 3, username: 'operador', password: 'operador123', role: 'operator', name: 'Operador' },
-        { id: 4, username: 'demo', password: 'demo', role: 'demo', name: 'Demo' }
-      ];
-
-      console.log('🔍 Tentativa de login:', { username, password });
-      console.log('👥 Usuários disponíveis:', defaultUsers);
+      // Token simulado
+      const token = btoa(JSON.stringify({
+        userId: userConfig.id,
+        username: cleanUsername,
+        role: userConfig.role,
+        exp: Date.now() + 24 * 60 * 60 * 1000
+      }));
       
-      const foundUser = defaultUsers.find(u => 
-        u.username === username && u.password === password
-      );
-
-      console.log('✅ Usuário encontrado:', foundUser);
-
-      if (foundUser) {
-        // Token simulado
-        const fakeToken = btoa(JSON.stringify({
-          userId: foundUser.id,
-          username: foundUser.username,
-          role: foundUser.role,
-          exp: Date.now() + 24 * 60 * 60 * 1000 // 24 horas
-        }));
-
-        // Remover contraseña y guardar
-        const userToSave = {
-          id: foundUser.id,
-          username: foundUser.username,
-          role: foundUser.role,
-          name: foundUser.name
-        };
-
-        localStorage.setItem('discador_token', fakeToken);
-        localStorage.setItem('discador_user', JSON.stringify(userToSave));
-        
-        setUser(userToSave);
-        setLoading(false);
-        
-        return {
-          success: true,
-          message: 'Login realizado con éxito (modo fallback)'
-        };
-      } else {
-        setError('Usuario o contraseña incorrectos');
-        setLoading(false);
-        return {
-          success: false,
-          error: 'Usuario o contraseña incorrectos'
-        };
-      }
+      // Salvar
+      localStorage.setItem('discador_token', token);
+      localStorage.setItem('discador_user', JSON.stringify(authenticatedUser));
+      
+      setUser(authenticatedUser);
+      setLoading(false);
+      
+      console.log('💾 Usuário salvo:', authenticatedUser);
+      
+      return {
+        success: true,
+        message: `Login realizado com sucesso como ${userConfig.name}`
+      };
+    } else {
+      console.log('❌ LOGIN NEGADO - Credenciais inválidas');
+      const errorMsg = 'Usuário ou senha incorretos';
+      setError(errorMsg);
+      setLoading(false);
+      return {
+        success: false,
+        error: errorMsg
+      };
     }
   };
 
