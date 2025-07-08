@@ -1118,8 +1118,65 @@ async def hello_direto():
 # Health check endpoints para Render.com
 @app.get("/")
 @app.head("/")
-async def raiz():
+async def raiz(campanhas: str = None):
     """Endpoint raiz com informações da API"""
+    if campanhas == "presione1":
+        # Retornar campanhas de exemplo quando solicitado
+        from datetime import datetime
+        
+        campanhas_exemplo = [
+            {
+                "id": 1,
+                "nombre": "Campanha Presione 1 - Teste",
+                "descripcion": "Campanha de exemplo para discado Presione 1",
+                "campaign_id": 1,
+                "activa": False,
+                "pausada": False,
+                "fecha_creacion": datetime.now().isoformat(),
+                "llamadas_simultaneas": 5,
+                "mensaje_audio_url": "https://example.com/audio1.wav",
+                "timeout_presione1": 10,
+                "extension_transferencia": "1001",
+                "cola_transferencia": "ventas"
+            },
+            {
+                "id": 2,
+                "nombre": "Campanha Promocional",
+                "descripcion": "Campanha promocional com Presione 1",
+                "campaign_id": 2,
+                "activa": True,
+                "pausada": False,
+                "fecha_creacion": datetime.now().isoformat(),
+                "llamadas_simultaneas": 3,
+                "mensaje_audio_url": "https://example.com/audio2.wav",
+                "timeout_presione1": 15,
+                "extension_transferencia": "1002",
+                "cola_transferencia": "soporte"
+            },
+            {
+                "id": 3,
+                "nombre": "Campanha Informativa",
+                "descripcion": "Campanha informativa para clientes",
+                "campaign_id": 3,
+                "activa": False,
+                "pausada": True,
+                "fecha_creacion": datetime.now().isoformat(),
+                "llamadas_simultaneas": 8,
+                "mensaje_audio_url": "https://example.com/audio3.wav",
+                "timeout_presione1": 12,
+                "extension_transferencia": "1003",
+                "cola_transferencia": "info"
+            }
+        ]
+        
+        return {
+            "status": "success",
+            "campanhas": campanhas_exemplo,
+            "total": len(campanhas_exemplo),
+            "message": "Campanhas presione1 via endpoint raiz"
+        }
+    
+    # Comportamento padrão
     return {
         "status": "healthy",
         "mensaje": f"API de {configuracion.APP_NAME}",
