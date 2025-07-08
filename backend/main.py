@@ -48,6 +48,8 @@ except ImportError as e:
     caller_id = None
     timing = None
     dnc = None
+
+# Force redeploy - 2024-12-28 17:10
 # Importar novas rotas avançadas
 try:
     from app.routes import configuracao_discagem
