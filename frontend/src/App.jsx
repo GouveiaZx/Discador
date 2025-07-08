@@ -16,7 +16,7 @@ import SipTrunkConfig from './components/SipTrunkConfig';
 import TrunkCountryManager from './components/TrunkCountryManager';
 import DNCMultiLanguageManager from './components/DNCMultiLanguageManager';
 import RealtimeCallDisplay from './components/RealtimeCallDisplay';
-import ConfiguracionConsolidada from './components/ConfiguracionConsolidada';
+import ConfiguracionAvanzada from './components/ConfiguracionAvanzada';
 import AudioManager from './components/AudioManager';
 
 /**
@@ -442,7 +442,7 @@ function AuthenticatedApp() {
                 {activeTab === 'caller-id' && hasPermission('supervisor') && <CallerIdManager />}
                 {activeTab === 'timing' && hasPermission('supervisor') && <CallTimingConfig />}
                 {activeTab === 'blacklist' && hasPermission('admin') && <GestionBlacklist />}
-                {activeTab === 'configuracion' && hasPermission('admin') && <ConfiguracionConsolidada />}
+                {activeTab === 'configuracion' && hasPermission('admin') && <ConfiguracionAvanzada />}
                 {activeTab === 'historico' && <HistoricoLlamadas />}
               </>
             )}
