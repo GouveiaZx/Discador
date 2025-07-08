@@ -1,0 +1,664 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===================================================
+   DESIGN SYSTEM PROFISSIONAL - VARIÁVEIS CSS
+   =================================================== */
+:root {
+  /* Cores principais */
+  --color-primary: #0ea5e9;
+  --color-primary-dark: #0284c7;
+  --color-secondary: #64748b;
+  --color-accent: #3b82f6;
+  
+  /* Background gradients */
+  --bg-gradient-primary: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --bg-gradient-card: linear-gradient(145deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  --bg-gradient-hover: linear-gradient(145deg, rgba(51, 65, 85, 0.8) 0%, rgba(30, 41, 59, 0.9) 100%);
+  
+  /* Sombras */
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.37);
+  --shadow-glow: 0 0 20px rgba(14, 165, 233, 0.3);
+  --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+  
+  /* Bordas */
+  --border-glass: 1px solid rgba(255, 255, 255, 0.125);
+  --border-glow: 1px solid rgba(14, 165, 233, 0.3);
+  
+  /* Transições */
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ===================================================
+   RESET E ESTILOS GLOBAIS PROFISSIONAIS
+   =================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg-gradient-primary);
+  color: #f8fafc;
+  line-height: 1.6;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===================================================
+   COMPONENTES PROFISSIONAIS
+   =================================================== */
+
+/* Cartões com efeito glass */
+.card-glass {
+  @apply relative overflow-hidden rounded-2xl;
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(16px);
+  border: var(--border-glass);
+  box-shadow: var(--shadow-card);
+  transition: var(--transition-smooth);
+}
+
+.card-glass:hover {
+  background: rgba(51, 65, 85, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+}
+
+/* Botões profissionais */
+.btn-primary {
+  @apply relative inline-flex items-center justify-center px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300;
+  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+  transform: translateY(0);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.6);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.4);
+}
+
+.btn-secondary {
+  @apply relative inline-flex items-center justify-center px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300;
+  background: rgba(100, 116, 139, 0.2);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.btn-secondary:hover {
+  background: rgba(100, 116, 139, 0.3);
+  border-color: rgba(148, 163, 184, 0.5);
+  color: #f1f5f9;
+  transform: translateY(-1px);
+}
+
+.btn-success {
+  @apply relative inline-flex items-center justify-center px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.6);
+}
+
+.btn-danger {
+  @apply relative inline-flex items-center justify-center px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6);
+}
+
+.btn-warning {
+  @apply relative inline-flex items-center justify-center px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+}
+
+.btn-warning:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.6);
+}
+
+/* Variantes de tamanho para botões */
+.btn-sm {
+  @apply px-3 py-1.5 text-xs;
+}
+
+.btn-lg {
+  @apply px-8 py-4 text-base;
+}
+
+.btn-xl {
+  @apply px-10 py-5 text-lg;
+}
+
+/* Inputs profissionais */
+.input-modern {
+  @apply w-full px-4 py-3 text-sm bg-transparent border rounded-xl transition-all duration-300 focus:outline-none;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #f1f5f9;
+  backdrop-filter: blur(8px);
+}
+
+.input-modern:focus {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.input-modern::placeholder {
+  color: #94a3b8;
+}
+
+/* Tabelas profissionais */
+.table-modern {
+  @apply w-full border-collapse;
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(16px);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.table-modern th {
+  @apply px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider;
+  background: rgba(15, 23, 42, 0.8);
+  color: #94a3b8;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.table-modern td {
+  @apply px-6 py-4 text-sm;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.table-modern tbody tr:hover {
+  background: rgba(51, 65, 85, 0.4);
+}
+
+/* Badges e status */
+.badge {
+  @apply inline-flex items-center px-3 py-1 text-xs font-medium rounded-full;
+}
+
+.badge-success {
+  @apply badge;
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.badge-warning {
+  @apply badge;
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-error {
+  @apply badge;
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-info {
+  @apply badge;
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Modal backdrop profissional */
+.modal-backdrop {
+  @apply fixed inset-0 z-50 flex items-center justify-center;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(8px);
+  animation: modalBackdropFadeIn 0.3s ease-out;
+}
+
+@keyframes modalBackdropFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
+/* Scrollbar customizada profissional */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.5) rgba(30, 41, 59, 0.3);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.3);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.5);
+  border-radius: 4px;
+  transition: var(--transition-smooth);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.8);
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: rgba(30, 41, 59, 0.3);
+}
+
+/* ===================================================
+   ANIMAÇÕES PROFISSIONAIS
+   =================================================== */
+
+/* Animação fade in up */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animação fade in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animação slide up */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animação slide in right */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Animação glow */
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
+  }
+  to {
+    box-shadow: 0 0 40px rgba(14, 165, 233, 0.8);
+  }
+}
+
+/* Animação pulse slow */
+@keyframes pulseSlow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Classes de utilidade para animações */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.5s ease-out forwards;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ===================================================
+   RESPONSIVIDADE PROFISSIONAL
+   =================================================== */
+@media (max-width: 768px) {
+  .card-glass {
+    @apply rounded-xl;
+  }
+  
+  .btn-primary,
+  .btn-secondary,
+  .btn-success,
+  .btn-danger,
+  .btn-warning {
+    @apply px-4 py-2 text-xs;
+  }
+  
+  .table-modern th,
+  .table-modern td {
+    @apply px-3 py-2 text-xs;
+  }
+  
+  .input-modern {
+    @apply px-3 py-2 text-sm;
+  }
+}
+
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+  
+  .card-glass {
+    @apply rounded-lg;
+  }
+  
+  .table-modern {
+    @apply text-xs;
+  }
+}
+
+/* ===================================================
+   UTILITÁRIOS ESPECIAIS
+   =================================================== */
+.text-gradient-primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glass-panel {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+}
+
+/* Efeitos hover especiais */
+.hover-glow:hover {
+  box-shadow: 0 0 30px rgba(14, 165, 233, 0.4);
+  transition: box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  transition: transform 0.3s ease;
+}
+
+/* Estados de loading profissionais */
+.loading-skeleton {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.1) 25%, rgba(148, 163, 184, 0.2) 50%, rgba(148, 163, 184, 0.1) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Indicators visuais */
+.status-indicator {
+  position: relative;
+}
+
+.status-indicator::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.warning::before {
+  background: #f59e0b;
+}
+
+.status-indicator.error::before {
+  background: #ef4444;
+}
+
+/* Melhorias para acessibilidade */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.5);
+}
+
+/* Transições suaves para elementos interativos */
+.smooth-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sistema de grid responsivo */
+.grid-auto-fit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.grid-auto-fill {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ===================================================
+   MELHORIAS PARA MONITORES GRANDES
+   =================================================== */
+
+/* Otimizações para telas ultrawide e monitores grandes */
+@media (min-width: 1920px) {
+  .grid-auto-fit {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    max-width: 100%;
+  }
+  
+  .grid-auto-fill {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    max-width: 100%;
+  }
+  
+  /* Limitar largura máxima de containers para não ficarem muito largos */
+  .container-max-width {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 2560px) {
+  .grid-auto-fit {
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 2rem;
+  }
+  
+  .grid-auto-fill {
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 2rem;
+  }
+  
+  /* Para monitores 4K e maiores */
+  .container-max-width {
+    max-width: 1600px;
+  }
+}
+
+/* Correção para barras de scroll e overflow em monitores grandes */
+.full-width-container {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Ajustes específicos para elementos que podem ficar cortados */
+.responsive-card {
+  min-width: 280px;
+  max-width: 100%;
+  width: auto;
+}
+
+/* Melhorias para navegação lateral em telas grandes */
+@media (min-width: 1440px) {
+  .sidebar {
+    min-width: 280px;
+}
+
+  .main-content {
+    margin-left: 280px;
+    width: calc(100% - 280px);
+  }
+}
+
+/* ===================================================
+   CORREÇÕES ESPECÍFICAS PARA HEADER EM MONITORES GRANDES
+   =================================================== */
+
+/* Header responsivo para todos os tamanhos de tela */
+header {
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+/* Correção para o header não ficar cortado */
+@media (min-width: 1024px) {
+  /* Layout principal para desktop */
+  .lg\\:ml-80 {
+    margin-left: 20rem; /* 80 * 0.25rem = 20rem */
+    width: calc(100vw - 20rem);
+    max-width: calc(100vw - 20rem);
+  }
+  
+  /* Header específico para desktop */
+  .lg\\:ml-80 header {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+  }
+  
+  /* Container do header */
+  .lg\\:ml-80 header > div {
+    width: 100%;
+    max-width: none;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* Melhorias para monitores ultrawide */
+@media (min-width: 1920px) {
+  .lg\\:ml-80 {
+    width: calc(100vw - 20rem);
+    max-width: calc(100vw - 20rem);
+  }
+  
+  /* Container máximo limitado em telas muito grandes */
+  .container-max-width {
+    max-width: 1600px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+@media (min-width: 2560px) {
+  .container-max-width {
+    max-width: 1800px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  
+  /* Padding extra para telas 4K */
+  .lg\\:ml-80 header > div {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+} 
