@@ -398,7 +398,7 @@ const DashboardProfessional = () => {
           <ProfessionalMetricCard
             title="IA Audio Sessions"
             value={metrics.sesionesAudio}
-            subtitle="Processamento inteligente"
+            subtitle="Procesamiento inteligente"
             icon="🤖"
             gradient="warning"
             trend={{ direction: 'up', value: '+25%' }}
@@ -411,16 +411,16 @@ const DashboardProfessional = () => {
           <ProfessionalMetricCard
             title="Campanhas Ativas"
             value={metrics.campanhasActivas}
-            subtitle="Em execução"
+            subtitle="En ejecución"
             icon="🗳️"
             gradient="primary"
             loading={loading}
           />
           
           <ProfessionalMetricCard
-            title="Tempo Médio"
+            title="Tiempo Promedio"
             value={metrics.tiempoMedio}
-            subtitle="Duração por chamada"
+            subtitle="Duración por llamada"
             icon="⏱️"
             gradient="success"
             loading={loading}
@@ -429,7 +429,7 @@ const DashboardProfessional = () => {
           <ProfessionalMetricCard
             title="Taxa de Sucesso"
             value={metrics.tasaExito}
-            subtitle="Chamadas completadas"
+            subtitle="Llamadas completadas"
             icon="✅"
             gradient="info"
             loading={loading}
@@ -443,10 +443,10 @@ const DashboardProfessional = () => {
             icon="🌐"
             items={(Array.isArray(data.provedores) ? data.provedores : []).map(p => ({
               name: p.nome || p.name,
-              description: `${p.llamadas || p.chamadas_ativas || 0} chamadas ativas`,
+              description: `${p.llamadas || p.chamadas_ativas || 0} llamadas activas`,
               status: p.status || 'inativo',
               badge: p.prioridade ? { 
-                text: `Prioridade ${p.prioridade}`, 
+                text: `Prioridad ${p.prioridade}`, 
                 color: 'bg-primary-500/20 text-primary-300 border border-primary-500/30' 
               } : null
             }))}
@@ -458,7 +458,7 @@ const DashboardProfessional = () => {
             icon="📱"
             items={(Array.isArray(data.clis) ? data.clis : []).map(c => ({
               name: c.numero || c.cli,
-              description: `${c.llamadas_hoy || c.chamadas_hoje || 0} chamadas hoje`,
+              description: `${c.llamadas_hoy || c.chamadas_hoje || 0} llamadas hoy`,
               status: c.activo || c.ativo ? 'ativo' : 'inativo',
               badge: c.pais || c.paises ? { 
                 text: c.pais || c.paises, 
@@ -473,7 +473,7 @@ const DashboardProfessional = () => {
             icon="🎵"
             items={(Array.isArray(data.audio?.contextos) ? data.audio.contextos : []).map(c => ({
               name: c.nome || c.name,
-              description: c.descripcion || c.descricao || 'Processamento de áudio inteligente',
+              description: c.descripcion || c.descricao || 'Procesamiento de audio inteligente',
               status: c.activo || c.ativo ? 'ativo' : 'inativo',
               count: c.sessiones_activas || c.sessoes_ativas
             }))}
@@ -519,7 +519,7 @@ const DashboardProfessional = () => {
               },
               { 
                 name: 'Sistema de Áudio IA', 
-                description: 'Processamento em tempo real', 
+                description: 'Procesamiento en tiempo real', 
                 status: 'ativo' 
               }
             ]}
@@ -527,47 +527,7 @@ const DashboardProfessional = () => {
           />
         </div>
 
-        {/* Centro de Comando */}
-        <div className="card-glass p-8">
-          <div className="flex items-center space-x-3 mb-8">
-            <span className="text-2xl">⚡</span>
-            <h3 className="text-xl font-bold text-white">Centro de Comando</h3>
-          </div>
-          
-          <div className="grid-auto-fit gap-6">
-            <QuickActionButton
-              title="Atualizar Dados"
-              icon="🔄"
-              description="Refresh manual"
-              onClick={loadDashboardData}
-              color="primary"
-            />
-            
-            <button
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              onClick={() => window.open(`${API_BASE_URL}/documentacao`, '_blank')}
-            >
-              <DocumentTextIcon className="w-5 h-5" />
-              Documentação API
-            </button>
-            
-            <QuickActionButton
-              title="Logs do Sistema"
-              icon="📋"
-              description="Visualizar logs"
-              onClick={() => console.log('Dashboard Data:', data)}
-              color="warning"
-            />
-            
-            <QuickActionButton
-              title="Reiniciar Interface"
-              icon="🔃"
-              description="Recarregar página"
-              onClick={() => window.location.reload()}
-              color="secondary"
-            />
-          </div>
-        </div>
+
 
         {/* Rodapé com Informações */}
         <div className="text-center space-y-2">
@@ -578,7 +538,7 @@ const DashboardProfessional = () => {
             </span>
             <span className="flex items-center space-x-1">
               <span className="w-2 h-2 bg-primary-400 rounded-full"></span>
-              <span>Tempo Real</span>
+              <span>Tiempo Real</span>
             </span>
             <span className="flex items-center space-x-1">
               <span className="w-2 h-2 bg-warning-400 rounded-full"></span>

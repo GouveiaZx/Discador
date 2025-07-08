@@ -249,7 +249,7 @@ function Login() {
             {showCredentials && (
             <div className="mt-6 space-y-3 animate-fade-in">
               <p className="text-xs text-secondary-500 mb-4">
-                Clique em qualquer conta para login automático:
+                Hacé clic en cualquier cuenta para login automático:
               </p>
                 
               {testAccounts.map((account, index) => (
