@@ -73,6 +73,8 @@ async def get_trunk(trunk_id: int):
 async def create_trunk(trunk_data: dict):
     """Criar novo trunk"""
     try:
+        print(f"🔵 [TRUNK-CREATE] Recebendo dados: {trunk_data}")
+        
         # Preparar dados
         name = trunk_data.get('name')
         host = trunk_data.get('host')
@@ -82,8 +84,12 @@ async def create_trunk(trunk_data: dict):
         trunk_type = trunk_data.get('trunk_type', 'dv_voip')
         sip_config = trunk_data.get('sip_config', {})
         
+        print(f"🔵 [TRUNK-CREATE] Dados processados - name: {name}, host: {host}, country: {country_code}")
+        
         if not name or not host or not country_code:
-            raise HTTPException(status_code=400, detail="Nome, host e código do país são obrigatórios")
+            error_msg = f"Nome, host e código do país são obrigatórios. Recebido: name={name}, host={host}, country_code={country_code}"
+            print(f"❌ [TRUNK-CREATE] Validação falhou: {error_msg}")
+            raise HTTPException(status_code=400, detail=error_msg)
         
         # Dados para inserção
         insert_data = {
@@ -97,21 +103,34 @@ async def create_trunk(trunk_data: dict):
             "is_active": True
         }
         
+        print(f"🔵 [TRUNK-CREATE] Dados para inserção: {insert_data}")
+        
         url = f"{SUPABASE_URL}/rest/v1/trunks"
+        print(f"🔵 [TRUNK-CREATE] URL Supabase: {url}")
+        
         response = requests.post(url, headers=headers, json=insert_data)
+        
+        print(f"🔵 [TRUNK-CREATE] Resposta Supabase: Status={response.status_code}, Text={response.text[:200]}")
         
         if response.status_code == 201:
             created_trunk = response.json()
+            print(f"✅ [TRUNK-CREATE] Trunk criado com sucesso: ID={created_trunk[0]['id'] if created_trunk else 'N/A'}")
             return {"message": "Trunk criado com sucesso", "trunk": created_trunk}
         else:
-            raise HTTPException(status_code=response.status_code, detail="Erro ao criar trunk no Supabase")
+            error_detail = f"Erro ao criar trunk no Supabase. Status: {response.status_code}, Response: {response.text}"
+            print(f"❌ [TRUNK-CREATE] {error_detail}")
+            raise HTTPException(status_code=response.status_code, detail=error_detail)
             
     except HTTPException:
         raise
     except requests.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"Erro de conexão com Supabase: {str(e)}")
+        error_msg = f"Erro de conexão com Supabase: {str(e)}"
+        print(f"❌ [TRUNK-CREATE] {error_msg}")
+        raise HTTPException(status_code=500, detail=error_msg)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao criar trunk: {str(e)}")
+        error_msg = f"Erro ao criar trunk: {str(e)}"
+        print(f"❌ [TRUNK-CREATE] {error_msg}")
+        raise HTTPException(status_code=500, detail=error_msg)
 
 @router.put("/{trunk_id}", response_model=dict)
 async def update_trunk(trunk_id: int, trunk_data: dict):
