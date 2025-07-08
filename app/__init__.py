@@ -1,1 +1,0 @@
-# Paquete app para el discador predictivo 
