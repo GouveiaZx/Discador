@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, status
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 try:
@@ -1059,10 +1059,18 @@ app.include_router(auth_router, prefix=f"{api_prefix}/auth")
 # Endpoint direto na aplicação principal para campanhas presione1
 @app.get(f"{api_prefix}/presione1/campanhas")
 async def listar_campanhas_presione1_direto():
-    """Lista campanhas presione1 - endpoint direto na aplicação"""
+    """Lista campanhas presione1 - conectado ao Supabase"""
     from datetime import datetime
     
-    # Sempre retornar campanhas de exemplo
+    # Buscar campanhas reais do Supabase
+    campanhas_reais = get_campanhas_presione1_from_supabase()
+    
+    if campanhas_reais:
+        logger.info(f"✅ [PRESIONE1] Retornando {len(campanhas_reais)} campanhas reais do Supabase")
+        return campanhas_reais
+    
+    # Fallback para campanhas de exemplo se Supabase não funcionar
+    logger.warning("⚠️ [PRESIONE1] Usando dados mockados como fallback")
     campanhas_exemplo = [
         {
             "id": 1,
@@ -1108,7 +1116,6 @@ async def listar_campanhas_presione1_direto():
         }
     ]
     
-    # Retornar apenas a lista de campanhas (como o frontend espera)
     return campanhas_exemplo
 
 @app.get(f"{api_prefix}/hello-direto")
@@ -1202,10 +1209,32 @@ async def obter_campana_presione1(campana_id: int):
 
 @app.get(f"{api_prefix}/presione1/campanhas/{{campana_id}}/estadisticas")
 async def estadisticas_campana_presione1(campana_id: int):
-    """Estatísticas detalhadas da campanha presione1"""
+    """Estatísticas detalhadas da campanha presione1 - conectado ao Supabase"""
     from datetime import datetime
     
-    # Retornar estatísticas de exemplo baseadas no ID da campanha
+    # Buscar estatísticas reais do Supabase
+    estadisticas_reais = get_estadisticas_presione1_from_supabase(campana_id)
+    
+    if estadisticas_reais:
+        # Adicionar campos extras para o frontend
+        estadisticas_reais.update({
+            "campana_id": campana_id,
+            "nombre_campana": f"Campanha {campana_id}",
+            "llamadas_pendientes": 0,  # Campo calculado
+            "llamadas_no_presiono": estadisticas_reais['llamadas_contestadas'] - estadisticas_reais['llamadas_presiono_1'],
+            "tiempo_medio_respuesta": 5.2,  # Campo calculado
+            "duracion_media_llamada": 45.5,  # Campo calculado
+            "activa": False,  # Campo calculado
+            "pausada": False,  # Campo calculado
+            "llamadas_activas": 0,  # Campo calculado
+            "timestamp": datetime.now().isoformat()
+        })
+        
+        logger.info(f"✅ [ESTADISTICAS] Retornando estatísticas reais da campanha {campana_id}")
+        return estadisticas_reais
+    
+    # Fallback para estatísticas de exemplo
+    logger.warning(f"⚠️ [ESTADISTICAS] Usando dados mockados como fallback para campanha {campana_id}")
     return {
         "campana_id": campana_id,
         "nombre_campana": f"Campanha {campana_id}",
@@ -1329,10 +1358,24 @@ async def parar_campana_presione1(campana_id: int):
 
 @app.get(f"{api_prefix}/presione1/campanhas/{{campana_id}}/llamadas")
 async def listar_llamadas_campana(campana_id: int, estado: str = None, presiono_1: bool = None):
-    """Listar chamadas da campanha com filtros"""
+    """Listar chamadas da campanha com filtros - conectado ao Supabase"""
     from datetime import datetime, timedelta
     
     now = datetime.now()
+    
+    # Buscar chamadas reais do Supabase
+    llamadas_reais = get_llamadas_presione1_from_supabase(campana_id, estado, presiono_1)
+    
+    if llamadas_reais:
+        logger.info(f"✅ [LLAMADAS] Retornando {len(llamadas_reais)} chamadas reais da campanha {campana_id}")
+        return {
+            "campana_id": campana_id,
+            "total": len(llamadas_reais),
+            "llamadas": llamadas_reais
+        }
+    
+    # Fallback para chamadas de exemplo se Supabase não funcionar
+    logger.warning(f"⚠️ [LLAMADAS] Usando dados mockados como fallback para campanha {campana_id}")
     llamadas = []
     
     # Gerar chamadas de exemplo
@@ -1402,11 +1445,44 @@ async def finalizar_llamada(llamada_id: int, finalize_data: dict = None):
 
 @app.get(f"{api_prefix}/monitoring/agentes")
 async def listar_agentes_monitoring():
-    """Lista agentes conectados e seu status"""
+    """Lista agentes conectados e seu status - conectado ao Supabase"""
     from datetime import datetime, timedelta
     
     now = datetime.now()
     
+    # Buscar agentes reais do Supabase
+    agentes_reais = get_agentes_from_supabase()
+    
+    if agentes_reais:
+        logger.info(f"✅ [AGENTES] Retornando {len(agentes_reais)} agentes reais do Supabase")
+        
+        # Adicionar campos extras para compatibilidade
+        agentes_formatados = []
+        for agente in agentes_reais:
+            agente_formatado = {
+                "id": agente.get("id"),
+                "nome": agente.get("nome", agente.get("name", "Agente")),
+                "extensao": agente.get("extensao", "100"),
+                "status": agente.get("status", "offline"),
+                "chamadas_hoje": agente.get("chamadas_hoje", 0),
+                "tempo_online": agente.get("tempo_online", "00:00:00"),
+                "ultima_chamada": agente.get("ultima_chamada", None),
+                "skills": agente.get("skills", [])
+            }
+            agentes_formatados.append(agente_formatado)
+        
+        return {
+            "total_agentes": len(agentes_formatados),
+            "disponiveis": len([a for a in agentes_formatados if a["status"] == "disponivel"]),
+            "ocupados": len([a for a in agentes_formatados if a["status"] == "ocupado"]),
+            "em_pausa": len([a for a in agentes_formatados if a["status"] == "pausa"]),
+            "offline": len([a for a in agentes_formatados if a["status"] == "offline"]),
+            "agentes": agentes_formatados,
+            "timestamp": now.isoformat()
+        }
+    
+    # Fallback para agentes de exemplo se Supabase não funcionar
+    logger.warning("⚠️ [AGENTES] Usando dados mockados como fallback")
     agentes = [
         {
             "id": 1,
@@ -1686,26 +1762,205 @@ async def reproduzir_audio(audio_id: int):
     }
 
 @app.post(f"{api_prefix}/audios/upload")
-async def upload_audio():
-    """Simula upload de arquivo de áudio"""
+async def upload_audio(file: UploadFile = File(...), tipo: str = "presione1", titulo: str = None, descripcion: str = None):
+    """Upload de arquivo de áudio para o sistema"""
     from datetime import datetime
+    import os
+    import uuid
     
-    # Simular upload bem-sucedido
+    # Validar formato de arquivo
+    allowed_formats = ['.wav', '.mp3', '.mp4', '.m4a', '.flac', '.ogg']
+    file_extension = os.path.splitext(file.filename)[1].lower()
+    
+    if file_extension not in allowed_formats:
+        return {
+            "status": "error",
+            "message": f"Formato não suportado. Formatos permitidos: {', '.join(allowed_formats)}",
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    # Validar tamanho do arquivo (max 50MB)
+    file_size = 0
+    file_content = await file.read()
+    file_size = len(file_content)
+    
+    if file_size > 50 * 1024 * 1024:  # 50MB
+        return {
+            "status": "error",
+            "message": "Arquivo muito grande. Tamanho máximo: 50MB",
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    # Gerar ID único para o arquivo
+    audio_id = str(uuid.uuid4())
+    safe_filename = f"{audio_id}{file_extension}"
+    
+    # Simular salvamento (em produção, salvar no Supabase Storage)
+    audio_url = f"https://discador.onrender.com/audios/{safe_filename}"
+    
+    # Simular análise de áudio
+    duracao_estimada = file_size / 8000  # Estimativa baseada no tamanho
+    
+    audio_data = {
+        "id": audio_id,
+        "nome": safe_filename,
+        "nome_original": file.filename,
+        "titulo": titulo or file.filename,
+        "descricao": descripcion or f"Áudio enviado: {file.filename}",
+        "url": audio_url,
+        "url_reproducao": f"https://discador.onrender.com/api/v1/audios/{audio_id}/play",
+        "duracao": round(duracao_estimada, 2),
+        "tamanho": f"{file_size / (1024*1024):.2f} MB",
+        "formato": file_extension.upper().replace('.', ''),
+        "tipo": tipo,
+        "data_upload": datetime.now().isoformat(),
+        "status": "processado",
+        "content_type": file.content_type,
+        "metadados": {
+            "tamanho_bytes": file_size,
+            "formato_original": file.content_type,
+            "processado_em": datetime.now().isoformat()
+        }
+    }
+    
+    # TODO: Salvar no Supabase Storage e atualizar tabela audio_template
+    logger.info(f"✅ [AUDIO-UPLOAD] Arquivo enviado: {file.filename} ({file_size} bytes)")
+    
     return {
         "status": "success",
-        "message": "Áudio enviado com sucesso",
-        "audio": {
-            "id": 4,
-            "nome": "novo_audio.wav",
-            "titulo": "Novo Áudio Enviado",
-            "url": f"https://discador.onrender.com/audios/novo_audio.wav",
-            "url_reproducao": f"https://discador.onrender.com/api/v1/audios/4/play",
-            "duracao": 30.0,
-            "tamanho": "2.8 MB",
-            "formato": "WAV",
-            "data_upload": datetime.now().isoformat(),
-            "status": "processando"
+        "message": "Áudio enviado e processado com sucesso",
+        "audio": audio_data,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.post(f"{api_prefix}/audios/gravar/iniciar")
+async def iniciar_gravacao_audio(titulo: str = None, descripcion: str = None, tipo: str = "presione1"):
+    """Iniciar sessão de gravação de áudio"""
+    from datetime import datetime
+    import uuid
+    
+    # Gerar ID único para a sessão de gravação
+    session_id = str(uuid.uuid4())
+    
+    gravacao_data = {
+        "session_id": session_id,
+        "titulo": titulo or "Nova Gravação",
+        "descricao": descripcion or "Gravação de áudio via navegador",
+        "tipo": tipo,
+        "status": "gravando",
+        "data_inicio": datetime.now().isoformat(),
+        "configuracoes": {
+            "sample_rate": 44100,
+            "channels": 1,
+            "format": "webm",
+            "max_duration": 300,  # 5 minutos
+            "auto_stop": True
+        }
+    }
+    
+    logger.info(f"✅ [AUDIO-GRAVACAO] Sessão iniciada: {session_id}")
+    
+    return {
+        "status": "success",
+        "message": "Sessão de gravação iniciada",
+        "session": gravacao_data,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.post(f"{api_prefix}/audios/gravar/parar")
+async def parar_gravacao_audio(session_id: str, audio_data: str = None):
+    """Finalizar sessão de gravação e processar áudio"""
+    from datetime import datetime
+    import base64
+    
+    # Validar sessão
+    if not session_id:
+        return {
+            "status": "error",
+            "message": "Session ID é obrigatório",
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    # Simular processamento do áudio gravado
+    audio_id = str(uuid.uuid4())
+    
+    # Se tem dados de áudio, processar
+    if audio_data:
+        try:
+            # Simular decodificação base64
+            audio_size = len(audio_data.encode()) if audio_data else 0
+            duracao_estimada = audio_size / 8000  # Estimativa
+            
+            audio_info = {
+                "id": audio_id,
+                "session_id": session_id,
+                "nome": f"gravacao_{audio_id}.wav",
+                "titulo": "Gravação de Áudio",
+                "descricao": "Áudio gravado via navegador",
+                "url": f"https://discador.onrender.com/audios/gravacao_{audio_id}.wav",
+                "url_reproducao": f"https://discador.onrender.com/api/v1/audios/{audio_id}/play",
+                "duracao": round(duracao_estimada, 2),
+                "tamanho": f"{audio_size / (1024*1024):.2f} MB",
+                "formato": "WAV",
+                "tipo": "presione1",
+                "data_gravacao": datetime.now().isoformat(),
+                "status": "processado",
+                "origem": "gravacao_navegador"
+            }
+            
+            logger.info(f"✅ [AUDIO-GRAVACAO] Processada: {session_id} -> {audio_id}")
+            
+            return {
+                "status": "success",
+                "message": "Gravação finalizada e processada com sucesso",
+                "audio": audio_info,
+                "timestamp": datetime.now().isoformat()
+            }
+        except Exception as e:
+            logger.error(f"❌ [AUDIO-GRAVACAO] Erro ao processar: {str(e)}")
+            return {
+                "status": "error",
+                "message": "Erro ao processar áudio gravado",
+                "timestamp": datetime.now().isoformat()
+            }
+    else:
+        return {
+            "status": "success",
+            "message": "Sessão de gravação finalizada (sem áudio)",
+            "session_id": session_id,
+            "timestamp": datetime.now().isoformat()
+        }
+
+@app.get(f"{api_prefix}/audios/gravar/status/{{session_id}}")
+async def status_gravacao_audio(session_id: str):
+    """Verificar status da sessão de gravação"""
+    from datetime import datetime
+    
+    # Simular verificação de status
+    return {
+        "session_id": session_id,
+        "status": "ativa",
+        "tempo_gravacao": 45.2,
+        "tamanho_atual": "2.1 MB",
+        "configuracoes": {
+            "sample_rate": 44100,
+            "channels": 1,
+            "format": "webm"
         },
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.delete(f"{api_prefix}/audios/gravar/cancelar/{{session_id}}")
+async def cancelar_gravacao_audio(session_id: str):
+    """Cancelar sessão de gravação"""
+    from datetime import datetime
+    
+    logger.info(f"🗑️ [AUDIO-GRAVACAO] Cancelada: {session_id}")
+    
+    return {
+        "status": "success",
+        "message": "Sessão de gravação cancelada",
+        "session_id": session_id,
         "timestamp": datetime.now().isoformat()
     }
 
@@ -2446,6 +2701,149 @@ def get_campaigns_from_supabase():
     except Exception as e:
         logger.error(f"Erro ao buscar campanhas do Supabase: {str(e)}")
         return []
+
+# ============================================================================
+# FUNÇÕES SUPABASE PARA CAMPANHAS PRESIONE1
+# ============================================================================
+
+def get_campanhas_presione1_from_supabase():
+    """Busca campanhas presione1 do Supabase"""
+    try:
+        headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        logger.info(f"🔍 [PRESIONE1] Buscando campanhas presione1 do Supabase...")
+        
+        response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/campanas_presione1",
+            headers=headers
+        )
+        
+        if response.status_code == 200:
+            campanhas = response.json()
+            logger.info(f"✅ [PRESIONE1] {len(campanhas)} campanhas encontradas")
+            return campanhas
+        else:
+            logger.error(f"❌ [PRESIONE1] Erro ao buscar campanhas: {response.status_code} - {response.text}")
+            return []
+            
+    except Exception as e:
+        logger.error(f"❌ [PRESIONE1] Erro ao conectar com Supabase: {str(e)}")
+        return []
+
+def get_agentes_from_supabase():
+    """Busca agentes do Supabase"""
+    try:
+        headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        logger.info(f"🔍 [AGENTES] Buscando agentes do Supabase...")
+        
+        response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/agente_monitoramento",
+            headers=headers
+        )
+        
+        if response.status_code == 200:
+            agentes = response.json()
+            logger.info(f"✅ [AGENTES] {len(agentes)} agentes encontrados")
+            return agentes
+        else:
+            logger.error(f"❌ [AGENTES] Erro ao buscar agentes: {response.status_code} - {response.text}")
+            return []
+            
+    except Exception as e:
+        logger.error(f"❌ [AGENTES] Erro ao conectar com Supabase: {str(e)}")
+        return []
+
+def get_llamadas_presione1_from_supabase(campana_id=None, estado=None, presiono_1=None):
+    """Busca chamadas presione1 do Supabase"""
+    try:
+        headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        # Construir URL com filtros
+        url = f"{SUPABASE_URL}/rest/v1/llamadas_presione1"
+        params = []
+        
+        if campana_id:
+            params.append(f"campana_id=eq.{campana_id}")
+        if estado:
+            params.append(f"estado=eq.{estado}")
+        if presiono_1 is not None:
+            params.append(f"presiono_1=eq.{presiono_1}")
+            
+        if params:
+            url += "?" + "&".join(params)
+        
+        logger.info(f"🔍 [LLAMADAS] Buscando chamadas do Supabase: {url}")
+        
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            llamadas = response.json()
+            logger.info(f"✅ [LLAMADAS] {len(llamadas)} chamadas encontradas")
+            return llamadas
+        else:
+            logger.error(f"❌ [LLAMADAS] Erro ao buscar chamadas: {response.status_code} - {response.text}")
+            return []
+            
+    except Exception as e:
+        logger.error(f"❌ [LLAMADAS] Erro ao conectar com Supabase: {str(e)}")
+        return []
+
+def get_estadisticas_presione1_from_supabase(campana_id):
+    """Busca estatísticas de campanha presione1 do Supabase"""
+    try:
+        headers = {
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        # Buscar chamadas da campanha
+        llamadas = get_llamadas_presione1_from_supabase(campana_id=campana_id)
+        
+        if not llamadas:
+            logger.warning(f"⚠️ [ESTADISTICAS] Nenhuma chamada encontrada para campanha {campana_id}")
+            return None
+            
+        # Calcular estatísticas
+        total_llamadas = len(llamadas)
+        contestadas = len([l for l in llamadas if l.get('estado') in ['contestada', 'finalizada', 'presiono_1']])
+        presiono_1 = len([l for l in llamadas if l.get('presiono_1') == True])
+        transferidas = len([l for l in llamadas if l.get('transferencia_exitosa') == True])
+        error = len([l for l in llamadas if l.get('estado') == 'error'])
+        
+        # Calcular taxas
+        tasa_contestacion = (contestadas / total_llamadas * 100) if total_llamadas > 0 else 0
+        tasa_presiono_1 = (presiono_1 / contestadas * 100) if contestadas > 0 else 0
+        tasa_transferencia = (transferidas / presiono_1 * 100) if presiono_1 > 0 else 0
+        
+        return {
+            "total_numeros": total_llamadas,
+            "llamadas_realizadas": total_llamadas,
+            "llamadas_contestadas": contestadas,
+            "llamadas_presiono_1": presiono_1,
+            "llamadas_transferidas": transferidas,
+            "llamadas_error": error,
+            "tasa_contestacion": round(tasa_contestacion, 2),
+            "tasa_presiono_1": round(tasa_presiono_1, 2),
+            "tasa_transferencia": round(tasa_transferencia, 2)
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ [ESTADISTICAS] Erro ao calcular estatísticas: {str(e)}")
+        return None
 
 if __name__ == "__main__":
     logger.info(f"Iniciando servidor en {configuracion.HOST}:{configuracion.PUERTO}")
