@@ -6,3 +6,7 @@ Incluye endpoints para gestionar llamadas, listas, CLI, reconocimiento de voz y 
 
 # Importar routers para que fiquem disponíveis quando importado
 from . import presione1 
+from . import trunk
+from . import caller_id
+from . import timing
+from . import dnc 
