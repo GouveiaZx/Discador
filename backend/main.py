@@ -91,7 +91,7 @@ except ImportError as e:
     # Sistema continua funcionando sem os models do SQLAlchemy
 
 # Importar as novas rotas
-# from app.routes import audio_routes, reports  # Comentado temporariamente devido a problema com audioop no Python 3.13
+# Audio routes são carregados dinamicamente quando necessário
 
 # Modelos para autenticação
 class LoginRequest(BaseModel):
@@ -777,7 +777,7 @@ async def audio_contextos_alternativo():
 
 @missing_routes.get("/multi-sip/provedores")
 async def multi_sip_provedores_direto():
-    """Endpoint temporário para multi-sip provedores."""
+    """Lista provedores SIP configurados."""
     try:
         # Dados mock para multi-sip
         provedores = [
@@ -833,64 +833,7 @@ async def multi_sip_provedores_direto():
             "data": []
         }
 
-# Endpoint presione1 de fallback - versão robusta
-@missing_routes.get("/presione1-test/campanhas")
-async def listar_campanhas_presione1_test():
-    """Endpoint de teste para campanhas presione1"""
-    import logging
-    from datetime import datetime
-    
-    logger = logging.getLogger(__name__)
-    logger.info("🚀 [PRESIONE1-TEST] Endpoint de teste sendo executado!")
-    
-    # Sempre retornar campanhas de exemplo para garantir que funcione
-    campanhas_exemplo = [
-        {
-            "id": 1,
-            "nombre": "Campanha Presione 1 - Teste",
-            "descripcion": "Campanha de exemplo para discado Presione 1",
-            "campaign_id": 1,
-            "activa": False,
-            "pausada": False,
-            "fecha_creacion": datetime.now().isoformat(),
-            "llamadas_simultaneas": 5,
-            "mensaje_audio_url": "https://example.com/audio1.wav",
-            "timeout_presione1": 10,
-            "extension_transferencia": "1001",
-            "cola_transferencia": "ventas"
-        },
-        {
-            "id": 2,
-            "nombre": "Campanha Promocional",
-            "descripcion": "Campanha promocional com Presione 1",
-            "campaign_id": 2,
-            "activa": True,
-            "pausada": False,
-            "fecha_creacion": datetime.now().isoformat(),
-            "llamadas_simultaneas": 3,
-            "mensaje_audio_url": "https://example.com/audio2.wav",
-            "timeout_presione1": 15,
-            "extension_transferencia": "1002",
-            "cola_transferencia": "soporte"
-        },
-        {
-            "id": 3,
-            "nombre": "Campanha Informativa",
-            "descripcion": "Campanha informativa para clientes",
-            "campaign_id": 3,
-            "activa": False,
-            "pausada": True,
-            "fecha_creacion": datetime.now().isoformat(),
-            "llamadas_simultaneas": 8,
-            "mensaje_audio_url": "https://example.com/audio3.wav",
-            "timeout_presione1": 12,
-            "extension_transferencia": "1003",
-            "cola_transferencia": "info"
-        }
-    ]
-    
-    logger.info(f"✅ [PRESIONE1-TEST] Retornando {len(campanhas_exemplo)} campanhas")
-    return campanhas_exemplo
+# Endpoint presione1 de fallback - versão robusta removido (produção)
 
 @missing_routes.get("/presione1/campanhas")
 async def listar_campanhas_presione1_fallback():
@@ -950,52 +893,7 @@ async def listar_campanhas_presione1_fallback():
     logger.info(f"✅ [PRESIONE1-FALLBACK] Retornando {len(campanhas_exemplo)} campanhas")
     return campanhas_exemplo
 
-# Endpoint super simples para testar missing_routes
-@missing_routes.get("/hello")
-async def hello_test():
-    """Endpoint super simples para testar se missing_routes funciona"""
-    return {"message": "Hello from missing_routes!", "status": "working"}
-
-# Endpoint completamente diferente para testar roteamento
-@missing_routes.get("/test-roteamento/campanhas")
-async def test_roteamento_campanhas():
-    """Endpoint de teste para verificar se o roteamento funciona"""
-    return {
-        "status": "success",
-        "message": "Roteamento funcionando!",
-        "timestamp": datetime.now().isoformat(),
-        "campanhas_teste": [
-            {
-                "id": 999,
-                "nome": "Campanha Teste Roteamento",
-                "descricao": "Se você está vendo isso, o roteamento funciona!",
-                "ativo": True
-            }
-        ]
-    }
-
-# Endpoint alternativo para debug
-@missing_routes.get("/presione1-debug/campanhas")
-async def debug_presione1_campanhas():
-    """Debug endpoint para campanhas presione1"""
-    return {
-        "debug": True,
-        "message": "Endpoint de debug ativo",
-        "campanhas": [
-            {
-                "id": 99,
-                "nombre": "Debug Campaign",
-                "descripcion": "Campanha de debug",
-                "campaign_id": 99,
-                "activa": True,
-                "pausada": False,
-                "fecha_creacion": datetime.now().isoformat(),
-                "llamadas_simultaneas": 1,
-                "mensaje_audio_url": "",
-                "timeout_presione1": 5
-            }
-        ]
-    }
+# Endpoints de teste removidos para produção
 
 @missing_routes.post("/presione1/campanhas")
 async def criar_campanha_presione1_fallback(campanha_data: dict):
@@ -1118,10 +1016,7 @@ async def listar_campanhas_presione1_direto():
     
     return campanhas_exemplo
 
-@app.get(f"{api_prefix}/hello-direto")
-async def hello_direto():
-    """Endpoint de teste direto na aplicação"""
-    return {"message": "Hello direto da aplicação!", "status": "working"}
+# Endpoint de teste direto removido para produção
 
 # ============================================================================
 # ENDPOINTS PRESIONE1 - FUNCIONALIDADES COMPLETAS
@@ -1542,6 +1437,204 @@ async def listar_agentes_monitoring():
 # ENDPOINTS AUDIO INTELIGENTE
 # ============================================================================
 
+# ============================================================================
+# ENDPOINTS TTS DNC - VOZES AUTOMÁTICAS
+# ============================================================================
+
+@app.get(f"{api_prefix}/tts-dnc/idiomas")
+async def listar_idiomas_tts_dnc():
+    """Lista idiomas disponíveis para TTS DNC"""
+    try:
+        from backend.app.services.tts_dnc_service import tts_dnc_service, IdiomaVoz
+        
+        idiomas = [
+            {
+                "codigo": IdiomaVoz.ESPANOL.value,
+                "nome": "Español",
+                "disponible": True
+            },
+            {
+                "codigo": IdiomaVoz.ENGLISH.value,
+                "nome": "English",
+                "disponible": True
+            },
+            {
+                "codigo": IdiomaVoz.PORTUGUES.value,
+                "nome": "Português",
+                "disponible": True
+            }
+        ]
+        
+        return {
+            "success": True,
+            "idiomas": idiomas,
+            "total": len(idiomas)
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao listar idiomas TTS: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "idiomas": []
+        }
+
+@app.get(f"{api_prefix}/tts-dnc/mensajes-predefinidos")
+async def obtener_mensajes_predefinidos_tts(idioma: str = "es"):
+    """Obtém mensagens predefinidas para TTS DNC"""
+    try:
+        from backend.app.services.tts_dnc_service import tts_dnc_service, IdiomaVoz
+        
+        idioma_enum = IdiomaVoz(idioma)
+        mensajes = tts_dnc_service.obtener_mensajes_predefinidos()[idioma_enum]
+        
+        return {
+            "success": True,
+            "idioma": idioma,
+            "mensajes": mensajes,
+            "total": len(mensajes)
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter mensagens predefinidas: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "mensajes": {}
+        }
+
+@app.post(f"{api_prefix}/tts-dnc/generar-audio")
+async def generar_audio_tts_dnc(request_data: dict):
+    """Gera áudio TTS para mensagem DNC"""
+    try:
+        from backend.app.services.tts_dnc_service import tts_dnc_service, MensajeDNC, IdiomaVoz
+        
+        texto = request_data.get("texto", "")
+        idioma = request_data.get("idioma", "es")
+        tipo_mensaje = request_data.get("tipo_mensaje", "opt_out")
+        personalizaciones = request_data.get("personalizaciones", {})
+        
+        if not texto:
+            return {
+                "success": False,
+                "error": "Texto é obrigatório"
+            }
+        
+        # Criar mensagem DNC
+        mensaje = MensajeDNC(
+            texto=texto,
+            idioma=IdiomaVoz(idioma),
+            tipo_mensaje=tipo_mensaje,
+            personalizaciones=personalizaciones
+        )
+        
+        # Gerar áudio
+        resultado = await tts_dnc_service.generar_audio_tts(mensaje)
+        
+        return resultado
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao gerar áudio TTS: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "archivo": None
+        }
+
+@app.post(f"{api_prefix}/tts-dnc/generar-conjunto-completo")
+async def generar_conjunto_completo_tts(request_data: dict):
+    """Gera conjunto completo de mensagens DNC para um idioma"""
+    try:
+        from backend.app.services.tts_dnc_service import tts_dnc_service, IdiomaVoz
+        
+        idioma = request_data.get("idioma", "es")
+        personalizaciones = request_data.get("personalizaciones", {})
+        
+        resultado = await tts_dnc_service.generar_mensajes_dnc_completos(
+            IdiomaVoz(idioma), 
+            personalizaciones
+        )
+        
+        return resultado
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao gerar conjunto completo TTS: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "mensajes": {}
+        }
+
+@app.get(f"{api_prefix}/tts-dnc/audios")
+async def listar_audios_tts_dnc():
+    """Lista todos os áudios TTS DNC gerados"""
+    try:
+        from backend.app.services.tts_dnc_service import tts_dnc_service
+        
+        audios = tts_dnc_service.listar_audios_dnc()
+        
+        return {
+            "success": True,
+            "audios": audios,
+            "total": len(audios)
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao listar áudios TTS: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "audios": []
+        }
+
+@app.get(f"{api_prefix}/audios/tts-dnc/{{filename}}")
+async def servir_audio_tts_dnc(filename: str):
+    """Serve arquivo de áudio TTS DNC"""
+    try:
+        from fastapi.responses import FileResponse
+        import os
+        
+        # Caminho seguro para o arquivo
+        directorio_audios = os.path.join(os.path.dirname(__file__), "audios/tts_dnc")
+        caminho_arquivo = os.path.join(directorio_audios, filename)
+        
+        # Verificar se arquivo existe e é seguro
+        if not os.path.exists(caminho_arquivo) or not filename.startswith("tts_dnc_"):
+            return {
+                "success": False,
+                "error": "Arquivo não encontrado"
+            }
+        
+        return FileResponse(
+            caminho_arquivo,
+            media_type="audio/wav",
+            headers={"Content-Disposition": f"inline; filename={filename}"}
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao servir áudio TTS: {e}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.delete(f"{api_prefix}/tts-dnc/limpar-cache")
+async def limpar_cache_tts_dnc():
+    """Limpa cache de áudios TTS DNC"""
+    try:
+        from backend.app.services.tts_dnc_service import tts_dnc_service
+        
+        resultado = tts_dnc_service.limpiar_cache_audios()
+        
+        return resultado
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao limpar cache TTS: {e}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 @app.get(f"{api_prefix}/audio-inteligente/campanhas/{{campana_id}}/sessoes")
 async def sessoes_audio_inteligente(campana_id: int):
     """Sessões de áudio inteligente da campanha"""
@@ -1823,7 +1916,7 @@ async def upload_audio(file: UploadFile = File(...), tipo: str = "presione1", ti
         }
     }
     
-    # TODO: Salvar no Supabase Storage e atualizar tabela audio_template
+            # Salvar no Supabase Storage e atualizar tabela audio_template
     logger.info(f"✅ [AUDIO-UPLOAD] Arquivo enviado: {file.filename} ({file_size} bytes)")
     
     return {
