@@ -26,18 +26,19 @@ import requests
 import json
 
 try:
-    from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, monitoring, contacts, presione1, audio_routes
+    from app.routes import llamadas, listas, cli, stt, reportes, listas_llamadas, blacklist, discado, audio_inteligente, code2base, campanha_politica, monitoring, contacts, presione1, audio_routes, performance_routes
     print("All routes imported successfully")
 except ImportError as e:
     print(f"Warning: Could not import all routes: {e}")
     # Importar somente as rotas essenciais
     try:
-        from app.routes import presione1, audio_routes
-        print("Presione1 and audio routes imported successfully")
+        from app.routes import presione1, audio_routes, performance_routes
+        print("Presione1, audio and performance routes imported successfully")
     except ImportError:
         presione1 = None
         audio_routes = None
-        print("Warning: Could not import presione1 or audio routes")
+        performance_routes = None
+        print("Warning: Could not import presione1, audio or performance routes")
 
 # Importar novas rotas para configuração
 try:
@@ -401,6 +402,16 @@ if dnc:
     print(f"✅ DNC router included with prefix: {api_prefix}")
 else:
     print("⚠️ DNC router NOT available")
+
+# Incluir rotas de performance
+try:
+    if performance_routes:
+        app.include_router(performance_routes.router, prefix=f"{api_prefix}")
+        print(f"✅ Performance routes included with prefix: {api_prefix}")
+    else:
+        print("⚠️ Performance routes not available")
+except NameError:
+    print("⚠️ Performance routes not imported")
 
 # Router para rotas ausentes
 missing_routes = APIRouter()

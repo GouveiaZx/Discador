@@ -54,7 +54,7 @@ const AdvancedPerformanceDashboard = () => {
   useEffect(() => {
     const connectWebSocket = () => {
       const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:8000';
-      wsRef.current = new WebSocket(`${wsUrl}/ws/performance`);
+      wsRef.current = new WebSocket(`${wsUrl}/api/performance/ws/performance`);
       
       wsRef.current.onopen = () => {
         setIsConnected(true);
@@ -116,7 +116,7 @@ const AdvancedPerformanceDashboard = () => {
     try {
       setTestRunning(true);
       
-      const response = await fetch('/api/load-test/start', {
+      const response = await fetch('/api/performance/load-test/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(testConfig)
@@ -138,7 +138,7 @@ const AdvancedPerformanceDashboard = () => {
   // Parar teste de carga
   const stopLoadTest = async () => {
     try {
-      const response = await fetch('/api/load-test/stop', {
+      const response = await fetch('/api/performance/load-test/stop', {
         method: 'POST'
       });
       

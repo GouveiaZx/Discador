@@ -17,6 +17,7 @@ import TrunkCountryManager from './components/TrunkCountryManager';
 import DNCMultiLanguageManager from './components/DNCMultiLanguageManager';
 import RealtimeCallDisplay from './components/RealtimeCallDisplay';
 import AudioManager from './components/AudioManager';
+import AdvancedPerformanceDashboard from './components/AdvancedPerformanceDashboard';
 
 /**
  * Sistema de Ícones Profissional
@@ -93,6 +94,11 @@ const Icons = {
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
     </svg>
+  ),
+  Performance: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+    </svg>
   )
   };
 
@@ -144,6 +150,7 @@ const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermiss
     { id: 'dashboard', label: 'Panel Principal', icon: Icons.Dashboard, permission: null },
     { id: 'realtime', label: 'Llamadas en Vivo', icon: Icons.RealTime, permission: null },
     { id: 'monitor', label: 'Monitor Avanzado', icon: Icons.Monitor, permission: null },
+    { id: 'performance', label: 'Performance Avanzado', icon: Icons.Performance, permission: 'admin' },
     { id: 'campanhas', label: 'Campañas', icon: Icons.Campaigns, permission: 'supervisor' },
     { id: 'listas', label: 'Listas', icon: Icons.Lists, permission: 'supervisor' },
     { id: 'audios', label: 'Gestión de Audios', icon: Icons.Audio, permission: 'supervisor' },
@@ -300,6 +307,7 @@ const ProfessionalHeader = ({ setSidebarOpen, activeTab }) => {
       dashboard: 'Panel Principal',
       realtime: 'Llamadas en Tiempo Real',
       monitor: 'Monitor Avanzado',
+      performance: 'Performance Avanzado',
       campanhas: 'Gestión de Campañas',
       listas: 'Gestión de Listas',
       audios: 'Gestión de Audios',
@@ -433,6 +441,7 @@ function AuthenticatedApp() {
                 {activeTab === 'dashboard' && <DashboardProfessional />}
                 {activeTab === 'realtime' && <RealtimeCallDisplay />}
                 {activeTab === 'monitor' && <MonitorLlamadasEnProgreso />}
+                {activeTab === 'performance' && hasPermission('admin') && <AdvancedPerformanceDashboard />}
                 {activeTab === 'campanhas' && hasPermission('supervisor') && (
                   <GestionCampanhas onOpenCampaignControl={setCampaignControlId} />
                 )}
@@ -451,7 +460,7 @@ function AuthenticatedApp() {
             {((activeTab === 'campanhas' || activeTab === 'listas' || activeTab === 'audios' || activeTab === 'caller-id' || activeTab === 'timing') && !hasPermission('supervisor')) && (
               <AccessDenied requiredLevel="Supervisor" />
             )}
-            {((activeTab === 'blacklist' || activeTab === 'configuracion' || activeTab === 'trunks') && !hasPermission('admin')) && (
+            {((activeTab === 'blacklist' || activeTab === 'configuracion' || activeTab === 'trunks' || activeTab === 'performance') && !hasPermission('admin')) && (
               <AccessDenied requiredLevel="Administrador" />
             )}
           </div>
