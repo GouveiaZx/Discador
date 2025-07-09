@@ -20,6 +20,7 @@
 ### 🛠️ **REFERÊNCIA TÉCNICA**
 4. **[MAPA DE ROTAS API](./MAPA_ROTAS_API.md)** - Todos os endpoints
 5. **[README PRINCIPAL](./README.md)** - Documentação geral
+6. **🆕 [SISTEMA PERFORMANCE MIGRAÇÕES](./SISTEMA_PERFORMANCE_MIGRACOES.md)** - Novas funcionalidades implementadas
 
 ---
 
@@ -67,6 +68,7 @@
 - [x] **CODE2BASE**: Seleção inteligente de CLIs baseada em geografia
 - [x] **Multi-SIP**: Múltiplos provedores + roteamento dinâmico
 - [x] **Campanhas Políticas**: Compliance + horários legais
+- [x] **🆕 Performance Avançado**: 20-30 CPS + limites por país + DTMF localizado
 
 ### ✅ **MONITORAMENTO**
 - [x] **Dashboard Real-time**: Estatísticas em tempo real
@@ -107,11 +109,14 @@
 - **80+ endpoints funcionais**
 - **15+ modelos de dados**
 
-### **Performance**
-- **Capacidade**: 100+ chamadas simultâneas
+### **Performance Atualizada**
+- **Capacidade**: 20-30 CPS (600-1800 chamadas/minuto)
+- **Chamadas Simultâneas**: Até 500
 - **Latência**: < 50ms para APIs
 - **Uptime**: 99.9%+ garantido
 - **Cache**: 95%+ hit rate
+- **🆕 Monitoramento**: Real-time por país
+- **🆕 Auto-ajuste**: CPS dinâmico
 
 ---
 
