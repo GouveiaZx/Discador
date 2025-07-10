@@ -103,8 +103,8 @@ function UploadListas() {
         setSelectedCampaign(campaignsList[0].id.toString());
       }
     } catch (err) {
-      console.error('❌ Erro ao carregar campanhas:', err);
-      // Se falhar ao carregar campanhas, criar uma padrão
+      console.error('❌ Error al cargar campañas:', err);
+              // Si falla al cargar campañas, crear una por defecto
       await createDefaultCampaign();
     }
   };
@@ -136,8 +136,8 @@ function UploadListas() {
         console.log('✅ Campanha padrão criada:', newCampaign);
       }
     } catch (err) {
-      console.error('❌ Erro ao criar campanha padrão:', err);
-      // Se falhar, permitir upload sem campanha
+              console.error('❌ Error al crear campaña por defecto:', err);
+        // Si falla, permitir carga sin campaña
       setCampaigns([{
         id: 'default',
         name: 'Sem Campanha (Upload Direto)',
@@ -150,7 +150,7 @@ function UploadListas() {
   const handleFileSelect = (selectedFile) => {
     if (!selectedFile) return;
 
-    console.log('📁 Arquivo selecionado:', {
+            console.log('📁 Archivo seleccionado:', {
       name: selectedFile.name,
       size: selectedFile.size,
       type: selectedFile.type
@@ -161,7 +161,7 @@ function UploadListas() {
     setError(null);
     setUploadResult(null);
 
-    // Leer arquivo para preview
+          // Leer archivo para preview
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -174,7 +174,7 @@ function UploadListas() {
           return;
         }
 
-        console.log('📋 Primeiras linhas do arquivo:', lines.slice(0, 3));
+        console.log('📋 Primeras líneas del archivo:', lines.slice(0, 3));
 
         // Detectar separador automaticamente
         const firstLine = lines[0];
@@ -187,7 +187,7 @@ function UploadListas() {
         } else if (firstLine.includes('|')) {
           separator = '|';
         } else if (!firstLine.includes(',')) {
-          // Se não tem vírgula, pode ser um arquivo TXT com apenas números
+          // Si no tiene coma, puede ser un archivo TXT con solo números
           separator = null;
         }
 
@@ -197,7 +197,7 @@ function UploadListas() {
         let preview = [];
 
         if (separator) {
-          // Arquivo com separadores (CSV, TSV, etc.)
+          // Archivo con separadores (CSV, TSV, etc.)
           headers = firstLine.split(separator).map(h => h.trim().replace(/"/g, ''));
           preview = lines.slice(1, 6).map(line => {
             const values = line.split(separator).map(v => v.trim().replace(/"/g, ''));
@@ -208,7 +208,7 @@ function UploadListas() {
             return row;
           });
         } else {
-          // Arquivo TXT simples (uma coluna por linha)
+          // Archivo TXT simple (una columna por línea)
           headers = ['telefone'];
           preview = lines.slice(0, 5).map(line => ({
             telefone: line.trim()
@@ -225,7 +225,7 @@ function UploadListas() {
         });
         setFileState(FileStates.PREVIEW);
       } catch (err) {
-        console.error('❌ Erro ao processar arquivo:', err);
+        console.error('❌ Error al procesar archivo:', err);
         setError('Error al leer el archivo: ' + err.message);
         setFileState(FileStates.ERROR);
       }
@@ -259,7 +259,7 @@ function UploadListas() {
       }
 
     } catch (error) {
-      console.error('❌ Erro no upload:', error);
+              console.error('❌ Error en carga:', error);
       setError('Error al cargar el archivo: ' + error.message);
       setFileState(FileStates.ERROR);
     } finally {
@@ -267,7 +267,7 @@ function UploadListas() {
     }
   };
 
-  // Upload normal para arquivos pequenos
+      // Carga normal para archivos pequeños
   const handleNormalUpload = async () => {
     // Se não há campanha selecionada, usar "default"
     const campaignId = selectedCampaign || 'default';

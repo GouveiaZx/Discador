@@ -32,7 +32,7 @@ const UploadListasFixed = () => {
     setProgress(prev => ({ ...prev, [fileId]: { current: 0, total: 0, status: 'Procesando archivo...' } }));
 
     try {
-      // Ler arquivo
+      // Leer archivo
       const text = await file.text();
       const lines = text.split('\n').filter(line => line.trim());
       const totalLines = lines.length;
@@ -42,14 +42,14 @@ const UploadListasFixed = () => {
         [fileId]: { current: 0, total: totalLines, status: 'Preparando carga...' } 
       }));
 
-      // Configurar chunks maiores para arquivos grandes
+      // Configurar chunks mayores para archivos grandes
       let CHUNK_SIZE = 500;
       if (totalLines > 100000) {
-        CHUNK_SIZE = 5000; // Chunks muito maiores para arquivos gigantes
+        CHUNK_SIZE = 5000; // Chunks muy grandes para archivos gigantes
       } else if (totalLines > 10000) {
         CHUNK_SIZE = 2000; // Chunks grandes
       } else if (totalLines > 1000) {
-        CHUNK_SIZE = 1000; // Chunks médios
+        CHUNK_SIZE = 1000; // Chunks medianos
       }
 
       const chunks = [];
@@ -57,7 +57,7 @@ const UploadListasFixed = () => {
         chunks.push(lines.slice(i, i + CHUNK_SIZE));
       }
 
-      console.log(`📦 Arquivo ${file.name}: ${totalLines} linhas em ${chunks.length} chunks de ${CHUNK_SIZE}`);
+      console.log(`📦 Archivo ${file.name}: ${totalLines} líneas en ${chunks.length} chunks de ${CHUNK_SIZE}`);
 
       let processedTotal = 0;
       let successTotal = 0;
@@ -78,13 +78,13 @@ const UploadListasFixed = () => {
           } 
         }));
 
-        // Criar FormData para o chunk
+        // Crear FormData para el chunk
         const chunkText = chunk.join('\n');
         const chunkBlob = new Blob([chunkText], { type: 'text/plain' });
         const chunkFile = new File([chunkBlob], `chunk_${i}.txt`, { type: 'text/plain' });
 
         const formData = new FormData();
-        formData.append('arquivo', chunkFile);
+        formData.append('archivo', chunkFile);
         formData.append('incluir_nome', 'true');
         formData.append('pais_preferido', 'auto');
         if (campaignId) {
@@ -106,15 +106,15 @@ const UploadListasFixed = () => {
           console.error(`❌ Error en chunk ${chunkNumber}:`, error);
           errorTotal += chunk.length;
           
-          // Continuar mesmo com erro
+          // Continuar incluso con error
           if (error.response?.status === 504 || error.code === 'ECONNABORTED') {
-            console.log('⚠️ Timeout no chunk, continuando...');
+            console.log('⚠️ Timeout en chunk, continuando...');
           }
         }
 
         processedTotal += chunk.length;
 
-        // Pausa menor entre chunks para não sobrecarregar
+        // Pausa menor entre chunks para no sobrecargar
         if (i < chunks.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 500)); // 0.5 segundo
         }
