@@ -94,12 +94,12 @@ function UploadListas() {
       const campaignsList = data.campaigns || [];
       setCampaigns(campaignsList);
       
-      // Se não há campanhas, criar uma campanha padrão automaticamente
+      // Si no hay campañas, crear una campaña por defecto automáticamente
       if (campaignsList.length === 0) {
-        console.log('🏗️ Criando campanha padrão...');
+        console.log('🏗️ Creando campaña por defecto...');
         await createDefaultCampaign();
       } else {
-        // Se há campanhas, selecionar a primeira automaticamente
+        // Si hay campañas, seleccionar la primera automáticamente
         setSelectedCampaign(campaignsList[0].id.toString());
       }
     } catch (err) {
@@ -110,18 +110,18 @@ function UploadListas() {
   };
 
   /**
-   * Criar campanha padrão para upload
+       * Crear campaña por defecto para carga
    */
   const createDefaultCampaign = async () => {
     try {
       const defaultCampaign = {
-        name: 'Campanha Upload Automático',
-        description: 'Campanha criada automaticamente para uploads de listas',
+        name: 'Campaña Carga Automática',
+        description: 'Campaña creada automáticamente para cargas de listas',
         status: 'active',
         wait_time: 2.0
       };
 
-      console.log('🎯 Criando campanha padrão:', defaultCampaign);
+              console.log('🎯 Creando campaña por defecto:', defaultCampaign);
       const response = await makeApiRequest('/campaigns', 'POST', defaultCampaign);
       
       if (response && response.id) {
@@ -133,14 +133,14 @@ function UploadListas() {
         
         setCampaigns([newCampaign]);
         setSelectedCampaign(response.id.toString());
-        console.log('✅ Campanha padrão criada:', newCampaign);
+        console.log('✅ Campaña por defecto creada:', newCampaign);
       }
     } catch (err) {
               console.error('❌ Error al crear campaña por defecto:', err);
         // Si falla, permitir carga sin campaña
-      setCampaigns([{
-        id: 'default',
-        name: 'Sem Campanha (Upload Direto)',
+              setCampaigns([{
+          id: 'default',
+          name: 'Sin Campaña (Carga Directa)',
         status: 'active'
       }]);
       setSelectedCampaign('default');
@@ -247,14 +247,14 @@ function UploadListas() {
     setError(null);
 
     try {
-      // NOVO: Detectar arquivos grandes e fazer upload em chunks
+      // NUEVO: Detectar archivos grandes y hacer carga en chunks
       const isLargeFile = file.size > 5 * 1024 * 1024; // 5MB
       
       if (isLargeFile) {
-        console.log(`📦 Arquivo grande detectado (${(file.size / 1024 / 1024).toFixed(1)}MB) - Upload em chunks`);
+        console.log(`📦 Archivo grande detectado (${(file.size / 1024 / 1024).toFixed(1)}MB) - Carga en chunks`);
         await handleLargeFileUpload();
       } else {
-        console.log('📄 Arquivo normal - Upload direto');
+        console.log('📄 Archivo normal - Carga directa');
         await handleNormalUpload();
       }
 
