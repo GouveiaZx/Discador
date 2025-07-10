@@ -83,6 +83,18 @@ export default {
           900: '#171717',
           950: '#0a0a0a',
         },
+        accent: {
+          50: '#fdf4ff',
+          100: '#fae8ff',
+          200: '#f5d0fe',
+          300: '#f0abfc',
+          400: '#e879f9',
+          500: '#d946ef',
+          600: '#c026d3',
+          700: '#a21caf',
+          800: '#86198f',
+          900: '#701a75',
+        },
         // Gradientes para fundos premium
         dark: {
           50: '#18181b',

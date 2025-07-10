@@ -15,6 +15,12 @@ import {
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 
+// Importar componentes especializados
+import LoadTestManager from './LoadTestManager';
+import CliLimitsManager from './CliLimitsManager';
+import DTMFCountryConfig from './DTMFCountryConfig';
+import CliRotationDashboard from './CliRotationDashboard';
+
 // Registrar componentes do Chart.js
 ChartJS.register(
   CategoryScale,
@@ -166,19 +172,39 @@ const AdvancedPerformanceDashboard = () => {
           displayFormats: {
             minute: 'HH:mm'
           }
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)'
+        },
+        ticks: {
+          color: 'rgba(255, 255, 255, 0.7)'
         }
       },
       y: {
-        beginAtZero: true
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)'
+        },
+        ticks: {
+          color: 'rgba(255, 255, 255, 0.7)'
+        }
       }
     },
     plugins: {
       legend: {
         position: 'top',
+        labels: {
+          color: 'rgba(255, 255, 255, 0.8)'
+        }
       },
       tooltip: {
         mode: 'index',
         intersect: false,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: 'white',
+        bodyColor: 'white',
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderWidth: 1
       }
     }
   };
@@ -262,78 +288,124 @@ const AdvancedPerformanceDashboard = () => {
 
   // Renderizar status de conexão
   const renderConnectionStatus = () => (
-    <div className="flex items-center space-x-2 mb-4">
-      <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-      <span className={`text-sm ${isConnected ? 'text-green-600' : 'text-red-600'}`}>
+    <div className="mb-4">
+      <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+        isConnected 
+          ? 'bg-green-100 text-green-800' 
+          : 'bg-red-100 text-red-800'
+      }`}>
+        <div className={`w-2 h-2 rounded-full mr-2 ${
+          isConnected ? 'bg-green-600' : 'bg-red-600'
+        }`} />
         {isConnected ? 'Conectado' : 'Desconectado'}
-      </span>
+      </div>
     </div>
   );
 
   // Renderizar métricas em tempo real
   const renderRealtimeMetrics = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Cards de métricas */}
-        <div className="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
-          <h3 className="text-sm font-medium text-gray-500">CPS Atual</h3>
-          <p className="text-2xl font-bold text-blue-600">
-            {metrics.realtime?.current_cps?.toFixed(1) || '0.0'}
-          </p>
+      {/* KPIs principais */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="glass-panel p-6 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-secondary-400">CPS Atual</p>
+              <p className="text-2xl font-bold text-gradient-primary">
+                {metrics.realtime?.current_cps?.toFixed(1) || '0.0'}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-primary-500/20 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </div>
+          </div>
         </div>
-        
-        <div className="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
-          <h3 className="text-sm font-medium text-gray-500">Taxa de Sucesso</h3>
-          <p className="text-2xl font-bold text-green-600">
-            {metrics.realtime?.success_rate ? `${(metrics.realtime.success_rate * 100).toFixed(1)}%` : '0.0%'}
-          </p>
+
+        <div className="glass-panel p-6 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-secondary-400">Chamadas Ativas</p>
+              <p className="text-2xl font-bold text-gradient-primary">
+                {metrics.realtime?.active_calls || 0}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-accent-500/20 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
+            </div>
+          </div>
         </div>
-        
-        <div className="bg-white p-4 rounded-lg shadow border-l-4 border-purple-500">
-          <h3 className="text-sm font-medium text-gray-500">Chamadas Concorrentes</h3>
-          <p className="text-2xl font-bold text-purple-600">
-            {metrics.realtime?.concurrent_calls || '0'}
-          </p>
+
+        <div className="glass-panel p-6 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-secondary-400">Taxa de Sucesso</p>
+              <p className="text-2xl font-bold text-gradient-primary">
+                {metrics.realtime?.success_rate?.toFixed(1) || '0.0'}%
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-success-500/20 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-success-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+          </div>
         </div>
-        
-        <div className="bg-white p-4 rounded-lg shadow border-l-4 border-orange-500">
-          <h3 className="text-sm font-medium text-gray-500">Carga do Sistema</h3>
-          <p className="text-2xl font-bold text-orange-600">
-            {metrics.realtime?.system_load?.toFixed(1) || '0.0'}%
-          </p>
+
+        <div className="glass-panel p-6 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-secondary-400">CLIs Ativos</p>
+              <p className="text-2xl font-bold text-gradient-primary">
+                {metrics.realtime?.active_clis || 0}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-warning-500/20 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-warning-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">CPS em Tempo Real</h3>
-          <div className="h-64">
-            <Line data={cpsChartData} options={chartOptions} />
+      {/* Gráfico de CPS em tempo real */}
+      {metricsHistoryRef.current.length > 0 && (
+        <div className="glass-panel p-6 rounded-xl">
+          <h3 className="text-lg font-semibold text-white mb-4">
+            Histórico de CPS - Tempo Real
+          </h3>
+          <div className="h-80">
+            <Line
+              data={{
+                labels: metricsHistoryRef.current.map(m => m.timestamp),
+                datasets: [
+                  {
+                    label: 'CPS Atual',
+                    data: metricsHistoryRef.current.map(m => m.current_cps),
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                  },
+                  {
+                    label: 'CPS Alvo',
+                    data: metricsHistoryRef.current.map(m => m.target_cps),
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    borderDash: [5, 5]
+                  }
+                ]
+              }}
+              options={chartOptions}
+            />
           </div>
         </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Chamadas Concorrentes</h3>
-          <div className="h-64">
-            <Line data={concurrentCallsData} options={chartOptions} />
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Taxa de Sucesso</h3>
-          <div className="h-64">
-            <Line data={successRateData} options={chartOptions} />
-          </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Distribuição por País</h3>
-          <div className="h-64">
-            <Doughnut data={countryDistributionData} options={{ responsive: true, maintainAspectRatio: false }} />
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 
@@ -546,38 +618,44 @@ const AdvancedPerformanceDashboard = () => {
   );
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-dark-100 to-secondary-950 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Cabeçalho */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Dashboard de Performance Avançado
-          </h1>
-          <p className="text-gray-600">
-            Monitoramento em tempo real, testes de carga e análise de performance
-          </p>
-          {renderConnectionStatus()}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-gradient-primary mb-2">
+                Performance Dashboard
+              </h1>
+              <p className="text-secondary-400 text-lg">
+                Monitoramento avançado, testes de carga e gestão de performance
+              </p>
+            </div>
+            {renderConnectionStatus()}
+          </div>
         </div>
 
         {/* Navegação por abas */}
-        <div className="mb-6">
-          <nav className="flex space-x-8">
+        <div className="mb-8">
+          <nav className="flex space-x-1 glass-panel rounded-xl p-1">
             {[
-              { id: 'realtime', label: 'Tempo Real' },
-              { id: 'loadtest', label: 'Teste de Carga' },
-              { id: 'cli', label: 'CLIs' },
-              { id: 'countries', label: 'Países' }
+              { id: 'realtime', label: 'Tempo Real', icon: '📊' },
+              { id: 'loadtest', label: 'Testes de Carga', icon: '🧪' },
+              { id: 'cli-limits', label: 'Limites CLI', icon: '🔢' },
+              { id: 'cli-rotation', label: 'Rotação CLI', icon: '🔄' },
+              { id: 'dtmf-config', label: 'Config DTMF', icon: '⌨️' }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setSelectedTab(tab.id)}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
                   selectedTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'bg-primary-500 text-white shadow-lg'
+                    : 'text-secondary-400 hover:text-white hover:bg-white/10'
                 }`}
               >
-                {tab.label}
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
               </button>
             ))}
           </nav>
@@ -586,14 +664,10 @@ const AdvancedPerformanceDashboard = () => {
         {/* Conteúdo das abas */}
         <div className="tab-content">
           {selectedTab === 'realtime' && renderRealtimeMetrics()}
-          {selectedTab === 'loadtest' && renderLoadTestSection()}
-          {selectedTab === 'cli' && renderCliStats()}
-          {selectedTab === 'countries' && (
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4">Estatísticas por País</h3>
-              <p className="text-gray-500">Implementação em progresso...</p>
-            </div>
-          )}
+          {selectedTab === 'loadtest' && <LoadTestManager />}
+          {selectedTab === 'cli-limits' && <CliLimitsManager />}
+          {selectedTab === 'cli-rotation' && <CliRotationDashboard />}
+          {selectedTab === 'dtmf-config' && <DTMFCountryConfig />}
         </div>
       </div>
     </div>
