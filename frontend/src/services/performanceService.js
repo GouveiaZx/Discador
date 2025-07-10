@@ -1,48 +1,50 @@
 import { makeApiRequest } from '../config/api.js';
 
 /**
- * Serviço para APIs de Performance Avançado
- * Inclui métricas em tempo real, CLI limits, DTMF config e load testing
+ * Servicio para APIs de Performance Avanzado
+ * Gestiona todas las operaciones de performance, tests de carga y gestión de CLIs
  */
 class PerformanceService {
-  
-  // ========== MÉTRICAS EM TEMPO REAL ==========
-  
+  constructor() {
+    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+  }
+
+  // ========== MÉTRICAS EN TIEMPO REAL ==========
   /**
-   * Obtém métricas em tempo real do sistema
+   * Obtiene métricas en tiempo real del sistema
    */
   async getRealtimeMetrics() {
     try {
       const response = await makeApiRequest('/performance/metrics/realtime', 'GET');
-      return response;
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao obter métricas em tempo real:', error);
+      console.error('❌ Error al obtener métricas en tiempo real:', error);
       throw error;
     }
   }
 
   /**
-   * Obtém histórico de métricas
-   * @param {number} minutes - Minutos de histórico (padrão 60)
+   * Obtiene historial de métricas
+   * @param {number} minutes - Minutos de historial
    */
   async getMetricsHistory(minutes = 60) {
     try {
       const response = await makeApiRequest(`/performance/metrics/history?minutes=${minutes}`, 'GET');
-      return response;
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao obter histórico de métricas:', error);
+      console.error('❌ Error al obtener historial de métricas:', error);
       throw error;
     }
   }
 
   /**
-   * Cria conexão WebSocket para métricas em tempo real
-   * @param {function} onMessage - Callback para receber mensagens
-   * @param {function} onError - Callback para erros
-   * @param {function} onClose - Callback para fechamento da conexão
+   * Crea conexión WebSocket para métricas en tiempo real
+   * @param {function} onMessage - Callback para mensajes
+   * @param {function} onError - Callback para errores
+   * @param {function} onClose - Callback para cierre
    */
   createWebSocketConnection(onMessage, onError, onClose) {
-    const wsUrl = import.meta.env.DEV 
+    const wsUrl = process.env.NODE_ENV === 'development' 
       ? 'ws://localhost:8000/api/performance/ws/performance'
       : 'wss://discador.onrender.com/api/performance/ws/performance';
     
@@ -53,369 +55,458 @@ class PerformanceService {
         const data = JSON.parse(event.data);
         onMessage(data);
       } catch (error) {
-        console.error('❌ Erro ao processar mensagem WebSocket:', error);
+        console.error('❌ Error al procesar mensaje WebSocket:', error);
         onError(error);
       }
     };
-    
+
     ws.onerror = (error) => {
-      console.error('❌ Erro na conexão WebSocket:', error);
+      console.error('❌ Error en conexión WebSocket:', error);
       onError(error);
     };
-    
+
     ws.onclose = () => {
-      console.log('🔌 Conexão WebSocket fechada');
-      onClose();
+      console.log('🔌 WebSocket desconectado');
+      if (onClose) onClose();
     };
-    
-    ws.onopen = () => {
-      console.log('✅ Conexão WebSocket estabelecida');
-    };
-    
+
     return ws;
   }
 
   // ========== SISTEMA DE DISCADO ==========
-
   /**
-   * Inicia o sistema de discado de alta performance
-   * @param {object} config - Configurações do dialer
+   * Inicia el sistema de discado de alta performance
+   * @param {object} config - Configuraciones del discado
    */
   async startDialer(config) {
     try {
       const response = await makeApiRequest('/performance/dialer/start', 'POST', config);
-      return response;
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao iniciar dialer:', error);
+      console.error('❌ Error al iniciar dialer:', error);
       throw error;
     }
   }
 
   /**
-   * Para o sistema de discado
+   * Para el sistema de discado
    */
   async stopDialer() {
     try {
       const response = await makeApiRequest('/performance/dialer/stop', 'POST');
-      return response;
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao parar dialer:', error);
+      console.error('❌ Error al parar dialer:', error);
       throw error;
     }
   }
 
   /**
-   * Define manualmente o CPS do sistema
-   * @param {number} cps - Chamadas por segundo
+   * Define manualmente el CPS del sistema
+   * @param {number} cps - CPS objetivo
    */
   async setCPS(cps) {
     try {
       const response = await makeApiRequest(`/performance/dialer/cps/${cps}`, 'POST');
-      return response;
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao definir CPS:', error);
+      console.error('❌ Error al definir CPS:', error);
       throw error;
     }
   }
 
-  // ========== TESTE DE CARGA ==========
-
+  // ========== TEST DE CARGA ==========
   /**
-   * Inicia teste de carga
-   * @param {object} config - Configurações do teste
+   * Inicia test de carga
+   * @param {object} config - Configuraciones del test
    */
   async startLoadTest(config) {
     try {
       const response = await makeApiRequest('/performance/load-test/start', 'POST', config);
-      return response;
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao iniciar teste de carga:', error);
+      console.error('❌ Error al iniciar test de carga:', error);
       throw error;
     }
   }
 
   /**
-   * Para teste de carga
+   * Para test de carga
    */
   async stopLoadTest() {
     try {
       const response = await makeApiRequest('/performance/load-test/stop', 'POST');
-      return response;
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao parar teste de carga:', error);
+      console.error('❌ Error al parar test de carga:', error);
       throw error;
     }
   }
 
   /**
-   * Obtém status do teste de carga
+   * Obtiene status del test de carga
    */
   async getLoadTestStatus() {
     try {
       const response = await makeApiRequest('/performance/load-test/status', 'GET');
-      return response;
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao obter status do teste:', error);
+      console.error('❌ Error al obtener status del test:', error);
       throw error;
     }
   }
 
   /**
-   * Obtém resultados do teste de carga
-   * @param {string} format - Formato dos resultados (json, csv, excel)
+   * Obtiene resultados del test de carga
+   * @param {string} format - Formato de exportación (json|csv|excel)
    */
   async getLoadTestResults(format = 'json') {
     try {
       const response = await makeApiRequest(`/performance/load-test/results?format=${format}`, 'GET');
-      return response;
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao obter resultados do teste:', error);
+      console.error('❌ Error al obtener resultados del test:', error);
       throw error;
     }
   }
 
-  // ========== CLI LIMITS (LIMITES DE CLI) ==========
-
+  // ========== CLI LIMITS (LÍMITES DE CLI) ==========
   /**
-   * Obtém limites de CLI por país
+   * Obtiene límites de CLI por país
    */
   async getCliLimits() {
     try {
       const response = await makeApiRequest('/performance/cli/limits', 'GET');
-      return response;
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao obter limites de CLI:', error);
+      console.error('❌ Error al obtener límites de CLI:', error);
       throw error;
     }
   }
 
   /**
-   * Define limite de CLI para um país
-   * @param {string} country - Código do país
-   * @param {number} dailyLimit - Limite diário de uso
+   * Actualiza límites de CLI por país
+   * @param {string} country - Código del país
+   * @param {number} limit - Límite diario
    */
-  async setCliLimit(country, dailyLimit) {
+  async updateCliLimits(country, limit) {
     try {
-      const response = await makeApiRequest(`/performance/cli/limits/${country}`, 'POST', {
+      const response = await makeApiRequest('/performance/cli/limits', 'POST', {
         country,
-        daily_limit: dailyLimit
+        daily_limit: limit
       });
-      return response;
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao definir limite de CLI:', error);
+      console.error('❌ Error al actualizar límites de CLI:', error);
       throw error;
     }
   }
 
   /**
-   * Obtém estatísticas de uso de CLI
+   * Obtiene uso actual de CLIs
    */
   async getCliUsage() {
     try {
       const response = await makeApiRequest('/performance/cli/usage', 'GET');
-      return response;
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao obter uso de CLI:', error);
+      console.error('❌ Error al obtener uso de CLIs:', error);
       throw error;
     }
   }
 
   /**
-   * Reseta contadores de uso de CLI
+   * Resetea contadores de uso de CLIs
+   * @param {string} country - País específico (opcional)
    */
-  async resetCliUsage() {
+  async resetCliUsage(country = null) {
     try {
-      const response = await makeApiRequest('/performance/cli/reset', 'POST');
-      return response;
+      const url = country ? `/performance/cli/usage/reset?country=${country}` : '/performance/cli/usage/reset';
+      const response = await makeApiRequest(url, 'POST');
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao resetar uso de CLI:', error);
+      console.error('❌ Error al resetear uso de CLIs:', error);
       throw error;
     }
   }
 
-  // ========== DTMF CONFIG (CONFIGURAÇÃO DTMF) ==========
-
+  // ========== ROTACIÓN DE CLIS ==========
   /**
-   * Obtém configurações DTMF por país
+   * Obtiene datos de rotación de CLIs
    */
-  async getDTMFConfig() {
+  async getCliRotationData() {
     try {
-      const response = await makeApiRequest('/performance/dtmf/config', 'GET');
-      return response;
+      const response = await makeApiRequest('/performance/cli/rotation', 'GET');
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao obter configurações DTMF:', error);
+      console.error('❌ Error al obtener datos de rotación:', error);
       throw error;
     }
   }
 
   /**
-   * Atualiza configuração DTMF para um país
-   * @param {string} country - Código do país
-   * @param {object} config - Configurações DTMF
+   * Obtiene lista de CLIs con filtros
+   * @param {object} filters - Filtros de búsqueda
    */
-  async updateDTMFConfig(country, config) {
+  async getCliList(filters = {}) {
     try {
-      const response = await makeApiRequest(`/performance/dtmf/config/${country}`, 'POST', config);
-      return response;
+      const queryParams = new URLSearchParams(filters).toString();
+      const response = await makeApiRequest(`/performance/cli/list?${queryParams}`, 'GET');
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro ao atualizar configuração DTMF:', error);
+      console.error('❌ Error al obtener lista de CLIs:', error);
       throw error;
     }
   }
 
-  // ========== HEALTH CHECK ==========
-
   /**
-   * Verifica saúde do sistema de performance
+   * Actualiza configuración de rotación de CLIs
+   * @param {object} config - Configuración de rotación
    */
-  async healthCheck() {
+  async updateCliRotationConfig(config) {
     try {
-      const response = await makeApiRequest('/performance/health', 'GET');
-      return response;
+      const response = await makeApiRequest('/performance/cli/rotation/config', 'POST', config);
+      return response.data;
     } catch (error) {
-      console.error('❌ Erro no health check:', error);
+      console.error('❌ Error al actualizar configuración de rotación:', error);
       throw error;
     }
   }
 
-  // ========== UTILITÁRIOS ==========
-
+  // ========== CONFIGURACIÓN DTMF ==========
   /**
-   * Formata dados de métricas para gráficos
-   * @param {array} metricsHistory - Histórico de métricas
+   * Obtiene configuraciones DTMF por país
    */
-  formatMetricsForChart(metricsHistory) {
-    if (!metricsHistory || !Array.isArray(metricsHistory)) {
-      return {
-        labels: [],
-        datasets: []
-      };
+  async getDTMFConfigs() {
+    try {
+      const response = await makeApiRequest('/performance/dtmf/configs', 'GET');
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error al obtener configuraciones DTMF:', error);
+      throw error;
     }
-
-    return {
-      labels: metricsHistory.map(m => new Date(m.timestamp).toLocaleTimeString()),
-      datasets: [
-        {
-          label: 'CPS Atual',
-          data: metricsHistory.map(m => m.current_cps),
-          borderColor: '#10B981',
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          fill: true
-        },
-        {
-          label: 'Chamadas Simultâneas',
-          data: metricsHistory.map(m => m.concurrent_calls),
-          borderColor: '#3B82F6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          fill: true
-        },
-        {
-          label: 'Taxa de Sucesso (%)',
-          data: metricsHistory.map(m => (m.success_rate * 100).toFixed(1)),
-          borderColor: '#F59E0B',
-          backgroundColor: 'rgba(245, 158, 11, 0.1)',
-          fill: true
-        }
-      ]
-    };
   }
 
   /**
-   * Obtém configurações padrão para países
+   * Guarda configuración DTMF para un país
+   * @param {object} config - Configuración DTMF
+   */
+  async saveDTMFConfig(config) {
+    try {
+      const response = await makeApiRequest('/performance/dtmf/config', 'POST', config);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error al guardar configuración DTMF:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Resetea configuración DTMF a valores por defecto
+   * @param {string} country - Código del país
+   */
+  async resetDTMFConfig(country) {
+    try {
+      const response = await makeApiRequest(`/performance/dtmf/config/reset?country=${country}`, 'POST');
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error al resetear configuración DTMF:', error);
+      throw error;
+    }
+  }
+
+  // ========== EXPORTACIÓN DE DATOS ==========
+  /**
+   * Exporta datos de performance
+   * @param {string} type - Tipo de datos (metrics|cli-usage|test-results)
+   * @param {string} format - Formato (json|csv|excel)
+   * @param {object} filters - Filtros de exportación
+   */
+  async exportData(type, format = 'json', filters = {}) {
+    try {
+      const queryParams = new URLSearchParams({ format, ...filters }).toString();
+      const response = await makeApiRequest(`/performance/export/${type}?${queryParams}`, 'GET');
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error al exportar datos:', error);
+      throw error;
+    }
+  }
+
+  // ========== VALIDACIONES Y UTILIDADES ==========
+  /**
+   * Valida configuración de CPS
+   * @param {number} cps - CPS a validar
+   */
+  validateCPS(cps) {
+    if (!cps || isNaN(cps) || cps < 1 || cps > 100) {
+      throw new Error('CPS debe estar entre 1 y 100');
+    }
+    return true;
+  }
+
+  /**
+   * Valida configuración de país
+   * @param {string} country - Código del país
+   */
+  validateCountry(country) {
+    const validCountries = ['usa', 'canada', 'mexico', 'brasil', 'colombia', 'argentina', 'chile', 'peru'];
+    if (!validCountries.includes(country)) {
+      throw new Error(`País no válido: ${country}`);
+    }
+    return true;
+  }
+
+  /**
+   * Obtiene configuraciones por defecto por país
    */
   getDefaultCountryConfigs() {
     return {
       usa: {
+        name: 'Estados Unidos',
+        flag: '🇺🇸',
         cli_limit: 100,
-        dtmf_config: {
-          connect_key: "1",
-          disconnect_key: "9",
-          repeat_key: "0",
-          menu_timeout: 10,
-          instructions: "Press 1 to connect, 9 to disconnect, 0 to repeat"
-        }
+        dtmf_key: '1',
+        timezone: 'America/New_York'
       },
       canada: {
+        name: 'Canadá',
+        flag: '🇨🇦',
         cli_limit: 100,
-        dtmf_config: {
-          connect_key: "1",
-          disconnect_key: "9",
-          repeat_key: "0",
-          menu_timeout: 10,
-          instructions: "Press 1 to connect, 9 to disconnect, 0 to repeat"
-        }
+        dtmf_key: '1',
+        timezone: 'America/Toronto'
       },
       mexico: {
-        cli_limit: 0, // Ilimitado
-        dtmf_config: {
-          connect_key: "3", // Especial para México
-          disconnect_key: "9",
-          repeat_key: "0",
-          menu_timeout: 15,
-          instructions: "Presione 3 para conectar, 9 para desconectar, 0 para repetir"
-        }
+        name: 'México',
+        flag: '🇲🇽',
+        cli_limit: 0, // Sin límite
+        dtmf_key: '3', // Especial para México
+        timezone: 'America/Mexico_City'
       },
       brasil: {
-        cli_limit: 0, // Ilimitado
-        dtmf_config: {
-          connect_key: "1",
-          disconnect_key: "9",
-          repeat_key: "0",
-          menu_timeout: 10,
-          instructions: "Pressione 1 para conectar, 9 para desconectar, 0 para repetir"
-        }
+        name: 'Brasil',
+        flag: '🇧🇷',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Sao_Paulo'
       },
       colombia: {
-        cli_limit: 0, // Ilimitado
-        dtmf_config: {
-          connect_key: "1",
-          disconnect_key: "9",
-          repeat_key: "0",
-          menu_timeout: 10,
-          instructions: "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
-        }
+        name: 'Colombia',
+        flag: '🇨🇴',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Bogota'
       },
       argentina: {
-        cli_limit: 0, // Ilimitado
-        dtmf_config: {
-          connect_key: "1",
-          disconnect_key: "9",
-          repeat_key: "0",
-          menu_timeout: 10,
-          instructions: "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
-        }
+        name: 'Argentina',
+        flag: '🇦🇷',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Argentina/Buenos_Aires'
+      },
+      chile: {
+        name: 'Chile',
+        flag: '🇨🇱',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Santiago'
+      },
+      peru: {
+        name: 'Perú',
+        flag: '🇵🇪',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Lima'
       }
     };
   }
 
   /**
-   * Valida configurações de teste de carga
-   * @param {object} config - Configurações a validar
+   * Formatea números para mostrar
+   * @param {number} num - Número a formatear
    */
-  validateLoadTestConfig(config) {
-    const errors = [];
-
-    if (!config.target_cps || config.target_cps < 1 || config.target_cps > 50) {
-      errors.push('CPS deve estar entre 1 e 50');
+  formatNumber(num) {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
     }
+    return num?.toString() || '0';
+  }
 
-    if (!config.duration_minutes || config.duration_minutes < 1 || config.duration_minutes > 120) {
-      errors.push('Duração deve estar entre 1 e 120 minutos');
+  /**
+   * Formatea duración en segundos
+   * @param {number} seconds - Segundos a formatear
+   */
+  formatDuration(seconds) {
+    if (!seconds) return '0s';
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${remainingSeconds}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${remainingSeconds}s`;
+    } else {
+      return `${remainingSeconds}s`;
     }
+  }
 
-    if (!config.countries_to_test || config.countries_to_test.length === 0) {
-      errors.push('Deve selecionar pelo menos um país para teste');
-    }
+  /**
+   * Calcula porcentaje de uso
+   * @param {number} used - Cantidad usada
+   * @param {number} limit - Límite total
+   */
+  calculateUsagePercentage(used, limit) {
+    if (!limit || limit === 0) return 0;
+    return Math.min(Math.round((used / limit) * 100), 100);
+  }
 
-    if (!config.number_of_clis || config.number_of_clis < 10 || config.number_of_clis > 50000) {
-      errors.push('Número de CLIs deve estar entre 10 e 50000');
-    }
-
-    return errors;
+  /**
+   * Obtiene color de status según porcentaje
+   * @param {number} percentage - Porcentaje
+   */
+  getStatusColor(percentage) {
+    if (percentage >= 90) return 'danger';
+    if (percentage >= 70) return 'warning';
+    return 'success';
   }
 }
 
-// Instância singleton
+// Función auxiliar para hacer requests HTTP
+async function makeApiRequest(endpoint, method = 'GET', data = null) {
+  const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+  const url = `${baseURL}${endpoint}`;
+  
+  const config = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+    }
+  };
+
+  if (data && ['POST', 'PUT', 'PATCH'].includes(method)) {
+    config.body = JSON.stringify(data);
+  }
+
+  try {
+    const response = await fetch(url, config);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`❌ Error en API ${method} ${endpoint}:`, error);
+    throw error;
+  }
+}
+
+// Instancia del servicio
 const performanceService = new PerformanceService();
 
 export default performanceService; 

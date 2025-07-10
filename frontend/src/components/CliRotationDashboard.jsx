@@ -1,24 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Bar, Line, Doughnut, Scatter } from 'react-chartjs-2';
+import { Doughnut, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   BarElement,
   ArcElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 } from 'chart.js';
 import performanceService from '../services/performanceService';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   BarElement,
   ArcElement,
   Title,
@@ -30,155 +26,162 @@ const CliRotationDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cliData, setCliData] = useState([]);
-  const [usage, setUsage] = useState({});
   const [filters, setFilters] = useState({
     country: '',
-    provider: '',
     status: '',
-    sortBy: 'usage_count',
-    sortOrder: 'desc'
+    provider: ''
   });
   const [pagination, setPagination] = useState({
-    page: 1,
-    pageSize: 50,
+    currentPage: 1,
+    itemsPerPage: 50,
     total: 0
   });
-  const [refreshInterval, setRefreshInterval] = useState(null);
+  const [sortConfig, setSortConfig] = useState({
+    key: 'usage_count',
+    direction: 'desc'
+  });
 
   const countries = {
     usa: { name: 'Estados Unidos', flag: '🇺🇸' },
     canada: { name: 'Canadá', flag: '🇨🇦' },
     mexico: { name: 'México', flag: '🇲🇽' },
     brasil: { name: 'Brasil', flag: '🇧🇷' },
-    colombia: { name: 'Colômbia', flag: '🇨🇴' },
+    colombia: { name: 'Colombia', flag: '🇨🇴' },
     argentina: { name: 'Argentina', flag: '🇦🇷' },
     chile: { name: 'Chile', flag: '🇨🇱' },
-    peru: { name: 'Peru', flag: '🇵🇪' }
+    peru: { name: 'Perú', flag: '🇵🇪' }
   };
 
   const providers = {
-    twilio: { name: 'Twilio', color: '#F22F46' },
-    vonage: { name: 'Vonage', color: '#1E40AF' },
-    telnyx: { name: 'Telnyx', color: '#059669' },
-    local: { name: 'Local Provider', color: '#7C3AED' }
+    'provider-1': 'Proveedor A',
+    'provider-2': 'Proveedor B',
+    'provider-3': 'Proveedor C',
+    'provider-4': 'Proveedor D'
   };
 
+  const statusLabels = {
+    'active': 'Activo',
+    'high_usage': 'Uso Alto',
+    'limit_reached': 'Límite Alcanzado',
+    'blocked': 'Bloqueado',
+    'inactive': 'Inactivo'
+  };
+
+  // Cargar datos de CLI
   useEffect(() => {
     loadCliData();
-    loadUsageData();
-    
-    // Auto-refresh a cada 30 segundos
-    const interval = setInterval(() => {
-      loadCliData();
-      loadUsageData();
-    }, 30000);
-    
-    setRefreshInterval(interval);
-    
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [filters, pagination.page]);
+  }, [filters, pagination.currentPage, sortConfig]);
 
   const loadCliData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Simular carregamento de dados de CLI
-      // Em produção, seria uma API real: /api/cli/list
-      const response = await fetch('/api/cli/list', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filters,
-          pagination: {
-            skip: (pagination.page - 1) * pagination.pageSize,
-            limit: pagination.pageSize
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao carregar dados de CLI');
+      // Simular carga de datos de CLI
+      const mockData = generateMockCliData();
+      
+      // Aplicar filtros
+      let filteredData = mockData;
+      if (filters.country) {
+        filteredData = filteredData.filter(cli => cli.country === filters.country);
+      }
+      if (filters.status) {
+        filteredData = filteredData.filter(cli => cli.status === filters.status);
+      }
+      if (filters.provider) {
+        filteredData = filteredData.filter(cli => cli.provider === filters.provider);
       }
 
-      const data = await response.json();
-      setCliData(data.clis || []);
-      setPagination(prev => ({
-        ...prev,
-        total: data.total || 0
-      }));
+      // Aplicar ordenamiento
+      filteredData.sort((a, b) => {
+        if (sortConfig.direction === 'asc') {
+          return a[sortConfig.key] > b[sortConfig.key] ? 1 : -1;
+        }
+        return a[sortConfig.key] < b[sortConfig.key] ? 1 : -1;
+      });
+
+      // Aplicar paginación
+      const startIndex = (pagination.currentPage - 1) * pagination.itemsPerPage;
+      const paginatedData = filteredData.slice(startIndex, startIndex + pagination.itemsPerPage);
+
+      setCliData(paginatedData);
+      setPagination(prev => ({ ...prev, total: filteredData.length }));
 
     } catch (err) {
-      console.error('❌ Erro ao carregar CLIs:', err);
-      
-      // Fallback com dados simulados
-      const simulatedData = generateSimulatedCliData();
-      setCliData(simulatedData);
-      setPagination(prev => ({
-        ...prev,
-        total: simulatedData.length
-      }));
+      console.error('❌ Error al cargar CLIs:', err);
+      setError('Error al cargar datos de CLI. Verificá la conexión.');
+      // Fallback con datos simulados
+      const fallbackData = generateMockCliData().slice(0, 10);
+      setCliData(fallbackData);
+      setPagination(prev => ({ ...prev, total: fallbackData.length }));
     } finally {
       setLoading(false);
     }
   };
 
-  const loadUsageData = async () => {
-    try {
-      const usageResponse = await performanceService.getCliUsage();
-      setUsage(usageResponse.usage || {});
-    } catch (err) {
-      console.error('❌ Erro ao carregar dados de uso:', err);
-    }
-  };
+  const generateMockCliData = () => {
+    const mockClis = [];
+    const countryKeys = Object.keys(countries);
+    const providerKeys = Object.keys(providers);
+    const statusKeys = Object.keys(statusLabels);
 
-  const generateSimulatedCliData = () => {
-    const simulatedClis = [];
-    const countryCodes = Object.keys(countries);
-    const providerCodes = Object.keys(providers);
-    
-    for (let i = 0; i < 100; i++) {
-      const country = countryCodes[Math.floor(Math.random() * countryCodes.length)];
-      const provider = providerCodes[Math.floor(Math.random() * providerCodes.length)];
+    for (let i = 0; i < 2000; i++) {
+      const country = countryKeys[Math.floor(Math.random() * countryKeys.length)];
+      const provider = providerKeys[Math.floor(Math.random() * providerKeys.length)];
       const usageCount = Math.floor(Math.random() * 150);
-      const lastUsed = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
+      const lastUsed = new Date(Date.now() - Math.floor(Math.random() * 86400000 * 7)).toISOString();
       
-      simulatedClis.push({
-        id: i + 1,
-        number: `+${Math.floor(Math.random() * 9000000000) + 1000000000}`,
+      mockClis.push({
+        id: `cli-${i + 1}`,
+        phone_number: `+1${Math.floor(Math.random() * 9000000000) + 1000000000}`,
         country,
         provider,
         usage_count: usageCount,
-        last_used: lastUsed.toISOString(),
+        last_used: lastUsed,
+        success_rate: Math.floor(Math.random() * 40) + 60,
         status: usageCount > 90 ? 'limit_reached' : usageCount > 50 ? 'high_usage' : 'active',
-        success_rate: (Math.random() * 0.3 + 0.7).toFixed(3), // 70-100%
-        avg_duration: Math.floor(Math.random() * 120 + 30), // 30-150 seconds
-        created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
+        created_at: new Date(Date.now() - Math.floor(Math.random() * 86400000 * 30)).toISOString()
       });
     }
-    
-    return simulatedClis;
+
+    return mockClis;
   };
 
-  const getUsageDistributionData = () => {
-    const distribution = cliData.reduce((acc, cli) => {
-      const range = cli.usage_count === 0 ? 'Não usado' :
-                    cli.usage_count <= 25 ? '1-25' :
-                    cli.usage_count <= 50 ? '26-50' :
-                    cli.usage_count <= 75 ? '51-75' :
-                    cli.usage_count <= 100 ? '76-100' : '100+';
-      acc[range] = (acc[range] || 0) + 1;
-      return acc;
-    }, {});
+  const handleSort = (key) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
+    }));
+  };
+
+  const handlePageChange = (page) => {
+    setPagination(prev => ({ ...prev, currentPage: page }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      country: '',
+      status: '',
+      provider: ''
+    });
+    setPagination(prev => ({ ...prev, currentPage: 1 }));
+  };
+
+  // Datos para gráficos
+  const getCountryDistribution = () => {
+    const distribution = {};
+    cliData.forEach(cli => {
+      distribution[cli.country] = (distribution[cli.country] || 0) + 1;
+    });
 
     return {
-      labels: Object.keys(distribution),
+      labels: Object.keys(distribution).map(code => countries[code]?.name || code),
       datasets: [{
+        label: 'CLIs por País',
         data: Object.values(distribution),
         backgroundColor: [
-          '#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'
+          '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
+          '#8B5CF6', '#06B6D4', '#84CC16', '#F97316'
         ],
         borderWidth: 2,
         borderColor: '#1F2937'
@@ -186,75 +189,71 @@ const CliRotationDashboard = () => {
     };
   };
 
-  const getCountryDistributionData = () => {
-    const distribution = cliData.reduce((acc, cli) => {
-      const country = countries[cli.country]?.name || cli.country;
-      acc[country] = (acc[country] || 0) + 1;
-      return acc;
-    }, {});
+  const getStatusDistribution = () => {
+    const distribution = {};
+    cliData.forEach(cli => {
+      distribution[cli.status] = (distribution[cli.status] || 0) + 1;
+    });
 
     return {
-      labels: Object.keys(distribution),
+      labels: Object.keys(distribution).map(status => statusLabels[status] || status),
       datasets: [{
-        label: 'CLIs por País',
+        label: 'CLIs por Estado',
         data: Object.values(distribution),
-        backgroundColor: 'rgba(59, 130, 246, 0.8)',
-        borderColor: '#3B82F6',
+        backgroundColor: ['#10B981', '#F59E0B', '#EF4444', '#6B7280', '#8B5CF6'],
+        borderWidth: 2,
+        borderColor: '#1F2937'
+      }]
+    };
+  };
+
+  const getUsageChart = () => {
+    const usageRanges = { '0-25': 0, '26-50': 0, '51-75': 0, '76-100': 0, '100+': 0 };
+    
+    cliData.forEach(cli => {
+      const usage = cli.usage_count;
+      if (usage <= 25) usageRanges['0-25']++;
+      else if (usage <= 50) usageRanges['26-50']++;
+      else if (usage <= 75) usageRanges['51-75']++;
+      else if (usage <= 100) usageRanges['76-100']++;
+      else usageRanges['100+']++;
+    });
+
+    return {
+      labels: Object.keys(usageRanges),
+      datasets: [{
+        label: 'Distribución de Uso',
+        data: Object.values(usageRanges),
+        backgroundColor: '#3B82F6',
+        borderColor: '#1E40AF',
         borderWidth: 1
       }]
     };
   };
 
-  const getUsageOverTimeData = () => {
-    const usageByDay = cliData.reduce((acc, cli) => {
-      const date = new Date(cli.last_used).toLocaleDateString();
-      acc[date] = (acc[date] || 0) + cli.usage_count;
-      return acc;
-    }, {});
-
-    const sortedDates = Object.keys(usageByDay).sort();
-    
-    return {
-      labels: sortedDates,
-      datasets: [{
-        label: 'Uso Acumulado',
-        data: sortedDates.map(date => usageByDay[date]),
-        borderColor: '#10B981',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        fill: true,
-        tension: 0.4
-      }]
-    };
-  };
-
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'active': return 'text-green-400';
-      case 'high_usage': return 'text-yellow-400';
-      case 'limit_reached': return 'text-red-400';
-      case 'inactive': return 'text-gray-400';
-      default: return 'text-white';
-    }
+    const colors = {
+      active: 'text-green-400',
+      high_usage: 'text-yellow-400',
+      limit_reached: 'text-red-400',
+      blocked: 'text-red-600',
+      inactive: 'text-gray-400'
+    };
+    return colors[status] || colors.inactive;
   };
 
   const getStatusBadge = (status) => {
     const colors = {
-      active: 'bg-green-500/20 text-green-400',
-      high_usage: 'bg-yellow-500/20 text-yellow-400',
-      limit_reached: 'bg-red-500/20 text-red-400',
-      inactive: 'bg-gray-500/20 text-gray-400'
+      active: 'bg-green-100 text-green-800',
+      high_usage: 'bg-yellow-100 text-yellow-800',
+      limit_reached: 'bg-red-100 text-red-800',
+      blocked: 'bg-red-200 text-red-900',
+      inactive: 'bg-gray-100 text-gray-800'
     };
-    
-    const labels = {
-      active: 'Ativo',
-      high_usage: 'Uso Alto',
-      limit_reached: 'Limite Atingido',
-      inactive: 'Inativo'
-    };
-    
+
     return (
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || colors.inactive}`}>
-        {labels[status] || status}
+        {statusLabels[status] || status}
       </span>
     );
   };
@@ -262,31 +261,23 @@ const CliRotationDashboard = () => {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    scales: {
-      x: {
-        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-        ticks: { color: 'rgba(255, 255, 255, 0.7)' }
-      },
-      y: {
-        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-        ticks: { color: 'rgba(255, 255, 255, 0.7)' }
-      }
-    },
     plugins: {
       legend: {
-        labels: { color: 'rgba(255, 255, 255, 0.9)' }
+        position: 'bottom',
+        labels: {
+          color: 'rgba(255, 255, 255, 0.8)',
+          font: { size: 12 }
+        }
       }
     }
   };
-
-  const totalPages = Math.ceil(pagination.total / pagination.pageSize);
 
   if (loading && cliData.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-          <p className="text-secondary-400">Carregando dados de CLI...</p>
+          <p className="text-secondary-400">Cargando datos de CLI...</p>
         </div>
       </div>
     );
@@ -295,223 +286,199 @@ const CliRotationDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-white mb-2">
-          🔄 Dashboard de Rotação de DIDs/CLIs
+      <div className="glass-panel p-6 rounded-xl">
+        <h2 className="text-2xl font-bold text-gradient-primary mb-2">
+          🔄 Dashboard de Rotación de DIDs/CLIs
         </h2>
-        <p className="text-purple-100">
-          Monitoramento de uso, rotação e performance de {pagination.total.toLocaleString()} CLIs
+        <p className="text-secondary-400">
+          Monitoreo de uso, rotación y rendimiento de {pagination.total.toLocaleString()} CLIs
         </p>
       </div>
 
-      {/* Estatísticas Gerais */}
+      {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="glass-panel rounded-lg p-4 text-center">
-          <div className="text-3xl font-bold text-primary-400">
-            {pagination.total.toLocaleString()}
-          </div>
+        <div className="glass-panel p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-primary-400">{pagination.total.toLocaleString()}</div>
           <div className="text-sm text-secondary-400">Total de CLIs</div>
         </div>
-        
-        <div className="glass-panel rounded-lg p-4 text-center">
-          <div className="text-3xl font-bold text-green-400">
+        <div className="glass-panel p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-success-400">
             {cliData.filter(cli => cli.status === 'active').length}
           </div>
-          <div className="text-sm text-secondary-400">CLIs Ativos</div>
+          <div className="text-sm text-secondary-400">CLIs Activos</div>
         </div>
-        
-        <div className="glass-panel rounded-lg p-4 text-center">
-          <div className="text-3xl font-bold text-yellow-400">
+        <div className="glass-panel p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-warning-400">
             {cliData.filter(cli => cli.status === 'high_usage').length}
           </div>
-          <div className="text-sm text-secondary-400">Alto Uso</div>
+          <div className="text-sm text-secondary-400">Uso Alto</div>
         </div>
-        
-        <div className="glass-panel rounded-lg p-4 text-center">
-          <div className="text-3xl font-bold text-red-400">
+        <div className="glass-panel p-4 rounded-xl text-center">
+          <div className="text-2xl font-bold text-error-400">
             {cliData.filter(cli => cli.status === 'limit_reached').length}
           </div>
-          <div className="text-sm text-secondary-400">Limite Atingido</div>
+          <div className="text-sm text-secondary-400">Límite Alcanzado</div>
         </div>
       </div>
 
       {/* Filtros */}
-      <div className="glass-panel rounded-lg p-6">
+      <div className="glass-panel p-6 rounded-xl">
         <h3 className="text-lg font-semibold text-white mb-4">🔍 Filtros</h3>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-secondary-300 mb-2">País</label>
             <select
               value={filters.country}
               onChange={(e) => setFilters({...filters, country: e.target.value})}
-              className="w-full px-3 py-2 bg-secondary-700 border border-secondary-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 bg-secondary-800 border border-secondary-600 rounded-lg text-white focus:border-primary-500 focus:outline-none"
             >
-              <option value="">Todos os países</option>
+              <option value="">Todos los países</option>
               {Object.entries(countries).map(([code, country]) => (
-                <option key={code} value={code}>{country.flag} {country.name}</option>
+                <option key={code} value={code}>
+                  {country.flag} {country.name}
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary-300 mb-2">Provedor</label>
+            <label className="block text-sm font-medium text-secondary-300 mb-2">Proveedor</label>
             <select
               value={filters.provider}
               onChange={(e) => setFilters({...filters, provider: e.target.value})}
-              className="w-full px-3 py-2 bg-secondary-700 border border-secondary-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 bg-secondary-800 border border-secondary-600 rounded-lg text-white focus:border-primary-500 focus:outline-none"
             >
-              <option value="">Todos os provedores</option>
-              {Object.entries(providers).map(([code, provider]) => (
-                <option key={code} value={code}>{provider.name}</option>
+              <option value="">Todos los proveedores</option>
+              {Object.entries(providers).map(([code, name]) => (
+                <option key={code} value={code}>{name}</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-secondary-300 mb-2">Status</label>
+            <label className="block text-sm font-medium text-secondary-300 mb-2">Estado</label>
             <select
               value={filters.status}
               onChange={(e) => setFilters({...filters, status: e.target.value})}
-              className="w-full px-3 py-2 bg-secondary-700 border border-secondary-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 bg-secondary-800 border border-secondary-600 rounded-lg text-white focus:border-primary-500 focus:outline-none"
             >
-              <option value="">Todos os status</option>
-              <option value="active">Ativo</option>
-              <option value="high_usage">Alto Uso</option>
-              <option value="limit_reached">Limite Atingido</option>
-              <option value="inactive">Inativo</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-secondary-300 mb-2">Ordenar por</label>
-            <select
-              value={filters.sortBy}
-              onChange={(e) => setFilters({...filters, sortBy: e.target.value})}
-              className="w-full px-3 py-2 bg-secondary-700 border border-secondary-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="usage_count">Uso</option>
-              <option value="last_used">Último Uso</option>
-              <option value="success_rate">Taxa de Sucesso</option>
-              <option value="created_at">Data de Criação</option>
+              <option value="">Todos los estados</option>
+              {Object.entries(statusLabels).map(([code, label]) => (
+                <option key={code} value={code}>{label}</option>
+              ))}
             </select>
           </div>
 
           <div className="flex items-end">
             <button
-              onClick={() => {
-                setFilters({
-                  country: '',
-                  provider: '',
-                  status: '',
-                  sortBy: 'usage_count',
-                  sortOrder: 'desc'
-                });
-                setPagination(prev => ({...prev, page: 1}));
-              }}
+              onClick={clearFilters}
               className="w-full px-4 py-2 bg-secondary-600 hover:bg-secondary-700 text-white rounded-lg transition-colors"
             >
-              Limpar Filtros
+              Limpiar Filtros
             </button>
           </div>
         </div>
       </div>
 
       {/* Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        <div className="glass-panel rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">📊 Distribuição por Uso</h3>
-          <div className="h-64">
-            <Doughnut data={getUsageDistributionData()} options={chartOptions} />
-          </div>
-        </div>
-
-        <div className="glass-panel rounded-lg p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="glass-panel p-6 rounded-xl">
           <h3 className="text-lg font-semibold text-white mb-4">🌍 CLIs por País</h3>
           <div className="h-64">
-            <Bar data={getCountryDistributionData()} options={chartOptions} />
+            <Doughnut data={getCountryDistribution()} options={chartOptions} />
           </div>
         </div>
 
-        <div className="glass-panel rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">📈 Uso ao Longo do Tempo</h3>
+        <div className="glass-panel p-6 rounded-xl">
+          <h3 className="text-lg font-semibold text-white mb-4">📊 CLIs por Estado</h3>
           <div className="h-64">
-            <Line data={getUsageOverTimeData()} options={chartOptions} />
+            <Doughnut data={getStatusDistribution()} options={chartOptions} />
+          </div>
+        </div>
+
+        <div className="glass-panel p-6 rounded-xl">
+          <h3 className="text-lg font-semibold text-white mb-4">📈 Distribución de Uso</h3>
+          <div className="h-64">
+            <Bar data={getUsageChart()} options={chartOptions} />
           </div>
         </div>
       </div>
 
-      {/* Tabela de CLIs */}
-      <div className="glass-panel rounded-lg overflow-hidden">
-        <div className="p-6 border-b border-secondary-700">
+      {/* Tabla de CLIs */}
+      <div className="glass-panel p-6 rounded-xl">
+        <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white">📋 Lista de CLIs</h3>
+          <div className="text-sm text-secondary-400">
+            Mostrando {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} - {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.total)} de {pagination.total.toLocaleString()} CLIs
+          </div>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-secondary-800">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-secondary-300 uppercase tracking-wider">
-                  Número
+            <thead>
+              <tr className="border-b border-secondary-600">
+                <th className="text-left py-3 px-4 text-secondary-300 font-medium">
+                  <button onClick={() => handleSort('phone_number')} className="flex items-center space-x-1 hover:text-white">
+                    <span>Teléfono</span>
+                    {sortConfig.key === 'phone_number' && (
+                      <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </button>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-secondary-300 uppercase tracking-wider">
-                  País
+                <th className="text-left py-3 px-4 text-secondary-300 font-medium">
+                  <button onClick={() => handleSort('country')} className="flex items-center space-x-1 hover:text-white">
+                    <span>País</span>
+                    {sortConfig.key === 'country' && (
+                      <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </button>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-secondary-300 uppercase tracking-wider">
-                  Provedor
+                <th className="text-left py-3 px-4 text-secondary-300 font-medium">
+                  <button onClick={() => handleSort('usage_count')} className="flex items-center space-x-1 hover:text-white">
+                    <span>Uso</span>
+                    {sortConfig.key === 'usage_count' && (
+                      <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </button>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-secondary-300 uppercase tracking-wider">
-                  Uso
+                <th className="text-left py-3 px-4 text-secondary-300 font-medium">
+                  <button onClick={() => handleSort('success_rate')} className="flex items-center space-x-1 hover:text-white">
+                    <span>Tasa Éxito</span>
+                    {sortConfig.key === 'success_rate' && (
+                      <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </button>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-secondary-300 uppercase tracking-wider">
-                  Taxa Sucesso
+                <th className="text-left py-3 px-4 text-secondary-300 font-medium">
+                  <button onClick={() => handleSort('status')} className="flex items-center space-x-1 hover:text-white">
+                    <span>Estado</span>
+                    {sortConfig.key === 'status' && (
+                      <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </button>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-secondary-300 uppercase tracking-wider">
+                <th className="text-left py-3 px-4 text-secondary-300 font-medium">
                   Último Uso
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-secondary-300 uppercase tracking-wider">
-                  Status
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-secondary-700">
-              {cliData.map((cli) => (
-                <tr key={cli.id} className="hover:bg-secondary-800 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                    {cli.number}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                    {countries[cli.country]?.flag} {countries[cli.country]?.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                    <span 
-                      className="px-2 py-1 rounded-full text-xs font-medium"
-                      style={{ 
-                        backgroundColor: `${providers[cli.provider]?.color}20`,
-                        color: providers[cli.provider]?.color
-                      }}
-                    >
-                      {providers[cli.provider]?.name}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <div className="flex items-center">
-                      <div className="text-white mr-2">{cli.usage_count}</div>
-                      <div className="w-16 bg-secondary-700 rounded-full h-2">
-                        <div 
-                          className="bg-gradient-to-r from-green-500 to-red-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min(cli.usage_count, 100)}%` }}
-                        ></div>
-                      </div>
+            <tbody>
+              {cliData.map((cli, index) => (
+                <tr key={cli.id} className="border-b border-secondary-700/50 hover:bg-secondary-800/30">
+                  <td className="py-3 px-4 text-white font-mono text-sm">{cli.phone_number}</td>
+                  <td className="py-3 px-4 text-white">
+                    <div className="flex items-center space-x-2">
+                      <span>{countries[cli.country]?.flag}</span>
+                      <span className="text-sm">{countries[cli.country]?.name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                    {(cli.success_rate * 100).toFixed(1)}%
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary-300">
-                    {new Date(cli.last_used).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="py-3 px-4 text-white">{cli.usage_count}</td>
+                  <td className="py-3 px-4 text-white">{cli.success_rate}%</td>
+                  <td className="py-3 px-4">
                     {getStatusBadge(cli.status)}
+                  </td>
+                  <td className="py-3 px-4 text-secondary-300 text-sm">
+                    {new Date(cli.last_used).toLocaleDateString()}
                   </td>
                 </tr>
               ))}
@@ -519,45 +486,45 @@ const CliRotationDashboard = () => {
           </table>
         </div>
 
-        {/* Paginação */}
-        <div className="px-6 py-4 border-t border-secondary-700 flex items-center justify-between">
+        {/* Paginación */}
+        <div className="flex items-center justify-between mt-6">
           <div className="text-sm text-secondary-400">
-            Mostrando {(pagination.page - 1) * pagination.pageSize + 1} a {Math.min(pagination.page * pagination.pageSize, pagination.total)} de {pagination.total.toLocaleString()} CLIs
+            Mostrando {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} - {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.total)} de {pagination.total.toLocaleString()} CLIs
           </div>
           
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setPagination(prev => ({...prev, page: Math.max(1, prev.page - 1)}))}
-              disabled={pagination.page === 1}
-              className="px-3 py-1 bg-secondary-600 hover:bg-secondary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors"
+              onClick={() => handlePageChange(pagination.currentPage - 1)}
+              disabled={pagination.currentPage === 1}
+              className="px-3 py-1 bg-secondary-600 hover:bg-secondary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
             >
               Anterior
             </button>
             
-            <span className="text-sm text-secondary-300">
-              Página {pagination.page} de {totalPages}
+            <span className="text-white px-3 py-1">
+              {pagination.currentPage} de {Math.ceil(pagination.total / pagination.itemsPerPage)}
             </span>
             
             <button
-              onClick={() => setPagination(prev => ({...prev, page: Math.min(totalPages, prev.page + 1)}))}
-              disabled={pagination.page === totalPages}
-              className="px-3 py-1 bg-secondary-600 hover:bg-secondary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors"
+              onClick={() => handlePageChange(pagination.currentPage + 1)}
+              disabled={pagination.currentPage >= Math.ceil(pagination.total / pagination.itemsPerPage)}
+              className="px-3 py-1 bg-secondary-600 hover:bg-secondary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
             >
-              Próxima
+              Siguiente
             </button>
           </div>
         </div>
       </div>
 
-      {/* Informações Técnicas */}
-      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-        <h4 className="font-medium text-blue-400 mb-2">ℹ️ Informações sobre Rotação de CLIs</h4>
-        <ul className="text-sm text-blue-300 space-y-1">
-          <li>• <strong>Rotação Inteligente:</strong> CLIs são selecionados com base no menor uso recente</li>
-          <li>• <strong>Limites por País:</strong> USA/Canadá limitados a 100 usos/dia</li>
-          <li>• <strong>Distribuição:</strong> Sistema balanceia uso entre provedores e regiões</li>
-          <li>• <strong>Auto-recuperação:</strong> CLIs bloqueados são automaticamente pausados</li>
-          <li>• <strong>Monitoramento:</strong> Taxa de sucesso e performance são monitoradas em tempo real</li>
+      {/* Información Importante */}
+      <div className="glass-panel p-6 rounded-xl">
+        <h4 className="font-medium text-blue-400 mb-2">ℹ️ Información sobre Rotación de CLIs</h4>
+        <ul className="text-sm text-secondary-300 space-y-1">
+          <li>• <strong>Rotación Inteligente:</strong> CLIs son seleccionados basándose en el menor uso reciente</li>
+          <li>• <strong>Límites por País:</strong> USA/Canadá limitados a 100 usos/día</li>
+          <li>• <strong>Distribución:</strong> El sistema balancea uso entre proveedores y regiones</li>
+          <li>• <strong>Auto-recuperación:</strong> CLIs bloqueados son automáticamente pausados</li>
+          <li>• <strong>Monitoreo:</strong> Tasa de éxito y rendimiento son monitoreados en tiempo real</li>
         </ul>
       </div>
     </div>

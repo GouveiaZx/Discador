@@ -23,13 +23,13 @@ const UploadListasFixed = () => {
         setCampaigns(response.data.campaigns);
       }
     } catch (error) {
-      console.error('Erro ao carregar campanhas:', error);
+      console.error('Error al cargar campañas:', error);
     }
   };
 
   const processLargeFile = async (file, campaignId) => {
     const fileId = file.name;
-    setProgress(prev => ({ ...prev, [fileId]: { current: 0, total: 0, status: 'Processando arquivo...' } }));
+    setProgress(prev => ({ ...prev, [fileId]: { current: 0, total: 0, status: 'Procesando archivo...' } }));
 
     try {
       // Ler arquivo
@@ -39,7 +39,7 @@ const UploadListasFixed = () => {
 
       setProgress(prev => ({ 
         ...prev, 
-        [fileId]: { current: 0, total: totalLines, status: 'Preparando upload...' } 
+        [fileId]: { current: 0, total: totalLines, status: 'Preparando carga...' } 
       }));
 
       // Configurar chunks maiores para arquivos grandes
@@ -73,7 +73,7 @@ const UploadListasFixed = () => {
           [fileId]: { 
             current: processedTotal, 
             total: totalLines, 
-            status: `Processando chunk ${chunkNumber}/${chunks.length}...`,
+            status: `Procesando chunk ${chunkNumber}/${chunks.length}...`,
             percent: Math.round((processedTotal / totalLines) * 100)
           } 
         }));
@@ -103,7 +103,7 @@ const UploadListasFixed = () => {
 
           console.log(`✅ Chunk ${chunkNumber}/${chunks.length} processado`);
         } catch (error) {
-          console.error(`❌ Erro no chunk ${chunkNumber}:`, error);
+          console.error(`❌ Error en chunk ${chunkNumber}:`, error);
           errorTotal += chunk.length;
           
           // Continuar mesmo com erro
@@ -126,14 +126,14 @@ const UploadListasFixed = () => {
         [fileId]: { 
           current: totalLines, 
           total: totalLines, 
-          status: '✅ Upload completo!',
+          status: '✅ Carga completa!',
           percent: 100
         } 
       }));
 
       return {
         success: true,
-        message: `Upload completo! ${successTotal} contatos válidos de ${totalLines} linhas.`,
+        message: `Carga completa! ${successTotal} contactos válidos de ${totalLines} líneas.`,
         stats: {
           total: totalLines,
           success: successTotal,
@@ -142,7 +142,7 @@ const UploadListasFixed = () => {
       };
 
     } catch (error) {
-      console.error('Erro ao processar arquivo:', error);
+      console.error('Error al procesar archivo:', error);
       throw error;
     }
   };
@@ -177,7 +177,7 @@ const UploadListasFixed = () => {
 
   const handleUpload = async () => {
     if (files.length === 0) {
-      setError('Selecione pelo menos um arquivo');
+      setError('Seleccione al menos un archivo');
       return;
     }
 
@@ -192,7 +192,7 @@ const UploadListasFixed = () => {
       try {
         setUploadStatus(prev => ({
           ...prev,
-          [file.name]: { status: 'uploading', message: 'Processando arquivo...' }
+          [file.name]: { status: 'uploading', message: 'Procesando archivo...' }
         }));
 
         const result = await processLargeFile(file, campaignId);
@@ -207,52 +207,52 @@ const UploadListasFixed = () => {
         }));
 
       } catch (error) {
-        console.error(`Erro no upload de ${file.name}:`, error);
+        console.error(`Error en carga de ${file.name}:`, error);
         setUploadStatus(prev => ({
           ...prev,
           [file.name]: {
             status: 'error',
-            message: error.response?.data?.detail || 'Erro no upload'
+            message: error.response?.data?.detail || 'Error en carga'
           }
         }));
       }
     }
 
     setUploading(false);
-    setSuccess('Upload concluído! Verifique os resultados abaixo.');
+    setSuccess('Carga completada! Verifique los resultados abajo.');
   };
 
   return (
     <div className="min-h-screen bg-dark-900 px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-8">
-          Upload de Listas - Versão Corrigida
+          Carga de Listas - Versión Corregida
         </h1>
 
         {/* Info Box */}
         <div className="mb-8 bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/50 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-blue-400 mb-2">
-            ✨ Versão Melhorada
+            ✨ Versión Mejorada
           </h3>
           <ul className="text-gray-300 space-y-1">
-            <li>• Processa arquivos grandes completamente (testado com 770k+)</li>
-            <li>• Chunks otimizados baseados no tamanho do arquivo</li>
-            <li>• Continua mesmo com erros parciais</li>
-            <li>• Progresso detalhado em tempo real</li>
+            <li>• Procesa archivos grandes completamente (probado con 770k+)</li>
+            <li>• Chunks optimizados basados en el tamaño del archivo</li>
+            <li>• Continúa incluso con errores parciales</li>
+            <li>• Progreso detallado en tiempo real</li>
           </ul>
         </div>
 
         {/* Campaign Selector */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-300 mb-2">
-            Selecionar Campanha (Opcional)
+            Seleccionar Campaña (Opcional)
           </label>
           <select
             value={selectedCampaign}
             onChange={(e) => setSelectedCampaign(e.target.value)}
             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
           >
-            <option value="">Criar nova campanha automaticamente</option>
+            <option value="">Crear nueva campaña automáticamente</option>
             {campaigns.map(campaign => (
               <option key={campaign.id} value={campaign.id}>
                 {campaign.name || campaign.nome} (ID: {campaign.id})
@@ -271,10 +271,10 @@ const UploadListasFixed = () => {
         >
           <Upload className="w-16 h-16 text-primary-500 mx-auto mb-4" />
           <p className="text-xl font-medium text-white mb-2">
-            Arraste arquivos aqui ou clique para selecionar
+            Arrastre archivos aquí o haga clic para seleccionar
           </p>
           <p className="text-gray-400 mb-4">
-            Aceita arquivos .txt e .csv
+                          Acepta archivos .txt y .csv
           </p>
           <input
             type="file"
@@ -293,7 +293,7 @@ const UploadListasFixed = () => {
                 : 'bg-primary-500 hover:bg-primary-600 text-white cursor-pointer'
             }`}
           >
-            Selecionar Arquivos
+                          Seleccionar Archivos
           </label>
         </div>
 
@@ -351,7 +351,7 @@ const UploadListasFixed = () => {
             <p className="text-sm text-gray-400">{prog.status}</p>
             {prog.current > 0 && (
               <p className="text-xs text-gray-500 mt-1">
-                {prog.current.toLocaleString()} de {prog.total.toLocaleString()} linhas
+                {prog.current.toLocaleString()} de {prog.total.toLocaleString()} líneas
               </p>
             )}
           </div>
@@ -375,7 +375,7 @@ const UploadListasFixed = () => {
         {/* Upload Stats */}
         {Object.entries(uploadStatus).some(([_, status]) => status.stats) && (
           <div className="mt-6 bg-dark-800 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">📊 Resumo do Upload</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">📊 Resumen de la Carga</h3>
             {Object.entries(uploadStatus).map(([fileName, status]) => {
               if (!status.stats) return null;
               return (
@@ -391,7 +391,7 @@ const UploadListasFixed = () => {
                       <p className="text-xl font-bold text-green-400">{status.stats.success.toLocaleString()}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-400">Erros</p>
+                      <p className="text-sm text-gray-400">Errores</p>
                       <p className="text-xl font-bold text-red-400">{status.stats.errors.toLocaleString()}</p>
                     </div>
                   </div>
@@ -415,12 +415,12 @@ const UploadListasFixed = () => {
             {uploading ? (
               <>
                 <Loader className="w-5 h-5 mr-2 animate-spin" />
-                Processando uploads...
+                Procesando cargas...
               </>
             ) : (
               <>
                 <Upload className="w-5 h-5 mr-2" />
-                Iniciar Upload
+                Iniciar Carga
               </>
             )}
           </button>

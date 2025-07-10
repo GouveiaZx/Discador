@@ -11,59 +11,59 @@ const CliLimitsManager = () => {
   const [newLimit, setNewLimit] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Configurações padrão dos países
+  // Configuraciones por defecto de países
   const countryConfigs = {
     usa: {
       name: 'Estados Unidos',
       flag: '🇺🇸',
       defaultLimit: 100,
-      description: 'Limite máximo de 100 usos por dia para evitar bloqueios'
+      description: 'Límite máximo de 100 usos por día para evitar bloqueos'
     },
     canada: {
       name: 'Canadá',
       flag: '🇨🇦',
       defaultLimit: 100,
-      description: 'Limite máximo de 100 usos por dia para evitar bloqueios'
+      description: 'Límite máximo de 100 usos por día para evitar bloqueos'
     },
     mexico: {
       name: 'México',
       flag: '🇲🇽',
       defaultLimit: 0,
-      description: 'Uso ilimitado - sem restrições de operadora'
+      description: 'Uso ilimitado - sin restricciones de operadora'
     },
     brasil: {
       name: 'Brasil',
       flag: '🇧🇷',
       defaultLimit: 0,
-      description: 'Uso ilimitado - sem restrições de operadora'
+      description: 'Uso ilimitado - sin restricciones de operadora'
     },
     colombia: {
-      name: 'Colômbia',
+      name: 'Colombia',
       flag: '🇨🇴',
       defaultLimit: 0,
-      description: 'Uso ilimitado - sem restrições de operadora'
+      description: 'Uso ilimitado - sin restricciones de operadora'
     },
     argentina: {
       name: 'Argentina',
       flag: '🇦🇷',
       defaultLimit: 0,
-      description: 'Uso ilimitado - sem restrições de operadora'
+      description: 'Uso ilimitado - sin restricciones de operadora'
     },
     chile: {
       name: 'Chile',
       flag: '🇨🇱',
       defaultLimit: 0,
-      description: 'Uso ilimitado - sem restrições de operadora'
+      description: 'Uso ilimitado - sin restricciones de operadora'
     },
     peru: {
-      name: 'Peru',
+      name: 'Perú',
       flag: '🇵🇪',
       defaultLimit: 0,
-      description: 'Uso ilimitado - sem restrições de operadora'
+      description: 'Uso ilimitado - sin restricciones de operadora'
     }
   };
 
-  // Carregar dados iniciais
+  // Cargar datos iniciales
   useEffect(() => {
     loadInitialData();
   }, []);
@@ -73,7 +73,7 @@ const CliLimitsManager = () => {
       setLoading(true);
       setError(null);
 
-      // Carregar limites e uso em paralelo
+      // Cargar límites y uso en paralelo
       const [limitsResponse, usageResponse] = await Promise.all([
         performanceService.getCliLimits(),
         performanceService.getCliUsage()
@@ -83,8 +83,8 @@ const CliLimitsManager = () => {
       setUsage(usageResponse.usage || {});
 
     } catch (err) {
-      console.error('❌ Erro ao carregar dados:', err);
-      setError('Erro ao carregar dados de CLI. Verifique a conexão com o servidor.');
+      console.error('❌ Error al cargar datos:', err);
+      setError('Error al cargar datos de CLI. Verificá la conexión con el servidor.');
     } finally {
       setLoading(false);
     }
@@ -92,13 +92,13 @@ const CliLimitsManager = () => {
 
   const handleSaveLimit = async () => {
     if (!selectedCountry || newLimit === '') {
-      setError('Selecione um país e defina um limite');
+      setError('Seleccioná un país y definí un límite');
       return;
     }
 
     const limitValue = parseInt(newLimit, 10);
     if (isNaN(limitValue) || limitValue < 0) {
-      setError('Limite deve ser um número inteiro positivo (0 para ilimitado)');
+      setError('El límite debe ser un número entero positivo (0 para ilimitado)');
       return;
     }
 
@@ -108,31 +108,31 @@ const CliLimitsManager = () => {
 
       await performanceService.setCliLimit(selectedCountry, limitValue);
 
-      // Atualizar estado local
+      // Actualizar estado local
       setLimits(prev => ({
         ...prev,
         [selectedCountry]: limitValue
       }));
 
-      setSuccessMessage(`Limite de ${limitValue === 0 ? 'uso ilimitado' : `${limitValue} usos/dia`} definido para ${countryConfigs[selectedCountry]?.name}`);
+      setSuccessMessage(`Límite de ${limitValue === 0 ? 'uso ilimitado' : `${limitValue} usos/día`} definido para ${countryConfigs[selectedCountry]?.name}`);
       setNewLimit('');
 
-      // Recarregar dados após salvar
+      // Recargar datos después de guardar
       setTimeout(() => {
         loadInitialData();
         setSuccessMessage('');
       }, 2000);
 
     } catch (err) {
-      console.error('❌ Erro ao salvar limite:', err);
-      setError('Erro ao salvar limite. Tente novamente.');
+      console.error('❌ Error al guardar límite:', err);
+      setError('Error al guardar límite. Intentá nuevamente.');
     } finally {
       setSaving(false);
     }
   };
 
   const handleResetUsage = async () => {
-    if (!confirm('Tem certeza que deseja resetar todos os contadores de uso de CLI?')) {
+    if (!confirm('¿Estás seguro que querés resetear todos los contadores de uso de CLI?')) {
       return;
     }
 
@@ -141,17 +141,17 @@ const CliLimitsManager = () => {
       setError(null);
 
       await performanceService.resetCliUsage();
-      setSuccessMessage('Contadores de uso resetados com sucesso');
+      setSuccessMessage('Contadores de uso reseteados con éxito');
 
-      // Recarregar dados
+      // Recargar datos
       setTimeout(() => {
         loadInitialData();
         setSuccessMessage('');
       }, 2000);
 
     } catch (err) {
-      console.error('❌ Erro ao resetar uso:', err);
-      setError('Erro ao resetar contadores. Tente novamente.');
+      console.error('❌ Error al resetear uso:', err);
+      setError('Error al resetear contadores. Intentá nuevamente.');
     } finally {
       setSaving(false);
     }
@@ -182,7 +182,7 @@ const CliLimitsManager = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-          <p className="text-secondary-400">Carregando configurações de CLI...</p>
+          <p className="text-secondary-400">Cargando configuraciones de CLI...</p>
         </div>
       </div>
     );
@@ -193,51 +193,48 @@ const CliLimitsManager = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-primary-500 to-accent-500 rounded-lg p-6">
         <h2 className="text-2xl font-bold text-white mb-2">
-          🌍 Gerenciamento de Limites de CLI por País
+          🌍 Gestión de Límites de CLI por País
         </h2>
         <p className="text-primary-100">
-          Configure limites diários de uso de CLI para cada país. USA/Canadá têm limite de 100/dia para evitar bloqueios.
+          Configurá límites diarios de uso de CLI para cada país. USA/Canadá tienen límite de 100/día para evitar bloqueos.
         </p>
       </div>
 
-      {/* Mensagens de Status */}
+      {/* Alertas */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
-          <div className="flex items-center">
-            <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.268 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-            </svg>
-            <span className="text-red-400">{error}</span>
+        <div className="glass-panel p-4 rounded-xl border border-error-500/30">
+          <div className="flex items-center space-x-2">
+            <span className="text-error-400">❌</span>
+            <span className="text-error-300">{error}</span>
           </div>
         </div>
       )}
 
       {successMessage && (
-        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-          <div className="flex items-center">
-            <svg className="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/>
-            </svg>
-            <span className="text-green-400">{successMessage}</span>
+        <div className="glass-panel p-4 rounded-xl border border-success-500/30">
+          <div className="flex items-center space-x-2">
+            <span className="text-success-400">✅</span>
+            <span className="text-success-300">{successMessage}</span>
           </div>
         </div>
       )}
 
-      {/* Configurar Limite */}
-      <div className="glass-panel rounded-lg p-6">
+      {/* Configuración de Límites */}
+      <div className="glass-panel p-6 rounded-xl">
         <h3 className="text-lg font-semibold text-white mb-4">
-          ⚙️ Configurar Limite de País
+          ⚙️ Configurar Límites
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-secondary-300 mb-2">
-              País
+              Seleccionar País
             </label>
             <select
               value={selectedCountry}
               onChange={(e) => setSelectedCountry(e.target.value)}
-              className="w-full px-3 py-2 bg-secondary-700 border border-secondary-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 bg-secondary-800 border border-secondary-600 rounded-lg text-white focus:border-primary-500 focus:outline-none"
+              disabled={saving}
             >
               {Object.entries(countryConfigs).map(([code, config]) => (
                 <option key={code} value={code}>
@@ -246,152 +243,176 @@ const CliLimitsManager = () => {
               ))}
             </select>
           </div>
-
+          
           <div>
             <label className="block text-sm font-medium text-secondary-300 mb-2">
-              Limite Diário (0 = ilimitado)
+              Límite Diario (0 = ilimitado)
             </label>
             <input
               type="number"
+              min="0"
               value={newLimit}
               onChange={(e) => setNewLimit(e.target.value)}
-              placeholder="Ex: 100"
-              min="0"
-              className="w-full px-3 py-2 bg-secondary-700 border border-secondary-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="Ej: 100"
+              className="w-full px-3 py-2 bg-secondary-800 border border-secondary-600 rounded-lg text-white focus:border-primary-500 focus:outline-none"
+              disabled={saving}
             />
           </div>
-
+          
           <div className="flex items-end">
             <button
               onClick={handleSaveLimit}
               disabled={saving}
-              className="w-full px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+              className={`w-full px-4 py-2 rounded-lg font-medium transition-all ${
+                saving
+                  ? 'bg-secondary-600 cursor-not-allowed'
+                  : 'bg-primary-600 hover:bg-primary-700 text-white'
+              }`}
             >
-              {saving ? 'Salvando...' : 'Salvar Limite'}
+              {saving ? 'Guardando...' : '💾 Guardar Límite'}
             </button>
           </div>
         </div>
 
-        {selectedCountry && countryConfigs[selectedCountry] && (
-          <div className="mt-4 p-4 bg-secondary-800 rounded-lg">
-            <p className="text-sm text-secondary-300">
-              <strong>{countryConfigs[selectedCountry].name}:</strong> {countryConfigs[selectedCountry].description}
-            </p>
+        {/* Información del País Seleccionado */}
+        <div className="bg-secondary-800/50 rounded-lg p-4">
+          <div className="flex items-center space-x-3 mb-2">
+            <span className="text-2xl">{countryConfigs[selectedCountry]?.flag}</span>
+            <span className="text-white font-medium">
+              {countryConfigs[selectedCountry]?.name}
+            </span>
           </div>
-        )}
+          <p className="text-sm text-secondary-300">
+            {countryConfigs[selectedCountry]?.description}
+          </p>
+          <p className="text-xs text-secondary-400 mt-1">
+            Límite actual: {
+              (limits[selectedCountry] ?? countryConfigs[selectedCountry]?.defaultLimit) === 0
+                ? 'Ilimitado'
+                : `${limits[selectedCountry] ?? countryConfigs[selectedCountry]?.defaultLimit} usos/día`
+            }
+          </p>
+        </div>
       </div>
 
-      {/* Status por País */}
-      <div className="glass-panel rounded-lg p-6">
+      {/* Estado Actual de Límites */}
+      <div className="glass-panel p-6 rounded-xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white">
-            📊 Status de Uso por País
+            📊 Estado Actual de Límites
           </h3>
           <button
             onClick={handleResetUsage}
             disabled={saving}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              saving
+                ? 'bg-secondary-600 cursor-not-allowed'
+                : 'bg-warning-600 hover:bg-warning-700 text-white'
+            }`}
           >
-            {saving ? 'Resetando...' : 'Resetar Contadores'}
+            {saving ? 'Reseteando...' : '🔄 Resetear Contadores'}
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {Object.entries(countryConfigs).map(([code, config]) => {
-            const currentLimit = limits[code] ?? config.defaultLimit;
-            const currentUsage = usage[code] || 0;
-            const percentage = getUsagePercentage(code);
-            const isUnlimited = currentLimit === 0;
-
+          {Object.entries(countryConfigs).map(([countryCode, config]) => {
+            const currentLimit = limits[countryCode] ?? config.defaultLimit;
+            const currentUsage = usage[countryCode] || 0;
+            const percentage = getUsagePercentage(countryCode);
+            
             return (
-              <div key={code} className="bg-secondary-800 rounded-lg p-4 border border-secondary-700">
+              <div key={countryCode} className="bg-secondary-800/50 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-2">{config.flag}</span>
-                    <div>
-                      <h4 className="font-medium text-white">{config.name}</h4>
-                      <p className="text-xs text-secondary-400">{code.toUpperCase()}</p>
-                    </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">{config.flag}</span>
+                    <span className="text-white font-medium text-sm">
+                      {config.name}
+                    </span>
                   </div>
-                  <div className="text-right">
-                    <div className={`text-sm font-medium ${getUsageColor(percentage)}`}>
-                      {currentUsage} {isUnlimited ? 'usos' : `/ ${currentLimit}`}
-                    </div>
-                    <div className="text-xs text-secondary-400">
-                      {isUnlimited ? 'Ilimitado' : `${percentage.toFixed(1)}%`}
-                    </div>
-                  </div>
+                  <span className={`text-xs font-medium ${getUsageColor(percentage)}`}>
+                    {currentLimit === 0 ? 'Ilimitado' : `${Math.round(percentage)}%`}
+                  </span>
                 </div>
 
-                {!isUnlimited && (
-                  <div className="w-full bg-secondary-700 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all duration-300 ${getUsageBarColor(percentage)}`}
-                      style={{ width: `${percentage}%` }}
-                    ></div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-secondary-300">Usado:</span>
+                    <span className="text-white">{currentUsage}</span>
                   </div>
-                )}
-
-                {isUnlimited && (
-                  <div className="w-full bg-green-500/20 rounded-full h-2">
-                    <div className="h-2 rounded-full bg-green-500 opacity-50"></div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-secondary-300">Límite:</span>
+                    <span className="text-white">
+                      {currentLimit === 0 ? 'Ilimitado' : currentLimit}
+                    </span>
                   </div>
-                )}
+                  
+                  {currentLimit > 0 && (
+                    <div className="w-full bg-secondary-700 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all duration-300 ${getUsageBarColor(percentage)}`}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Estatísticas Gerais */}
-      <div className="glass-panel rounded-lg p-6">
+      {/* Estadísticas Generales */}
+      <div className="glass-panel p-6 rounded-xl">
         <h3 className="text-lg font-semibold text-white mb-4">
-          📈 Estatísticas Gerais
+          📈 Estadísticas Generales
         </h3>
-
+        
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-secondary-800 rounded-lg p-4 text-center">
+          <div className="text-center">
             <div className="text-2xl font-bold text-primary-400">
-              {Object.keys(countryConfigs).filter(code => (limits[code] ?? countryConfigs[code].defaultLimit) > 0).length}
+              {Object.values(usage).reduce((total, count) => total + count, 0)}
             </div>
-            <div className="text-sm text-secondary-400">Países com Limite</div>
+            <div className="text-sm text-secondary-400">Total CLIs Usados Hoy</div>
           </div>
-
-          <div className="bg-secondary-800 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-green-400">
-              {Object.keys(countryConfigs).filter(code => (limits[code] ?? countryConfigs[code].defaultLimit) === 0).length}
+          
+          <div className="text-center">
+            <div className="text-2xl font-bold text-accent-400">
+              {Object.keys(countryConfigs).filter(country => 
+                limits[country] ?? countryConfigs[country].defaultLimit > 0
+              ).length}
+            </div>
+            <div className="text-sm text-secondary-400">Países con Límites</div>
+          </div>
+          
+          <div className="text-center">
+            <div className="text-2xl font-bold text-success-400">
+              {Object.keys(countryConfigs).filter(country => 
+                (limits[country] ?? countryConfigs[country].defaultLimit) === 0
+              ).length}
             </div>
             <div className="text-sm text-secondary-400">Países Ilimitados</div>
           </div>
-
-          <div className="bg-secondary-800 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-400">
-              {Object.values(usage).reduce((sum, count) => sum + count, 0)}
+          
+          <div className="text-center">
+            <div className="text-2xl font-bold text-warning-400">
+              {Object.keys(countryConfigs).filter(country => 
+                getUsagePercentage(country) >= 80
+              ).length}
             </div>
-            <div className="text-sm text-secondary-400">Usos Hoje</div>
-          </div>
-
-          <div className="bg-secondary-800 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-red-400">
-              {Object.entries(countryConfigs).filter(([code]) => {
-                const limit = limits[code] ?? countryConfigs[code].defaultLimit;
-                const used = usage[code] || 0;
-                return limit > 0 && (used / limit) >= 0.9;
-              }).length}
-            </div>
-            <div className="text-sm text-secondary-400">Países > 90%</div>
+            <div className="text-sm text-secondary-400">Países &gt;80% Límite</div>
           </div>
         </div>
       </div>
 
-      {/* Informações Importantes */}
-      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-        <h4 className="font-medium text-blue-400 mb-2">ℹ️ Informações Importantes</h4>
-        <ul className="text-sm text-blue-300 space-y-1">
-          <li>• USA e Canadá têm limite padrão de 100 usos/dia para evitar bloqueios de operadora</li>
-          <li>• Países da América Latina não têm restrições de uso</li>
-          <li>• Contadores são resetados automaticamente à meia-noite (UTC)</li>
-          <li>• CLIs próximos do limite são automaticamente substituídos na rotação</li>
+      {/* Información Importante */}
+      <div className="glass-panel p-6 rounded-xl">
+        <h4 className="font-medium text-blue-400 mb-2">ℹ️ Información sobre Límites de CLI</h4>
+        <ul className="text-sm text-secondary-300 space-y-1">
+          <li>• <strong>Estados Unidos y Canadá:</strong> Recomendado límite de 100 usos/día máximo</li>
+          <li>• <strong>América Latina:</strong> Generalmente sin restricciones (uso ilimitado)</li>
+          <li>• <strong>Reset Automático:</strong> Los contadores se resetean automáticamente a las 00:00 UTC</li>
+          <li>• <strong>Monitoreo:</strong> El sistema bloquea automáticamente CLIs que exceden el límite</li>
+          <li>• <strong>Recomendación:</strong> Configurá límites conservadores para evitar bloqueos de operadora</li>
         </ul>
       </div>
     </div>

@@ -36,55 +36,88 @@ ChartJS.register(
 );
 
 const AdvancedPerformanceDashboard = () => {
-  const [metrics, setMetrics] = useState({
-    realtime: null,
-    history: [],
-    loadTest: null,
-    cliStats: null,
-    countryStats: null
-  });
-  
-  const [isConnected, setIsConnected] = useState(false);
   const [selectedTab, setSelectedTab] = useState('realtime');
-  const [testRunning, setTestRunning] = useState(false);
-  const [testConfig, setTestConfig] = useState({
-    target_cps: 25,
-    duration_minutes: 10,
-    countries: ['usa', 'mexico', 'brasil', 'colombia']
+  const [metrics, setMetrics] = useState({
+    cps: 0,
+    concurrent_calls: 0,
+    success_rate: 0,
+    answered_calls: 0,
+    total_calls: 0,
+    active_clis: 0,
+    blocked_clis: 0,
+    avg_call_duration: 0,
+    countries: {},
+    timestamp: new Date().toISOString()
   });
-  
+  const [metricsHistory, setMetricsHistory] = useState([]);
+  const [testRunning, setTestRunning] = useState(false);
+  const [testResults, setTestResults] = useState(null);
+  const [cliStats, setCliStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const wsRef = useRef(null);
-  const metricsHistoryRef = useRef([]);
 
-  // Conectar WebSocket para métricas em tempo real
+  // Conectar WebSocket para métricas en tiempo real
   useEffect(() => {
-    const connectWebSocket = () => {
-      const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:8000';
-      wsRef.current = new WebSocket(`${wsUrl}/api/performance/ws/performance`);
-      
-      wsRef.current.onopen = () => {
-        setIsConnected(true);
-        console.log('✅ WebSocket conectado');
-      };
-      
-      wsRef.current.onmessage = (event) => {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}`;
+    wsRef.current = new WebSocket(`${wsUrl}/api/performance/ws/performance`);
+    
+    wsRef.current.onmessage = (event) => {
+      try {
         const data = JSON.parse(event.data);
-        handleMetricsUpdate(data);
-      };
-      
-      wsRef.current.onclose = () => {
-        setIsConnected(false);
-        console.log('🔌 WebSocket desconectado');
-        // Reconectar após 3 segundos
-        setTimeout(connectWebSocket, 3000);
-      };
-      
-      wsRef.current.onerror = (error) => {
-        console.error('❌ Erro no WebSocket:', error);
-      };
+        
+        if (data.type === 'metrics') {
+          setMetrics(data.data);
+          
+          // Mantener historial en memoria
+          setMetricsHistory(prev => {
+            const newHistory = [...prev, {
+              ...data.data,
+              timestamp: new Date().toISOString()
+            }];
+            
+            // Mantener solo los últimos 100 puntos
+            return newHistory.slice(-100);
+          });
+        }
+        
+        if (data.type === 'test_status') {
+          setTestRunning(data.running);
+          if (data.results) {
+            setTestResults(data.results);
+          }
+        }
+        
+        if (data.type === 'cli_stats') {
+          setCliStats(data.data);
+        }
+        
+      } catch (err) {
+        console.error('Error al procesar WebSocket:', err);
+      }
     };
     
-    connectWebSocket();
+    wsRef.current.onopen = () => {
+      console.log('🔗 WebSocket conectado');
+      setLoading(false);
+    };
+    
+    wsRef.current.onerror = (error) => {
+      console.error('❌ Error WebSocket:', error);
+      setError('Error de conexión WebSocket');
+      setLoading(false);
+    };
+    
+    wsRef.current.onclose = () => {
+      console.log('🔌 WebSocket desconectado');
+      // Intentar reconectar después de 5 segundos
+      setTimeout(() => {
+        if (wsRef.current?.readyState === WebSocket.CLOSED) {
+          // Reconectar
+        }
+      }, 5000);
+    };
     
     return () => {
       if (wsRef.current) {
@@ -93,77 +126,83 @@ const AdvancedPerformanceDashboard = () => {
     };
   }, []);
 
-  // Atualizar métricas recebidas via WebSocket
-  const handleMetricsUpdate = (data) => {
-    setMetrics(prev => ({
-      ...prev,
-      realtime: data.realtime,
-      history: data.history || prev.history,
-      cliStats: data.cli_stats || prev.cliStats,
-      countryStats: data.country_stats || prev.countryStats
-    }));
-    
-    // Manter histórico em memória
-    if (data.realtime) {
-      metricsHistoryRef.current.push({
-        ...data.realtime,
-        timestamp: new Date()
+  // Mantener historial en memoria
+  useEffect(() => {
+    if (metrics.timestamp) {
+      setMetricsHistory(prev => {
+        const newHistory = [...prev, metrics];
+        return newHistory.slice(-100); // Mantener solo los últimos 100 puntos
       });
-      
-      // Manter apenas últimos 1000 pontos
-      if (metricsHistoryRef.current.length > 1000) {
-        metricsHistoryRef.current.shift();
-      }
     }
-  };
+  }, [metrics]);
 
-  // Iniciar teste de carga
+  // Iniciar test de carga
   const startLoadTest = async () => {
     try {
       setTestRunning(true);
-      
       const response = await fetch('/api/performance/load-test/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(testConfig)
+        body: JSON.stringify({
+          target_cps: 25,
+          duration: 300,
+          country: 'all'
+        })
       });
-      
+
       if (!response.ok) {
-        throw new Error('Erro ao iniciar teste');
+        throw new Error('Error al iniciar test');
       }
-      
+
       const result = await response.json();
-      console.log('🧪 Teste de carga iniciado:', result);
-      
+      console.log('🧪 Test de carga iniciado:', result);
     } catch (error) {
-      console.error('❌ Erro ao iniciar teste:', error);
+      console.error('❌ Error al iniciar test:', error);
       setTestRunning(false);
     }
   };
 
-  // Parar teste de carga
+  // Parar test de carga
   const stopLoadTest = async () => {
     try {
       const response = await fetch('/api/performance/load-test/stop', {
         method: 'POST'
       });
-      
+
       if (!response.ok) {
-        throw new Error('Erro ao parar teste');
+        throw new Error('Error al parar test');
       }
-      
+
       setTestRunning(false);
-      console.log('🛑 Teste de carga parado');
-      
+      console.log('🛑 Test de carga parado');
     } catch (error) {
-      console.error('❌ Erro ao parar teste:', error);
+      console.error('❌ Error al parar test:', error);
     }
   };
 
-  // Configurações de gráficos
+  // Configuraciones de gráficos
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          color: 'rgba(255, 255, 255, 0.9)',
+          usePointStyle: true,
+          pointStyle: 'circle'
+        }
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: 'white',
+        bodyColor: 'white',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1
+      }
+    },
     scales: {
       x: {
         type: 'time',
@@ -189,339 +228,310 @@ const AdvancedPerformanceDashboard = () => {
           color: 'rgba(255, 255, 255, 0.7)'
         }
       }
-    },
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          color: 'rgba(255, 255, 255, 0.8)'
-        }
-      },
-      tooltip: {
-        mode: 'index',
-        intersect: false,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: 'white',
-        bodyColor: 'white',
-        borderColor: 'rgba(255, 255, 255, 0.2)',
-        borderWidth: 1
-      }
     }
   };
 
-  // Dados do gráfico CPS em tempo real
+  // Datos del gráfico CPS en tiempo real
   const cpsChartData = {
-    labels: metricsHistoryRef.current.map(m => m.timestamp),
-    datasets: [
-      {
-        label: 'CPS Atual',
-        data: metricsHistoryRef.current.map(m => m.current_cps),
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        tension: 0.1
-      },
-      {
-        label: 'CPS Alvo',
-        data: metricsHistoryRef.current.map(m => m.target_cps),
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        borderDash: [5, 5]
-      }
-    ]
+    labels: metricsHistory.map(m => new Date(m.timestamp)),
+    datasets: [{
+      label: 'CPS Actual',
+      data: metricsHistory.map(m => m.cps),
+      borderColor: '#3B82F6',
+      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+      tension: 0.4,
+      fill: true,
+      pointRadius: 2,
+      pointHoverRadius: 4
+    }]
   };
 
-  // Dados do gráfico de chamadas concorrentes
+  // Datos del gráfico de llamadas concurrentes
   const concurrentCallsData = {
-    labels: metricsHistoryRef.current.map(m => m.timestamp),
-    datasets: [
-      {
-        label: 'Chamadas Concorrentes',
-        data: metricsHistoryRef.current.map(m => m.concurrent_calls),
-        borderColor: 'rgb(153, 102, 255)',
-        backgroundColor: 'rgba(153, 102, 255, 0.2)',
-        tension: 0.1
-      }
-    ]
+    labels: metricsHistory.map(m => new Date(m.timestamp)),
+    datasets: [{
+      label: 'Llamadas Concurrentes',
+      data: metricsHistory.map(m => m.concurrent_calls),
+      borderColor: '#10B981',
+      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+      tension: 0.4,
+      fill: true
+    }]
   };
 
-  // Dados do gráfico de taxa de sucesso
+  // Datos del gráfico de tasa de éxito
   const successRateData = {
-    labels: metricsHistoryRef.current.map(m => m.timestamp),
-    datasets: [
-      {
-        label: 'Taxa de Sucesso (%)',
-        data: metricsHistoryRef.current.map(m => m.success_rate * 100),
-        borderColor: 'rgb(255, 206, 86)',
-        backgroundColor: 'rgba(255, 206, 86, 0.2)',
-        tension: 0.1
-      }
-    ]
+    labels: metricsHistory.map(m => new Date(m.timestamp)),
+    datasets: [{
+      label: 'Tasa de Éxito (%)',
+      data: metricsHistory.map(m => m.success_rate),
+      borderColor: '#F59E0B',
+      backgroundColor: 'rgba(245, 158, 11, 0.1)',
+      tension: 0.4,
+      fill: true
+    }]
   };
 
-  // Dados do gráfico de distribuição por país
+  // Datos del gráfico de distribución por país
   const countryDistributionData = {
-    labels: metrics.countryStats ? Object.keys(metrics.countryStats) : [],
-    datasets: [
-      {
-        label: 'Chamadas por País',
-        data: metrics.countryStats ? Object.values(metrics.countryStats).map(c => c.calls_attempted) : [],
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.8)',
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(255, 206, 86, 0.8)',
-          'rgba(75, 192, 192, 0.8)',
-          'rgba(153, 102, 255, 0.8)',
-          'rgba(255, 159, 64, 0.8)'
-        ],
-        borderColor: [
-          'rgba(255, 99, 132, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-          'rgba(255, 159, 64, 1)'
-        ],
-        borderWidth: 1
-      }
-    ]
+    labels: Object.keys(metrics.countries || {}),
+    datasets: [{
+      label: 'Llamadas por País',
+      data: Object.values(metrics.countries || {}),
+      backgroundColor: [
+        '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
+        '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'
+      ],
+      borderWidth: 2,
+      borderColor: '#1F2937'
+    }]
   };
 
-  // Renderizar status de conexão
-  const renderConnectionStatus = () => (
-    <div className="mb-4">
-      <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-        isConnected 
-          ? 'bg-green-100 text-green-800' 
-          : 'bg-red-100 text-red-800'
-      }`}>
-        <div className={`w-2 h-2 rounded-full mr-2 ${
-          isConnected ? 'bg-green-600' : 'bg-red-600'
-        }`} />
-        {isConnected ? 'Conectado' : 'Desconectado'}
-      </div>
-    </div>
-  );
+  const formatNumber = (num) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num?.toString() || '0';
+  };
 
-  // Renderizar métricas em tempo real
+  const formatDuration = (seconds) => {
+    if (!seconds) return '0s';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return minutes > 0 ? `${minutes}m ${remainingSeconds}s` : `${remainingSeconds}s`;
+  };
+
+  const getStatusColor = (value, thresholds) => {
+    if (value >= thresholds.good) return 'text-green-400';
+    if (value >= thresholds.warning) return 'text-yellow-400';
+    return 'text-red-400';
+  };
+
+  const getProgressColor = (value, thresholds) => {
+    if (value >= thresholds.good) return 'bg-green-500';
+    if (value >= thresholds.warning) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
+  // Renderizar métricas en tiempo real
   const renderRealtimeMetrics = () => (
     <div className="space-y-6">
-      {/* KPIs principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="glass-panel p-6 rounded-xl">
+      {/* KPIs principales */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="glass-panel p-4 rounded-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-400">CPS Atual</p>
-              <p className="text-2xl font-bold text-gradient-primary">
-                {metrics.realtime?.current_cps?.toFixed(1) || '0.0'}
+              <p className="text-sm text-secondary-400">CPS Actual</p>
+              <p className={`text-2xl font-bold ${getStatusColor(metrics.cps, { good: 20, warning: 10 })}`}>
+                {metrics.cps}
               </p>
             </div>
-            <div className="w-12 h-12 bg-primary-500/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-              </svg>
+            <div className="text-3xl">📞</div>
+          </div>
+          <div className="mt-2">
+            <div className="w-full bg-secondary-700 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full ${getProgressColor(metrics.cps, { good: 20, warning: 10 })}`}
+                style={{ width: `${Math.min(metrics.cps * 3.33, 100)}%` }}
+              ></div>
             </div>
+            <p className="text-xs text-secondary-400 mt-1">Meta: 20-30 CPS</p>
           </div>
         </div>
 
-        <div className="glass-panel p-6 rounded-xl">
+        <div className="glass-panel p-4 rounded-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-400">Chamadas Ativas</p>
-              <p className="text-2xl font-bold text-gradient-primary">
-                {metrics.realtime?.active_calls || 0}
-              </p>
+              <p className="text-sm text-secondary-400">Llamadas Concurrentes</p>
+              <p className="text-2xl font-bold text-blue-400">{metrics.concurrent_calls}</p>
             </div>
-            <div className="w-12 h-12 bg-accent-500/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-              </svg>
+            <div className="text-3xl">🔄</div>
+          </div>
+          <div className="mt-2">
+            <div className="w-full bg-secondary-700 rounded-full h-2">
+              <div 
+                className="h-2 rounded-full bg-blue-500"
+                style={{ width: `${Math.min(metrics.concurrent_calls * 2, 100)}%` }}
+              ></div>
             </div>
+            <p className="text-xs text-secondary-400 mt-1">Activas ahora</p>
           </div>
         </div>
 
-        <div className="glass-panel p-6 rounded-xl">
+        <div className="glass-panel p-4 rounded-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-400">Taxa de Sucesso</p>
-              <p className="text-2xl font-bold text-gradient-primary">
-                {metrics.realtime?.success_rate?.toFixed(1) || '0.0'}%
+              <p className="text-sm text-secondary-400">Tasa de Éxito</p>
+              <p className={`text-2xl font-bold ${getStatusColor(metrics.success_rate, { good: 80, warning: 60 })}`}>
+                {metrics.success_rate}%
               </p>
             </div>
-            <div className="w-12 h-12 bg-success-500/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-success-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
+            <div className="text-3xl">✅</div>
+          </div>
+          <div className="mt-2">
+            <div className="w-full bg-secondary-700 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full ${getProgressColor(metrics.success_rate, { good: 80, warning: 60 })}`}
+                style={{ width: `${metrics.success_rate}%` }}
+              ></div>
             </div>
+            <p className="text-xs text-secondary-400 mt-1">Objetivo: &gt;80%</p>
           </div>
         </div>
 
-        <div className="glass-panel p-6 rounded-xl">
+        <div className="glass-panel p-4 rounded-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-secondary-400">CLIs Ativos</p>
-              <p className="text-2xl font-bold text-gradient-primary">
-                {metrics.realtime?.active_clis || 0}
-              </p>
+              <p className="text-sm text-secondary-400">CLIs Activos</p>
+              <p className="text-2xl font-bold text-green-400">{metrics.active_clis}</p>
             </div>
-            <div className="w-12 h-12 bg-warning-500/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-warning-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-              </svg>
+            <div className="text-3xl">📱</div>
+          </div>
+          <div className="mt-2">
+            <div className="flex justify-between text-xs text-secondary-400">
+              <span>Bloqueados: {metrics.blocked_clis}</span>
+              <span>Total: {metrics.active_clis + metrics.blocked_clis}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Gráfico de CPS em tempo real */}
-      {metricsHistoryRef.current.length > 0 && (
+      {/* Gráficos en tiempo real */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Gráfico de CPS en tiempo real */}
         <div className="glass-panel p-6 rounded-xl">
-          <h3 className="text-lg font-semibold text-white mb-4">
-            Histórico de CPS - Tempo Real
+          <h3 className="text-lg font-semibold mb-4 text-white">
+            Historial de CPS - Tiempo Real
           </h3>
-          <div className="h-80">
-            <Line
-              data={{
-                labels: metricsHistoryRef.current.map(m => m.timestamp),
-                datasets: [
-                  {
-                    label: 'CPS Atual',
-                    data: metricsHistoryRef.current.map(m => m.current_cps),
-                    borderColor: 'rgb(34, 197, 94)',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                  },
-                  {
-                    label: 'CPS Alvo',
-                    data: metricsHistoryRef.current.map(m => m.target_cps),
-                    borderColor: 'rgb(239, 68, 68)',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    tension: 0.4,
-                    borderDash: [5, 5]
-                  }
-                ]
-              }}
-              options={chartOptions}
-            />
+          <div className="h-64">
+            <Line data={cpsChartData} options={chartOptions} />
           </div>
         </div>
-      )}
+
+        {/* Gráfico de llamadas concurrentes */}
+        <div className="glass-panel p-6 rounded-xl">
+          <h3 className="text-lg font-semibold mb-4 text-white">
+            Llamadas Concurrentes
+          </h3>
+          <div className="h-64">
+            <Line data={concurrentCallsData} options={chartOptions} />
+          </div>
+        </div>
+
+        {/* Gráfico de tasa de éxito */}
+        <div className="glass-panel p-6 rounded-xl">
+          <h3 className="text-lg font-semibold mb-4 text-white">
+            Tasa de Éxito
+          </h3>
+          <div className="h-64">
+            <Line data={successRateData} options={chartOptions} />
+          </div>
+        </div>
+
+        {/* Gráfico de distribución por país */}
+        <div className="glass-panel p-6 rounded-xl">
+          <h3 className="text-lg font-semibold mb-4 text-white">
+            Distribución por País
+          </h3>
+          <div className="h-64">
+            <Doughnut data={countryDistributionData} options={chartOptions} />
+          </div>
+        </div>
+      </div>
     </div>
   );
 
-  // Renderizar seção de teste de carga
+  // Renderizar sección de test de carga
   const renderLoadTestSection = () => (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">Configuração do Teste de Carga</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="glass-panel p-6 rounded-xl">
+        <h3 className="text-lg font-semibold mb-4">Configuración del Test de Carga</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">CPS Alvo</label>
+            <label className="block text-sm font-medium text-secondary-300 mb-2">
+              CPS Objetivo
+            </label>
             <input
               type="number"
-              value={testConfig.target_cps}
-              onChange={(e) => setTestConfig(prev => ({ ...prev, target_cps: parseInt(e.target.value) }))}
-              className="w-full p-2 border border-gray-300 rounded-md"
               min="1"
               max="50"
-              disabled={testRunning}
+              defaultValue="25"
+              className="w-full px-3 py-2 bg-secondary-800 border border-secondary-600 rounded-lg text-white focus:border-primary-500 focus:outline-none"
             />
           </div>
-          
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Duração (minutos)</label>
+            <label className="block text-sm font-medium text-secondary-300 mb-2">
+              Duración (minutos)
+            </label>
             <input
               type="number"
-              value={testConfig.duration_minutes}
-              onChange={(e) => setTestConfig(prev => ({ ...prev, duration_minutes: parseInt(e.target.value) }))}
-              className="w-full p-2 border border-gray-300 rounded-md"
               min="1"
               max="60"
-              disabled={testRunning}
+              defaultValue="5"
+              className="w-full px-3 py-2 bg-secondary-800 border border-secondary-600 rounded-lg text-white focus:border-primary-500 focus:outline-none"
             />
           </div>
-          
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Países</label>
-            <select
-              multiple
-              value={testConfig.countries}
-              onChange={(e) => setTestConfig(prev => ({ 
-                ...prev, 
-                countries: Array.from(e.target.selectedOptions, option => option.value)
-              }))}
-              className="w-full p-2 border border-gray-300 rounded-md"
-              disabled={testRunning}
-            >
-              <option value="usa">USA</option>
+            <label className="block text-sm font-medium text-secondary-300 mb-2">
+              País
+            </label>
+            <select className="w-full px-3 py-2 bg-secondary-800 border border-secondary-600 rounded-lg text-white focus:border-primary-500 focus:outline-none">
+              <option value="all">Todos los países</option>
+              <option value="usa">Estados Unidos</option>
               <option value="canada">Canadá</option>
               <option value="mexico">México</option>
               <option value="brasil">Brasil</option>
-              <option value="colombia">Colômbia</option>
+              <option value="colombia">Colombia</option>
               <option value="argentina">Argentina</option>
             </select>
           </div>
         </div>
         
-        <div className="flex space-x-4">
+        <div className="flex space-x-4 mt-6">
           <button
             onClick={startLoadTest}
             disabled={testRunning}
-            className={`px-4 py-2 rounded-md font-medium ${
+            className={`px-6 py-2 rounded-lg font-medium transition-all ${
               testRunning 
-                ? 'bg-gray-300 cursor-not-allowed' 
-                : 'bg-blue-500 hover:bg-blue-600 text-white'
+                ? 'bg-secondary-600 cursor-not-allowed' 
+                : 'bg-primary-600 hover:bg-primary-700 text-white'
             }`}
           >
-            {testRunning ? 'Teste em Andamento...' : 'Iniciar Teste'}
+            {testRunning ? 'Test en Curso...' : 'Iniciar Test'}
           </button>
           
-          <button
-            onClick={stopLoadTest}
-            disabled={!testRunning}
-            className={`px-4 py-2 rounded-md font-medium ${
-              !testRunning 
-                ? 'bg-gray-300 cursor-not-allowed' 
-                : 'bg-red-500 hover:bg-red-600 text-white'
-            }`}
-          >
-            Parar Teste
-          </button>
+          {testRunning && (
+            <button
+              onClick={stopLoadTest}
+              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all"
+            >
+              Parar Test
+            </button>
+          )}
         </div>
       </div>
-      
-      {metrics.loadTest && (
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Resultados do Teste</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+      {testResults && (
+        <div className="glass-panel p-6 rounded-xl">
+          <h3 className="text-lg font-semibold mb-4">Resultados del Test</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">
-                {metrics.loadTest.total_calls_attempted || 0}
-              </p>
-              <p className="text-sm text-gray-500">Chamadas Tentadas</p>
+              <div className="text-2xl font-bold text-blue-400">{testResults.avg_cps}</div>
+              <div className="text-sm text-secondary-400">CPS Promedio</div>
             </div>
-            
             <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">
-                {metrics.loadTest.total_calls_successful || 0}
-              </p>
-              <p className="text-sm text-gray-500">Bem-sucedidas</p>
+              <div className="text-2xl font-bold text-green-400">{testResults.max_cps}</div>
+              <div className="text-sm text-secondary-400">CPS Máximo</div>
             </div>
-            
             <div className="text-center">
-              <p className="text-2xl font-bold text-red-600">
-                {metrics.loadTest.total_calls_failed || 0}
-              </p>
-              <p className="text-sm text-gray-500">Falhadas</p>
+              <div className="text-2xl font-bold text-yellow-400">{testResults.success_rate}%</div>
+              <div className="text-sm text-secondary-400">Tasa de Éxito</div>
             </div>
-            
             <div className="text-center">
-              <p className="text-2xl font-bold text-purple-600">
-                {metrics.loadTest.actual_cps?.toFixed(1) || '0.0'}
-              </p>
-              <p className="text-sm text-gray-500">CPS Alcançado</p>
+              <div className="text-2xl font-bold text-purple-400">{formatDuration(testResults.duration)}</div>
+              <div className="text-sm text-secondary-400">Duración</div>
             </div>
           </div>
         </div>
@@ -529,146 +539,93 @@ const AdvancedPerformanceDashboard = () => {
     </div>
   );
 
-  // Renderizar estatísticas de CLIs
-  const renderCliStats = () => (
+  // Renderizar estadísticas de CLIs
+  const renderCliStatsSection = () => (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">Estatísticas de CLIs</h3>
-        
-        {metrics.cliStats ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">
-                  {metrics.cliStats.total_clis || 0}
-                </p>
-                <p className="text-sm text-gray-500">CLIs Disponíveis</p>
-              </div>
-              
-              <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">
-                  {metrics.cliStats.active_clis || 0}
-                </p>
-                <p className="text-sm text-gray-500">CLIs Ativos</p>
-              </div>
-              
-              <div className="text-center">
-                <p className="text-2xl font-bold text-orange-600">
-                  {metrics.cliStats.average_usage?.toFixed(1) || '0.0'}
-                </p>
-                <p className="text-sm text-gray-500">Uso Médio</p>
-              </div>
+      <div className="glass-panel p-6 rounded-xl">
+        <h3 className="text-lg font-semibold mb-4">Estadísticas de CLIs</h3>
+        {cliStats ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-400">{cliStats.total_clis}</div>
+              <div className="text-sm text-secondary-400">Total CLIs</div>
             </div>
-            
-            {metrics.cliStats.top_used && (
-              <div>
-                <h4 className="font-semibold mb-2">CLIs Mais Usados</h4>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          CLI
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Uso Hoje
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Limite
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {metrics.cliStats.top_used.map((cli, index) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {cli.cli}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {cli.usage}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {cli.limit === 0 ? 'Ilimitado' : cli.limit}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              cli.status === 'available' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {cli.status === 'available' ? 'Disponível' : 'Bloqueado'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-400">{cliStats.active_clis}</div>
+              <div className="text-sm text-secondary-400">Activos</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-400">{cliStats.high_usage_clis}</div>
+              <div className="text-sm text-secondary-400">Alto Uso</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-400">{cliStats.blocked_clis}</div>
+              <div className="text-sm text-secondary-400">Bloqueados</div>
+            </div>
           </div>
         ) : (
-          <p className="text-gray-500">Carregando estatísticas...</p>
+          <p className="text-gray-500">Cargando estadísticas...</p>
         )}
       </div>
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+          <p className="text-secondary-400">Conectando al sistema de performance...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-100 to-secondary-950 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Cabeçalho */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-gradient-primary mb-2">
-                Performance Dashboard
-              </h1>
-              <p className="text-secondary-400 text-lg">
-                Monitoramento avançado, testes de carga e gestão de performance
-              </p>
-            </div>
-            {renderConnectionStatus()}
-          </div>
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="glass-panel p-6 rounded-xl">
+        <h1 className="text-3xl font-bold text-gradient-primary mb-2">
+          Dashboard de Performance
+        </h1>
+        <p className="text-secondary-400">
+          Monitoreo avanzado, tests de carga y gestión de performance
+        </p>
+      </div>
 
-        {/* Navegação por abas */}
-        <div className="mb-8">
-          <nav className="flex space-x-1 glass-panel rounded-xl p-1">
-            {[
-              { id: 'realtime', label: 'Tempo Real', icon: '📊' },
-              { id: 'loadtest', label: 'Testes de Carga', icon: '🧪' },
-              { id: 'cli-limits', label: 'Limites CLI', icon: '🔢' },
-              { id: 'cli-rotation', label: 'Rotação CLI', icon: '🔄' },
-              { id: 'dtmf-config', label: 'Config DTMF', icon: '⌨️' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setSelectedTab(tab.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                  selectedTab === tab.id
-                    ? 'bg-primary-500 text-white shadow-lg'
-                    : 'text-secondary-400 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </nav>
+      {/* Navegación por pestañas */}
+      <div className="glass-panel p-4 rounded-xl">
+        <div className="flex space-x-2 overflow-x-auto">
+          {[
+            { id: 'realtime', label: 'Tiempo Real', icon: '📊' },
+            { id: 'loadtest', label: 'Tests de Carga', icon: '🧪' },
+            { id: 'cli-limits', label: 'Límites CLI', icon: '🔢' },
+            { id: 'cli-rotation', label: 'Rotación CLI', icon: '🔄' },
+            { id: 'dtmf-config', label: 'Config DTMF', icon: '📞' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setSelectedTab(tab.id)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                selectedTab === tab.id
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-secondary-700 text-secondary-300 hover:bg-secondary-600'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* Conteúdo das abas */}
-        <div className="tab-content">
-          {selectedTab === 'realtime' && renderRealtimeMetrics()}
-          {selectedTab === 'loadtest' && <LoadTestManager />}
-          {selectedTab === 'cli-limits' && <CliLimitsManager />}
-          {selectedTab === 'cli-rotation' && <CliRotationDashboard />}
-          {selectedTab === 'dtmf-config' && <DTMFCountryConfig />}
-        </div>
+      {/* Contenido de las pestañas */}
+      <div className="min-h-[500px]">
+        {selectedTab === 'realtime' && renderRealtimeMetrics()}
+        {selectedTab === 'loadtest' && <LoadTestManager />}
+        {selectedTab === 'cli-limits' && <CliLimitsManager />}
+        {selectedTab === 'cli-rotation' && <CliRotationDashboard />}
+        {selectedTab === 'dtmf-config' && <DTMFCountryConfig />}
       </div>
     </div>
   );
