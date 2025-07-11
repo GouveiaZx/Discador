@@ -1,0 +1,9 @@
+# Trigger deploy do backend - Performance endpoints corrigidos
+# Data: 2025-01-11
+# Versão: 1.0.1
+
+- Corrigido prefixo duplicado nas rotas de performance
+- Endpoints agora funcionam corretamente em /api/v1/performance/
+- Implementados todos os endpoints necessários para o dashboard
+
+Deploy necessário para aplicar as correções! 
