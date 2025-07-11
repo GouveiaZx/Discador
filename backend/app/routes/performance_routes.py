@@ -63,6 +63,22 @@ except ImportError:
         def __init__(self, *args, **kwargs):
             pass
 
+try:
+    from app.services.dynamic_caller_id_service import DynamicCallerIdService
+    HAS_DYNAMIC_CALLER_ID_SERVICE = True
+except ImportError:
+    HAS_DYNAMIC_CALLER_ID_SERVICE = False
+    class DynamicCallerIdService:
+        def __init__(self, db): pass
+
+try:
+    from app.services.advanced_dnc_service import AdvancedDNCService
+    HAS_ADVANCED_DNC_SERVICE = True
+except ImportError:
+    HAS_ADVANCED_DNC_SERVICE = False
+    class AdvancedDNCService:
+        def __init__(self, db): pass
+
 router = APIRouter(prefix="/performance", tags=["performance"])
 
 # Instância global do dialer (seria melhor usar singleton ou dependency injection)
@@ -632,114 +648,6 @@ async def reset_cli_usage(db: Session = Depends(get_db)):
             "timestamp": datetime.now().isoformat()
         }
 
-@router.get("/dtmf/configs")
-async def get_dtmf_configs(db: Session = Depends(get_db)):
-    """Obtém configurações DTMF por país."""
-    try:
-        if not HAS_DTMF_CONFIG_SERVICE:
-            return {
-                "status": "service_unavailable",
-                "message": "Serviço de configurações DTMF não disponível",
-                "configurations": {
-                    "usa": {
-                        "connect_key": "1",
-                        "disconnect_key": "9",
-                        "repeat_key": "0",
-                        "menu_timeout": 10,
-                        "instructions": "Press 1 to connect"
-                    },
-                    "canada": {
-                        "connect_key": "1",
-                        "disconnect_key": "9",
-                        "repeat_key": "0",
-                        "menu_timeout": 10,
-                        "instructions": "Press 1 to connect"
-                    },
-                    "mexico": {
-                        "connect_key": "3",
-                        "disconnect_key": "9",
-                        "repeat_key": "0",
-                        "menu_timeout": 10,
-                        "instructions": "Presione 3 para conectar"
-                    }
-                },
-                "timestamp": datetime.now().isoformat()
-            }
-        
-        dtmf_service = DTMFCountryConfigService(db)
-        configs = dtmf_service.get_all_country_configs()
-        
-        return {
-            "status": "success",
-            "configurations": configs,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ Erro ao obter configurações: {str(e)}")
-        return {
-            "status": "error",
-            "message": str(e),
-            "configurations": {},
-            "timestamp": datetime.now().isoformat()
-        }
-
-@router.post("/dtmf/config/{country}")
-async def update_dtmf_config(country: str, request: CountryConfigRequest, db: Session = Depends(get_db)):
-    """Atualiza configuração DTMF para um país."""
-    try:
-        if not HAS_DTMF_CONFIG_SERVICE:
-            return {
-                "status": "service_unavailable",
-                "message": "Serviço de configurações DTMF não disponível",
-                "country": country,
-                "new_config": None
-            }
-        
-        dtmf_service = DTMFCountryConfigService(db)
-        
-        new_config = {
-            "connect_key": request.connect_key,
-            "disconnect_key": request.disconnect_key,
-            "repeat_key": request.repeat_key,
-            "menu_timeout": request.menu_timeout,
-            "instructions": request.instructions
-        }
-        
-        if hasattr(dtmf_service, 'update_country_config'):
-            success = dtmf_service.update_country_config(country, new_config)
-            
-            if success:
-                return {
-                    "status": "success",
-                    "country": country,
-                    "new_config": new_config,
-                    "message": f"Configuração DTMF atualizada para {country}"
-                }
-            else:
-                return {
-                    "status": "not_found",
-                    "country": country,
-                    "new_config": new_config,
-                    "message": f"País {country} não encontrado"
-                }
-        else:
-            return {
-                "status": "method_unavailable",
-                "country": country,
-                "new_config": new_config,
-                "message": "Método update_country_config não disponível"
-            }
-        
-    except Exception as e:
-        logger.error(f"❌ Erro ao atualizar configuração: {str(e)}")
-        return {
-            "status": "error",
-            "message": str(e),
-            "country": country,
-            "new_config": None
-        }
-
 # ========== WEBSOCKET PARA MÉTRICAS EM TEMPO REAL ==========
 
 @router.websocket("/ws/performance")
@@ -869,3 +777,830 @@ async def test_endpoint():
             "/performance/dtmf/configs"
         ]
     } 
+
+# ========================= CONFIGURAÇÃO DTMF POR PAÍS =========================
+
+@router.get("/dtmf/configs")
+async def get_dtmf_configs(db: Session = Depends(get_db)):
+    """Obtém todas as configurações DTMF por país."""
+    if not HAS_DTMF_CONFIG_SERVICE:
+        return {
+            "status": "service_unavailable",
+            "message": "Serviço DTMF não disponível",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "configs": {
+                    "usa": {"connect_key": "1", "dnc_key": "2", "daily_limit": 100},
+                    "canada": {"connect_key": "1", "dnc_key": "2", "daily_limit": 100},
+                    "mexico": {"connect_key": "3", "dnc_key": "2", "daily_limit": 0},
+                    "brasil": {"connect_key": "1", "dnc_key": "2", "daily_limit": 0},
+                    "colombia": {"connect_key": "1", "dnc_key": "2", "daily_limit": 0}
+                }
+            }
+        }
+    
+    try:
+        dtmf_service = DTMFCountryConfigService(db)
+        configs = dtmf_service.get_all_country_configs()
+        
+        return {
+            "status": "success",
+            "message": "Configurações DTMF obtidas",
+            "timestamp": datetime.now().isoformat(),
+            "data": {"configs": configs}
+        }
+    except Exception as e:
+        return {
+            "status": "error", 
+            "message": f"Erro ao obter configurações DTMF: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.get("/dtmf/config/{country}")
+async def get_dtmf_config_by_country(country: str, db: Session = Depends(get_db)):
+    """Obtém configuração DTMF de um país específico."""
+    if not HAS_DTMF_CONFIG_SERVICE:
+        # Configurações simuladas baseadas na funcionalidade solicitada
+        simulate_configs = {
+            "mexico": {"connect_key": "3", "dnc_key": "2", "menu_timeout": 12},
+            "usa": {"connect_key": "1", "dnc_key": "2", "menu_timeout": 10},
+            "canada": {"connect_key": "1", "dnc_key": "2", "menu_timeout": 10}
+        }
+        
+        config = simulate_configs.get(country.lower(), {"connect_key": "1", "dnc_key": "2", "menu_timeout": 10})
+        
+        return {
+            "status": "service_unavailable",
+            "message": f"Configuração DTMF simulada para {country}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {"config": config, "country": country}
+        }
+    
+    try:
+        dtmf_service = DTMFCountryConfigService(db)
+        config = dtmf_service.get_country_config(country)
+        
+        return {
+            "status": "success",
+            "message": f"Configuração DTMF obtida para {country}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {"config": config, "country": country}
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro ao obter configuração DTMF para {country}: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.post("/dtmf/config/{country}")
+async def update_dtmf_config(
+    country: str,
+    config_data: Dict[str, Any],
+    db: Session = Depends(get_db)
+):
+    """Atualiza configuração DTMF de um país."""
+    if not HAS_DTMF_CONFIG_SERVICE:
+        return {
+            "status": "service_unavailable",
+            "message": "Serviço DTMF não disponível para atualização",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "country": country,
+                "received_config": config_data,
+                "message": "Configuração recebida mas não pode ser salva"
+            }
+        }
+    
+    try:
+        dtmf_service = DTMFCountryConfigService(db)
+        
+        # Validar configuração
+        connect_key = config_data.get("connect_key", "1")
+        dnc_key = config_data.get("dnc_key", "2")
+        
+        validation = dtmf_service.validate_key_assignment(country, connect_key, dnc_key)
+        
+        if not validation["valid"]:
+            return {
+                "status": "error",
+                "message": f"Configuração inválida: {', '.join(validation['errors'])}",
+                "timestamp": datetime.now().isoformat(),
+                "data": {
+                    "validation": validation,
+                    "suggestions": validation["suggestions"]
+                }
+            }
+        
+        # Atualizar configuração
+        success = dtmf_service.update_country_config(country, config_data)
+        
+        if success:
+            updated_config = dtmf_service.get_country_config(country)
+            return {
+                "status": "success",
+                "message": f"Configuração DTMF atualizada para {country}",
+                "timestamp": datetime.now().isoformat(),
+                "data": {
+                    "country": country,
+                    "updated_config": updated_config
+                }
+            }
+        else:
+            return {
+                "status": "error",
+                "message": f"Falha ao atualizar configuração DTMF para {country}",
+                "timestamp": datetime.now().isoformat(),
+                "data": {}
+            }
+            
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro ao atualizar configuração DTMF: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.get("/dtmf/dialplan/{country}")
+async def generate_asterisk_dialplan(country: str, db: Session = Depends(get_db)):
+    """Gera dialplan do Asterisk para configuração DTMF de um país."""
+    if not HAS_DTMF_CONFIG_SERVICE:
+        # Dialplan simulado baseado no país
+        dialplan_templates = {
+            "mexico": f"""
+; Configuração DTMF para México (CONNECT_KEY=3)
+[dtmf-mexico]
+exten => s,1,NoOp(DTMF Handler for Mexico)
+exten => 3,1,NoOp(Connect key pressed)
+exten => 3,n,Set(__CALL_RESULT=CONNECT)
+exten => 2,1,NoOp(DNC key pressed)
+exten => 2,n,Set(__CALL_RESULT=DNC)
+""",
+            "usa": f"""
+; Configuração DTMF para USA (CONNECT_KEY=1)
+[dtmf-usa]
+exten => s,1,NoOp(DTMF Handler for USA)
+exten => 1,1,NoOp(Connect key pressed)
+exten => 1,n,Set(__CALL_RESULT=CONNECT)
+exten => 2,1,NoOp(DNC key pressed)
+exten => 2,n,Set(__CALL_RESULT=DNC)
+"""
+        }
+        
+        dialplan = dialplan_templates.get(country.lower(), dialplan_templates["usa"])
+        
+        return {
+            "status": "service_unavailable",
+            "message": f"Dialplan simulado para {country}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "country": country,
+                "dialplan": dialplan
+            }
+        }
+    
+    try:
+        dtmf_service = DTMFCountryConfigService(db)
+        dialplan = dtmf_service.generate_asterisk_dialplan(country)
+        
+        return {
+            "status": "success",
+            "message": f"Dialplan gerado para {country}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "country": country,
+                "dialplan": dialplan
+            }
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro ao gerar dialplan: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+# ========================= CALLER ID DINÂMICO =========================
+
+@router.get("/caller-id/next/{country}")
+async def get_next_caller_id(
+    country: str,
+    campaign_id: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Obtém próximo Caller ID disponível para um país."""
+    if not HAS_DYNAMIC_CALLER_ID_SERVICE:
+        # Caller IDs simulados por país
+        fallback_clis = {
+            "usa": "+14255551000",
+            "canada": "+14165551000", 
+            "mexico": "+525555551000",
+            "brasil": "+551155551000",
+            "colombia": "+5715551000",
+            "argentina": "+541155551000",
+            "chile": "+5625551000",
+            "peru": "+5115551000"
+        }
+        
+        cli = fallback_clis.get(country.lower(), "+18885559999")
+        
+        return {
+            "status": "service_unavailable",
+            "message": f"Caller ID simulado para {country}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "cli": cli,
+                "country": country,
+                "campaign_id": campaign_id,
+                "source": "fallback_simulation"
+            }
+        }
+    
+    try:
+        caller_id_service = DynamicCallerIdService(db)
+        cli_info = caller_id_service.get_next_cli(country, campaign_id)
+        
+        return {
+            "status": "success",
+            "message": f"Caller ID obtido para {country}",
+            "timestamp": datetime.now().isoformat(),
+            "data": cli_info
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro ao obter Caller ID: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.get("/caller-id/stats/{country}")
+async def get_caller_id_stats(country: str, db: Session = Depends(get_db)):
+    """Obtém estatísticas de Caller ID de um país."""
+    if not HAS_DYNAMIC_CALLER_ID_SERVICE:
+        return {
+            "status": "service_unavailable",
+            "message": f"Estatísticas simuladas para {country}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "country": country,
+                "total_clis": 1000,
+                "daily_limit": 100 if country.lower() in ["usa", "canada"] else 0,
+                "used_today": 50,
+                "available_today": 950 if country.lower() not in ["usa", "canada"] else 50
+            }
+        }
+    
+    try:
+        caller_id_service = DynamicCallerIdService(db)
+        stats = caller_id_service.get_country_cli_stats(country)
+        
+        return {
+            "status": "success",
+            "message": f"Estatísticas de Caller ID para {country}",
+            "timestamp": datetime.now().isoformat(),
+            "data": stats
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro ao obter estatísticas: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.get("/caller-id/stats")
+async def get_all_caller_id_stats(db: Session = Depends(get_db)):
+    """Obtém estatísticas de Caller ID de todos os países."""
+    if not HAS_DYNAMIC_CALLER_ID_SERVICE:
+        return {
+            "status": "service_unavailable",
+            "message": "Estatísticas globais simuladas",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "total_countries": 8,
+                "restricted_countries": ["usa", "canada"],
+                "unrestricted_countries": ["mexico", "brasil", "colombia", "argentina", "chile", "peru"],
+                "total_clis": 8000
+            }
+        }
+    
+    try:
+        caller_id_service = DynamicCallerIdService(db)
+        stats = caller_id_service.get_all_countries_stats()
+        
+        return {
+            "status": "success",
+            "message": "Estatísticas globais de Caller ID",
+            "timestamp": datetime.now().isoformat(),
+            "data": stats
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro ao obter estatísticas globais: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.post("/caller-id/load/{country}")
+async def load_caller_id_list(
+    country: str,
+    cli_data: Dict[str, List[str]],
+    db: Session = Depends(get_db)
+):
+    """Carrega lista personalizada de Caller IDs para um país."""
+    if not HAS_DYNAMIC_CALLER_ID_SERVICE:
+        cli_list = cli_data.get("cli_list", [])
+        return {
+            "status": "service_unavailable",
+            "message": f"Lista simulada carregada para {country}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "country": country,
+                "received_clis": len(cli_list),
+                "message": "Lista recebida mas não pode ser salva"
+            }
+        }
+    
+    try:
+        caller_id_service = DynamicCallerIdService(db)
+        cli_list = cli_data.get("cli_list", [])
+        
+        result = caller_id_service.load_custom_cli_list(country, cli_list)
+        
+        return {
+            "status": "success" if result["success"] else "error",
+            "message": result["message"],
+            "timestamp": datetime.now().isoformat(),
+            "data": result
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro ao carregar lista de CLIs: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.post("/caller-id/reset/{country}")
+async def reset_caller_id_usage(country: str, db: Session = Depends(get_db)):
+    """Reset contadores de uso de Caller ID para um país."""
+    if not HAS_DYNAMIC_CALLER_ID_SERVICE:
+        return {
+            "status": "service_unavailable",
+            "message": f"Reset simulado para {country}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "country": country,
+                "reset_records": 100,
+                "message": "Reset simulado executado"
+            }
+        }
+    
+    try:
+        caller_id_service = DynamicCallerIdService(db)
+        result = caller_id_service.reset_daily_usage(country)
+        
+        return {
+            "status": "success" if result["success"] else "error",
+            "message": result["message"],
+            "timestamp": datetime.now().isoformat(),
+            "data": result
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro ao resetar uso: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+# ========================= LISTA NEGRA/DNC AVANÇADA =========================
+
+@router.post("/dnc/add")
+async def add_to_dnc(
+    dnc_data: Dict[str, Any],
+    db: Session = Depends(get_db)
+):
+    """Adiciona número à lista DNC."""
+    if not HAS_ADVANCED_DNC_SERVICE:
+        phone_number = dnc_data.get("phone_number")
+        country = dnc_data.get("country")
+        return {
+            "status": "service_unavailable",
+            "message": f"Adição simulada à DNC: {phone_number} ({country})",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "phone_number": phone_number,
+                "country": country,
+                "action": "simulated_add"
+            }
+        }
+    
+    try:
+        dnc_service = AdvancedDNCService(db)
+        
+        phone_number = dnc_data.get("phone_number")
+        country = dnc_data.get("country")
+        campaign_id = dnc_data.get("campaign_id")
+        reason = dnc_data.get("reason", "customer_request")
+        
+        if not phone_number or not country:
+            return {
+                "status": "error",
+                "message": "phone_number e country são obrigatórios",
+                "timestamp": datetime.now().isoformat(),
+                "data": {}
+            }
+        
+        result = dnc_service.add_to_dnc(phone_number, country, campaign_id, reason)
+        
+        return {
+            "status": "success" if result["success"] else "error",
+            "message": result["message"],
+            "timestamp": datetime.now().isoformat(),
+            "data": result
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro ao adicionar à DNC: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.get("/dnc/check/{phone_number}/{country}")
+async def check_dnc_status(
+    phone_number: str,
+    country: str,
+    campaign_id: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Verifica se número está na lista DNC."""
+    if not HAS_ADVANCED_DNC_SERVICE:
+        return {
+            "status": "service_unavailable",
+            "message": f"Verificação simulada para {phone_number}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "is_dnc": False,
+                "phone_number": phone_number,
+                "country": country,
+                "reason": "Simulation - not in DNC"
+            }
+        }
+    
+    try:
+        dnc_service = AdvancedDNCService(db)
+        result = dnc_service.check_dnc_status(phone_number, country, campaign_id)
+        
+        return {
+            "status": "success",
+            "message": f"Status DNC verificado para {phone_number}",
+            "timestamp": datetime.now().isoformat(),
+            "data": result
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro ao verificar DNC: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.delete("/dnc/remove")
+async def remove_from_dnc(
+    dnc_data: Dict[str, Any],
+    db: Session = Depends(get_db)
+):
+    """Remove número da lista DNC."""
+    if not HAS_ADVANCED_DNC_SERVICE:
+        phone_number = dnc_data.get("phone_number")
+        country = dnc_data.get("country")
+        return {
+            "status": "service_unavailable",
+            "message": f"Remoção simulada da DNC: {phone_number} ({country})",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "phone_number": phone_number,
+                "country": country,
+                "action": "simulated_remove"
+            }
+        }
+    
+    try:
+        dnc_service = AdvancedDNCService(db)
+        
+        phone_number = dnc_data.get("phone_number")
+        country = dnc_data.get("country")
+        campaign_id = dnc_data.get("campaign_id")
+        reason = dnc_data.get("reason", "manual_removal")
+        
+        if not phone_number or not country:
+            return {
+                "status": "error",
+                "message": "phone_number e country são obrigatórios",
+                "timestamp": datetime.now().isoformat(),
+                "data": {}
+            }
+        
+        result = dnc_service.remove_from_dnc(phone_number, country, campaign_id, reason)
+        
+        return {
+            "status": "success" if result["success"] else "error",
+            "message": result["message"],
+            "timestamp": datetime.now().isoformat(),
+            "data": result
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro ao remover da DNC: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.get("/dnc/stats")
+async def get_dnc_stats(
+    country: Optional[str] = None,
+    campaign_id: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Obtém estatísticas da lista DNC."""
+    if not HAS_ADVANCED_DNC_SERVICE:
+        return {
+            "status": "service_unavailable",
+            "message": "Estatísticas DNC simuladas",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "total_entries": 1500,
+                "active_entries": 1200,
+                "expired_entries": 300,
+                "filter_country": country,
+                "filter_campaign": campaign_id
+            }
+        }
+    
+    try:
+        dnc_service = AdvancedDNCService(db)
+        stats = dnc_service.get_dnc_stats(country, campaign_id)
+        
+        return {
+            "status": "success",
+            "message": "Estatísticas DNC obtidas",
+            "timestamp": datetime.now().isoformat(),
+            "data": stats
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro ao obter estatísticas DNC: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.post("/dnc/cleanup")
+async def cleanup_expired_dnc(
+    cleanup_data: Dict[str, Any],
+    db: Session = Depends(get_db)
+):
+    """Remove entradas DNC expiradas."""
+    if not HAS_ADVANCED_DNC_SERVICE:
+        country = cleanup_data.get("country")
+        return {
+            "status": "service_unavailable",
+            "message": f"Limpeza simulada para {country or 'todos os países'}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "removed_count": 150,
+                "filter_country": country
+            }
+        }
+    
+    try:
+        dnc_service = AdvancedDNCService(db)
+        country = cleanup_data.get("country")
+        
+        result = dnc_service.cleanup_expired_dnc(country)
+        
+        return {
+            "status": "success" if result["success"] else "error",
+            "message": result["message"],
+            "timestamp": datetime.now().isoformat(),
+            "data": result
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro na limpeza DNC: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.get("/dnc/export")
+async def export_dnc_list(
+    country: Optional[str] = None,
+    campaign_id: Optional[str] = None,
+    format: str = "json",
+    db: Session = Depends(get_db)
+):
+    """Exporta lista DNC."""
+    if not HAS_ADVANCED_DNC_SERVICE:
+        return {
+            "status": "service_unavailable",
+            "message": f"Exportação simulada ({format})",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "format": format,
+                "total_entries": 100,
+                "filter_country": country,
+                "filter_campaign": campaign_id,
+                "download_url": f"/simulated-export.{format}"
+            }
+        }
+    
+    try:
+        dnc_service = AdvancedDNCService(db)
+        result = dnc_service.export_dnc_list(country, campaign_id, format)
+        
+        return {
+            "status": "success" if result["success"] else "error",
+            "message": f"Exportação DNC concluída ({format})",
+            "timestamp": datetime.now().isoformat(),
+            "data": result
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro na exportação DNC: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.post("/dnc/import")
+async def import_dnc_list(
+    import_data: Dict[str, Any],
+    db: Session = Depends(get_db)
+):
+    """Importa lista DNC."""
+    if not HAS_ADVANCED_DNC_SERVICE:
+        data = import_data.get("data", [])
+        country = import_data.get("country")
+        return {
+            "status": "service_unavailable",
+            "message": f"Importação simulada para {country}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "country": country,
+                "received_entries": len(data),
+                "simulated_imported": len(data),
+                "message": "Dados recebidos mas não podem ser salvos"
+            }
+        }
+    
+    try:
+        dnc_service = AdvancedDNCService(db)
+        
+        data = import_data.get("data", [])
+        country = import_data.get("country")
+        campaign_id = import_data.get("campaign_id")
+        
+        if not data or not country:
+            return {
+                "status": "error",
+                "message": "data e country são obrigatórios",
+                "timestamp": datetime.now().isoformat(),
+                "data": {}
+            }
+        
+        result = dnc_service.import_dnc_list(data, country, campaign_id)
+        
+        return {
+            "status": "success" if result["success"] else "error",
+            "message": result["message"],
+            "timestamp": datetime.now().isoformat(),
+            "data": result
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro na importação DNC: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.get("/dnc/audit")
+async def get_dnc_audit_log(
+    limit: int = 100,
+    db: Session = Depends(get_db)
+):
+    """Obtém log de auditoria DNC."""
+    if not HAS_ADVANCED_DNC_SERVICE:
+        # Log simulado
+        simulated_log = [
+            {
+                "action": "ADD",
+                "phone_number": "+5525555551234",
+                "country": "mexico",
+                "campaign_id": "camp_001",
+                "reason": "customer_request",
+                "timestamp": datetime.now().isoformat(),
+                "user": "system"
+            }
+        ]
+        
+        return {
+            "status": "service_unavailable",
+            "message": "Log de auditoria simulado",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "audit_log": simulated_log,
+                "total_entries": len(simulated_log),
+                "limit": limit
+            }
+        }
+    
+    try:
+        dnc_service = AdvancedDNCService(db)
+        audit_log = dnc_service.get_audit_log(limit)
+        
+        return {
+            "status": "success",
+            "message": "Log de auditoria DNC obtido",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "audit_log": audit_log,
+                "total_entries": len(audit_log),
+                "limit": limit
+            }
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro ao obter log de auditoria: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+# ========================= CONFIGURAÇÃO INTEGRADA POR PAÍS =========================
+
+@router.get("/country-config/{country}")
+async def get_complete_country_config(country: str, db: Session = Depends(get_db)):
+    """Obtém configuração completa de um país (DTMF + CLI + DNC)."""
+    try:
+        config_result = {
+            "country": country,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Configuração DTMF
+        if HAS_DTMF_CONFIG_SERVICE:
+            dtmf_service = DTMFCountryConfigService(db)
+            config_result["dtmf"] = dtmf_service.get_country_config(country)
+        else:
+            config_result["dtmf"] = {
+                "connect_key": "3" if country.lower() == "mexico" else "1",
+                "dnc_key": "2",
+                "status": "simulated"
+            }
+        
+        # Estatísticas de CLI
+        if HAS_DYNAMIC_CALLER_ID_SERVICE:
+            caller_id_service = DynamicCallerIdService(db)
+            config_result["caller_id"] = caller_id_service.get_country_cli_stats(country)
+        else:
+            config_result["caller_id"] = {
+                "daily_limit": 100 if country.lower() in ["usa", "canada"] else 0,
+                "total_clis": 1000,
+                "status": "simulated"
+            }
+        
+        # Estatísticas DNC
+        if HAS_ADVANCED_DNC_SERVICE:
+            dnc_service = AdvancedDNCService(db)
+            config_result["dnc"] = dnc_service.get_dnc_stats(country)
+        else:
+            config_result["dnc"] = {
+                "total_entries": 100,
+                "active_entries": 80,
+                "status": "simulated"
+            }
+        
+        return {
+            "status": "success",
+            "message": f"Configuração completa obtida para {country}",
+            "timestamp": datetime.now().isoformat(),
+            "data": config_result
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Erro ao obter configuração completa: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        } 

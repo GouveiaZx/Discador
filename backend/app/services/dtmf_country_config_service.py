@@ -1,419 +1,412 @@
 """
-Serviço para configurações de DTMF específicas por país.
-Permite configurar diferentes teclas DTMF por país (ex: "oprimir 3" para México).
+Serviço de configuração DTMF por país com opções flexíveis.
+Permite configurar diferentes teclas por país para transferência e lista negra.
 """
 
-from typing import Dict, List, Optional, Any
-from datetime import datetime
+from typing import Dict, Any, Optional, List
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, or_
-import logging
-
-from app.models.audio_sistema import AudioContexto, AudioRegra, TipoEvento, EstadoAudio
-from app.schemas.lista_llamadas import detectar_pais_numero
-
-logger = logging.getLogger(__name__)
+from app.utils.logger import logger
 
 class DTMFCountryConfigService:
-    """Serviço para configurações de DTMF por país."""
+    """
+    Serviço para gerenciar configurações DTMF específicas por país.
     
-    # Configurações DTMF por país
-    COUNTRY_DTMF_CONFIG = {
-        'usa': {
-            'connect_key': '1',
-            'disconnect_key': '9',
-            'repeat_key': '0',
-            'menu_timeout': 10,
-            'instructions': 'Press 1 to connect, 9 to be removed from list',
-            'instructions_audio': 'press_1_connect_en.wav',
-            'context_suffix': '_usa'
-        },
-        'canada': {
-            'connect_key': '1',
-            'disconnect_key': '9', 
-            'repeat_key': '0',
-            'menu_timeout': 10,
-            'instructions': 'Press 1 to connect, 9 to be removed from list',
-            'instructions_audio': 'press_1_connect_en.wav',
-            'context_suffix': '_canada'
-        },
-        'mexico': {
-            'connect_key': '3',  # México usa tecla 3 ao invés de 1
-            'disconnect_key': '9',
-            'repeat_key': '0',
-            'menu_timeout': 15,
-            'instructions': 'Presione 3 para conectar, 9 para salir de la lista',
-            'instructions_audio': 'presione_3_conectar_mx.wav',
-            'context_suffix': '_mexico'
-        },
-        'brasil': {
-            'connect_key': '1',
-            'disconnect_key': '9',
-            'repeat_key': '0',
-            'menu_timeout': 10,
-            'instructions': 'Pressione 1 para conectar, 9 para sair da lista',
-            'instructions_audio': 'pressione_1_conectar_br.wav',
-            'context_suffix': '_brasil'
-        },
-        'colombia': {
-            'connect_key': '1',
-            'disconnect_key': '9',
-            'repeat_key': '0',
-            'menu_timeout': 12,
-            'instructions': 'Presione 1 para conectar, 9 para salir de la lista',
-            'instructions_audio': 'presione_1_conectar_co.wav',
-            'context_suffix': '_colombia'
-        },
-        'argentina': {
-            'connect_key': '1',
-            'disconnect_key': '9',
-            'repeat_key': '0',
-            'menu_timeout': 10,
-            'instructions': 'Presione 1 para conectar, 9 para salir de la lista',
-            'instructions_audio': 'presione_1_conectar_ar.wav',
-            'context_suffix': '_argentina'
-        },
-        'chile': {
-            'connect_key': '1',
-            'disconnect_key': '9',
-            'repeat_key': '0',
-            'menu_timeout': 10,
-            'instructions': 'Presione 1 para conectar, 9 para salir de la lista',
-            'instructions_audio': 'presione_1_conectar_cl.wav',
-            'context_suffix': '_chile'
-        },
-        'peru': {
-            'connect_key': '1',
-            'disconnect_key': '9',
-            'repeat_key': '0',
-            'menu_timeout': 12,
-            'instructions': 'Presione 1 para conectar, 9 para salir de la lista',
-            'instructions_audio': 'presione_1_conectar_pe.wav',
-            'context_suffix': '_peru'
-        },
-        'venezuela': {
-            'connect_key': '1',
-            'disconnect_key': '9',
-            'repeat_key': '0',
-            'menu_timeout': 12,
-            'instructions': 'Presione 1 para conectar, 9 para salir de la lista',
-            'instructions_audio': 'presione_1_conectar_ve.wav',
-            'context_suffix': '_venezuela'
-        },
-        'default': {
-            'connect_key': '1',
-            'disconnect_key': '9',
-            'repeat_key': '0',
-            'menu_timeout': 10,
-            'instructions': 'Press 1 to connect, 9 to be removed from list',
-            'instructions_audio': 'press_1_connect_default.wav',
-            'context_suffix': '_default'
-        }
-    }
+    Funcionalidades:
+    - Configuração de teclas de transferência por país
+    - Configuração de teclas para lista negra (DNC)
+    - Configuração de timeouts e instruções
+    - Fallbacks para países não configurados
+    """
     
     def __init__(self, db: Session):
         self.db = db
+        self.default_configs = self._load_default_configs()
+        
+    def _load_default_configs(self) -> Dict[str, Dict[str, Any]]:
+        """Carrega configurações padrão por país."""
+        return {
+            "usa": {
+                "country_name": "Estados Unidos",
+                "connect_key": "1",
+                "disconnect_key": "9", 
+                "dnc_key": "2",  # Do Not Call
+                "repeat_key": "0",
+                "available_options": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+                "menu_timeout": 10,
+                "instructions": {
+                    "english": "Press 1 to connect, 2 to be removed from list, 9 to hang up",
+                    "spanish": "Presione 1 para conectar, 2 para ser removido de la lista, 9 para colgar"
+                },
+                "audio_context": {
+                    "language": "en-US",
+                    "voice": "female",
+                    "speed": "normal"
+                },
+                "timezone": "America/New_York",
+                "calling_restrictions": {
+                    "daily_cli_limit": 100,
+                    "time_restrictions": ["09:00-21:00"],
+                    "weekend_allowed": False
+                }
+            },
+            "canada": {
+                "country_name": "Canadá",
+                "connect_key": "1",
+                "disconnect_key": "9",
+                "dnc_key": "2",
+                "repeat_key": "0",
+                "available_options": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+                "menu_timeout": 10,
+                "instructions": {
+                    "english": "Press 1 to connect, 2 to be removed from list, 9 to hang up",
+                    "french": "Appuyez sur 1 pour vous connecter, 2 pour être supprimé de la liste, 9 pour raccrocher"
+                },
+                "audio_context": {
+                    "language": "en-CA",
+                    "voice": "female", 
+                    "speed": "normal"
+                },
+                "timezone": "America/Toronto",
+                "calling_restrictions": {
+                    "daily_cli_limit": 100,
+                    "time_restrictions": ["09:00-21:00"],
+                    "weekend_allowed": False
+                }
+            },
+            "mexico": {
+                "country_name": "México",
+                "connect_key": "3",  # Usar 3 ao invés de 1 por causa das contestadoras
+                "disconnect_key": "9",
+                "dnc_key": "2",
+                "repeat_key": "0",
+                "available_options": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+                "menu_timeout": 12,
+                "instructions": {
+                    "spanish": "Presione 3 para conectar, 2 para ser removido de la lista, 9 para colgar",
+                    "english": "Press 3 to connect, 2 to be removed from list, 9 to hang up"
+                },
+                "audio_context": {
+                    "language": "es-MX",
+                    "voice": "female",
+                    "speed": "slow"  # Mais devagar para melhor compreensão
+                },
+                "timezone": "America/Mexico_City",
+                "calling_restrictions": {
+                    "daily_cli_limit": 0,  # Sem limitação
+                    "time_restrictions": ["08:00-22:00"],
+                    "weekend_allowed": True
+                }
+            },
+            "brasil": {
+                "country_name": "Brasil",
+                "connect_key": "1",
+                "disconnect_key": "9",
+                "dnc_key": "2",
+                "repeat_key": "0",
+                "available_options": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+                "menu_timeout": 10,
+                "instructions": {
+                    "portuguese": "Pressione 1 para conectar, 2 para ser removido da lista, 9 para desligar",
+                    "spanish": "Presione 1 para conectar, 2 para ser removido de la lista, 9 para colgar"
+                },
+                "audio_context": {
+                    "language": "pt-BR",
+                    "voice": "female",
+                    "speed": "normal"
+                },
+                "timezone": "America/Sao_Paulo",
+                "calling_restrictions": {
+                    "daily_cli_limit": 0,  # Sem limitação
+                    "time_restrictions": ["08:00-22:00"],
+                    "weekend_allowed": True
+                }
+            },
+            "colombia": {
+                "country_name": "Colombia",
+                "connect_key": "1",
+                "disconnect_key": "9",
+                "dnc_key": "2",
+                "repeat_key": "0",
+                "available_options": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+                "menu_timeout": 10,
+                "instructions": {
+                    "spanish": "Presione 1 para conectar, 2 para ser removido de la lista, 9 para colgar"
+                },
+                "audio_context": {
+                    "language": "es-CO",
+                    "voice": "female",
+                    "speed": "normal"
+                },
+                "timezone": "America/Bogota",
+                "calling_restrictions": {
+                    "daily_cli_limit": 0,  # Sem limitação
+                    "time_restrictions": ["08:00-22:00"],
+                    "weekend_allowed": True
+                }
+            },
+            "argentina": {
+                "country_name": "Argentina",
+                "connect_key": "1",
+                "disconnect_key": "9", 
+                "dnc_key": "2",
+                "repeat_key": "0",
+                "available_options": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+                "menu_timeout": 10,
+                "instructions": {
+                    "spanish": "Presione 1 para conectar, 2 para ser removido de la lista, 9 para colgar"
+                },
+                "audio_context": {
+                    "language": "es-AR",
+                    "voice": "female",
+                    "speed": "normal"
+                },
+                "timezone": "America/Argentina/Buenos_Aires",
+                "calling_restrictions": {
+                    "daily_cli_limit": 0,  # Sem limitação
+                    "time_restrictions": ["08:00-22:00"],
+                    "weekend_allowed": True
+                }
+            },
+            "chile": {
+                "country_name": "Chile",
+                "connect_key": "1",
+                "disconnect_key": "9",
+                "dnc_key": "2", 
+                "repeat_key": "0",
+                "available_options": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+                "menu_timeout": 10,
+                "instructions": {
+                    "spanish": "Presione 1 para conectar, 2 para ser removido de la lista, 9 para colgar"
+                },
+                "audio_context": {
+                    "language": "es-CL",
+                    "voice": "female",
+                    "speed": "normal"
+                },
+                "timezone": "America/Santiago",
+                "calling_restrictions": {
+                    "daily_cli_limit": 0,  # Sem limitação
+                    "time_restrictions": ["08:00-22:00"],
+                    "weekend_allowed": True
+                }
+            },
+            "peru": {
+                "country_name": "Peru",
+                "connect_key": "1",
+                "disconnect_key": "9",
+                "dnc_key": "2",
+                "repeat_key": "0", 
+                "available_options": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+                "menu_timeout": 10,
+                "instructions": {
+                    "spanish": "Presione 1 para conectar, 2 para ser removido de la lista, 9 para colgar"
+                },
+                "audio_context": {
+                    "language": "es-PE",
+                    "voice": "female",
+                    "speed": "normal"
+                },
+                "timezone": "America/Lima",
+                "calling_restrictions": {
+                    "daily_cli_limit": 0,  # Sem limitação
+                    "time_restrictions": ["08:00-22:00"],
+                    "weekend_allowed": True
+                }
+            }
+        }
     
     def get_country_config(self, country: str) -> Dict[str, Any]:
-        """Obtém configuração DTMF para um país específico."""
-        return self.COUNTRY_DTMF_CONFIG.get(country.lower(), 
-                                           self.COUNTRY_DTMF_CONFIG['default'])
-    
-    def get_dtmf_config_for_number(self, destination_number: str) -> Dict[str, Any]:
-        """
-        Obtém configuração DTMF baseada no número de destino.
+        """Obtém configuração de um país específico."""
+        country_key = country.lower()
         
-        Args:
-            destination_number: Número de destino
-            
-        Returns:
-            Dict com configurações DTMF específicas do país
-        """
-        try:
-            # Detectar país do número
-            country = detectar_pais_numero(destination_number)
-            
-            # Obter configuração do país
-            config = self.get_country_config(country)
-            
-            # Adicionar informações do país
-            config['detected_country'] = country
-            config['destination_number'] = destination_number
-            
+        if country_key in self.default_configs:
+            config = self.default_configs[country_key].copy()
+            logger.info(f"📞 Configuração DTMF obtida para {country}: connect_key={config['connect_key']}")
             return config
-            
-        except Exception as e:
-            logger.error(f"Erro ao obter configuração DTMF para {destination_number}: {str(e)}")
-            return self.COUNTRY_DTMF_CONFIG['default']
-    
-    def create_country_specific_context(self, 
-                                      base_context_name: str,
-                                      destination_number: str,
-                                      audio_base_url: str = "https://example.com/audios/") -> Optional[AudioContexto]:
-        """
-        Cria contexto de áudio específico para um país.
-        
-        Args:
-            base_context_name: Nome base do contexto
-            destination_number: Número de destino
-            audio_base_url: URL base para áudios
-            
-        Returns:
-            AudioContexto criado ou None se erro
-        """
-        try:
-            # Obter configuração do país
-            config = self.get_dtmf_config_for_number(destination_number)
-            country = config['detected_country']
-            
-            # Nome do contexto específico do país
-            context_name = f"{base_context_name}{config['context_suffix']}"
-            
-            # Verificar se já existe
-            existing_context = self.db.query(AudioContexto).filter(
-                AudioContexto.nome == context_name
-            ).first()
-            
-            if existing_context:
-                return existing_context
-            
-            # Criar novo contexto
-            new_context = AudioContexto(
-                nome=context_name,
-                descricao=f"Contexto para {country.upper()} - {config['instructions']}",
-                timeout_dtmf_padrao=config['menu_timeout'],
-                detectar_voicemail=True,
-                audio_principal_url=f"{audio_base_url}{config['instructions_audio']}",
-                audio_voicemail_url=f"{audio_base_url}voicemail_{country}.wav",
-                configuracoes_avancadas={
-                    'country': country,
-                    'connect_key': config['connect_key'],
-                    'disconnect_key': config['disconnect_key'],
-                    'repeat_key': config['repeat_key'],
-                    'instructions': config['instructions']
+        else:
+            # Fallback para países não configurados
+            fallback_config = {
+                "country_name": country.title(),
+                "connect_key": "1",
+                "disconnect_key": "9",
+                "dnc_key": "2",
+                "repeat_key": "0",
+                "available_options": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+                "menu_timeout": 10,
+                "instructions": {
+                    "spanish": "Presione 1 para conectar, 2 para ser removido de la lista, 9 para colgar"
+                },
+                "audio_context": {
+                    "language": "es",
+                    "voice": "female",
+                    "speed": "normal"
+                },
+                "timezone": "UTC",
+                "calling_restrictions": {
+                    "daily_cli_limit": 0,
+                    "time_restrictions": ["08:00-22:00"],
+                    "weekend_allowed": True
                 }
-            )
-            
-            self.db.add(new_context)
-            self.db.commit()
-            self.db.refresh(new_context)
-            
-            # Criar regras específicas para este contexto
-            self._create_country_specific_rules(new_context, config)
-            
-            logger.info(f"Contexto criado para {country}: {context_name}")
-            return new_context
-            
-        except Exception as e:
-            logger.error(f"Erro ao criar contexto para {destination_number}: {str(e)}")
-            self.db.rollback()
-            return None
+            }
+            logger.warning(f"⚠️ País {country} não configurado, usando fallback")
+            return fallback_config
     
-    def _create_country_specific_rules(self, context: AudioContexto, config: Dict[str, Any]):
-        """Cria regras específicas para um contexto de país."""
-        try:
-            # Regra para tecla de conexão (1 para maioria, 3 para México)
-            connect_rule = AudioRegra(
-                contexto_id=context.id,
-                nome=f"Conectar - Tecla {config['connect_key']}",
-                descricao=f"Cliente pressionou tecla {config['connect_key']} para conectar",
-                prioridade=95,
-                estado_origem=EstadoAudio.AGUARDANDO_DTMF,
-                evento_disparador=TipoEvento.DTMF_DETECTADO,
-                estado_destino=EstadoAudio.CONECTADO,
-                condicoes=[
-                    {
-                        "campo": "dtmf_tecla",
-                        "operador": "igual",
-                        "valor": config['connect_key']
-                    }
-                ],
-                audio_url=f"https://example.com/audios/connecting_{config['detected_country']}.wav"
-            )
-            
-            # Regra para tecla de desconexão (9)
-            disconnect_rule = AudioRegra(
-                contexto_id=context.id,
-                nome=f"Desconectar - Tecla {config['disconnect_key']}",
-                descricao=f"Cliente pressionou tecla {config['disconnect_key']} para sair da lista",
-                prioridade=90,
-                estado_origem=EstadoAudio.AGUARDANDO_DTMF,
-                evento_disparador=TipoEvento.DTMF_DETECTADO,
-                estado_destino=EstadoAudio.FINALIZADO,
-                condicoes=[
-                    {
-                        "campo": "dtmf_tecla",
-                        "operador": "igual",
-                        "valor": config['disconnect_key']
-                    }
-                ],
-                audio_url=f"https://example.com/audios/removed_{config['detected_country']}.wav"
-            )
-            
-            # Regra para repetir (0)
-            repeat_rule = AudioRegra(
-                contexto_id=context.id,
-                nome=f"Repetir - Tecla {config['repeat_key']}",
-                descricao=f"Cliente pressionou tecla {config['repeat_key']} para repetir",
-                prioridade=85,
-                estado_origem=EstadoAudio.AGUARDANDO_DTMF,
-                evento_disparador=TipoEvento.DTMF_DETECTADO,
-                estado_destino=EstadoAudio.AGUARDANDO_DTMF,
-                condicoes=[
-                    {
-                        "campo": "dtmf_tecla",
-                        "operador": "igual",
-                        "valor": config['repeat_key']
-                    }
-                ],
-                audio_url=context.audio_principal_url  # Repetir áudio principal
-            )
-            
-            # Regra para teclas inválidas
-            invalid_key_rule = AudioRegra(
-                contexto_id=context.id,
-                nome="Tecla Inválida",
-                descricao="Cliente pressionou tecla inválida",
-                prioridade=50,
-                estado_origem=EstadoAudio.AGUARDANDO_DTMF,
-                evento_disparador=TipoEvento.DTMF_DETECTADO,
-                estado_destino=EstadoAudio.AGUARDANDO_DTMF,
-                condicoes=[
-                    {
-                        "campo": "dtmf_tecla",
-                        "operador": "nao_contem",
-                        "valor": f"{config['connect_key']}{config['disconnect_key']}{config['repeat_key']}"
-                    }
-                ],
-                audio_url=f"https://example.com/audios/invalid_key_{config['detected_country']}.wav"
-            )
-            
-            # Adicionar regras ao banco
-            rules = [connect_rule, disconnect_rule, repeat_rule, invalid_key_rule]
-            for rule in rules:
-                self.db.add(rule)
-            
-            self.db.commit()
-            
-            logger.info(f"Criadas {len(rules)} regras para contexto {context.nome}")
-            
-        except Exception as e:
-            logger.error(f"Erro ao criar regras para contexto {context.nome}: {str(e)}")
-            self.db.rollback()
-    
-    def get_context_for_number(self, destination_number: str, 
-                             base_context_name: str = "Presione") -> Optional[AudioContexto]:
-        """
-        Obtém ou cria contexto específico para um número.
-        
-        Args:
-            destination_number: Número de destino
-            base_context_name: Nome base do contexto
-            
-        Returns:
-            AudioContexto específico do país ou None
-        """
-        try:
-            # Obter configuração do país
-            config = self.get_dtmf_config_for_number(destination_number)
-            context_name = f"{base_context_name}{config['context_suffix']}"
-            
-            # Buscar contexto existente
-            context = self.db.query(AudioContexto).filter(
-                AudioContexto.nome == context_name
-            ).first()
-            
-            if context:
-                return context
-            
-            # Criar contexto se não existir
-            return self.create_country_specific_context(
-                base_context_name, 
-                destination_number
-            )
-            
-        except Exception as e:
-            logger.error(f"Erro ao obter contexto para {destination_number}: {str(e)}")
-            return None
+    def get_all_country_configs(self) -> Dict[str, Dict[str, Any]]:
+        """Obtém todas as configurações de países."""
+        return self.default_configs.copy()
     
     def update_country_config(self, country: str, new_config: Dict[str, Any]) -> bool:
-        """
-        Atualiza configuração DTMF para um país (em runtime).
-        
-        Args:
-            country: País a atualizar
-            new_config: Nova configuração
-            
-        Returns:
-            bool: True se atualizou com sucesso
-        """
+        """Atualiza configuração de um país."""
         try:
-            if country.lower() not in self.COUNTRY_DTMF_CONFIG:
-                logger.warning(f"País {country} não encontrado na configuração")
-                return False
+            country_key = country.lower()
             
-            # Atualizar configuração em runtime
-            self.COUNTRY_DTMF_CONFIG[country.lower()].update(new_config)
+            if country_key not in self.default_configs:
+                # Criar nova configuração para país não existente
+                self.default_configs[country_key] = self._get_default_country_template()
             
-            logger.info(f"Configuração DTMF atualizada para {country}")
+            # Atualizar configuração
+            current_config = self.default_configs[country_key]
+            
+            # Atualizar campos básicos
+            for key in ["connect_key", "disconnect_key", "dnc_key", "repeat_key", "menu_timeout"]:
+                if key in new_config:
+                    current_config[key] = new_config[key]
+            
+            # Atualizar instruções
+            if "instructions" in new_config:
+                current_config["instructions"].update(new_config["instructions"])
+            
+            # Atualizar contexto de áudio
+            if "audio_context" in new_config:
+                current_config["audio_context"].update(new_config["audio_context"])
+            
+            # Atualizar restrições de chamadas
+            if "calling_restrictions" in new_config:
+                current_config["calling_restrictions"].update(new_config["calling_restrictions"])
+            
+            logger.info(f"✅ Configuração DTMF atualizada para {country}")
             return True
             
         except Exception as e:
-            logger.error(f"Erro ao atualizar configuração para {country}: {str(e)}")
+            logger.error(f"❌ Erro ao atualizar configuração para {country}: {str(e)}")
             return False
     
-    def get_all_country_configs(self) -> Dict[str, Dict[str, Any]]:
-        """Obtém todas as configurações DTMF por país."""
-        return self.COUNTRY_DTMF_CONFIG.copy()
+    def _get_default_country_template(self) -> Dict[str, Any]:
+        """Template padrão para novos países."""
+        return {
+            "country_name": "",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "available_options": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+            "menu_timeout": 10,
+            "instructions": {
+                "spanish": "Presione 1 para conectar, 2 para ser removido de la lista, 9 para colgar"
+            },
+            "audio_context": {
+                "language": "es",
+                "voice": "female",
+                "speed": "normal"
+            },
+            "timezone": "UTC",
+            "calling_restrictions": {
+                "daily_cli_limit": 0,
+                "time_restrictions": ["08:00-22:00"],
+                "weekend_allowed": True
+            }
+        }
     
-    def validate_dtmf_key(self, dtmf_key: str, destination_number: str) -> Dict[str, Any]:
-        """
-        Valida se uma tecla DTMF é válida para um país.
+    def get_connect_key(self, country: str) -> str:
+        """Obtém tecla de conexão para um país."""
+        config = self.get_country_config(country)
+        return config["connect_key"]
+    
+    def get_dnc_key(self, country: str) -> str:
+        """Obtém tecla de lista negra (Do Not Call) para um país."""
+        config = self.get_country_config(country)
+        return config["dnc_key"]
+    
+    def get_available_keys(self, country: str) -> List[str]:
+        """Obtém teclas disponíveis para um país."""
+        config = self.get_country_config(country)
+        return config["available_options"]
+    
+    def get_instructions(self, country: str, language: str = "spanish") -> str:
+        """Obtém instruções em idioma específico para um país."""
+        config = self.get_country_config(country)
+        instructions = config["instructions"]
         
-        Args:
-            dtmf_key: Tecla DTMF pressionada
-            destination_number: Número de destino
-            
-        Returns:
-            Dict com resultado da validação
-        """
-        try:
-            config = self.get_dtmf_config_for_number(destination_number)
-            
-            if dtmf_key == config['connect_key']:
-                return {
-                    'valid': True,
-                    'action': 'connect',
-                    'message': 'Conectando chamada',
-                    'country': config['detected_country']
-                }
-            elif dtmf_key == config['disconnect_key']:
-                return {
-                    'valid': True,
-                    'action': 'disconnect',
-                    'message': 'Removendo da lista',
-                    'country': config['detected_country']
-                }
-            elif dtmf_key == config['repeat_key']:
-                return {
-                    'valid': True,
-                    'action': 'repeat',
-                    'message': 'Repetindo mensagem',
-                    'country': config['detected_country']
-                }
-            else:
-                return {
-                    'valid': False,
-                    'action': 'invalid',
-                    'message': f'Tecla inválida. {config["instructions"]}',
-                    'country': config['detected_country']
-                }
-                
-        except Exception as e:
-            logger.error(f"Erro ao validar tecla DTMF {dtmf_key}: {str(e)}")
-            return {
-                'valid': False,
-                'action': 'error',
-                'message': 'Erro interno',
-                'country': 'unknown'
-            } 
+        if language in instructions:
+            return instructions[language]
+        elif "spanish" in instructions:
+            return instructions["spanish"]
+        else:
+            return list(instructions.values())[0]
+    
+    def validate_key_assignment(self, country: str, connect_key: str, dnc_key: str) -> Dict[str, Any]:
+        """Valida se as teclas atribuídas não conflitam."""
+        config = self.get_country_config(country)
+        available_keys = config["available_options"]
+        
+        errors = []
+        
+        if connect_key not in available_keys:
+            errors.append(f"Tecla de conexão '{connect_key}' não está disponível")
+        
+        if dnc_key not in available_keys:
+            errors.append(f"Tecla DNC '{dnc_key}' não está disponível")
+        
+        if connect_key == dnc_key:
+            errors.append("Tecla de conexão e DNC não podem ser iguais")
+        
+        return {
+            "valid": len(errors) == 0,
+            "errors": errors,
+            "suggestions": {
+                "connect_key": connect_key if connect_key in available_keys else "1",
+                "dnc_key": dnc_key if dnc_key in available_keys and dnc_key != connect_key else "2"
+            }
+        }
+    
+    def generate_asterisk_dialplan(self, country: str) -> str:
+        """Gera dialplan do Asterisk para um país."""
+        config = self.get_country_config(country)
+        
+        dialplan = f"""
+; Configuração DTMF para {config['country_name']} ({country.upper()})
+[dtmf-{country.lower()}]
+exten => s,1,NoOp(DTMF Handler for {config['country_name']})
+exten => s,n,Set(TIMEOUT(digit)={config['menu_timeout']})
+exten => s,n,Set(TIMEOUT(response)={config['menu_timeout']})
+exten => s,n,Read(DTMF_INPUT,,1,,1,{config['menu_timeout']})
+
+; Tecla de conexão ({config['connect_key']})
+exten => {config['connect_key']},1,NoOp(Connect key pressed)
+exten => {config['connect_key']},n,Set(__CALL_RESULT=CONNECT)
+exten => {config['connect_key']},n,Return()
+
+; Tecla de lista negra/DNC ({config['dnc_key']})
+exten => {config['dnc_key']},1,NoOp(DNC key pressed)
+exten => {config['dnc_key']},n,Set(__CALL_RESULT=DNC)
+exten => {config['dnc_key']},n,AGI(add_to_blacklist.py,${{CALLERID(num)}})
+exten => {config['dnc_key']},n,Return()
+
+; Tecla de desconexão ({config['disconnect_key']})
+exten => {config['disconnect_key']},1,NoOp(Disconnect key pressed)
+exten => {config['disconnect_key']},n,Set(__CALL_RESULT=HANGUP)
+exten => {config['disconnect_key']},n,Hangup()
+
+; Tecla de repetição ({config['repeat_key']})
+exten => {config['repeat_key']},1,NoOp(Repeat key pressed)
+exten => {config['repeat_key']},n,Goto(s,1)
+
+; Timeout ou entrada inválida
+exten => t,1,NoOp(Timeout)
+exten => t,n,Set(__CALL_RESULT=TIMEOUT)
+exten => t,n,Return()
+
+exten => i,1,NoOp(Invalid input)
+exten => i,n,Goto(s,1)
+"""
+        return dialplan 
