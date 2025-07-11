@@ -625,6 +625,30 @@ async def health_check():
         "services": {
             "dialer": "active" if dialer_instance and dialer_instance.is_running else "inactive",
             "load_test": "active" if load_test_service and load_test_service.is_running else "inactive",
-            "websocket_connections": len(websocket_connections)
+            "websocket_connections": len(websocket_connections),
+            "high_performance_dialer": HAS_HIGH_PERFORMANCE_DIALER,
+            "load_test_service": HAS_LOAD_TEST_SERVICE,
+            "cli_limits_service": HAS_CLI_LIMITS_SERVICE,
+            "dtmf_config_service": HAS_DTMF_CONFIG_SERVICE
         }
+    }
+
+@router.get("/test")
+async def test_endpoint():
+    """Endpoint de teste para verificar se as rotas estão funcionando."""
+    return {
+        "status": "working",
+        "message": "Performance routes are working correctly",
+        "timestamp": datetime.now().isoformat(),
+        "endpoints": [
+            "/performance/health",
+            "/performance/test",
+            "/performance/metrics/realtime",
+            "/performance/metrics/history",
+            "/performance/load-test/status",
+            "/performance/load-test/results",
+            "/performance/cli/limits",
+            "/performance/cli/usage",
+            "/performance/dtmf/configs"
+        ]
     } 
