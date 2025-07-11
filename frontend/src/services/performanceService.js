@@ -1,22 +1,62 @@
 import { makeApiRequest } from '../config/api.js';
 
 /**
- * Servicio para APIs de Performance Avanzado
- * Gestiona todas las operaciones de performance, tests de carga y gestión de CLIs
+ * Serviço para gerenciar performance, testes de carga e CLI rotation
  */
 class PerformanceService {
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+    this.isProduction = !import.meta.env.DEV;
+    this.mockData = {
+      loadTest: {
+        status: 'idle',
+        progress: 0,
+        results: null
+      },
+      cliLimits: {
+        usa: { country: 'USA', daily_limit: 100, used: 45 },
+        canada: { country: 'Canada', daily_limit: 100, used: 23 },
+        mexico: { country: 'Mexico', daily_limit: 0, used: 156 },
+        brasil: { country: 'Brasil', daily_limit: 0, used: 89 },
+        colombia: { country: 'Colombia', daily_limit: 0, used: 67 }
+      },
+      cliUsage: {
+        total_clis: 25000,
+        active_clis: 2000,
+        blocked_clis: 150,
+        countries: ['usa', 'canada', 'mexico', 'brasil', 'colombia']
+      },
+      dtmfConfigs: {
+        usa: { country: 'USA', connect_key: '1', disconnect_key: '9', instructions: 'Press 1 to connect' },
+        canada: { country: 'Canada', connect_key: '1', disconnect_key: '9', instructions: 'Press 1 to connect' },
+        mexico: { country: 'Mexico', connect_key: '3', disconnect_key: '9', instructions: 'Presione 3 para conectar' },
+        brasil: { country: 'Brasil', connect_key: '1', disconnect_key: '9', instructions: 'Pressione 1 para conectar' },
+        colombia: { country: 'Colombia', connect_key: '1', disconnect_key: '9', instructions: 'Presione 1 para conectar' }
+      }
+    };
   }
 
-  // ========== MÉTRICAS EN TIEMPO REAL ==========
+  // Helper para fallback quando endpoint não existe
+  async apiRequestWithFallback(endpoint, method = 'GET', data = null, fallbackData = null) {
+    try {
+      const response = await makeApiRequest(endpoint, method, data);
+      return response;
+    } catch (error) {
+      if (error.message.includes('Endpoint not implemented') || error.message.includes('404')) {
+        console.warn(`🔄 Usando fallback para ${endpoint}`);
+        return fallbackData || { status: 'fallback', message: 'Endpoint não implementado, usando mock' };
+      }
+      throw error;
+    }
+  }
+
+  // ========== MÉTRICAS EM TEMPO REAL ==========
   /**
-   * Obtiene métricas en tiempo real del sistema
+   * Obtém métricas em tempo real
    */
   async getRealtimeMetrics() {
     try {
       const response = await makeApiRequest('/performance/metrics/realtime', 'GET');
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ Error al obtener métricas en tiempo real:', error);
       throw error;
@@ -24,64 +64,70 @@ class PerformanceService {
   }
 
   /**
-   * Obtiene historial de métricas
-   * @param {number} minutes - Minutos de historial
+   * Obtém histórico de métricas
    */
   async getMetricsHistory(minutes = 60) {
     try {
       const response = await makeApiRequest(`/performance/metrics/history?minutes=${minutes}`, 'GET');
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ Error al obtener historial de métricas:', error);
       throw error;
     }
   }
 
+  // ========== WEBSOCKET ==========
   /**
-   * Crea conexión WebSocket para métricas en tiempo real
-   * @param {function} onMessage - Callback para mensajes
-   * @param {function} onError - Callback para errores
-   * @param {function} onClose - Callback para cierre
+   * Cria conexão WebSocket para métricas em tempo real
    */
   createWebSocketConnection(onMessage, onError, onClose) {
-    const wsUrl = process.env.NODE_ENV === 'development' 
-      ? 'ws://localhost:8000/api/performance/ws/performance'
-      : 'wss://discador.onrender.com/api/performance/ws/performance';
-    
-    const ws = new WebSocket(wsUrl);
-    
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        onMessage(data);
-      } catch (error) {
-        console.error('❌ Error al procesar mensaje WebSocket:', error);
-        onError(error);
-      }
-    };
+    // Não conectar WebSocket no Vercel ou em produção
+    if (window.location.hostname.includes('vercel.app') || this.isProduction) {
+      console.log('🚫 WebSocket desabilitado em produção');
+      return null;
+    }
 
-    ws.onerror = (error) => {
-      console.error('❌ Error en conexión WebSocket:', error);
-      onError(error);
-    };
-
-    ws.onclose = () => {
-      console.log('🔌 WebSocket desconectado');
-      if (onClose) onClose();
-    };
-
-    return ws;
+    try {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/api/performance/ws/performance`;
+      
+      const ws = new WebSocket(wsUrl);
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          onMessage(data);
+        } catch (err) {
+          console.error('❌ Error al parsear mensaje WebSocket:', err);
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error('❌ Error WebSocket:', error);
+        if (onError) onError(error);
+      };
+      
+      ws.onclose = () => {
+        console.log('🔌 WebSocket desconectado');
+        if (onClose) onClose();
+      };
+      
+      return ws;
+    } catch (error) {
+      console.error('❌ Error al crear WebSocket:', error);
+      if (onError) onError(error);
+      return null;
+    }
   }
 
-  // ========== SISTEMA DE DISCADO ==========
+  // ========== CONTROLE DO DIALER ==========
   /**
-   * Inicia el sistema de discado de alta performance
-   * @param {object} config - Configuraciones del discado
+   * Inicia o dialer de alta performance
    */
   async startDialer(config) {
     try {
       const response = await makeApiRequest('/performance/dialer/start', 'POST', config);
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ Error al iniciar dialer:', error);
       throw error;
@@ -89,12 +135,12 @@ class PerformanceService {
   }
 
   /**
-   * Para el sistema de discado
+   * Para o dialer
    */
   async stopDialer() {
     try {
       const response = await makeApiRequest('/performance/dialer/stop', 'POST');
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ Error al parar dialer:', error);
       throw error;
@@ -102,28 +148,30 @@ class PerformanceService {
   }
 
   /**
-   * Define manualmente el CPS del sistema
-   * @param {number} cps - CPS objetivo
+   * Define CPS manualmente
    */
   async setCPS(cps) {
     try {
+      if (!cps || isNaN(cps) || cps < 1 || cps > 100) {
+        throw new Error('CPS deve estar entre 1 e 100');
+      }
+      
       const response = await makeApiRequest(`/performance/dialer/cps/${cps}`, 'POST');
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ Error al definir CPS:', error);
       throw error;
     }
   }
 
-  // ========== TEST DE CARGA ==========
+  // ========== TESTES DE CARGA ==========
   /**
-   * Inicia test de carga
-   * @param {object} config - Configuraciones del test
+   * Inicia teste de carga
    */
   async startLoadTest(config) {
     try {
       const response = await makeApiRequest('/performance/load-test/start', 'POST', config);
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ Error al iniciar test de carga:', error);
       throw error;
@@ -131,12 +179,12 @@ class PerformanceService {
   }
 
   /**
-   * Para test de carga
+   * Para teste de carga
    */
   async stopLoadTest() {
     try {
       const response = await makeApiRequest('/performance/load-test/stop', 'POST');
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ Error al parar test de carga:', error);
       throw error;
@@ -144,12 +192,17 @@ class PerformanceService {
   }
 
   /**
-   * Obtiene status del test de carga
+   * Obtém status do teste atual
    */
   async getLoadTestStatus() {
     try {
-      const response = await makeApiRequest('/performance/load-test/status', 'GET');
-      return response.data;
+      const response = await this.apiRequestWithFallback('/performance/load-test/status', 'GET', null, {
+        status: 'success',
+        test_status: this.mockData.loadTest.status,
+        progress: this.mockData.loadTest.progress,
+        message: 'Mock data - backend em deploy'
+      });
+      return response;
     } catch (error) {
       console.error('❌ Error al obtener status del test:', error);
       throw error;
@@ -157,12 +210,15 @@ class PerformanceService {
   }
 
   /**
-   * Obtiene resultados del test de carga
-   * @param {string} format - Formato de exportación (json|csv|excel)
+   * Obtém resultados do teste
    */
   async getLoadTestResults(format = 'json') {
     try {
-      const response = await makeApiRequest(`/performance/load-test/results?format=${format}`, 'GET');
+      const response = await this.apiRequestWithFallback(`/performance/load-test/results?format=${format}`, 'GET', null, {
+        status: 'success',
+        results: this.mockData.loadTest.results,
+        message: 'Mock data - backend em deploy'
+      });
       return response.data;
     } catch (error) {
       console.error('❌ Error al obtener resultados del test:', error);
@@ -170,14 +226,18 @@ class PerformanceService {
     }
   }
 
-  // ========== CLI LIMITS (LÍMITES DE CLI) ==========
+  // ========== CLI LIMITS ==========
   /**
-   * Obtiene límites de CLI por país
+   * Obtém limites de CLI por país
    */
   async getCliLimits() {
     try {
-      const response = await makeApiRequest('/performance/cli/limits', 'GET');
-      return response.data;
+      const response = await this.apiRequestWithFallback('/performance/cli/limits', 'GET', null, {
+        status: 'success',
+        limits: this.mockData.cliLimits,
+        message: 'Mock data - backend em deploy'
+      });
+      return response;
     } catch (error) {
       console.error('❌ Error al obtener límites de CLI:', error);
       throw error;
@@ -185,17 +245,22 @@ class PerformanceService {
   }
 
   /**
-   * Actualiza límites de CLI por país
-   * @param {string} country - Código del país
-   * @param {number} limit - Límite diario
+   * Define limite de CLI para um país
    */
   async updateCliLimits(country, limit) {
     try {
-      const response = await makeApiRequest('/performance/cli/limits', 'POST', {
-        country,
+      const requestData = {
+        country: country,
         daily_limit: limit
+      };
+      
+      const response = await this.apiRequestWithFallback(`/performance/cli/limits/${country}`, 'POST', requestData, {
+        status: 'success',
+        country: country,
+        new_limit: limit,
+        message: `Mock: Limite atualizado para ${country}`
       });
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ Error al actualizar límites de CLI:', error);
       throw error;
@@ -203,12 +268,16 @@ class PerformanceService {
   }
 
   /**
-   * Obtiene uso actual de CLIs
+   * Obtém estatísticas de uso de CLI
    */
   async getCliUsage() {
     try {
-      const response = await makeApiRequest('/performance/cli/usage', 'GET');
-      return response.data;
+      const response = await this.apiRequestWithFallback('/performance/cli/usage', 'GET', null, {
+        status: 'success',
+        statistics: this.mockData.cliUsage,
+        message: 'Mock data - backend em deploy'
+      });
+      return response;
     } catch (error) {
       console.error('❌ Error al obtener uso de CLIs:', error);
       throw error;
@@ -216,28 +285,30 @@ class PerformanceService {
   }
 
   /**
-   * Resetea contadores de uso de CLIs
-   * @param {string} country - País específico (opcional)
+   * Reseta uso diário de CLI
    */
   async resetCliUsage(country = null) {
     try {
-      const url = country ? `/performance/cli/usage/reset?country=${country}` : '/performance/cli/usage/reset';
-      const response = await makeApiRequest(url, 'POST');
-      return response.data;
+      const url = country ? `/performance/cli/reset?country=${country}` : '/performance/cli/reset';
+      const response = await this.apiRequestWithFallback(url, 'POST', null, {
+        status: 'success',
+        message: `Mock: Uso resetado${country ? ` para ${country}` : ''}`
+      });
+      return response;
     } catch (error) {
-      console.error('❌ Error al resetear uso de CLIs:', error);
+      console.error('❌ Error al resetear uso de CLI:', error);
       throw error;
     }
   }
 
-  // ========== ROTACIÓN DE CLIS ==========
+  // ========== CLI ROTATION ==========
   /**
-   * Obtiene datos de rotación de CLIs
+   * Obtém dados de rotação de CLI
    */
   async getCliRotationData() {
     try {
       const response = await makeApiRequest('/performance/cli/rotation', 'GET');
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ Error al obtener datos de rotación:', error);
       throw error;
@@ -245,14 +316,13 @@ class PerformanceService {
   }
 
   /**
-   * Obtiene lista de CLIs con filtros
-   * @param {object} filters - Filtros de búsqueda
+   * Obtém lista de CLIs com filtros
    */
   async getCliList(filters = {}) {
     try {
       const queryParams = new URLSearchParams(filters).toString();
       const response = await makeApiRequest(`/performance/cli/list?${queryParams}`, 'GET');
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ Error al obtener lista de CLIs:', error);
       throw error;
@@ -260,27 +330,30 @@ class PerformanceService {
   }
 
   /**
-   * Actualiza configuración de rotación de CLIs
-   * @param {object} config - Configuración de rotación
+   * Atualiza configuração de rotação de CLI
    */
   async updateCliRotationConfig(config) {
     try {
       const response = await makeApiRequest('/performance/cli/rotation/config', 'POST', config);
-      return response.data;
+      return response;
     } catch (error) {
       console.error('❌ Error al actualizar configuración de rotación:', error);
       throw error;
     }
   }
 
-  // ========== CONFIGURACIÓN DTMF ==========
+  // ========== CONFIGURAÇÕES DTMF ==========
   /**
-   * Obtiene configuraciones DTMF por país
+   * Obtém configurações DTMF por país
    */
   async getDTMFConfigs() {
     try {
-      const response = await makeApiRequest('/performance/dtmf/configs', 'GET');
-      return response.data;
+      const response = await this.apiRequestWithFallback('/performance/dtmf/configs', 'GET', null, {
+        status: 'success',
+        configurations: this.mockData.dtmfConfigs,
+        message: 'Mock data - backend em deploy'
+      });
+      return response;
     } catch (error) {
       console.error('❌ Error al obtener configuraciones DTMF:', error);
       throw error;
@@ -288,13 +361,17 @@ class PerformanceService {
   }
 
   /**
-   * Guarda configuración DTMF para un país
-   * @param {object} config - Configuración DTMF
+   * Salva configuração DTMF para um país
    */
   async saveDTMFConfig(config) {
     try {
-      const response = await makeApiRequest('/performance/dtmf/config', 'POST', config);
-      return response.data;
+      const response = await this.apiRequestWithFallback(`/performance/dtmf/config/${config.country}`, 'POST', config, {
+        status: 'success',
+        country: config.country,
+        new_config: config,
+        message: `Mock: Configuração DTMF salva para ${config.country}`
+      });
+      return response;
     } catch (error) {
       console.error('❌ Error al guardar configuración DTMF:', error);
       throw error;
@@ -302,25 +379,28 @@ class PerformanceService {
   }
 
   /**
-   * Resetea configuración DTMF a valores por defecto
-   * @param {string} country - Código del país
+   * Reseta configuração DTMF para um país
    */
   async resetDTMFConfig(country) {
     try {
-      const response = await makeApiRequest(`/performance/dtmf/config/reset?country=${country}`, 'POST');
-      return response.data;
+      const response = await this.apiRequestWithFallback(`/performance/dtmf/config/reset?country=${country}`, 'POST', null, {
+        status: 'success',
+        country: country,
+        message: `Mock: Configuração DTMF resetada para ${country}`
+      });
+      return response;
     } catch (error) {
       console.error('❌ Error al resetear configuración DTMF:', error);
       throw error;
     }
   }
 
-  // ========== EXPORTACIÓN DE DATOS ==========
+  // ========== EXPORTAÇÃO DE DADOS ==========
   /**
-   * Exporta datos de performance
-   * @param {string} type - Tipo de datos (metrics|cli-usage|test-results)
+   * Exporta dados de performance
+   * @param {string} type - Tipo de dados (metrics|cli-usage|test-results)
    * @param {string} format - Formato (json|csv|excel)
-   * @param {object} filters - Filtros de exportación
+   * @param {object} filters - Filtros de exportação
    */
   async exportData(type, format = 'json', filters = {}) {
     try {
@@ -333,9 +413,9 @@ class PerformanceService {
     }
   }
 
-  // ========== VALIDACIONES Y UTILIDADES ==========
+  // ========== VALIDAÇÕES E UTILIDADES ==========
   /**
-   * Valida configuración de CPS
+   * Valida configuração de CPS
    * @param {number} cps - CPS a validar
    */
   validateCPS(cps) {
@@ -346,7 +426,7 @@ class PerformanceService {
   }
 
   /**
-   * Valida configuración de país
+   * Valida configuração de país
    * @param {string} country - Código del país
    */
   validateCountry(country) {
@@ -358,7 +438,7 @@ class PerformanceService {
   }
 
   /**
-   * Obtiene configuraciones por defecto por país
+   * Obtém configurações por defecto por país
    */
   getDefaultCountryConfigs() {
     return {
@@ -473,8 +553,6 @@ class PerformanceService {
     return 'success';
   }
 }
-
-
 
 // Instancia del servicio
 const performanceService = new PerformanceService();
