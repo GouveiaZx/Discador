@@ -158,330 +158,348 @@ const CliLocalRandomizer = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white">CLI Local Randomizer</h2>
-          <p className="text-gray-400">
-            Gera números de Caller ID que parecem locais para aumentar taxa de resposta
-          </p>
-        </div>
-        <Button 
-          onClick={loadCountryPatterns} 
-          disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          {loading ? 'Carregando...' : 'Atualizar'}
-        </Button>
-      </div>
-
-      {/* Alerta explicativo para México */}
-      <Alert className="border-yellow-500 bg-yellow-500/10">
-        <div className="flex items-start space-x-3">
-          <span className="text-2xl">🇲🇽</span>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
           <div>
-            <h4 className="font-semibold text-yellow-300">Especial para México</h4>
-            <p className="text-yellow-200">
-              No México, usar CLIs locais é essencial para evitar contestadoras automáticas. 
-              O sistema gera números que parecem da mesma cidade do cliente.
+            <h2 className="text-3xl font-bold text-white mb-2">🎯 CLI Local Randomizer</h2>
+            <p className="text-gray-300 text-lg">
+              Gera números de Caller ID que parecem locais para aumentar taxa de resposta
             </p>
           </div>
+          <Button 
+            onClick={loadCountryPatterns} 
+            disabled={loading}
+            variant="success"
+            size="lg"
+          >
+            {loading ? 'Carregando...' : '🔄 Atualizar'}
+          </Button>
         </div>
-      </Alert>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">📊 Visão Geral</TabsTrigger>
-          <TabsTrigger value="test">🧪 Teste Individual</TabsTrigger>
-          <TabsTrigger value="bulk">📦 Geração em Lote</TabsTrigger>
-          <TabsTrigger value="stats">📈 Estatísticas</TabsTrigger>
-        </TabsList>
-
-        {/* Visão Geral */}
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Object.entries(countryPatterns).map(([countryCode, config]) => (
-              <Card key={countryCode} className="bg-gray-800 border-gray-700 hover:border-blue-500 transition-colors">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center justify-between text-lg">
-                    <span className="flex items-center space-x-2">
-                      <span className="text-2xl">{countryFlags[countryCode] || '🌍'}</span>
-                      <span className="text-white">{config.name}</span>
-                    </span>
-                    <Badge variant="outline" className="text-xs">
-                      {config.country_code}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <p className="text-sm text-gray-400 mb-1">Estratégia:</p>
-                    <p className="text-sm text-white">{getStrategyDescription(config.strategy)}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm text-gray-400 mb-1">Exemplo de Padrão:</p>
-                    <code className="text-xs bg-gray-900 px-2 py-1 rounded text-green-400 block">
-                      {formatExamplePattern(countryCode, config)}
-                    </code>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm text-gray-400 mb-1">Códigos de Área Disponíveis:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {config.area_codes.slice(0, 6).map(code => (
-                        <Badge key={code} variant="secondary" className="text-xs">
-                          {code}
-                        </Badge>
-                      ))}
-                      {config.area_codes.length > 6 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{config.area_codes.length - 6} mais
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  <Button 
-                    onClick={() => fillExampleNumber(countryCode)}
-                    size="sm"
-                    className="w-full mt-3 bg-blue-600 hover:bg-blue-700"
-                  >
-                    Testar {config.name}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+        {/* Alerta explicativo para México */}
+        <Alert variant="warning" className="bg-gradient-to-r from-yellow-900/40 to-orange-900/40 border-2 border-yellow-500/50 backdrop-blur-sm">
+          <div className="flex items-start space-x-4">
+            <span className="text-4xl">🇲🇽</span>
+            <div>
+              <h4 className="font-semibold text-yellow-200 text-lg mb-2">🔥 Especial para México</h4>
+              <p className="text-yellow-100 leading-relaxed">
+                No México, usar CLIs locais é <strong>essencial</strong> para evitar contestadoras automáticas. 
+                O sistema gera números que parecem da mesma cidade do cliente, aumentando significativamente a taxa de resposta.
+              </p>
+            </div>
           </div>
-        </TabsContent>
+        </Alert>
 
-        {/* Teste Individual */}
-        <TabsContent value="test" className="space-y-6">
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white">🧪 Teste de Geração CLI</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Número de Destino
-                  </label>
-                  <Input
-                    type="text"
-                    value={testNumber}
-                    onChange={(e) => setTestNumber(e.target.value)}
-                    placeholder="+5511999999999"
-                    className="bg-gray-700 border-gray-600 text-white"
-                  />
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="overview">📊 Visão Geral</TabsTrigger>
+            <TabsTrigger value="test">🧪 Teste Individual</TabsTrigger>
+            <TabsTrigger value="bulk">📦 Geração em Lote</TabsTrigger>
+            <TabsTrigger value="stats">📈 Estatísticas</TabsTrigger>
+          </TabsList>
+
+          {/* Visão Geral */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Object.entries(countryPatterns).map(([countryCode, config]) => (
+                <Card key={countryCode} className="hover:border-blue-500 transition-all duration-300 hover:shadow-2xl hover:scale-105">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center justify-between text-lg">
+                      <span className="flex items-center space-x-2">
+                        <span className="text-3xl">{countryFlags[countryCode] || '🌍'}</span>
+                        <span className="text-white font-bold">{config.name}</span>
+                      </span>
+                      <Badge variant="default" className="text-xs font-semibold">
+                        {config.country_code}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <p className="text-sm text-gray-400 mb-2 font-medium">Estratégia:</p>
+                      <p className="text-sm text-white leading-relaxed">{getStrategyDescription(config.strategy)}</p>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm text-gray-400 mb-2 font-medium">Exemplo de Padrão:</p>
+                      <code className="text-xs bg-gray-900 px-3 py-2 rounded-lg text-green-400 block font-mono">
+                        {formatExamplePattern(countryCode, config)}
+                      </code>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm text-gray-400 mb-2 font-medium">Códigos de Área Disponíveis:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {config.area_codes.slice(0, 6).map(code => (
+                          <Badge key={code} variant="secondary" className="text-xs">
+                            {code}
+                          </Badge>
+                        ))}
+                        {config.area_codes.length > 6 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{config.area_codes.length - 6} mais
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <Button 
+                      onClick={() => fillExampleNumber(countryCode)}
+                      size="sm"
+                      className="w-full mt-4"
+                      variant="success"
+                    >
+                      🧪 Testar {config.name}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* Teste Individual */}
+          <TabsContent value="test" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-white text-xl flex items-center space-x-2">
+                  <span>🧪</span>
+                  <span>Teste de Geração CLI</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-3">
+                      Número de Destino
+                    </label>
+                    <Input
+                      type="text"
+                      value={testNumber}
+                      onChange={(e) => setTestNumber(e.target.value)}
+                      placeholder="+5511999999999"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-3">
+                      Forçar País (Opcional)
+                    </label>
+                    <Select
+                      value={selectedCountry}
+                      onValueChange={setSelectedCountry}
+                    >
+                      <option value="">Detectar automaticamente</option>
+                      {Object.entries(countryPatterns).map(([code, config]) => (
+                        <option key={code} value={code} className="bg-gray-700 text-white">
+                          {countryFlags[code]} {config.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Forçar País (Opcional)
-                  </label>
-                  <Select
-                    value={selectedCountry}
-                    onValueChange={setSelectedCountry}
-                    className="bg-gray-700 border-gray-600"
+
+                <div className="flex space-x-3">
+                  <Button 
+                    onClick={generateTestCli}
+                    disabled={loading}
+                    variant="success"
+                    size="lg"
                   >
-                    <option value="">Detectar automaticamente</option>
-                    {Object.entries(countryPatterns).map(([code, config]) => (
-                      <option key={code} value={code}>
-                        {countryFlags[code]} {config.name}
-                      </option>
-                    ))}
-                  </Select>
+                    {loading ? 'Gerando...' : '🎯 Gerar 5 CLIs de Teste'}
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => {setTestNumber(''); setTestResults([]);}}
+                    variant="outline"
+                    size="lg"
+                  >
+                    🗑️ Limpar
+                  </Button>
                 </div>
-              </div>
 
-              <div className="flex space-x-2">
-                <Button 
-                  onClick={generateTestCli}
-                  disabled={loading}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  {loading ? 'Gerando...' : 'Gerar 5 CLIs de Teste'}
-                </Button>
-                
-                <Button 
-                  onClick={() => {setTestNumber(''); setTestResults([]);}}
-                  variant="outline"
-                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                >
-                  Limpar
-                </Button>
-              </div>
-
-              {/* Resultados do Teste */}
-              {testResults.length > 0 && (
-                <div className="mt-6 space-y-3">
-                  <h4 className="text-lg font-semibold text-white">Resultados do Teste:</h4>
-                  {testResults.map((result, index) => (
-                    <Card key={index} className="bg-gray-900 border-gray-600">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <span className="text-2xl">{countryFlags[result.country] || '🌍'}</span>
-                            <div>
-                              <p className="font-mono text-lg text-green-400">{result.cli}</p>
-                              <p className="text-sm text-gray-400">
-                                {result.country_name} • Área: {result.area_detected}
+                {/* Resultados do Teste */}
+                {testResults.length > 0 && (
+                  <div className="mt-8 space-y-4">
+                    <h4 className="text-xl font-semibold text-white flex items-center space-x-2">
+                      <span>✅</span>
+                      <span>Resultados do Teste:</span>
+                    </h4>
+                    {testResults.map((result, index) => (
+                      <Card key={index} className="bg-gray-900/80 border-gray-600 hover:border-green-500 transition-colors">
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <span className="text-3xl">{countryFlags[result.country] || '🌍'}</span>
+                              <div>
+                                <p className="font-mono text-xl text-green-400 font-bold">{result.cli}</p>
+                                <p className="text-sm text-gray-400 mt-1">
+                                  <span className="font-semibold">{result.country_name}</span> • Área: <span className="text-blue-400">{result.area_detected}</span>
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right space-y-2">
+                              <Badge variant={result.is_local ? "success" : "secondary"} className="text-sm px-3 py-1">
+                                {result.is_local ? '🎯 Local' : '🔄 Fallback'}
+                              </Badge>
+                              <p className="text-xs text-gray-500">
+                                {result.strategy}
                               </p>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <Badge variant={result.is_local ? "default" : "secondary"}>
-                              {result.is_local ? '🎯 Local' : '🔄 Fallback'}
-                            </Badge>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {result.strategy}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        {/* Geração em Lote */}
-        <TabsContent value="bulk" className="space-y-6">
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white">📦 Geração de CLIs em Lote</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Números de Destino (um por linha)
-                </label>
-                <textarea
-                  value={bulkNumbers}
-                  onChange={(e) => setBulkNumbers(e.target.value)}
-                  placeholder={`+5511999999999
+          {/* Geração em Lote */}
+          <TabsContent value="bulk" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-white text-xl flex items-center space-x-2">
+                  <span>📦</span>
+                  <span>Geração de CLIs em Lote</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
+                    Números de Destino (um por linha)
+                  </label>
+                  <textarea
+                    value={bulkNumbers}
+                    onChange={(e) => setBulkNumbers(e.target.value)}
+                    placeholder={`+5511999999999
 +5521999999999
 +5531999999999
 +13055551234
 +525555551234`}
-                  rows={8}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="flex space-x-2">
-                <Button 
-                  onClick={generateBulkClis}
-                  disabled={loading}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  {loading ? 'Processando...' : 'Gerar CLIs em Lote'}
-                </Button>
-                
-                <Button 
-                  onClick={() => {setBulkNumbers(''); setBulkResults(null);}}
-                  variant="outline"
-                  className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                >
-                  Limpar
-                </Button>
-              </div>
-
-              {/* Resultados do Lote */}
-              {bulkResults && (
-                <div className="mt-6 space-y-4">
-                  <div className="grid grid-cols-3 gap-4">
-                    <Card className="bg-green-900/20 border-green-700">
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-green-400">{bulkResults.successful}</p>
-                        <p className="text-sm text-green-300">Sucessos</p>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="bg-red-900/20 border-red-700">
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-red-400">{bulkResults.failed}</p>
-                        <p className="text-sm text-red-300">Falhas</p>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="bg-blue-900/20 border-blue-700">
-                      <CardContent className="p-4 text-center">
-                        <p className="text-2xl font-bold text-blue-400">{bulkResults.total_processed}</p>
-                        <p className="text-sm text-blue-300">Total</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="max-h-96 overflow-y-auto space-y-2">
-                    {bulkResults.results.map((result, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-900 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-sm text-gray-400 font-mono">{result.destination_number}</span>
-                          <span className="text-gray-600">→</span>
-                          {result.success ? (
-                            <span className="text-sm text-green-400 font-mono">{result.generated_cli}</span>
-                          ) : (
-                            <span className="text-sm text-red-400">Erro: {result.error}</span>
-                          )}
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {result.success && (
-                            <>
-                              <span>{countryFlags[result.country] || '🌍'}</span>
-                              <Badge variant="outline" className="text-xs">
-                                {result.area_detected}
-                              </Badge>
-                            </>
-                          )}
-                          <Badge variant={result.success ? "default" : "destructive"}>
-                            {result.success ? 'OK' : 'ERRO'}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                    rows={10}
+                    className="w-full bg-gray-700 border-2 border-gray-600 rounded-lg px-4 py-3 text-white font-mono text-sm 
+                             focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200
+                             placeholder:text-gray-400 hover:border-gray-500 resize-y"
+                  />
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        {/* Estatísticas */}
-        <TabsContent value="stats" className="space-y-6">
-          <Card className="bg-gray-800 border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-white">📈 Estatísticas de Geração</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Object.entries(generationStats.countries || {}).map(([country, data]) => (
-                  <Card key={country} className="bg-gray-900 border-gray-600">
-                    <CardContent className="p-4 text-center">
-                      <div className="text-2xl mb-2">{countryFlags[country] || '🌍'}</div>
-                      <p className="text-lg font-bold text-white">{data.count}</p>
-                      <p className="text-sm text-gray-400 capitalize">{country}</p>
-                      <p className="text-xs text-gray-500">{Object.keys(data.areas || {}).length} áreas</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {generationStats.total_generated !== undefined && (
-                <div className="mt-6 text-center">
-                  <p className="text-2xl font-bold text-blue-400">{generationStats.total_generated}</p>
-                  <p className="text-gray-400">Total de CLIs gerados hoje</p>
-                  <p className="text-xs text-gray-500 mt-1">Data: {generationStats.date}</p>
+                <div className="flex space-x-3">
+                  <Button 
+                    onClick={generateBulkClis}
+                    disabled={loading}
+                    variant="warning"
+                    size="lg"
+                  >
+                    {loading ? 'Processando...' : '⚡ Gerar CLIs em Lote'}
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => {setBulkNumbers(''); setBulkResults(null);}}
+                    variant="outline"
+                    size="lg"
+                  >
+                    🗑️ Limpar
+                  </Button>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+
+                {/* Resultados do Lote */}
+                {bulkResults && (
+                  <div className="mt-8 space-y-6">
+                    <div className="grid grid-cols-3 gap-6">
+                      <Card className="bg-gradient-to-r from-green-900/40 to-green-800/40 border-green-500">
+                        <CardContent className="p-6 text-center">
+                          <p className="text-3xl font-bold text-green-400 mb-2">{bulkResults.successful}</p>
+                          <p className="text-sm text-green-300 font-medium">✅ Sucessos</p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="bg-gradient-to-r from-red-900/40 to-red-800/40 border-red-500">
+                        <CardContent className="p-6 text-center">
+                          <p className="text-3xl font-bold text-red-400 mb-2">{bulkResults.failed}</p>
+                          <p className="text-sm text-red-300 font-medium">❌ Falhas</p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="bg-gradient-to-r from-blue-900/40 to-blue-800/40 border-blue-500">
+                        <CardContent className="p-6 text-center">
+                          <p className="text-3xl font-bold text-blue-400 mb-2">{bulkResults.total_processed}</p>
+                          <p className="text-sm text-blue-300 font-medium">📊 Total</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <div className="max-h-96 overflow-y-auto space-y-3 border border-gray-600 rounded-lg p-4 bg-gray-800/50">
+                      {bulkResults.results.map((result, index) => (
+                        <div key={index} className="flex items-center justify-between p-4 bg-gray-900/80 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors">
+                          <div className="flex items-center space-x-4">
+                            <span className="text-sm text-gray-400 font-mono bg-gray-800 px-2 py-1 rounded">{result.destination_number}</span>
+                            <span className="text-gray-600 text-lg">→</span>
+                            {result.success ? (
+                              <span className="text-sm text-green-400 font-mono font-bold">{result.generated_cli}</span>
+                            ) : (
+                              <span className="text-sm text-red-400">❌ Erro: {result.error}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            {result.success && (
+                              <>
+                                <span className="text-2xl">{countryFlags[result.country] || '🌍'}</span>
+                                <Badge variant="outline" className="text-xs">
+                                  {result.area_detected}
+                                </Badge>
+                              </>
+                            )}
+                            <Badge variant={result.success ? "success" : "destructive"}>
+                              {result.success ? 'OK' : 'ERRO'}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Estatísticas */}
+          <TabsContent value="stats" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-white text-xl flex items-center space-x-2">
+                  <span>📈</span>
+                  <span>Estatísticas de Geração</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {Object.entries(generationStats.countries || {}).map(([country, data]) => (
+                    <Card key={country} className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 border-gray-600 hover:border-blue-500 transition-all hover:scale-105">
+                      <CardContent className="p-6 text-center">
+                        <div className="text-4xl mb-3">{countryFlags[country] || '🌍'}</div>
+                        <p className="text-2xl font-bold text-white mb-1">{data.count}</p>
+                        <p className="text-sm text-gray-400 capitalize font-medium">{country}</p>
+                        <p className="text-xs text-gray-500 mt-2">{Object.keys(data.areas || {}).length} áreas ativas</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {generationStats.total_generated !== undefined && (
+                  <div className="mt-8 text-center bg-gradient-to-r from-blue-900/40 to-purple-900/40 rounded-xl p-8 border border-blue-500/50">
+                    <p className="text-4xl font-bold text-blue-400 mb-2">{generationStats.total_generated}</p>
+                    <p className="text-gray-300 text-lg mb-1">Total de CLIs gerados hoje</p>
+                    <p className="text-xs text-gray-500">Data: {generationStats.date}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
