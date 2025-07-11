@@ -10,11 +10,36 @@ import asyncio
 import json
 
 from app.database import get_db
-from app.services.high_performance_dialer import HighPerformanceDialer, PerformanceConfig
-from app.services.load_test_service import LoadTestService, LoadTestConfig
-from app.services.cli_country_limits_service import CliCountryLimitsService
-from app.services.dtmf_country_config_service import DTMFCountryConfigService
 from app.utils.logger import logger
+
+# Imports opcionais para evitar erros
+try:
+    from app.services.high_performance_dialer import HighPerformanceDialer, PerformanceConfig
+    HAS_HIGH_PERFORMANCE_DIALER = True
+except ImportError:
+    HAS_HIGH_PERFORMANCE_DIALER = False
+    print("⚠️ Warning: high_performance_dialer not available")
+
+try:
+    from app.services.load_test_service import LoadTestService, LoadTestConfig
+    HAS_LOAD_TEST_SERVICE = True
+except ImportError:
+    HAS_LOAD_TEST_SERVICE = False
+    print("⚠️ Warning: load_test_service not available")
+
+try:
+    from app.services.cli_country_limits_service import CliCountryLimitsService
+    HAS_CLI_LIMITS_SERVICE = True
+except ImportError:
+    HAS_CLI_LIMITS_SERVICE = False
+    print("⚠️ Warning: cli_country_limits_service not available")
+
+try:
+    from app.services.dtmf_country_config_service import DTMFCountryConfigService
+    HAS_DTMF_CONFIG_SERVICE = True
+except ImportError:
+    HAS_DTMF_CONFIG_SERVICE = False
+    print("⚠️ Warning: dtmf_country_config_service not available")
 
 router = APIRouter(prefix="/performance", tags=["performance"])
 
@@ -258,8 +283,21 @@ async def stop_load_test():
 async def get_load_test_status():
     """Obtém status do teste de carga atual."""
     try:
+        if not HAS_LOAD_TEST_SERVICE:
+            return {
+                "status": "service_unavailable",
+                "message": "Serviço de teste de carga não disponível",
+                "test_status": "inactive",
+                "timestamp": datetime.now().isoformat()
+            }
+        
         if not load_test_service:
-            return {"status": "no_test", "message": "Nenhum teste executado"}
+            return {
+                "status": "no_test", 
+                "message": "Nenhum teste executado",
+                "test_status": "inactive",
+                "timestamp": datetime.now().isoformat()
+            }
         
         status = load_test_service.get_test_status()
         
@@ -271,7 +309,12 @@ async def get_load_test_status():
         
     except Exception as e:
         logger.error(f"❌ Erro ao obter status do teste: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return {
+            "status": "error",
+            "message": str(e),
+            "test_status": "error",
+            "timestamp": datetime.now().isoformat()
+        }
 
 @router.get("/load-test/results")
 async def get_load_test_results(format: str = "json"):
@@ -305,6 +348,23 @@ async def get_load_test_results(format: str = "json"):
 async def get_cli_limits(db: Session = Depends(get_db)):
     """Obtém limites de CLIs por país."""
     try:
+        if not HAS_CLI_LIMITS_SERVICE:
+            return {
+                "status": "service_unavailable",
+                "message": "Serviço de limites CLI não disponível",
+                "limits": {
+                    "usa": 100,
+                    "canada": 100,
+                    "mexico": 0,
+                    "brasil": 0,
+                    "colombia": 0,
+                    "argentina": 0,
+                    "chile": 0,
+                    "peru": 0
+                },
+                "timestamp": datetime.now().isoformat()
+            }
+        
         cli_service = CliCountryLimitsService(db)
         
         return {
@@ -315,7 +375,12 @@ async def get_cli_limits(db: Session = Depends(get_db)):
         
     except Exception as e:
         logger.error(f"❌ Erro ao obter limites: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return {
+            "status": "error",
+            "message": str(e),
+            "limits": {},
+            "timestamp": datetime.now().isoformat()
+        }
 
 @router.post("/cli/limits/{country}")
 async def set_cli_limit(country: str, request: CliLimitRequest, db: Session = Depends(get_db)):
@@ -343,6 +408,19 @@ async def set_cli_limit(country: str, request: CliLimitRequest, db: Session = De
 async def get_cli_usage(db: Session = Depends(get_db)):
     """Obtém estatísticas de uso de CLIs."""
     try:
+        if not HAS_CLI_LIMITS_SERVICE:
+            return {
+                "status": "service_unavailable",
+                "message": "Serviço de estatísticas CLI não disponível",
+                "statistics": {
+                    "total_clis": 0,
+                    "active_clis": 0,
+                    "blocked_clis": 0,
+                    "countries": {}
+                },
+                "timestamp": datetime.now().isoformat()
+            }
+        
         cli_service = CliCountryLimitsService(db)
         stats = cli_service.get_usage_statistics()
         
@@ -354,7 +432,12 @@ async def get_cli_usage(db: Session = Depends(get_db)):
         
     except Exception as e:
         logger.error(f"❌ Erro ao obter estatísticas: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return {
+            "status": "error",
+            "message": str(e),
+            "statistics": {},
+            "timestamp": datetime.now().isoformat()
+        }
 
 @router.post("/cli/reset")
 async def reset_cli_usage(db: Session = Depends(get_db)):
@@ -373,10 +456,40 @@ async def reset_cli_usage(db: Session = Depends(get_db)):
         logger.error(f"❌ Erro ao resetar uso: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/dtmf/config")
-async def get_dtmf_config(db: Session = Depends(get_db)):
+@router.get("/dtmf/configs")
+async def get_dtmf_configs(db: Session = Depends(get_db)):
     """Obtém configurações DTMF por país."""
     try:
+        if not HAS_DTMF_CONFIG_SERVICE:
+            return {
+                "status": "service_unavailable",
+                "message": "Serviço de configurações DTMF não disponível",
+                "configurations": {
+                    "usa": {
+                        "connect_key": "1",
+                        "disconnect_key": "9",
+                        "repeat_key": "0",
+                        "menu_timeout": 10,
+                        "instructions": "Press 1 to connect"
+                    },
+                    "canada": {
+                        "connect_key": "1",
+                        "disconnect_key": "9",
+                        "repeat_key": "0",
+                        "menu_timeout": 10,
+                        "instructions": "Press 1 to connect"
+                    },
+                    "mexico": {
+                        "connect_key": "3",
+                        "disconnect_key": "9",
+                        "repeat_key": "0",
+                        "menu_timeout": 10,
+                        "instructions": "Presione 3 para conectar"
+                    }
+                },
+                "timestamp": datetime.now().isoformat()
+            }
+        
         dtmf_service = DTMFCountryConfigService(db)
         configs = dtmf_service.get_all_country_configs()
         
@@ -388,7 +501,12 @@ async def get_dtmf_config(db: Session = Depends(get_db)):
         
     except Exception as e:
         logger.error(f"❌ Erro ao obter configurações: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return {
+            "status": "error",
+            "message": str(e),
+            "configurations": {},
+            "timestamp": datetime.now().isoformat()
+        }
 
 @router.post("/dtmf/config/{country}")
 async def update_dtmf_config(country: str, request: CountryConfigRequest, db: Session = Depends(get_db)):
