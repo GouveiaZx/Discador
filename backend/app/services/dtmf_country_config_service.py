@@ -353,14 +353,14 @@ class DTMFCountryConfigService:
         
         if connect_key not in available_keys:
             errors.append(f"Tecla de conexão '{connect_key}' não está disponível")
-        
+            
         if dnc_key not in available_keys:
             errors.append(f"Tecla DNC '{dnc_key}' não está disponível")
         
         if connect_key == dnc_key:
             errors.append("Tecla de conexão e DNC não podem ser iguais")
         
-        return {
+                return {
             "valid": len(errors) == 0,
             "errors": errors,
             "suggestions": {

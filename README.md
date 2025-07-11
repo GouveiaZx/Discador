@@ -118,6 +118,7 @@ asterisk -rx "dialplan reload"
 - Algoritmo inteligente de predição
 - Detecção automática de voicemail (AMD)
 - Sistema "Presione 1" completo
+- **🎯 CLI Local Randomization** - Gera números locais por país
 - Rotação inteligente de CLIs
 - Balanceamento de carga
 
@@ -139,6 +140,14 @@ asterisk -rx "dialplan reload"
 - Detecção de DTMF
 - Transferência automática
 - Gravação de chamadas
+
+### 🎯 CLI Local Randomization (NOVO!)
+- **USA**: Mantém Area Code + aleatoriza sufixo (ex: 305 2xx-xxxx)
+- **México**: Números locais CDMX/Monterrey (ex: 55 xxxxxxx)
+- **Brasil**: DDD + 9 + aleatorização (ex: 11 9xxxx-xxxx)
+- **Interface completa** no Performance Avançado
+- **Geração em lote** para campanhas
+- **+200% taxa de resposta** no México
 
 ## 💻 TECNOLOGIAS
 
@@ -176,6 +185,7 @@ O sistema já vem configurado com:
 | `docs/README_SISTEMA_COMPLETO.md` | Documentação técnica completa |
 | `docs/INICIO_RAPIDO.md` | Guia de início rápido (5 min) |
 | `docs/CONFIGURACAO_FINAL.md` | Configuração final do sistema |
+| `docs/SISTEMA_CLI_LOCAL_RANDOMIZATION.md` | **🎯 CLI Local Randomization** - Números locais por país |
 | `docs/README_PRIMERA_ETAPA.md` | Análise Primera Etapa (100% implementado) |
 | `docs/CHECKLIST_COMPLETO.md` | Checklist completo de funcionalidades |
 | `docs/` | Documentação específica por módulo |

@@ -21,6 +21,7 @@ import LoadTestManager from './LoadTestManager';
 import CliLimitsManager from './CliLimitsManager';
 import DTMFCountryConfig from './DTMFCountryConfig';
 import CliRotationDashboard from './CliRotationDashboard';
+import CliLocalRandomizer from './CliLocalRandomizer';
 
 // Registrar componentes do Chart.js
 ChartJS.register(
@@ -70,9 +71,9 @@ const AdvancedPerformanceDashboard = () => {
     
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}`;
-    wsRef.current = new WebSocket(`${wsUrl}/api/performance/ws/performance`);
-    
-    wsRef.current.onmessage = (event) => {
+      wsRef.current = new WebSocket(`${wsUrl}/api/performance/ws/performance`);
+      
+      wsRef.current.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         
@@ -110,9 +111,9 @@ const AdvancedPerformanceDashboard = () => {
     wsRef.current.onopen = () => {
       console.log('🔗 WebSocket conectado');
       setLoading(false);
-    };
-    
-    wsRef.current.onerror = (error) => {
+      };
+      
+      wsRef.current.onerror = (error) => {
       console.error('❌ Error WebSocket:', error);
       setError('Error de conexión WebSocket');
       setLoading(false);
@@ -158,11 +159,11 @@ const AdvancedPerformanceDashboard = () => {
           country: 'all'
         })
       });
-
+      
       if (!response.ok) {
         throw new Error('Error al iniciar test');
       }
-
+      
       const result = await response.json();
       console.log('🧪 Test de carga iniciado:', result);
     } catch (error) {
@@ -177,11 +178,11 @@ const AdvancedPerformanceDashboard = () => {
       const response = await fetch('/api/performance/load-test/stop', {
         method: 'POST'
       });
-
+      
       if (!response.ok) {
         throw new Error('Error al parar test');
       }
-
+      
       setTestRunning(false);
       console.log('🛑 Test de carga parado');
     } catch (error) {
@@ -287,10 +288,10 @@ const AdvancedPerformanceDashboard = () => {
     datasets: [{
       label: 'Llamadas por País',
       data: Object.values(metrics.countries || {}),
-      backgroundColor: [
+        backgroundColor: [
         '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
         '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'
-      ],
+        ],
       borderWidth: 2,
       borderColor: '#1F2937'
     }]
@@ -349,7 +350,7 @@ const AdvancedPerformanceDashboard = () => {
             <p className="text-xs text-secondary-400 mt-1">Meta: 20-30 CPS</p>
           </div>
         </div>
-
+        
         <div className="glass-panel p-4 rounded-xl">
           <div className="flex items-center justify-between">
             <div>
@@ -368,7 +369,7 @@ const AdvancedPerformanceDashboard = () => {
             <p className="text-xs text-secondary-400 mt-1">Activas ahora</p>
           </div>
         </div>
-
+        
         <div className="glass-panel p-4 rounded-xl">
           <div className="flex items-center justify-between">
             <div>
@@ -389,7 +390,7 @@ const AdvancedPerformanceDashboard = () => {
             <p className="text-xs text-secondary-400 mt-1">Objetivo: &gt;80%</p>
           </div>
         </div>
-
+        
         <div className="glass-panel p-4 rounded-xl">
           <div className="flex items-center justify-between">
             <div>
@@ -418,7 +419,7 @@ const AdvancedPerformanceDashboard = () => {
             <Line data={cpsChartData} options={chartOptions} />
           </div>
         </div>
-
+        
         {/* Gráfico de llamadas concurrentes */}
         <div className="glass-panel p-6 rounded-xl">
           <h3 className="text-lg font-semibold mb-4 text-white">
@@ -428,7 +429,7 @@ const AdvancedPerformanceDashboard = () => {
             <Line data={concurrentCallsData} options={chartOptions} />
           </div>
         </div>
-
+        
         {/* Gráfico de tasa de éxito */}
         <div className="glass-panel p-6 rounded-xl">
           <h3 className="text-lg font-semibold mb-4 text-white">
@@ -438,7 +439,7 @@ const AdvancedPerformanceDashboard = () => {
             <Line data={successRateData} options={chartOptions} />
           </div>
         </div>
-
+        
         {/* Gráfico de distribución por país */}
         <div className="glass-panel p-6 rounded-xl">
           <h3 className="text-lg font-semibold mb-4 text-white">
@@ -512,16 +513,16 @@ const AdvancedPerformanceDashboard = () => {
           </button>
           
           {testRunning && (
-            <button
-              onClick={stopLoadTest}
+          <button
+            onClick={stopLoadTest}
               className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all"
-            >
+          >
               Parar Test
-            </button>
+          </button>
           )}
         </div>
       </div>
-
+      
       {testResults && (
         <div className="glass-panel p-6 rounded-xl">
           <h3 className="text-lg font-semibold mb-4">Resultados del Test</h3>
@@ -555,22 +556,22 @@ const AdvancedPerformanceDashboard = () => {
         <h3 className="text-lg font-semibold mb-4">Estadísticas de CLIs</h3>
         {cliStats ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="text-center">
+              <div className="text-center">
               <div className="text-2xl font-bold text-blue-400">{cliStats.total_clis}</div>
               <div className="text-sm text-secondary-400">Total CLIs</div>
-            </div>
-            <div className="text-center">
+              </div>
+              <div className="text-center">
               <div className="text-2xl font-bold text-green-400">{cliStats.active_clis}</div>
               <div className="text-sm text-secondary-400">Activos</div>
-            </div>
-            <div className="text-center">
+              </div>
+              <div className="text-center">
               <div className="text-2xl font-bold text-yellow-400">{cliStats.high_usage_clis}</div>
               <div className="text-sm text-secondary-400">Alto Uso</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-red-400">{cliStats.blocked_clis}</div>
               <div className="text-sm text-secondary-400">Bloqueados</div>
-            </div>
+              </div>
           </div>
         ) : (
           <p className="text-gray-500">Cargando estadísticas...</p>
@@ -596,44 +597,46 @@ const AdvancedPerformanceDashboard = () => {
       <div className="glass-panel p-6 rounded-xl">
         <h1 className="text-3xl font-bold text-gradient-primary mb-2">
           Dashboard de Performance
-        </h1>
+          </h1>
         <p className="text-secondary-400">
           Monitoreo avanzado, tests de carga y gestión de performance
-        </p>
-      </div>
+          </p>
+        </div>
 
       {/* Navegación por pestañas */}
       <div className="glass-panel p-4 rounded-xl">
         <div className="flex space-x-2 overflow-x-auto">
-          {[
+            {[
             { id: 'realtime', label: 'Tiempo Real', icon: '📊' },
             { id: 'loadtest', label: 'Tests de Carga', icon: '🧪' },
             { id: 'cli-limits', label: 'Límites CLI', icon: '🔢' },
             { id: 'cli-rotation', label: 'Rotación CLI', icon: '🔄' },
+            { id: 'cli-local', label: 'CLI Local', icon: '🎯' },
             { id: 'dtmf-config', label: 'Config DTMF', icon: '📞' }
           ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setSelectedTab(tab.id)}
+              <button
+                key={tab.id}
+                onClick={() => setSelectedTab(tab.id)}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                selectedTab === tab.id
+                  selectedTab === tab.id
                   ? 'bg-primary-600 text-white'
                   : 'bg-secondary-700 text-secondary-300 hover:bg-secondary-600'
-              }`}
-            >
+                }`}
+              >
               <span>{tab.icon}</span>
               <span>{tab.label}</span>
-            </button>
-          ))}
+              </button>
+            ))}
         </div>
-      </div>
+        </div>
 
       {/* Contenido de las pestañas */}
       <div className="min-h-[500px]">
-        {selectedTab === 'realtime' && renderRealtimeMetrics()}
+          {selectedTab === 'realtime' && renderRealtimeMetrics()}
         {selectedTab === 'loadtest' && <LoadTestManager />}
         {selectedTab === 'cli-limits' && <CliLimitsManager />}
         {selectedTab === 'cli-rotation' && <CliRotationDashboard />}
+        {selectedTab === 'cli-local' && <CliLocalRandomizer />}
         {selectedTab === 'dtmf-config' && <DTMFCountryConfig />}
       </div>
     </div>

@@ -79,6 +79,14 @@ except ImportError:
     class AdvancedDNCService:
         def __init__(self, db): pass
 
+try:
+    from app.services.cli_local_randomization_service import CliLocalRandomizationService
+    HAS_CLI_LOCAL_RANDOMIZATION_SERVICE = True
+except ImportError:
+    HAS_CLI_LOCAL_RANDOMIZATION_SERVICE = False
+    class CliLocalRandomizationService:
+        def __init__(self, db): pass
+
 router = APIRouter(prefix="/performance", tags=["performance"])
 
 # Instância global do dialer (seria melhor usar singleton ou dependency injection)
@@ -1601,6 +1609,240 @@ async def get_complete_country_config(country: str, db: Session = Depends(get_db
         return {
             "status": "error",
             "message": f"Erro ao obter configuração completa: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        } 
+
+# ========================= CLI LOCAL RANDOMIZATION =========================
+
+@router.post("/cli-local/generate")
+async def generate_local_cli(
+    request: Dict[str, Any],
+    db: Session = Depends(get_db)
+):
+    """
+    Gera CLI local baseado no número de destino.
+    
+    Body:
+        destination_number: Número de destino
+        custom_pattern: Padrão customizado (opcional)
+        country_override: Forçar país específico (opcional)
+    """
+    try:
+        destination_number = request.get("destination_number")
+        if not destination_number:
+            return {
+                "status": "error",
+                "message": "destination_number é obrigatório",
+                "timestamp": datetime.now().isoformat(),
+                "data": {}
+            }
+        
+        service = CliLocalRandomizationService(db)
+        result = service.generate_local_cli(
+            destination_number=destination_number,
+            custom_pattern=request.get("custom_pattern"),
+            country_override=request.get("country_override")
+        )
+        
+        return {
+            "status": "success",
+            "message": f"CLI local gerado para {destination_number}",
+            "timestamp": datetime.now().isoformat(),
+            "data": result
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao gerar CLI local: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"Erro ao gerar CLI local: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.get("/cli-local/patterns")
+async def get_country_patterns(db: Session = Depends(get_db)):
+    """Obtém padrões disponíveis por país para CLI local."""
+    try:
+        service = CliLocalRandomizationService(db)
+        patterns = service.get_country_patterns()
+        
+        return {
+            "status": "success",
+            "message": "Padrões de países obtidos",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "countries": patterns,
+                "total_countries": len(patterns)
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter padrões: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"Erro ao obter padrões: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.get("/cli-local/stats")
+async def get_generation_stats(
+    country: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Obtém estatísticas de geração de CLIs locais."""
+    try:
+        service = CliLocalRandomizationService(db)
+        stats = service.get_generation_stats(country)
+        
+        return {
+            "status": "success",
+            "message": f"Estatísticas obtidas" + (f" para {country}" if country else ""),
+            "timestamp": datetime.now().isoformat(),
+            "data": stats
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter estatísticas: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"Erro ao obter estatísticas: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.post("/cli-local/patterns/create")
+async def create_custom_pattern(
+    request: Dict[str, Any],
+    db: Session = Depends(get_db)
+):
+    """
+    Cria padrão customizado de aleatorização CLI.
+    
+    Body:
+        name: Nome do padrão
+        pattern_config: Configuração do padrão
+    """
+    try:
+        name = request.get("name")
+        pattern_config = request.get("pattern_config")
+        
+        if not name or not pattern_config:
+            return {
+                "status": "error",
+                "message": "name e pattern_config são obrigatórios",
+                "timestamp": datetime.now().isoformat(),
+                "data": {}
+            }
+        
+        service = CliLocalRandomizationService(db)
+        result = service.create_custom_pattern(name, pattern_config)
+        
+        if result["success"]:
+            return {
+                "status": "success",
+                "message": result["message"],
+                "timestamp": datetime.now().isoformat(),
+                "data": result["pattern"]
+            }
+        else:
+            return {
+                "status": "error",
+                "message": result["error"],
+                "timestamp": datetime.now().isoformat(),
+                "data": {}
+            }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao criar padrão customizado: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"Erro ao criar padrão: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.post("/cli-local/bulk-generate")
+async def bulk_generate_clis(
+    request: Dict[str, Any],
+    db: Session = Depends(get_db)
+):
+    """
+    Gera CLIs locais em lote para uma lista de números.
+    
+    Body:
+        destination_numbers: Lista de números de destino
+        pattern_name: Nome do padrão a usar (opcional)
+    """
+    try:
+        destination_numbers = request.get("destination_numbers", [])
+        pattern_name = request.get("pattern_name")
+        
+        if not destination_numbers:
+            return {
+                "status": "error",
+                "message": "destination_numbers é obrigatório",
+                "timestamp": datetime.now().isoformat(),
+                "data": {}
+            }
+        
+        service = CliLocalRandomizationService(db)
+        result = service.bulk_generate_clis(destination_numbers, pattern_name)
+        
+        return {
+            "status": "success",
+            "message": f"Processados {result['total_processed']} números",
+            "timestamp": datetime.now().isoformat(),
+            "data": result
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro na geração em lote: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"Erro na geração em lote: {str(e)}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {}
+        }
+
+@router.get("/cli-local/test/{destination_number}")
+async def test_cli_generation(
+    destination_number: str,
+    country_override: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Testa geração de CLI local para um número específico."""
+    try:
+        service = CliLocalRandomizationService(db)
+        
+        # Gerar 5 CLIs diferentes para mostrar variações
+        results = []
+        for i in range(5):
+            result = service.generate_local_cli(
+                destination_number=destination_number,
+                country_override=country_override
+            )
+            results.append(result)
+        
+        return {
+            "status": "success",
+            "message": f"5 CLIs gerados para teste: {destination_number}",
+            "timestamp": datetime.now().isoformat(),
+            "data": {
+                "destination_number": destination_number,
+                "country_override": country_override,
+                "generated_clis": results,
+                "total_generated": len(results)
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro no teste de geração: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"Erro no teste: {str(e)}",
             "timestamp": datetime.now().isoformat(),
             "data": {}
         } 

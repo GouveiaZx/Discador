@@ -138,8 +138,8 @@ function UploadListas() {
     } catch (err) {
               console.error('❌ Error al crear campaña por defecto:', err);
         // Si falla, permitir carga sin campaña
-              setCampaigns([{
-          id: 'default',
+      setCampaigns([{
+        id: 'default',
           name: 'Sin Campaña (Carga Directa)',
         status: 'active'
       }]);

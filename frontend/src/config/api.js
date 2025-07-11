@@ -141,6 +141,42 @@ export const makeApiRequest = async (endpoint, methodOrOptions = {}, data = null
   }
 };
 
+// Objeto API principal com métodos HTTP
+const api = {
+  // GET request
+  get: async (endpoint, params = {}) => {
+    let url = endpoint;
+    if (Object.keys(params).length > 0) {
+      const queryParams = new URLSearchParams(params);
+      url += `?${queryParams.toString()}`;
+    }
+    return await makeApiRequest(url, 'GET');
+  },
+
+  // POST request
+  post: async (endpoint, data = null) => {
+    return await makeApiRequest(endpoint, 'POST', data);
+  },
+
+  // PUT request
+  put: async (endpoint, data = null) => {
+    return await makeApiRequest(endpoint, 'PUT', data);
+  },
+
+  // PATCH request
+  patch: async (endpoint, data = null) => {
+    return await makeApiRequest(endpoint, 'PATCH', data);
+  },
+
+  // DELETE request
+  delete: async (endpoint) => {
+    return await makeApiRequest(endpoint, 'DELETE');
+  }
+};
+
+// Export default da instância API
+export default api;
+
 // Debug: Log da configuração atual (apenas em desenvolvimento)
 if (import.meta.env.DEV) {
   console.log('🔧 API Configuration:', {
