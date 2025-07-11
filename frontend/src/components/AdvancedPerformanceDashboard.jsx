@@ -11,7 +11,8 @@ import {
   Title,
   Tooltip,
   Legend,
-  TimeScale
+  TimeScale,
+  Filler
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 
@@ -32,7 +33,8 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  TimeScale
+  TimeScale,
+  Filler
 );
 
 const AdvancedPerformanceDashboard = () => {
@@ -59,6 +61,13 @@ const AdvancedPerformanceDashboard = () => {
 
   // Conectar WebSocket para métricas en tiempo real
   useEffect(() => {
+    // Não tentar conectar WebSocket no Vercel (produção)
+    if (window.location.hostname.includes('vercel.app')) {
+      console.log('🚫 WebSocket desabilitado no Vercel');
+      setLoading(false);
+      return;
+    }
+    
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}`;
     wsRef.current = new WebSocket(`${wsUrl}/api/performance/ws/performance`);

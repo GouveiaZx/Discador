@@ -16,7 +16,7 @@ from app.services.cli_country_limits_service import CliCountryLimitsService
 from app.services.dtmf_country_config_service import DTMFCountryConfigService
 from app.utils.logger import logger
 
-router = APIRouter(prefix="/api/performance", tags=["performance"])
+router = APIRouter(prefix="/performance", tags=["performance"])
 
 # Instância global do dialer (seria melhor usar singleton ou dependency injection)
 dialer_instance = None
