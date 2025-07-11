@@ -474,37 +474,7 @@ class PerformanceService {
   }
 }
 
-// Función auxiliar para hacer requests HTTP
-async function makeApiRequest(endpoint, method = 'GET', data = null) {
-  const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
-  const url = `${baseURL}${endpoint}`;
-  
-  const config = {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-    }
-  };
 
-  if (data && ['POST', 'PUT', 'PATCH'].includes(method)) {
-    config.body = JSON.stringify(data);
-  }
-
-  try {
-    const response = await fetch(url, config);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Error HTTP: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error(`❌ Error en API ${method} ${endpoint}:`, error);
-    throw error;
-  }
-}
 
 // Instancia del servicio
 const performanceService = new PerformanceService();
