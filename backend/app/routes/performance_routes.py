@@ -14,7 +14,7 @@ from app.utils.logger import logger
 
 # Imports opcionais para evitar erros
 try:
-from app.services.high_performance_dialer import HighPerformanceDialer, PerformanceConfig
+    from app.services.high_performance_dialer import HighPerformanceDialer, PerformanceConfig
     HAS_HIGH_PERFORMANCE_DIALER = True
 except ImportError:
     HAS_HIGH_PERFORMANCE_DIALER = False
@@ -26,7 +26,7 @@ except ImportError:
                 setattr(self, key, value)
 
 try:
-from app.services.load_test_service import LoadTestService, LoadTestConfig
+    from app.services.load_test_service import LoadTestService, LoadTestConfig
     HAS_LOAD_TEST_SERVICE = True
 except ImportError:
     HAS_LOAD_TEST_SERVICE = False
@@ -42,7 +42,7 @@ except ImportError:
             pass
 
 try:
-from app.services.cli_country_limits_service import CliCountryLimitsService
+    from app.services.cli_country_limits_service import CliCountryLimitsService
     HAS_CLI_LIMITS_SERVICE = True
 except ImportError:
     HAS_CLI_LIMITS_SERVICE = False
@@ -53,7 +53,7 @@ except ImportError:
             pass
 
 try:
-from app.services.dtmf_country_config_service import DTMFCountryConfigService
+    from app.services.dtmf_country_config_service import DTMFCountryConfigService
     HAS_DTMF_CONFIG_SERVICE = True
 except ImportError:
     HAS_DTMF_CONFIG_SERVICE = False
@@ -140,7 +140,7 @@ async def get_realtime_metrics(db: Session = Depends(get_db)):
             }
         
         if hasattr(dialer_instance, 'get_current_metrics'):
-        metrics = dialer_instance.get_current_metrics()
+            metrics = dialer_instance.get_current_metrics()
         else:
             metrics = {}
         
@@ -148,9 +148,9 @@ async def get_realtime_metrics(db: Session = Depends(get_db)):
         cli_stats = {}
         if HAS_CLI_LIMITS_SERVICE:
             try:
-        cli_service = CliCountryLimitsService(db)
+                cli_service = CliCountryLimitsService(db)
                 if hasattr(cli_service, 'get_usage_statistics'):
-        cli_stats = cli_service.get_usage_statistics()
+                    cli_stats = cli_service.get_usage_statistics()
             except Exception:
                 pass
         
@@ -187,22 +187,22 @@ async def get_metrics_history(minutes: int = 60, db: Session = Depends(get_db)):
             }
         
         if hasattr(dialer_instance, 'get_metrics_history'):
-        history = dialer_instance.get_metrics_history(minutes)
+            history = dialer_instance.get_metrics_history(minutes)
         
-        return {
-            "history": [
-                {
+            return {
+                "history": [
+                    {
                         "timestamp": metric.timestamp.isoformat() if hasattr(metric, 'timestamp') else datetime.now().isoformat(),
                         "current_cps": getattr(metric, 'current_cps', 0),
                         "concurrent_calls": getattr(metric, 'concurrent_calls', 0),
                         "success_rate": getattr(metric, 'calls_answered', 0) / getattr(metric, 'calls_initiated', 1) if getattr(metric, 'calls_initiated', 0) > 0 else 0,
                         "system_load": getattr(metric, 'system_load', 0)
-                }
-                for metric in history
-            ],
-            "total_points": len(history),
-            "period_minutes": minutes
-        }
+                    }
+                    for metric in history
+                ],
+                "total_points": len(history),
+                "period_minutes": minutes
+            }
         else:
             return {
                 "history": [],
@@ -251,11 +251,11 @@ async def start_dialer(config: PerformanceConfigRequest, db: Session = Depends(g
         
         # Configurar callbacks para WebSocket
         if hasattr(dialer_instance, 'on_metrics_updated'):
-        dialer_instance.on_metrics_updated = broadcast_metrics_update
+            dialer_instance.on_metrics_updated = broadcast_metrics_update
         
         # Iniciar dialer em background
         if hasattr(dialer_instance, 'start'):
-        asyncio.create_task(dialer_instance.start())
+            asyncio.create_task(dialer_instance.start())
         
         logger.info("🚀 Sistema de discado iniciado")
         
@@ -289,7 +289,7 @@ async def stop_dialer():
             return {"message": "Dialer não está rodando", "status": "not_running"}
         
         if hasattr(dialer_instance, 'stop'):
-        await dialer_instance.stop()
+            await dialer_instance.stop()
         
         dialer_instance = None
         
@@ -326,7 +326,7 @@ async def set_cps(new_cps: float):
             }
         
         if hasattr(dialer_instance, 'set_cps'):
-        dialer_instance.set_cps(new_cps)
+            dialer_instance.set_cps(new_cps)
         
         return {
             "message": f"CPS definido para {new_cps}",
@@ -406,7 +406,7 @@ async def stop_load_test():
             return {"message": "Nenhum teste em execução", "status": "not_running"}
         
         if hasattr(load_test_service, 'is_running'):
-        load_test_service.is_running = False
+            load_test_service.is_running = False
         
         logger.info("🛑 Teste de carga parado")
         
@@ -480,7 +480,7 @@ async def get_load_test_results(format: str = "json"):
             }
         
         if hasattr(load_test_service, 'export_results'):
-        results = load_test_service.export_results(format)
+            results = load_test_service.export_results(format)
         
         if format == "json":
             return {
@@ -567,7 +567,7 @@ async def set_cli_limit(country: str, request: CliLimitRequest, db: Session = De
         
         # Atualizar limite
         if hasattr(cli_service, 'COUNTRY_DAILY_LIMITS'):
-        cli_service.COUNTRY_DAILY_LIMITS[country.lower()] = request.daily_limit
+            cli_service.COUNTRY_DAILY_LIMITS[country.lower()] = request.daily_limit
         
         logger.info(f"📊 Limite de CLI atualizado para {country}: {request.daily_limit}")
         
@@ -637,7 +637,7 @@ async def reset_cli_usage(db: Session = Depends(get_db)):
         cli_service = CliCountryLimitsService(db)
         
         if hasattr(cli_service, 'reset_daily_usage'):
-        result = cli_service.reset_daily_usage()
+            result = cli_service.reset_daily_usage()
         else:
             result = {"message": "Método reset_daily_usage não disponível"}
         
@@ -724,25 +724,25 @@ async def run_load_test_background(config: LoadTestConfig):
                 }
             }
         else:
-        result = await load_test_service.run_load_test(config)
-        
-        # Enviar resultado via WebSocket
-        message = {
-            "type": "load_test_completed",
-            "timestamp": datetime.now().isoformat(),
-            "result": {
-                "test_id": result.test_id,
-                "success_rate": result.success_rate,
-                "actual_cps": result.actual_cps,
-                "total_calls": result.total_calls_attempted
+            result = await load_test_service.run_load_test(config)
+            
+            # Enviar resultado via WebSocket
+            message = {
+                "type": "load_test_completed",
+                "timestamp": datetime.now().isoformat(),
+                "result": {
+                    "test_id": result.test_id,
+                    "success_rate": result.success_rate,
+                    "actual_cps": result.actual_cps,
+                    "total_calls": result.total_calls_attempted
+                }
             }
-        }
-        
-        for websocket in websocket_connections:
-            try:
-                await websocket.send_text(json.dumps(message))
-            except:
-                pass
+            
+            for websocket in websocket_connections:
+                try:
+                    await websocket.send_text(json.dumps(message))
+                except:
+                    pass
         
     except Exception as e:
         logger.error(f"❌ Erro no teste de carga: {str(e)}")

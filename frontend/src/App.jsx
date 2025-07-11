@@ -126,7 +126,7 @@ const ProfessionalLoader = () => (
       
       {/* Texto com gradiente */}
       <h2 className="text-2xl font-bold text-gradient-primary mb-2">
-        Discador Preditivo
+        Discador Predictivo
       </h2>
       <p className="text-secondary-400 text-sm animate-pulse">
         Inicializando sistema...
@@ -150,13 +150,13 @@ const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermiss
     { id: 'dashboard', label: 'Panel Principal', icon: Icons.Dashboard, permission: null },
     { id: 'realtime', label: 'Llamadas en Vivo', icon: Icons.RealTime, permission: null },
     { id: 'monitor', label: 'Monitor Avanzado', icon: Icons.Monitor, permission: null },
-    { id: 'performance', label: 'Performance Avanzado', icon: Icons.Performance, permission: 'admin' },
+    { id: 'performance', label: 'Rendimiento Avanzado', icon: Icons.Performance, permission: 'admin' },
     { id: 'campanhas', label: 'Campañas', icon: Icons.Campaigns, permission: 'supervisor' },
     { id: 'listas', label: 'Listas', icon: Icons.Lists, permission: 'supervisor' },
     { id: 'audios', label: 'Gestión de Audios', icon: Icons.Audio, permission: 'supervisor' },
-    { id: 'trunks', label: 'Gestión Trunks', icon: Icons.Trunk, permission: 'admin' },
-    { id: 'caller-id', label: 'Caller ID', icon: Icons.Phone, permission: 'supervisor' },
-    { id: 'timing', label: 'Wait/Sleep Time', icon: Icons.Settings, permission: 'supervisor' },
+    { id: 'trunks', label: 'Gestión de Troncales', icon: Icons.Trunk, permission: 'admin' },
+    { id: 'caller-id', label: 'Identificador de Llamada', icon: Icons.Phone, permission: 'supervisor' },
+    { id: 'timing', label: 'Tiempo de Espera', icon: Icons.Settings, permission: 'supervisor' },
     { id: 'blacklist', label: 'Lista Negra', icon: Icons.Blacklist, permission: 'admin' },
     { id: 'configuracion', label: 'Configuración', icon: Icons.Settings, permission: 'admin' },
     { id: 'historico', label: 'Histórico', icon: Icons.History, permission: null },
@@ -307,13 +307,13 @@ const ProfessionalHeader = ({ setSidebarOpen, activeTab }) => {
       dashboard: 'Panel Principal',
       realtime: 'Llamadas en Tiempo Real',
       monitor: 'Monitor Avanzado',
-      performance: 'Performance Avanzado',
+      performance: 'Rendimiento Avanzado',
       campanhas: 'Gestión de Campañas',
       listas: 'Gestión de Listas',
       audios: 'Gestión de Audios',
-      trunks: 'Gestión de Trunks SIP',
-      'caller-id': 'Configuración Caller ID',
-      timing: 'Configuración Wait/Sleep Time',
+      trunks: 'Gestión de Troncales SIP',
+      'caller-id': 'Configuración Identificador de Llamada',
+      timing: 'Configuración Tiempo de Espera',
       blacklist: 'Lista Negra',
       configuracion: 'Configuración Avanzada',
       historico: 'Histórico de Llamadas'
