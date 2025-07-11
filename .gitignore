@@ -77,7 +77,7 @@ asterisk_logs/
 
 # Modelos de voz
 vosk-model*/
-models/
+voice-models/
 *.model
 
 # Arquivos temporários do sistema
