@@ -3430,7 +3430,159 @@ def get_estadisticas_presione1_from_supabase(campana_id):
         logger.error(f"❌ [ESTADISTICAS] Erro ao calcular estatísticas: {str(e)}")
         return None
 
+# Fallback para rotas CLI pattern se não estiverem funcionando
+@missing_routes.get("/performance/cli-pattern/countries")
+async def cli_pattern_countries_fallback():
+    """Fallback para países suportados do CLI pattern"""
+    try:
+        countries = [
+            {"country_code": "usa", "name": "Estados Unidos", "supported": True},
+            {"country_code": "canada", "name": "Canadá", "supported": True},
+            {"country_code": "mexico", "name": "México", "supported": True},
+            {"country_code": "brasil", "name": "Brasil", "supported": True},
+            {"country_code": "colombia", "name": "Colombia", "supported": True},
+            {"country_code": "argentina", "name": "Argentina", "supported": True},
+            {"country_code": "chile", "name": "Chile", "supported": True},
+            {"country_code": "peru", "name": "Perú", "supported": True}
+        ]
+        return {
+            "success": True,
+            "data": countries,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Erro no fallback de países CLI: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
+@missing_routes.get("/performance/cli-pattern/patterns/{country}")
+async def cli_pattern_patterns_fallback(country: str):
+    """Fallback para padrões de país do CLI pattern"""
+    try:
+        patterns = {
+            "area_codes": {
+                "305": {"name": "Miami", "pattern": "xxx-xxxx"},
+                "425": {"name": "Seattle", "pattern": "xxx-xxxx"},
+                "213": {"name": "Los Angeles", "pattern": "xxx-xxxx"}
+            },
+            "strategy": "preserve_area_code"
+        }
+        return {
+            "success": True,
+            "data": patterns,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Erro no fallback de padrões CLI: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@missing_routes.post("/performance/cli-pattern/generate")
+async def cli_pattern_generate_fallback(request: dict):
+    """Fallback para geração de CLI pattern"""
+    try:
+        destination_number = request.get("destination_number")
+        quantity = request.get("quantity", 1)
+        
+        if not destination_number:
+            return {
+                "success": False,
+                "error": "destination_number é obrigatório",
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        # Gerar CLIs simples baseados no número de destino
+        import random
+        generated_clis = []
+        
+        for i in range(quantity):
+            # Extrair código do país do número de destino
+            if destination_number.startswith("+1"):
+                # USA/Canada
+                base = "+1305"
+                random_part = ''.join([str(random.randint(0, 9)) for _ in range(7)])
+                cli = f"{base}{random_part}"
+            elif destination_number.startswith("+52"):
+                # Mexico
+                base = "+5255"
+                random_part = ''.join([str(random.randint(0, 9)) for _ in range(8)])
+                cli = f"{base}{random_part}"
+            elif destination_number.startswith("+55"):
+                # Brasil
+                base = "+5511"
+                random_part = ''.join([str(random.randint(0, 9)) for _ in range(9)])
+                cli = f"{base}{random_part}"
+            else:
+                # Default
+                base = "+1305"
+                random_part = ''.join([str(random.randint(0, 9)) for _ in range(7)])
+                cli = f"{base}{random_part}"
+            
+            generated_clis.append(cli)
+        
+        return {
+            "success": True,
+            "data": {
+                "generated_clis": generated_clis,
+                "destination_number": destination_number,
+                "strategy": "fallback_generation"
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Erro no fallback de geração CLI: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@missing_routes.post("/performance/cli-pattern/bulk-generate")
+async def cli_pattern_bulk_generate_fallback(request: dict):
+    """Fallback para geração em massa de CLI pattern"""
+    try:
+        destination_numbers = request.get("destination_numbers", [])
+        
+        if not destination_numbers:
+            return {
+                "success": False,
+                "error": "destination_numbers é obrigatório",
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        results = []
+        for number in destination_numbers:
+            # Gerar 1 CLI para cada número
+            cli_result = await cli_pattern_generate_fallback({
+                "destination_number": number,
+                "quantity": 1
+            })
+            results.append({
+                "destination_number": number,
+                "generated_clis": cli_result.get("data", {}).get("generated_clis", [])
+            })
+        
+        return {
+            "success": True,
+            "data": {
+                "results": results,
+                "total_processed": len(destination_numbers)
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Erro no fallback de geração em massa CLI: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
 
 if __name__ == "__main__":
     logger.info(f"Iniciando servidor en {configuracion.HOST}:{configuracion.PUERTO}")

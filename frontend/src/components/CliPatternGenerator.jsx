@@ -62,6 +62,7 @@ const CliPatternGenerator = () => {
   const loadSupportedCountries = async () => {
     try {
       setLoading(true);
+      setError('');
       console.log('🔄 Cargando países soportados...');
       
       const response = await api.get('/performance/cli-pattern/countries');
@@ -74,22 +75,28 @@ const CliPatternGenerator = () => {
       } else {
         console.error('❌ Error en la respuesta:', response.data.error);
         setError('Error al cargar países: ' + response.data.error);
+        // Usar fallback
+        useFallbackCountries();
       }
     } catch (error) {
       console.error('❌ Error al cargar países:', error);
-      setError('Error al cargar países soportados. Revisa la consola para más detalles.');
+      setError('Error al cargar países soportados. Usando configuración por defecto.');
       
       // Fallback: cargar países por defecto
-      const fallbackCountries = Object.keys(countryInfo).map(code => ({
-        country_code: code,
-        name: countryInfo[code].name,
-        supported: true
-      }));
-      setCountries(fallbackCountries);
-      console.log('🔄 Usando países por defecto:', fallbackCountries);
+      useFallbackCountries();
     } finally {
       setLoading(false);
     }
+  };
+
+  const useFallbackCountries = () => {
+    const fallbackCountries = Object.keys(countryInfo).map(code => ({
+      country_code: code,
+      name: countryInfo[code].name,
+      supported: true
+    }));
+    setCountries(fallbackCountries);
+    console.log('🔄 Usando países por defecto:', fallbackCountries);
   };
 
   const loadCountryPatterns = async (country) => {
@@ -325,19 +332,19 @@ const CliPatternGenerator = () => {
                 onChange={(e) => setDestinationNumber(e.target.value)}
                 placeholder="Ej: +13055551234"
                 className="flex-1"
+                disabled={loading}
               />
               <Select
                 value={selectedCountry}
                 onValueChange={setSelectedCountry}
+                placeholder="Detectar automáticamente"
                 className="w-48"
-              >
-                <option value="">Detectar automáticamente</option>
-                {countries.map(country => (
-                  <option key={country.country_code} value={country.country_code}>
-                    {countryInfo[country.country_code]?.flag} {countryInfo[country.country_code]?.name}
-                  </option>
-                ))}
-              </Select>
+                disabled={loading}
+                options={countries.map(country => ({
+                  value: country.country_code,
+                  label: `${countryInfo[country.country_code]?.flag} ${countryInfo[country.country_code]?.name}`
+                }))}
+              />
             </div>
           </div>
 
