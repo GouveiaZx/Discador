@@ -678,6 +678,8 @@ async def broadcast_metrics_update(metrics):
 
 async def run_load_test_background(config: LoadTestConfig):
     """Executa teste de carga em background."""
+    global load_test_service
+    
     try:
         if load_test_service and hasattr(load_test_service, 'run'):
             await load_test_service.run()
@@ -688,7 +690,6 @@ async def run_load_test_background(config: LoadTestConfig):
         logger.error(f"❌ Erro no teste de carga: {str(e)}")
     
     finally:
-        global load_test_service
         load_test_service = None
 
 # ========== ROTAS DE SAÚDE ==========

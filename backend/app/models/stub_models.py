@@ -178,6 +178,19 @@ class ReglaCli(Base):
     nome = Column(String(100))
     created_at = Column(DateTime, default=datetime.utcnow)
 
+class CliGeo(Base):
+    __tablename__ = "cli_geo"
+    id = Column(Integer, primary_key=True)
+    cli_id = Column(Integer)
+    prefijo_id = Column(Integer, ForeignKey("prefijos.id"))
+    numero_normalizado = Column(String(20))
+    tipo_numero = Column(String(20))
+    operadora = Column(String(100))
+    calidad = Column(Float, default=0.0)
+    tasa_exito = Column(Float, default=0.0)
+    activo = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 # Modelos para Configuração de Discagem
 class ConfiguracaoDiscagem(Base):
     __tablename__ = "configuracao_discagem"
