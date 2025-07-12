@@ -215,3 +215,22 @@ class ConfiguracaoAlgoritmo(Base):
     id = Column(Integer, primary_key=True)
     configuracao_id = Column(Integer, ForeignKey("configuracao_discagem.id"))
     created_at = Column(DateTime, default=datetime.utcnow) 
+
+# Enumerações como classes para compatibilidade
+class TipoOperadora:
+    DESCONOCIDA = "desconocida"
+    CLARO = "claro"
+    MOVISTAR = "movistar"
+    PERSONAL = "personal"
+    OTROS = "otros"
+
+class TipoRegra:
+    GEOGRAFIA = "geografia"
+    OPERADORA = "operadora"
+    CALIDAD = "calidad"
+    TIEMPO = "tiempo"
+
+class TipoNumero:
+    MOVIL = "movil"
+    FIJO = "fijo"
+    ESPECIAL = "especial" 

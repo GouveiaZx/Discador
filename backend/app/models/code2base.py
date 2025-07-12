@@ -1,5 +1,5 @@
 # Modelos Code2Base
-from .stub_models import Pais, Estado, Cidade, Prefijo, ReglaCli, CliGeo
+from .stub_models import Pais, Estado, Cidade, Prefijo, ReglaCli, CliGeo, TipoOperadora, TipoRegra, TipoNumero
 
 # Adicionar classes faltantes
 class HistorialSeleccionCli:
@@ -10,4 +10,4 @@ class Cli:
     def __init__(self, *args, **kwargs):
         pass
 
-__all__ = ["Pais", "Estado", "Cidade", "Prefijo", "ReglaCli", "CliGeo", "HistorialSeleccionCli", "Cli"] 
+__all__ = ["Pais", "Estado", "Cidade", "Prefijo", "ReglaCli", "CliGeo", "HistorialSeleccionCli", "Cli", "TipoOperadora", "TipoRegra", "TipoNumero"] 
