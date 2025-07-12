@@ -3584,6 +3584,100 @@ async def cli_pattern_bulk_generate_fallback(request: dict):
             "timestamp": datetime.now().isoformat()
         }
 
+@missing_routes.get("/diagnostics/supabase")
+async def diagnostics_supabase():
+    """Diagnóstico completo do Supabase"""
+    try:
+        # Verificar variáveis de ambiente
+        supabase_url = os.getenv('SUPABASE_URL')
+        supabase_key = os.getenv('SUPABASE_ANON_KEY')
+        
+        diagnostics = {
+            "timestamp": datetime.now().isoformat(),
+            "supabase_url_configured": bool(supabase_url),
+            "supabase_key_configured": bool(supabase_key),
+            "url_preview": supabase_url[:30] + "..." if supabase_url else None,
+            "key_preview": supabase_key[:20] + "..." if supabase_key else None,
+            "connection_tests": []
+        }
+        
+        if supabase_url and supabase_key:
+            # Testar conexão com Supabase
+            import requests
+            
+            headers = {
+                "apikey": supabase_key,
+                "Authorization": f"Bearer {supabase_key}",
+                "Content-Type": "application/json"
+            }
+            
+            # Teste 1: Verificar se consegue acessar o health check
+            try:
+                response = requests.get(f"{supabase_url}/rest/v1/", headers=headers, timeout=5)
+                diagnostics["connection_tests"].append({
+                    "test": "health_check",
+                    "status": response.status_code,
+                    "success": response.status_code in [200, 400]  # 400 é normal para endpoint vazio
+                })
+            except Exception as e:
+                diagnostics["connection_tests"].append({
+                    "test": "health_check",
+                    "error": str(e),
+                    "success": False
+                })
+                
+            # Teste 2: Verificar se consegue acessar campanhas
+            try:
+                response = requests.get(f"{supabase_url}/rest/v1/campaigns?limit=1", headers=headers, timeout=5)
+                diagnostics["connection_tests"].append({
+                    "test": "campaigns_access",
+                    "status": response.status_code,
+                    "success": response.status_code == 200,
+                    "data_preview": response.json()[:1] if response.status_code == 200 else None
+                })
+            except Exception as e:
+                diagnostics["connection_tests"].append({
+                    "test": "campaigns_access",
+                    "error": str(e),
+                    "success": False
+                })
+        
+        return {
+            "success": True,
+            "diagnostics": diagnostics
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
+@missing_routes.get("/diagnostics/cli-pattern")
+async def diagnostics_cli_pattern():
+    """Diagnóstico do sistema CLI Pattern"""
+    try:
+        # Verificar se o serviço CLI Pattern está funcionando
+        result = await cli_pattern_generate_fallback({
+            "destination_number": "+14165551234",
+            "quantity": 1
+        })
+        
+        return {
+            "success": True,
+            "fallback_working": result.get("success", False),
+            "test_result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }
+
 if __name__ == "__main__":
     logger.info(f"Iniciando servidor en {configuracion.HOST}:{configuracion.PUERTO}")
     uvicorn.run(

@@ -154,9 +154,29 @@ const CliPatternGenerator = () => {
       console.log('📞 Respuesta generación:', response.data);
       
       if (response.data.success) {
-        setGeneratedClis(response.data.data.generated_clis);
-        setSuccess(`✅ Se generaron ${response.data.data.generated_clis.length} CLIs correctamente`);
-        loadStats();
+        // Tratar diferentes formatos de respuesta da API
+        let clis = [];
+        
+        if (response.data.data && response.data.data.generated_clis) {
+          // Formato: { success: true, data: { generated_clis: [...] } }
+          clis = response.data.data.generated_clis;
+        } else if (response.data.generated_clis) {
+          // Formato: { success: true, generated_clis: [...] }
+          clis = response.data.generated_clis;
+        } else {
+          // Fallback: procurar no objeto completo
+          clis = response.data.data?.generated_clis || response.data.generated_clis || [];
+        }
+        
+        console.log('📞 CLIs extraídos:', clis);
+        
+        if (clis && clis.length > 0) {
+          setGeneratedClis(clis);
+          setSuccess(`✅ Se generaron ${clis.length} CLIs correctamente`);
+          loadStats();
+        } else {
+          setError('No se generaron CLIs. Verifica la configuración.');
+        }
       } else {
         setError(response.data.error || 'Error al generar CLIs');
       }
@@ -197,9 +217,29 @@ const CliPatternGenerator = () => {
       console.log('📞 Respuesta generación masiva:', response.data);
       
       if (response.data.success) {
-        setBulkResults(response.data.data);
-        setSuccess(`✅ Se generaron CLIs masivos para ${numbers.length} números`);
-        loadStats();
+        // Tratar diferentes formatos de respuesta da API
+        let results = [];
+        
+        if (response.data.data && response.data.data.results) {
+          // Formato: { success: true, data: { results: [...] } }
+          results = response.data.data.results;
+        } else if (response.data.results) {
+          // Formato: { success: true, results: [...] }
+          results = response.data.results;
+        } else {
+          // Fallback: procurar no objeto completo
+          results = response.data.data?.results || response.data.results || [];
+        }
+        
+        console.log('📞 Resultados extraídos:', results);
+        
+        if (results && results.length > 0) {
+          setBulkResults({ results });
+          setSuccess(`✅ Se generaron CLIs masivos para ${numbers.length} números`);
+          loadStats();
+        } else {
+          setError('No se generaron CLIs masivos. Verifica la configuración.');
+        }
       } else {
         setError(response.data.error || 'Error en la generación masiva');
       }
@@ -533,7 +573,7 @@ const CliPatternGenerator = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {bulkResults.generated_clis && bulkResults.generated_clis.map((result, index) => (
+              {bulkResults.results && bulkResults.results.map((result, index) => (
                 <div key={index} className="p-4 bg-gray-700 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-gray-300">Para: {result.destination_number}</span>
@@ -657,85 +697,59 @@ const CliPatternGenerator = () => {
     </div>
   );
 
+  // Debug: Adicionar informações de debug no componente
+  const renderDebugInfo = () => {
+    if (!error && !success) return null;
+    
+    return (
+      <div className="mt-4 p-4 bg-gray-900 border border-gray-700 rounded-lg">
+        <h4 className="text-sm font-medium text-gray-300 mb-2">🔍 Debug Info</h4>
+        <div className="text-xs text-gray-400 space-y-1">
+          <div>Países cargados: {countries.length}</div>
+          <div>País seleccionado: {selectedCountry || 'Auto-detectar'}</div>
+          <div>Número de destino: {destinationNumber || 'Vacío'}</div>
+          <div>Patrón personalizado: {customPattern || 'Ninguno'}</div>
+          <div>Cantidad: {quantity}</div>
+          <div>Estado loading: {loading ? 'Sí' : 'No'}</div>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-900/50 to-gray-900/50 p-6 rounded-xl border border-blue-500/20">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold text-white mb-2">
-              🎯 Generador de CLIs Aleatorios Locales
-            </h2>
-            <p className="text-gray-300 text-lg">
-              Sistema avanzado para generar CLIs locales con patrones personalizados por país
-            </p>
-            <p className="text-blue-300 text-sm mt-2">
-              <strong>Funciona para TODOS los países:</strong> USA, Canadá, México, Brasil, Colombia, Argentina, Chile, Perú
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-blue-400">
-              {Object.keys(countryInfo).length}
-            </div>
-            <div className="text-sm text-gray-400">
-              Países Soportados
-            </div>
-          </div>
+    <div className="p-6 bg-gray-900 min-h-screen">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-white mb-2">
+            🎯 Generador de Patrones CLI
+          </h1>
+          <p className="text-gray-400">
+            Genera identificadores de llamadas locales para mejorar las tasas de respuesta
+          </p>
         </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="generator">🎯 Generador</TabsTrigger>
+            <TabsTrigger value="bulk">📦 Masivo</TabsTrigger>
+            <TabsTrigger value="guide">📋 Guía</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="generator" className="space-y-6">
+            {renderGeneratorTab()}
+            {renderDebugInfo()}
+          </TabsContent>
+
+          <TabsContent value="bulk" className="space-y-6">
+            {renderBulkTab()}
+            {renderDebugInfo()}
+          </TabsContent>
+
+          <TabsContent value="guide" className="space-y-6">
+            {renderGuideTab()}
+          </TabsContent>
+        </Tabs>
       </div>
-
-      {/* Alerta Importante */}
-      <Alert className="bg-gradient-to-r from-yellow-900/40 to-orange-900/40 border-2 border-yellow-500/50">
-        <div className="flex items-start space-x-4">
-          <span className="text-4xl">🚀</span>
-          <div>
-            <h4 className="font-semibold text-yellow-200 text-lg mb-2">
-              Sistema de CLIs Locales - Como funciona
-            </h4>
-            <p className="text-yellow-100 leading-relaxed">
-              <strong>Para USA:</strong> Si llamás a 305 300 9005, el cliente ve "305 2xx-xxxx" (últimos 6 aleatorios)<br/>
-              <strong>Para México:</strong> Si llamás a CDMX (55), el cliente ve "55 xxxx-xxxx" (últimos 8 aleatorios)<br/>
-              <strong>Para Brasil:</strong> Si llamás a SP (11), el cliente ve "11 9xxxx-xxxx" (últimos 8 aleatorios)<br/>
-              <strong>¡Funciona para todos los países!</strong> El cliente siempre recibe una llamada que parece local.
-            </p>
-          </div>
-        </div>
-      </Alert>
-
-      {/* Debug Info */}
-      <div className="bg-gray-800 p-4 rounded-lg text-xs text-gray-400">
-        <details>
-          <summary className="cursor-pointer mb-2">🔍 Debug Info</summary>
-          <div className="space-y-2">
-            <p>Países cargados: {countries.length}</p>
-            <p>País seleccionado: {selectedCountry || 'Ninguno'}</p>
-            <p>Número de destino: {destinationNumber || 'Vacío'}</p>
-            <p>CLIs generados: {generatedClis.length}</p>
-            <p>Estado de carga: {loading ? 'Cargando...' : 'Listo'}</p>
-          </div>
-        </details>
-      </div>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="generator">🎯 Generador</TabsTrigger>
-          <TabsTrigger value="bulk">📦 Masivo</TabsTrigger>
-          <TabsTrigger value="guide">📚 Guía</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="generator" className="mt-6">
-          {renderGeneratorTab()}
-        </TabsContent>
-
-        <TabsContent value="bulk" className="mt-6">
-          {renderBulkTab()}
-        </TabsContent>
-
-        <TabsContent value="guide" className="mt-6">
-          {renderGuideTab()}
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };
