@@ -1,8 +1,54 @@
-# Modelos stub básicos para resolver imports
-# Este arquivo contém modelos básicos para evitar erros de importação
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, Float, ForeignKey, JSON
+"""
+Modelos stub para compatibilidade com o sistema principal
+"""
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Text, UUID
+from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
-from . import Base
+from enum import Enum
+
+Base = declarative_base()
+
+# Enums para compatibilidade com Pydantic
+class TipoOperadora(str, Enum):
+    DESCONOCIDA = "desconocida"
+    CLARO = "claro"
+    MOVISTAR = "movistar"
+    PERSONAL = "personal"
+    OTROS = "otros"
+
+class TipoRegra(str, Enum):
+    GEOGRAFIA = "geografia"
+    OPERADORA = "operadora"
+    CALIDAD = "calidad"
+    TIEMPO = "tiempo"
+
+class TipoNumero(str, Enum):
+    MOVIL = "movil"
+    FIJO = "fijo"
+    ESPECIAL = "especial"
+
+class TipoEleicao(str, Enum):
+    MUNICIPAL = "municipal"
+    ESTADUAL = "estadual"
+    FEDERAL = "federal"
+    PRESIDENCIAL = "presidencial"
+    REFERENDO = "referendo"
+    PLEBISCITO = "plebiscito"
+
+class StatusCampanhaPolitica(str, Enum):
+    PENDENTE = "pendente"
+    APROVADA = "aprovada"
+    REJEITADA = "rejeitada"
+    ATIVA = "ativa"
+    PAUSADA = "pausada"
+    FINALIZADA = "finalizada"
+
+class TipoLogEleitoral(str, Enum):
+    INICIO = "inicio"
+    FIM = "fim"
+    OPTOUT = "optout"
+    ERRO = "erro"
+    TRANSFERENCIA = "transferencia"
 
 # Modelos para DNC
 class DNCList(Base):
@@ -214,7 +260,7 @@ class ConfiguracaoAlgoritmo(Base):
     __tablename__ = "configuracao_algoritmo"
     id = Column(Integer, primary_key=True)
     configuracao_id = Column(Integer, ForeignKey("configuracao_discagem.id"))
-    created_at = Column(DateTime, default=datetime.utcnow) 
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 # Enumerações como classes para compatibilidade
 class TipoOperadora:
@@ -233,7 +279,7 @@ class TipoRegra:
 class TipoNumero:
     MOVIL = "movil"
     FIJO = "fijo"
-    ESPECIAL = "especial" 
+    ESPECIAL = "especial"
 
 class ConfiguracaoEleitoral(Base):
     __tablename__ = "configuracao_eleitoral"
@@ -256,7 +302,7 @@ class LogEleitoralImutavel(Base):
     __tablename__ = "log_eleitoral_imutavel"
     id = Column(Integer, primary_key=True)
     tipo_log = Column(String(50))
-    dados = Column(JSON)
+    dados = Column(Text) # Changed from JSON to Text for compatibility
     hash_integridade = Column(String(255))
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -264,27 +310,4 @@ class OptOutEleitoral(Base):
     __tablename__ = "opt_out_eleitoral"
     id = Column(Integer, primary_key=True)
     numero_telefone = Column(String(20))
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-class StatusCampanhaPolitica(Base):
-    __tablename__ = "status_campanha_politica"
-    id = Column(Integer, primary_key=True)
-    nome = Column(String(50))
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-# Enumeração para Tipo de Log Eleitoral
-class TipoLogEleitoral:
-    INICIO_CAMPANHA = "inicio_campanha"
-    PARADA_CAMPANHA = "parada_campanha"
-    CONFIGURACAO_ALTERADA = "configuracao_alterada"
-    CHAMADA_REALIZADA = "chamada_realizada"
-    ERRO_SISTEMA = "erro_sistema" 
-
-# Enumeração para Tipo de Eleição
-class TipoEleicao:
-    MUNICIPAL = "municipal"
-    ESTADUAL = "estadual"
-    FEDERAL = "federal"
-    PRESIDENCIAL = "presidencial"
-    REFERENDO = "referendo"
-    PLEBISCITO = "plebiscito" 
+    created_at = Column(DateTime, default=datetime.utcnow) 
