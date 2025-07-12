@@ -69,7 +69,8 @@ try:
 except ImportError:
     HAS_DYNAMIC_CALLER_ID_SERVICE = False
     class DynamicCallerIdService:
-        def __init__(self, db): pass
+        def __init__(self, db): 
+            pass
 
 try:
     from app.services.advanced_dnc_service import AdvancedDNCService
@@ -77,7 +78,8 @@ try:
 except ImportError:
     HAS_ADVANCED_DNC_SERVICE = False
     class AdvancedDNCService:
-        def __init__(self, db): pass
+        def __init__(self, db): 
+            pass
 
 try:
     from app.services.cli_local_randomization_service import CliLocalRandomizationService
@@ -85,7 +87,8 @@ try:
 except ImportError:
     HAS_CLI_LOCAL_RANDOMIZATION_SERVICE = False
     class CliLocalRandomizationService:
-        def __init__(self, db): pass
+        def __init__(self, db): 
+            pass
 
 try:
     from app.services.cli_pattern_generator_service import CliPatternGeneratorService
@@ -93,14 +96,8 @@ try:
 except ImportError:
     HAS_CLI_PATTERN_GENERATOR_SERVICE = False
     class CliPatternGeneratorService:
-        def __init__(self, db): pass
-
-router = APIRouter(prefix="/performance", tags=["performance"])
-
-# Instância global do dialer (seria melhor usar singleton ou dependency injection)
-dialer_instance = None
-load_test_service = None
-websocket_connections = set()
+        def __init__(self, db): 
+            pass
 
 # Modelos Pydantic para requests/responses
 from pydantic import BaseModel
@@ -130,6 +127,12 @@ class CountryConfigRequest(BaseModel):
 class CliLimitRequest(BaseModel):
     country: str
     daily_limit: int = 100
+
+# Instâncias globais
+router = APIRouter(prefix="/performance", tags=["performance"])
+dialer_instance = None
+load_test_service = None
+websocket_connections = set()
 
 # ========== ROTAS DE PERFORMANCE EM TEMPO REAL ==========
 
@@ -209,40 +212,44 @@ async def get_metrics_history(minutes: int = 60, db: Session = Depends(get_db)):
                     for metric in history
                 ],
                 "total_points": len(history),
-                "period_minutes": minutes
+                "period_minutes": minutes,
+                "status": "success"
             }
         else:
             return {
                 "history": [],
-                "message": "Método get_metrics_history não disponível",
+                "message": "Histórico não disponível",
                 "total_points": 0,
                 "period_minutes": minutes
             }
-        
+            
     except Exception as e:
         logger.error(f"❌ Erro ao obter histórico: {str(e)}")
         return {
             "history": [],
-            "message": str(e),
+            "message": f"Erro: {str(e)}",
             "total_points": 0,
             "period_minutes": minutes
         }
 
 @router.post("/dialer/start")
 async def start_dialer(config: PerformanceConfigRequest, db: Session = Depends(get_db)):
-    """Inicia o sistema de discado de alta performance."""
+    """Inicia o dialer de alta performance."""
     global dialer_instance
     
     try:
         if not HAS_HIGH_PERFORMANCE_DIALER:
-            return {
-                "message": "Serviço de discado de alta performance não disponível",
-                "status": "service_unavailable",
-                "config": config.dict()
-            }
+            raise HTTPException(
+                status_code=503,
+                detail="Serviço de dialer não disponível"
+            )
         
-        if dialer_instance and hasattr(dialer_instance, 'is_running') and dialer_instance.is_running:
-            return {"message": "Dialer já está rodando", "status": "already_running"}
+        if dialer_instance and hasattr(dialer_instance, 'is_active') and dialer_instance.is_active():
+            return {
+                "status": "already_running",
+                "message": "Dialer já está ativo",
+                "current_cps": getattr(dialer_instance, 'current_cps', 0)
+            }
         
         # Criar configuração
         performance_config = PerformanceConfig(
@@ -254,428 +261,391 @@ async def start_dialer(config: PerformanceConfigRequest, db: Session = Depends(g
             auto_adjust_cps=config.auto_adjust_cps
         )
         
-        # Criar e iniciar dialer
-        dialer_instance = HighPerformanceDialer(db, performance_config)
+        # Inicializar dialer
+        dialer_instance = HighPerformanceDialer(performance_config, db)
         
-        # Configurar callbacks para WebSocket
-        if hasattr(dialer_instance, 'on_metrics_updated'):
-            dialer_instance.on_metrics_updated = broadcast_metrics_update
-        
-        # Iniciar dialer em background
-        if hasattr(dialer_instance, 'start'):
-            asyncio.create_task(dialer_instance.start())
-        
-        logger.info("🚀 Sistema de discado iniciado")
+        # Iniciar em background
+        asyncio.create_task(dialer_instance.start())
         
         return {
-            "message": "Sistema de discado iniciado com sucesso",
             "status": "started",
-            "config": config.dict()
+            "message": "Dialer iniciado com sucesso",
+            "config": config.dict(),
+            "timestamp": datetime.now().isoformat()
         }
         
     except Exception as e:
         logger.error(f"❌ Erro ao iniciar dialer: {str(e)}")
-        return {
-            "message": f"Erro ao iniciar dialer: {str(e)}",
-            "status": "error",
-            "config": config.dict()
-        }
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao iniciar dialer: {str(e)}"
+        )
 
 @router.post("/dialer/stop")
 async def stop_dialer():
-    """Para o sistema de discado."""
+    """Para o dialer de alta performance."""
     global dialer_instance
     
     try:
-        if not HAS_HIGH_PERFORMANCE_DIALER:
-            return {
-                "message": "Serviço de discado de alta performance não disponível",
-                "status": "service_unavailable"
-            }
-        
         if not dialer_instance:
-            return {"message": "Dialer não está rodando", "status": "not_running"}
+            return {
+                "status": "not_running",
+                "message": "Dialer não está ativo"
+            }
         
         if hasattr(dialer_instance, 'stop'):
             await dialer_instance.stop()
         
         dialer_instance = None
         
-        logger.info("🛑 Sistema de discado parado")
-        
         return {
-            "message": "Sistema de discado parado com sucesso",
-            "status": "stopped"
+            "status": "stopped",
+            "message": "Dialer parado com sucesso",
+            "timestamp": datetime.now().isoformat()
         }
         
     except Exception as e:
         logger.error(f"❌ Erro ao parar dialer: {str(e)}")
-        return {
-            "message": f"Erro ao parar dialer: {str(e)}",
-            "status": "error"
-        }
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao parar dialer: {str(e)}"
+        )
 
 @router.post("/dialer/cps/{new_cps}")
 async def set_cps(new_cps: float):
-    """Define manualmente o CPS do sistema."""
+    """Ajusta o CPS do dialer."""
     try:
-        if not HAS_HIGH_PERFORMANCE_DIALER:
-            return {
-                "message": "Serviço de discado de alta performance não disponível",
-                "new_cps": new_cps,
-                "status": "service_unavailable"
-            }
-        
         if not dialer_instance:
-            return {
-                "message": "Dialer não está rodando",
-                "new_cps": new_cps,
-                "status": "not_running"
-            }
+            raise HTTPException(
+                status_code=400,
+                detail="Dialer não está ativo"
+            )
         
         if hasattr(dialer_instance, 'set_cps'):
             dialer_instance.set_cps(new_cps)
         
         return {
-            "message": f"CPS definido para {new_cps}",
+            "status": "updated",
+            "message": f"CPS ajustado para {new_cps}",
             "new_cps": new_cps,
-            "status": "updated"
+            "timestamp": datetime.now().isoformat()
         }
         
     except Exception as e:
-        logger.error(f"❌ Erro ao definir CPS: {str(e)}")
-        return {
-            "message": f"Erro ao definir CPS: {str(e)}",
-            "new_cps": new_cps,
-            "status": "error"
-        }
+        logger.error(f"❌ Erro ao ajustar CPS: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao ajustar CPS: {str(e)}"
+        )
 
 # ========== ROTAS DE TESTE DE CARGA ==========
 
 @router.post("/load-test/start")
 async def start_load_test(config: LoadTestConfigRequest, db: Session = Depends(get_db)):
-    """Inicia um teste de carga."""
+    """Inicia teste de carga."""
     global load_test_service
     
     try:
         if not HAS_LOAD_TEST_SERVICE:
+            raise HTTPException(
+                status_code=503,
+                detail="Serviço de teste de carga não disponível"
+            )
+        
+        if load_test_service and hasattr(load_test_service, 'is_running') and load_test_service.is_running():
             return {
-                "message": "Serviço de teste de carga não disponível",
-                "status": "service_unavailable",
-                "config": config.dict()
+                "status": "already_running",
+                "message": "Teste de carga já está em execução"
             }
         
-        if load_test_service and hasattr(load_test_service, 'is_running') and load_test_service.is_running:
-            return {"message": "Teste de carga já está rodando", "status": "already_running"}
-        
-        # Criar configuração do teste
-        test_config = LoadTestConfig(
+        # Criar configuração
+        load_config = LoadTestConfig(
             target_cps=config.target_cps,
             duration_minutes=config.duration_minutes,
             countries_to_test=config.countries_to_test,
             number_of_clis=config.number_of_clis
         )
         
-        # Criar e iniciar teste
-        load_test_service = LoadTestService(db)
+        # Inicializar serviço
+        load_test_service = LoadTestService(load_config, db)
         
-        # Executar teste em background
-        asyncio.create_task(run_load_test_background(test_config))
-        
-        logger.info(f"🧪 Teste de carga iniciado: {config.target_cps} CPS")
+        # Iniciar em background
+        asyncio.create_task(run_load_test_background(load_config))
         
         return {
-            "message": "Teste de carga iniciado com sucesso",
             "status": "started",
-            "config": config.dict()
+            "message": "Teste de carga iniciado",
+            "config": config.dict(),
+            "estimated_duration": config.duration_minutes,
+            "timestamp": datetime.now().isoformat()
         }
         
     except Exception as e:
-        logger.error(f"❌ Erro ao iniciar teste: {str(e)}")
-        return {
-            "message": f"Erro ao iniciar teste: {str(e)}",
-            "status": "error",
-            "config": config.dict()
-        }
+        logger.error(f"❌ Erro ao iniciar teste de carga: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao iniciar teste: {str(e)}"
+        )
 
 @router.post("/load-test/stop")
 async def stop_load_test():
-    """Para o teste de carga atual."""
+    """Para o teste de carga."""
     global load_test_service
     
     try:
-        if not HAS_LOAD_TEST_SERVICE:
+        if not load_test_service:
             return {
-                "message": "Serviço de teste de carga não disponível",
-                "status": "service_unavailable"
+                "status": "not_running",
+                "message": "Teste de carga não está em execução"
             }
         
-        if not load_test_service or not hasattr(load_test_service, 'is_running') or not load_test_service.is_running:
-            return {"message": "Nenhum teste em execução", "status": "not_running"}
+        if hasattr(load_test_service, 'stop'):
+            await load_test_service.stop()
         
-        if hasattr(load_test_service, 'is_running'):
-            load_test_service.is_running = False
-        
-        logger.info("🛑 Teste de carga parado")
+        load_test_service = None
         
         return {
-            "message": "Teste de carga parado com sucesso",
-            "status": "stopped"
+            "status": "stopped",
+            "message": "Teste de carga parado",
+            "timestamp": datetime.now().isoformat()
         }
         
     except Exception as e:
         logger.error(f"❌ Erro ao parar teste: {str(e)}")
-        return {
-            "message": f"Erro ao parar teste: {str(e)}",
-            "status": "error"
-        }
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao parar teste: {str(e)}"
+        )
 
 @router.get("/load-test/status")
 async def get_load_test_status():
-    """Obtém status do teste de carga atual."""
+    """Obtém status do teste de carga."""
     try:
-        if not HAS_LOAD_TEST_SERVICE:
-            return {
-                "status": "service_unavailable",
-                "message": "Serviço de teste de carga não disponível",
-                "test_status": "inactive",
-                "timestamp": datetime.now().isoformat()
-            }
-        
         if not load_test_service:
             return {
-                "status": "no_test", 
-                "message": "Nenhum teste executado",
-                "test_status": "inactive",
+                "status": "inactive",
+                "message": "Nenhum teste em execução"
+            }
+        
+        if hasattr(load_test_service, 'get_status'):
+            status = load_test_service.get_status()
+            return {
+                "status": "active",
+                "details": status,
                 "timestamp": datetime.now().isoformat()
             }
         
-        status = load_test_service.get_test_status()
-        
         return {
-            "status": "success",
-            "test_status": status,
-            "timestamp": datetime.now().isoformat()
+            "status": "unknown",
+            "message": "Status não disponível"
         }
         
     except Exception as e:
-        logger.error(f"❌ Erro ao obter status do teste: {str(e)}")
+        logger.error(f"❌ Erro ao obter status: {str(e)}")
         return {
             "status": "error",
-            "message": str(e),
-            "test_status": "error",
-            "timestamp": datetime.now().isoformat()
+            "message": str(e)
         }
 
 @router.get("/load-test/results")
 async def get_load_test_results(format: str = "json"):
-    """Obtém resultados do último teste de carga."""
+    """Obtém resultados do teste de carga."""
     try:
-        if not HAS_LOAD_TEST_SERVICE:
-            return {
-                "status": "service_unavailable",
-                "message": "Serviço de teste de carga não disponível",
-                "results": None,
-                "format": format
-            }
-        
         if not load_test_service:
             return {
-                "status": "no_test",
-                "message": "Nenhum teste executado",
-                "results": None,
-                "format": format
+                "results": [],
+                "message": "Nenhum teste executado"
             }
         
-        if hasattr(load_test_service, 'export_results'):
-            results = load_test_service.export_results(format)
-        
-        if format == "json":
-            return {
-                "status": "success",
-                "format": format,
-                "results": json.loads(results)
-            }
-        else:
-            return {
-                "status": "success",
-                "format": format,
-                "results": results
+        if hasattr(load_test_service, 'get_results'):
+            results = load_test_service.get_results()
+            
+            if format == "csv":
+                # Converter para CSV
+                import csv
+                import io
+                output = io.StringIO()
+                writer = csv.writer(output)
+                
+                # Cabeçalho
+                writer.writerow(["timestamp", "cps", "concurrent_calls", "success_rate", "response_time"])
+                
+                # Dados
+                for result in results:
+                    writer.writerow([
+                        result.get("timestamp", ""),
+                        result.get("cps", 0),
+                        result.get("concurrent_calls", 0),
+                        result.get("success_rate", 0),
+                        result.get("response_time", 0)
+                    ])
+                
+                return {
+                    "format": "csv",
+                    "data": output.getvalue(),
+                    "total_records": len(results)
                 }
-        else:
+            
             return {
-                "status": "method_unavailable",
-                "message": "Método export_results não disponível",
-                "results": None,
-                "format": format
+                "format": "json",
+                "results": results,
+                "total_records": len(results),
+                "timestamp": datetime.now().isoformat()
             }
+        
+        return {
+            "results": [],
+            "message": "Resultados não disponíveis"
+        }
         
     except Exception as e:
         logger.error(f"❌ Erro ao obter resultados: {str(e)}")
         return {
-            "status": "error",
-            "message": str(e),
-            "results": None,
-            "format": format
+            "results": [],
+            "message": f"Erro: {str(e)}"
         }
 
-# ========== ROTAS DE CLI E PAÍSES ==========
+# ========== ROTAS DE LIMITES CLI ==========
 
 @router.get("/cli/limits")
 async def get_cli_limits(db: Session = Depends(get_db)):
-    """Obtém limites de CLIs por país."""
+    """Obtém limites de CLI por país."""
     try:
         if not HAS_CLI_LIMITS_SERVICE:
             return {
-                "status": "service_unavailable",
-                "message": "Serviço de limites CLI não disponível",
-                "limits": {
-                    "usa": 100,
-                    "canada": 100,
-                    "mexico": 0,
-                    "brasil": 0,
-                    "colombia": 0,
-                    "argentina": 0,
-                    "chile": 0,
-                    "peru": 0
-                },
-                "timestamp": datetime.now().isoformat()
+                "limits": {},
+                "message": "Serviço de limites CLI não disponível"
             }
         
         cli_service = CliCountryLimitsService(db)
         
+        if hasattr(cli_service, 'get_all_limits'):
+            limits = cli_service.get_all_limits()
+            return {
+                "limits": limits,
+                "timestamp": datetime.now().isoformat()
+            }
+        
         return {
-            "status": "success",
-            "limits": cli_service.COUNTRY_DAILY_LIMITS,
-            "timestamp": datetime.now().isoformat()
+            "limits": {},
+            "message": "Método não disponível"
         }
         
     except Exception as e:
         logger.error(f"❌ Erro ao obter limites: {str(e)}")
         return {
-            "status": "error",
-            "message": str(e),
             "limits": {},
-            "timestamp": datetime.now().isoformat()
+            "message": f"Erro: {str(e)}"
         }
 
 @router.post("/cli/limits/{country}")
 async def set_cli_limit(country: str, request: CliLimitRequest, db: Session = Depends(get_db)):
-    """Define limite de CLI para um país."""
+    """Define limite de CLI para país."""
     try:
         if not HAS_CLI_LIMITS_SERVICE:
-            return {
-                "status": "service_unavailable",
-                "message": "Serviço de limites CLI não disponível",
-                "country": country,
-                "new_limit": request.daily_limit
-            }
+            raise HTTPException(
+                status_code=503,
+                detail="Serviço de limites CLI não disponível"
+            )
         
         cli_service = CliCountryLimitsService(db)
         
-        # Atualizar limite
-        if hasattr(cli_service, 'COUNTRY_DAILY_LIMITS'):
-            cli_service.COUNTRY_DAILY_LIMITS[country.lower()] = request.daily_limit
-        
-        logger.info(f"📊 Limite de CLI atualizado para {country}: {request.daily_limit}")
+        if hasattr(cli_service, 'set_limit'):
+            cli_service.set_limit(country, request.daily_limit)
         
         return {
-            "status": "success",
+            "status": "updated",
             "country": country,
-            "new_limit": request.daily_limit,
-            "message": f"Limite atualizado para {country}"
+            "daily_limit": request.daily_limit,
+            "timestamp": datetime.now().isoformat()
         }
         
     except Exception as e:
         logger.error(f"❌ Erro ao definir limite: {str(e)}")
-        return {
-            "status": "error",
-            "message": str(e),
-            "country": country,
-            "new_limit": request.daily_limit
-        }
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao definir limite: {str(e)}"
+        )
 
 @router.get("/cli/usage")
 async def get_cli_usage(db: Session = Depends(get_db)):
-    """Obtém estatísticas de uso de CLIs."""
+    """Obtém uso atual de CLI por país."""
     try:
         if not HAS_CLI_LIMITS_SERVICE:
             return {
-                "status": "service_unavailable",
-                "message": "Serviço de estatísticas CLI não disponível",
-                "statistics": {
-                    "total_clis": 0,
-                    "active_clis": 0,
-                    "blocked_clis": 0,
-                    "countries": {}
-                },
-                "timestamp": datetime.now().isoformat()
+                "usage": {},
+                "message": "Serviço de limites CLI não disponível"
             }
         
         cli_service = CliCountryLimitsService(db)
-        stats = cli_service.get_usage_statistics()
+        
+        if hasattr(cli_service, 'get_usage_statistics'):
+            usage = cli_service.get_usage_statistics()
+            return {
+                "usage": usage,
+                "timestamp": datetime.now().isoformat()
+            }
         
         return {
-            "status": "success",
-            "statistics": stats,
-            "timestamp": datetime.now().isoformat()
+            "usage": {},
+            "message": "Estatísticas não disponíveis"
         }
         
     except Exception as e:
-        logger.error(f"❌ Erro ao obter estatísticas: {str(e)}")
+        logger.error(f"❌ Erro ao obter uso: {str(e)}")
         return {
-            "status": "error",
-            "message": str(e),
-            "statistics": {},
-            "timestamp": datetime.now().isoformat()
+            "usage": {},
+            "message": f"Erro: {str(e)}"
         }
 
 @router.post("/cli/reset")
 async def reset_cli_usage(db: Session = Depends(get_db)):
-    """Reseta uso diário de CLIs."""
+    """Reseta contadores de uso de CLI."""
     try:
         if not HAS_CLI_LIMITS_SERVICE:
-            return {
-                "status": "service_unavailable",
-                "message": "Serviço de limites CLI não disponível",
-                "reset_result": None,
-                "timestamp": datetime.now().isoformat()
-            }
+            raise HTTPException(
+                status_code=503,
+                detail="Serviço de limites CLI não disponível"
+            )
         
         cli_service = CliCountryLimitsService(db)
         
-        if hasattr(cli_service, 'reset_daily_usage'):
-            result = cli_service.reset_daily_usage()
-        else:
-            result = {"message": "Método reset_daily_usage não disponível"}
+        if hasattr(cli_service, 'reset_usage'):
+            cli_service.reset_usage()
         
         return {
-            "status": "success",
-            "reset_result": result,
+            "status": "reset",
+            "message": "Contadores de uso resetados",
             "timestamp": datetime.now().isoformat()
         }
         
     except Exception as e:
         logger.error(f"❌ Erro ao resetar uso: {str(e)}")
-        return {
-            "status": "error",
-            "message": str(e),
-            "reset_result": None,
-            "timestamp": datetime.now().isoformat()
-        }
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao resetar uso: {str(e)}"
+        )
 
-# ========== WEBSOCKET PARA MÉTRICAS EM TEMPO REAL ==========
+# ========== WEBSOCKET ==========
 
 @router.websocket("/ws/performance")
 async def websocket_performance(websocket: WebSocket):
-    """WebSocket para métricas de performance em tempo real."""
+    """WebSocket para métricas em tempo real."""
     await websocket.accept()
     websocket_connections.add(websocket)
     
     try:
         while True:
-            # Manter conexão viva
-            await websocket.receive_text()
+            await asyncio.sleep(1)
+            
+            # Enviar métricas atuais
+            if dialer_instance and hasattr(dialer_instance, 'get_current_metrics'):
+                metrics = dialer_instance.get_current_metrics()
+                await websocket.send_json({
+                    "type": "metrics",
+                    "data": metrics,
+                    "timestamp": datetime.now().isoformat()
+                })
             
     except WebSocketDisconnect:
         websocket_connections.discard(websocket)
@@ -683,1235 +653,141 @@ async def websocket_performance(websocket: WebSocket):
         logger.error(f"❌ Erro no WebSocket: {str(e)}")
         websocket_connections.discard(websocket)
 
-# ========== FUNÇÕES AUXILIARES ==========
-
 async def broadcast_metrics_update(metrics):
-    """Envia atualização de métricas para todos os WebSockets conectados."""
+    """Broadcast métricas para todos os websockets conectados."""
     if not websocket_connections:
         return
     
     message = {
         "type": "metrics_update",
-        "timestamp": datetime.now().isoformat(),
-        "data": {
-            "current_cps": metrics.current_cps,
-            "concurrent_calls": metrics.concurrent_calls,
-            "system_load": metrics.system_load,
-            "calls_initiated": metrics.calls_initiated,
-            "calls_answered": metrics.calls_answered,
-            "calls_failed": metrics.calls_failed
-        }
+        "data": metrics,
+        "timestamp": datetime.now().isoformat()
     }
     
-    # Enviar para todos os WebSockets conectados
     disconnected = set()
     for websocket in websocket_connections:
         try:
-            await websocket.send_text(json.dumps(message))
+            await websocket.send_json(message)
         except:
             disconnected.add(websocket)
     
-    # Remover WebSockets desconectados
-    websocket_connections.difference_update(disconnected)
+    # Remover conexões mortas
+    websocket_connections -= disconnected
+
+# ========== FUNÇÕES AUXILIARES ==========
 
 async def run_load_test_background(config: LoadTestConfig):
     """Executa teste de carga em background."""
     try:
-        if not HAS_LOAD_TEST_SERVICE or not load_test_service:
-            logger.warning("⚠️ Load test service não disponível - simulando resultado")
-            # Simular resultado para WebSocket
-            message = {
-                "type": "load_test_completed",
-                "timestamp": datetime.now().isoformat(),
-                "result": {
-                    "test_id": "simulation",
-                    "success_rate": 0.0,
-                    "actual_cps": 0.0,
-                    "total_calls": 0,
-                    "message": "Serviço de teste de carga não disponível"
-                }
-            }
-        else:
-            result = await load_test_service.run_load_test(config)
-            
-            # Enviar resultado via WebSocket
-            message = {
-                "type": "load_test_completed",
-                "timestamp": datetime.now().isoformat(),
-                "result": {
-                    "test_id": result.test_id,
-                    "success_rate": result.success_rate,
-                    "actual_cps": result.actual_cps,
-                    "total_calls": result.total_calls_attempted
-                }
-            }
-            
-            for websocket in websocket_connections:
-                try:
-                    await websocket.send_text(json.dumps(message))
-                except:
-                    pass
+        if load_test_service and hasattr(load_test_service, 'run'):
+            await load_test_service.run()
+        
+        logger.info("🎯 Teste de carga finalizado")
         
     except Exception as e:
         logger.error(f"❌ Erro no teste de carga: {str(e)}")
+    
+    finally:
+        global load_test_service
+        load_test_service = None
 
-# ========== ENDPOINTS DE SAÚDE ==========
+# ========== ROTAS DE SAÚDE ==========
 
 @router.get("/health")
 async def health_check():
-    """Verifica saúde do sistema de performance."""
+    """Verifica saúde dos serviços."""
     return {
         "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
         "services": {
-            "dialer": "active" if dialer_instance and hasattr(dialer_instance, 'is_running') and dialer_instance.is_running else "inactive",
-            "load_test": "active" if load_test_service and hasattr(load_test_service, 'is_running') and load_test_service.is_running else "inactive",
-            "websocket_connections": len(websocket_connections),
             "high_performance_dialer": HAS_HIGH_PERFORMANCE_DIALER,
             "load_test_service": HAS_LOAD_TEST_SERVICE,
             "cli_limits_service": HAS_CLI_LIMITS_SERVICE,
-            "dtmf_config_service": HAS_DTMF_CONFIG_SERVICE
-        }
+            "dtmf_config_service": HAS_DTMF_CONFIG_SERVICE,
+            "dynamic_caller_id_service": HAS_DYNAMIC_CALLER_ID_SERVICE,
+            "advanced_dnc_service": HAS_ADVANCED_DNC_SERVICE,
+            "cli_local_randomization_service": HAS_CLI_LOCAL_RANDOMIZATION_SERVICE,
+            "cli_pattern_generator_service": HAS_CLI_PATTERN_GENERATOR_SERVICE
+        },
+        "dialer_active": dialer_instance is not None,
+        "load_test_active": load_test_service is not None,
+        "websocket_connections": len(websocket_connections),
+        "timestamp": datetime.now().isoformat()
     }
 
 @router.get("/test")
 async def test_endpoint():
-    """Endpoint de teste para verificar se as rotas estão funcionando."""
+    """Endpoint de teste simples."""
     return {
-        "status": "working",
-        "message": "Performance routes are working correctly",
-        "timestamp": datetime.now().isoformat(),
-        "endpoints": [
-            "/performance/health",
-            "/performance/test",
-            "/performance/metrics/realtime",
-            "/performance/metrics/history",
-            "/performance/load-test/status",
-            "/performance/load-test/results",
-            "/performance/cli/limits",
-            "/performance/cli/usage",
-            "/performance/dtmf/configs"
-        ]
-    } 
+        "status": "ok",
+        "message": "Performance routes funcionando",
+        "timestamp": datetime.now().isoformat()
+    }
 
-# ========================= CONFIGURAÇÃO DTMF POR PAÍS =========================
+# ========== ROTAS CLI PATTERN GENERATOR ==========
 
-@router.get("/dtmf/configs")
-async def get_dtmf_configs(db: Session = Depends(get_db)):
-    """Obtém todas as configurações DTMF por país."""
-    if not HAS_DTMF_CONFIG_SERVICE:
-        return {
-            "status": "service_unavailable",
-            "message": "Serviço DTMF não disponível",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "configs": {
-                    "usa": {"connect_key": "1", "dnc_key": "2", "daily_limit": 100},
-                    "canada": {"connect_key": "1", "dnc_key": "2", "daily_limit": 100},
-                    "mexico": {"connect_key": "3", "dnc_key": "2", "daily_limit": 0},
-                    "brasil": {"connect_key": "1", "dnc_key": "2", "daily_limit": 0},
-                    "colombia": {"connect_key": "1", "dnc_key": "2", "daily_limit": 0}
-                }
-            }
-        }
-    
+@router.get("/cli-pattern/countries")
+async def get_supported_countries(db: Session = Depends(get_db)):
+    """Obtém países suportados pelo gerador de padrões CLI."""
     try:
-        dtmf_service = DTMFCountryConfigService(db)
-        configs = dtmf_service.get_all_country_configs()
-        
-        return {
-            "status": "success",
-            "message": "Configurações DTMF obtidas",
-            "timestamp": datetime.now().isoformat(),
-            "data": {"configs": configs}
-        }
-    except Exception as e:
-        return {
-            "status": "error", 
-            "message": f"Erro ao obter configurações DTMF: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.get("/dtmf/config/{country}")
-async def get_dtmf_config_by_country(country: str, db: Session = Depends(get_db)):
-    """Obtém configuração DTMF de um país específico."""
-    if not HAS_DTMF_CONFIG_SERVICE:
-        # Configurações simuladas baseadas na funcionalidade solicitada
-        simulate_configs = {
-            "mexico": {"connect_key": "3", "dnc_key": "2", "menu_timeout": 12},
-            "usa": {"connect_key": "1", "dnc_key": "2", "menu_timeout": 10},
-            "canada": {"connect_key": "1", "dnc_key": "2", "menu_timeout": 10}
-        }
-        
-        config = simulate_configs.get(country.lower(), {"connect_key": "1", "dnc_key": "2", "menu_timeout": 10})
-        
-        return {
-            "status": "service_unavailable",
-            "message": f"Configuração DTMF simulada para {country}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {"config": config, "country": country}
-        }
-    
-    try:
-        dtmf_service = DTMFCountryConfigService(db)
-        config = dtmf_service.get_country_config(country)
-        
-        return {
-            "status": "success",
-            "message": f"Configuração DTMF obtida para {country}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {"config": config, "country": country}
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro ao obter configuração DTMF para {country}: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.post("/dtmf/config/{country}")
-async def update_dtmf_config(
-    country: str,
-    config_data: Dict[str, Any],
-    db: Session = Depends(get_db)
-):
-    """Atualiza configuração DTMF de um país."""
-    if not HAS_DTMF_CONFIG_SERVICE:
-        return {
-            "status": "service_unavailable",
-            "message": "Serviço DTMF não disponível para atualização",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "country": country,
-                "received_config": config_data,
-                "message": "Configuração recebida mas não pode ser salva"
-            }
-        }
-    
-    try:
-        dtmf_service = DTMFCountryConfigService(db)
-        
-        # Validar configuração
-        connect_key = config_data.get("connect_key", "1")
-        dnc_key = config_data.get("dnc_key", "2")
-        
-        validation = dtmf_service.validate_key_assignment(country, connect_key, dnc_key)
-        
-        if not validation["valid"]:
+        if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
             return {
-                "status": "error",
-                "message": f"Configuração inválida: {', '.join(validation['errors'])}",
-                "timestamp": datetime.now().isoformat(),
-                "data": {
-                    "validation": validation,
-                    "suggestions": validation["suggestions"]
-                }
+                "countries": [],
+                "message": "Serviço de padrões CLI não disponível"
             }
         
-        # Atualizar configuração
-        success = dtmf_service.update_country_config(country, config_data)
+        cli_service = CliPatternGeneratorService(db)
         
-        if success:
-            updated_config = dtmf_service.get_country_config(country)
+        if hasattr(cli_service, 'get_supported_countries'):
+            countries = cli_service.get_supported_countries()
             return {
-                "status": "success",
-                "message": f"Configuração DTMF atualizada para {country}",
-                "timestamp": datetime.now().isoformat(),
-                "data": {
-                    "country": country,
-                    "updated_config": updated_config
-                }
+                "countries": countries,
+                "total": len(countries),
+                "timestamp": datetime.now().isoformat()
             }
-        else:
+        
+        return {
+            "countries": [],
+            "message": "Método não disponível"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter países: {str(e)}")
+        return {
+            "countries": [],
+            "message": f"Erro: {str(e)}"
+        }
+
+@router.get("/cli-pattern/patterns/{country}")
+async def get_country_patterns(country: str, db: Session = Depends(get_db)):
+    """Obtém padrões disponíveis para um país."""
+    try:
+        if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
             return {
-                "status": "error",
-                "message": f"Falha ao atualizar configuração DTMF para {country}",
-                "timestamp": datetime.now().isoformat(),
-                "data": {}
+                "patterns": [],
+                "message": "Serviço de padrões CLI não disponível"
             }
-            
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro ao atualizar configuração DTMF: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.get("/dtmf/dialplan/{country}")
-async def generate_asterisk_dialplan(country: str, db: Session = Depends(get_db)):
-    """Gera dialplan do Asterisk para configuração DTMF de um país."""
-    if not HAS_DTMF_CONFIG_SERVICE:
-        # Dialplan simulado baseado no país
-        dialplan_templates = {
-            "mexico": f"""
-; Configuração DTMF para México (CONNECT_KEY=3)
-[dtmf-mexico]
-exten => s,1,NoOp(DTMF Handler for Mexico)
-exten => 3,1,NoOp(Connect key pressed)
-exten => 3,n,Set(__CALL_RESULT=CONNECT)
-exten => 2,1,NoOp(DNC key pressed)
-exten => 2,n,Set(__CALL_RESULT=DNC)
-""",
-            "usa": f"""
-; Configuração DTMF para USA (CONNECT_KEY=1)
-[dtmf-usa]
-exten => s,1,NoOp(DTMF Handler for USA)
-exten => 1,1,NoOp(Connect key pressed)
-exten => 1,n,Set(__CALL_RESULT=CONNECT)
-exten => 2,1,NoOp(DNC key pressed)
-exten => 2,n,Set(__CALL_RESULT=DNC)
-"""
-        }
         
-        dialplan = dialplan_templates.get(country.lower(), dialplan_templates["usa"])
+        cli_service = CliPatternGeneratorService(db)
         
-        return {
-            "status": "service_unavailable",
-            "message": f"Dialplan simulado para {country}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "country": country,
-                "dialplan": dialplan
-            }
-        }
-    
-    try:
-        dtmf_service = DTMFCountryConfigService(db)
-        dialplan = dtmf_service.generate_asterisk_dialplan(country)
-        
-        return {
-            "status": "success",
-            "message": f"Dialplan gerado para {country}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "country": country,
-                "dialplan": dialplan
-            }
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro ao gerar dialplan: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-# ========================= CALLER ID DINÂMICO =========================
-
-@router.get("/caller-id/next/{country}")
-async def get_next_caller_id(
-    country: str,
-    campaign_id: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """Obtém próximo Caller ID disponível para um país."""
-    if not HAS_DYNAMIC_CALLER_ID_SERVICE:
-        # Caller IDs simulados por país
-        fallback_clis = {
-            "usa": "+14255551000",
-            "canada": "+14165551000", 
-            "mexico": "+525555551000",
-            "brasil": "+551155551000",
-            "colombia": "+5715551000",
-            "argentina": "+541155551000",
-            "chile": "+5625551000",
-            "peru": "+5115551000"
-        }
-        
-        cli = fallback_clis.get(country.lower(), "+18885559999")
-        
-        return {
-            "status": "service_unavailable",
-            "message": f"Caller ID simulado para {country}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "cli": cli,
-                "country": country,
-                "campaign_id": campaign_id,
-                "source": "fallback_simulation"
-            }
-        }
-    
-    try:
-        caller_id_service = DynamicCallerIdService(db)
-        cli_info = caller_id_service.get_next_cli(country, campaign_id)
-        
-        return {
-            "status": "success",
-            "message": f"Caller ID obtido para {country}",
-            "timestamp": datetime.now().isoformat(),
-            "data": cli_info
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro ao obter Caller ID: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.get("/caller-id/stats/{country}")
-async def get_caller_id_stats(country: str, db: Session = Depends(get_db)):
-    """Obtém estatísticas de Caller ID de um país."""
-    if not HAS_DYNAMIC_CALLER_ID_SERVICE:
-        return {
-            "status": "service_unavailable",
-            "message": f"Estatísticas simuladas para {country}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "country": country,
-                "total_clis": 1000,
-                "daily_limit": 100 if country.lower() in ["usa", "canada"] else 0,
-                "used_today": 50,
-                "available_today": 950 if country.lower() not in ["usa", "canada"] else 50
-            }
-        }
-    
-    try:
-        caller_id_service = DynamicCallerIdService(db)
-        stats = caller_id_service.get_country_cli_stats(country)
-        
-        return {
-            "status": "success",
-            "message": f"Estatísticas de Caller ID para {country}",
-            "timestamp": datetime.now().isoformat(),
-            "data": stats
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro ao obter estatísticas: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.get("/caller-id/stats")
-async def get_all_caller_id_stats(db: Session = Depends(get_db)):
-    """Obtém estatísticas de Caller ID de todos os países."""
-    if not HAS_DYNAMIC_CALLER_ID_SERVICE:
-        return {
-            "status": "service_unavailable",
-            "message": "Estatísticas globais simuladas",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "total_countries": 8,
-                "restricted_countries": ["usa", "canada"],
-                "unrestricted_countries": ["mexico", "brasil", "colombia", "argentina", "chile", "peru"],
-                "total_clis": 8000
-            }
-        }
-    
-    try:
-        caller_id_service = DynamicCallerIdService(db)
-        stats = caller_id_service.get_all_countries_stats()
-        
-        return {
-            "status": "success",
-            "message": "Estatísticas globais de Caller ID",
-            "timestamp": datetime.now().isoformat(),
-            "data": stats
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro ao obter estatísticas globais: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.post("/caller-id/load/{country}")
-async def load_caller_id_list(
-    country: str,
-    cli_data: Dict[str, List[str]],
-    db: Session = Depends(get_db)
-):
-    """Carrega lista personalizada de Caller IDs para um país."""
-    if not HAS_DYNAMIC_CALLER_ID_SERVICE:
-        cli_list = cli_data.get("cli_list", [])
-        return {
-            "status": "service_unavailable",
-            "message": f"Lista simulada carregada para {country}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "country": country,
-                "received_clis": len(cli_list),
-                "message": "Lista recebida mas não pode ser salva"
-            }
-        }
-    
-    try:
-        caller_id_service = DynamicCallerIdService(db)
-        cli_list = cli_data.get("cli_list", [])
-        
-        result = caller_id_service.load_custom_cli_list(country, cli_list)
-        
-        return {
-            "status": "success" if result["success"] else "error",
-            "message": result["message"],
-            "timestamp": datetime.now().isoformat(),
-            "data": result
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro ao carregar lista de CLIs: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.post("/caller-id/reset/{country}")
-async def reset_caller_id_usage(country: str, db: Session = Depends(get_db)):
-    """Reset contadores de uso de Caller ID para um país."""
-    if not HAS_DYNAMIC_CALLER_ID_SERVICE:
-        return {
-            "status": "service_unavailable",
-            "message": f"Reset simulado para {country}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "country": country,
-                "reset_records": 100,
-                "message": "Reset simulado executado"
-            }
-        }
-    
-    try:
-        caller_id_service = DynamicCallerIdService(db)
-        result = caller_id_service.reset_daily_usage(country)
-        
-        return {
-            "status": "success" if result["success"] else "error",
-            "message": result["message"],
-            "timestamp": datetime.now().isoformat(),
-            "data": result
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro ao resetar uso: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-# ========================= LISTA NEGRA/DNC AVANÇADA =========================
-
-@router.post("/dnc/add")
-async def add_to_dnc(
-    dnc_data: Dict[str, Any],
-    db: Session = Depends(get_db)
-):
-    """Adiciona número à lista DNC."""
-    if not HAS_ADVANCED_DNC_SERVICE:
-        phone_number = dnc_data.get("phone_number")
-        country = dnc_data.get("country")
-        return {
-            "status": "service_unavailable",
-            "message": f"Adição simulada à DNC: {phone_number} ({country})",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "phone_number": phone_number,
-                "country": country,
-                "action": "simulated_add"
-            }
-        }
-    
-    try:
-        dnc_service = AdvancedDNCService(db)
-        
-        phone_number = dnc_data.get("phone_number")
-        country = dnc_data.get("country")
-        campaign_id = dnc_data.get("campaign_id")
-        reason = dnc_data.get("reason", "customer_request")
-        
-        if not phone_number or not country:
+        if hasattr(cli_service, 'get_country_patterns'):
+            patterns = cli_service.get_country_patterns(country)
             return {
-                "status": "error",
-                "message": "phone_number e country são obrigatórios",
-                "timestamp": datetime.now().isoformat(),
-                "data": {}
-            }
-        
-        result = dnc_service.add_to_dnc(phone_number, country, campaign_id, reason)
-        
-        return {
-            "status": "success" if result["success"] else "error",
-            "message": result["message"],
-            "timestamp": datetime.now().isoformat(),
-            "data": result
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro ao adicionar à DNC: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.get("/dnc/check/{phone_number}/{country}")
-async def check_dnc_status(
-    phone_number: str,
-    country: str,
-    campaign_id: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """Verifica se número está na lista DNC."""
-    if not HAS_ADVANCED_DNC_SERVICE:
-        return {
-            "status": "service_unavailable",
-            "message": f"Verificação simulada para {phone_number}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "is_dnc": False,
-                "phone_number": phone_number,
                 "country": country,
-                "reason": "Simulation - not in DNC"
-            }
-        }
-    
-    try:
-        dnc_service = AdvancedDNCService(db)
-        result = dnc_service.check_dnc_status(phone_number, country, campaign_id)
-        
-        return {
-            "status": "success",
-            "message": f"Status DNC verificado para {phone_number}",
-            "timestamp": datetime.now().isoformat(),
-            "data": result
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro ao verificar DNC: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.delete("/dnc/remove")
-async def remove_from_dnc(
-    dnc_data: Dict[str, Any],
-    db: Session = Depends(get_db)
-):
-    """Remove número da lista DNC."""
-    if not HAS_ADVANCED_DNC_SERVICE:
-        phone_number = dnc_data.get("phone_number")
-        country = dnc_data.get("country")
-        return {
-            "status": "service_unavailable",
-            "message": f"Remoção simulada da DNC: {phone_number} ({country})",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "phone_number": phone_number,
-                "country": country,
-                "action": "simulated_remove"
-            }
-        }
-    
-    try:
-        dnc_service = AdvancedDNCService(db)
-        
-        phone_number = dnc_data.get("phone_number")
-        country = dnc_data.get("country")
-        campaign_id = dnc_data.get("campaign_id")
-        reason = dnc_data.get("reason", "manual_removal")
-        
-        if not phone_number or not country:
-            return {
-                "status": "error",
-                "message": "phone_number e country são obrigatórios",
-                "timestamp": datetime.now().isoformat(),
-                "data": {}
-            }
-        
-        result = dnc_service.remove_from_dnc(phone_number, country, campaign_id, reason)
-        
-        return {
-            "status": "success" if result["success"] else "error",
-            "message": result["message"],
-            "timestamp": datetime.now().isoformat(),
-            "data": result
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro ao remover da DNC: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.get("/dnc/stats")
-async def get_dnc_stats(
-    country: Optional[str] = None,
-    campaign_id: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """Obtém estatísticas da lista DNC."""
-    if not HAS_ADVANCED_DNC_SERVICE:
-        return {
-            "status": "service_unavailable",
-            "message": "Estatísticas DNC simuladas",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "total_entries": 1500,
-                "active_entries": 1200,
-                "expired_entries": 300,
-                "filter_country": country,
-                "filter_campaign": campaign_id
-            }
-        }
-    
-    try:
-        dnc_service = AdvancedDNCService(db)
-        stats = dnc_service.get_dnc_stats(country, campaign_id)
-        
-        return {
-            "status": "success",
-            "message": "Estatísticas DNC obtidas",
-            "timestamp": datetime.now().isoformat(),
-            "data": stats
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro ao obter estatísticas DNC: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.post("/dnc/cleanup")
-async def cleanup_expired_dnc(
-    cleanup_data: Dict[str, Any],
-    db: Session = Depends(get_db)
-):
-    """Remove entradas DNC expiradas."""
-    if not HAS_ADVANCED_DNC_SERVICE:
-        country = cleanup_data.get("country")
-        return {
-            "status": "service_unavailable",
-            "message": f"Limpeza simulada para {country or 'todos os países'}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "removed_count": 150,
-                "filter_country": country
-            }
-        }
-    
-    try:
-        dnc_service = AdvancedDNCService(db)
-        country = cleanup_data.get("country")
-        
-        result = dnc_service.cleanup_expired_dnc(country)
-        
-        return {
-            "status": "success" if result["success"] else "error",
-            "message": result["message"],
-            "timestamp": datetime.now().isoformat(),
-            "data": result
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro na limpeza DNC: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.get("/dnc/export")
-async def export_dnc_list(
-    country: Optional[str] = None,
-    campaign_id: Optional[str] = None,
-    format: str = "json",
-    db: Session = Depends(get_db)
-):
-    """Exporta lista DNC."""
-    if not HAS_ADVANCED_DNC_SERVICE:
-        return {
-            "status": "service_unavailable",
-            "message": f"Exportação simulada ({format})",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "format": format,
-                "total_entries": 100,
-                "filter_country": country,
-                "filter_campaign": campaign_id,
-                "download_url": f"/simulated-export.{format}"
-            }
-        }
-    
-    try:
-        dnc_service = AdvancedDNCService(db)
-        result = dnc_service.export_dnc_list(country, campaign_id, format)
-        
-        return {
-            "status": "success" if result["success"] else "error",
-            "message": f"Exportação DNC concluída ({format})",
-            "timestamp": datetime.now().isoformat(),
-            "data": result
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro na exportação DNC: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.post("/dnc/import")
-async def import_dnc_list(
-    import_data: Dict[str, Any],
-    db: Session = Depends(get_db)
-):
-    """Importa lista DNC."""
-    if not HAS_ADVANCED_DNC_SERVICE:
-        data = import_data.get("data", [])
-        country = import_data.get("country")
-        return {
-            "status": "service_unavailable",
-            "message": f"Importação simulada para {country}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "country": country,
-                "received_entries": len(data),
-                "simulated_imported": len(data),
-                "message": "Dados recebidos mas não podem ser salvos"
-            }
-        }
-    
-    try:
-        dnc_service = AdvancedDNCService(db)
-        
-        data = import_data.get("data", [])
-        country = import_data.get("country")
-        campaign_id = import_data.get("campaign_id")
-        
-        if not data or not country:
-            return {
-                "status": "error",
-                "message": "data e country são obrigatórios",
-                "timestamp": datetime.now().isoformat(),
-                "data": {}
-            }
-        
-        result = dnc_service.import_dnc_list(data, country, campaign_id)
-        
-        return {
-            "status": "success" if result["success"] else "error",
-            "message": result["message"],
-            "timestamp": datetime.now().isoformat(),
-            "data": result
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro na importação DNC: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.get("/dnc/audit")
-async def get_dnc_audit_log(
-    limit: int = 100,
-    db: Session = Depends(get_db)
-):
-    """Obtém log de auditoria DNC."""
-    if not HAS_ADVANCED_DNC_SERVICE:
-        # Log simulado
-        simulated_log = [
-            {
-                "action": "ADD",
-                "phone_number": "+5525555551234",
-                "country": "mexico",
-                "campaign_id": "camp_001",
-                "reason": "customer_request",
-                "timestamp": datetime.now().isoformat(),
-                "user": "system"
-            }
-        ]
-        
-        return {
-            "status": "service_unavailable",
-            "message": "Log de auditoria simulado",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "audit_log": simulated_log,
-                "total_entries": len(simulated_log),
-                "limit": limit
-            }
-        }
-    
-    try:
-        dnc_service = AdvancedDNCService(db)
-        audit_log = dnc_service.get_audit_log(limit)
-        
-        return {
-            "status": "success",
-            "message": "Log de auditoria DNC obtido",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "audit_log": audit_log,
-                "total_entries": len(audit_log),
-                "limit": limit
-            }
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro ao obter log de auditoria: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-# ========================= CONFIGURAÇÃO INTEGRADA POR PAÍS =========================
-
-@router.get("/country-config/{country}")
-async def get_complete_country_config(country: str, db: Session = Depends(get_db)):
-    """Obtém configuração completa de um país (DTMF + CLI + DNC)."""
-    try:
-        config_result = {
-            "country": country,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-        # Configuração DTMF
-        if HAS_DTMF_CONFIG_SERVICE:
-            dtmf_service = DTMFCountryConfigService(db)
-            config_result["dtmf"] = dtmf_service.get_country_config(country)
-        else:
-            config_result["dtmf"] = {
-                "connect_key": "3" if country.lower() == "mexico" else "1",
-                "dnc_key": "2",
-                "status": "simulated"
-            }
-        
-        # Estatísticas de CLI
-        if HAS_DYNAMIC_CALLER_ID_SERVICE:
-            caller_id_service = DynamicCallerIdService(db)
-            config_result["caller_id"] = caller_id_service.get_country_cli_stats(country)
-        else:
-            config_result["caller_id"] = {
-                "daily_limit": 100 if country.lower() in ["usa", "canada"] else 0,
-                "total_clis": 1000,
-                "status": "simulated"
-            }
-        
-        # Estatísticas DNC
-        if HAS_ADVANCED_DNC_SERVICE:
-            dnc_service = AdvancedDNCService(db)
-            config_result["dnc"] = dnc_service.get_dnc_stats(country)
-        else:
-            config_result["dnc"] = {
-                "total_entries": 100,
-                "active_entries": 80,
-                "status": "simulated"
+                "patterns": patterns,
+                "total": len(patterns),
+                "timestamp": datetime.now().isoformat()
             }
         
         return {
-            "status": "success",
-            "message": f"Configuração completa obtida para {country}",
-            "timestamp": datetime.now().isoformat(),
-            "data": config_result
-        }
-        
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": f"Erro ao obter configuração completa: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        } 
-
-# ========================= CLI LOCAL RANDOMIZATION =========================
-
-@router.post("/cli-local/generate")
-async def generate_local_cli(
-    request: Dict[str, Any],
-    db: Session = Depends(get_db)
-):
-    """
-    Gera CLI local baseado no número de destino.
-    
-    Body:
-        destination_number: Número de destino
-        custom_pattern: Padrão customizado (opcional)
-        country_override: Forçar país específico (opcional)
-    """
-    try:
-        destination_number = request.get("destination_number")
-        if not destination_number:
-            return {
-                "status": "error",
-                "message": "destination_number é obrigatório",
-                "timestamp": datetime.now().isoformat(),
-                "data": {}
-            }
-        
-        service = CliLocalRandomizationService(db)
-        result = service.generate_local_cli(
-            destination_number=destination_number,
-            custom_pattern=request.get("custom_pattern"),
-            country_override=request.get("country_override")
-        )
-        
-        return {
-            "status": "success",
-            "message": f"CLI local gerado para {destination_number}",
-            "timestamp": datetime.now().isoformat(),
-            "data": result
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ Erro ao gerar CLI local: {str(e)}")
-        return {
-            "status": "error",
-            "message": f"Erro ao gerar CLI local: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.get("/cli-local/patterns")
-async def get_country_patterns(db: Session = Depends(get_db)):
-    """Obtém padrões disponíveis por país para CLI local."""
-    try:
-        service = CliLocalRandomizationService(db)
-        patterns = service.get_country_patterns()
-        
-        return {
-            "status": "success",
-            "message": "Padrões de países obtidos",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "countries": patterns,
-                "total_countries": len(patterns)
-            }
+            "patterns": [],
+            "message": "Método não disponível"
         }
         
     except Exception as e:
         logger.error(f"❌ Erro ao obter padrões: {str(e)}")
         return {
-            "status": "error",
-            "message": f"Erro ao obter padrões: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.get("/cli-local/stats")
-async def get_generation_stats(
-    country: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """Obtém estatísticas de geração de CLIs locais."""
-    try:
-        service = CliLocalRandomizationService(db)
-        stats = service.get_generation_stats(country)
-        
-        return {
-            "status": "success",
-            "message": f"Estatísticas obtidas" + (f" para {country}" if country else ""),
-            "timestamp": datetime.now().isoformat(),
-            "data": stats
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ Erro ao obter estatísticas: {str(e)}")
-        return {
-            "status": "error",
-            "message": f"Erro ao obter estatísticas: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.post("/cli-local/patterns/create")
-async def create_custom_pattern(
-    request: Dict[str, Any],
-    db: Session = Depends(get_db)
-):
-    """
-    Cria padrão customizado de aleatorização CLI.
-    
-    Body:
-        name: Nome do padrão
-        pattern_config: Configuração do padrão
-    """
-    try:
-        name = request.get("name")
-        pattern_config = request.get("pattern_config")
-        
-        if not name or not pattern_config:
-            return {
-                "status": "error",
-                "message": "name e pattern_config são obrigatórios",
-                "timestamp": datetime.now().isoformat(),
-                "data": {}
-            }
-        
-        service = CliLocalRandomizationService(db)
-        result = service.create_custom_pattern(name, pattern_config)
-        
-        if result["success"]:
-            return {
-                "status": "success",
-                "message": result["message"],
-                "timestamp": datetime.now().isoformat(),
-                "data": result["pattern"]
-            }
-        else:
-            return {
-                "status": "error",
-                "message": result["error"],
-                "timestamp": datetime.now().isoformat(),
-                "data": {}
-            }
-        
-    except Exception as e:
-        logger.error(f"❌ Erro ao criar padrão customizado: {str(e)}")
-        return {
-            "status": "error",
-            "message": f"Erro ao criar padrão: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.post("/cli-local/bulk-generate")
-async def bulk_generate_clis(
-    request: Dict[str, Any],
-    db: Session = Depends(get_db)
-):
-    """
-    Gera CLIs locais em lote para uma lista de números.
-    
-    Body:
-        destination_numbers: Lista de números de destino
-        pattern_name: Nome do padrão a usar (opcional)
-    """
-    try:
-        destination_numbers = request.get("destination_numbers", [])
-        pattern_name = request.get("pattern_name")
-        
-        if not destination_numbers:
-            return {
-                "status": "error",
-                "message": "destination_numbers é obrigatório",
-                "timestamp": datetime.now().isoformat(),
-                "data": {}
-            }
-        
-        service = CliLocalRandomizationService(db)
-        result = service.bulk_generate_clis(destination_numbers, pattern_name)
-        
-        return {
-            "status": "success",
-            "message": f"Processados {result['total_processed']} números",
-            "timestamp": datetime.now().isoformat(),
-            "data": result
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ Erro na geração em lote: {str(e)}")
-        return {
-            "status": "error",
-            "message": f"Erro na geração em lote: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        }
-
-@router.get("/cli-local/test/{destination_number}")
-async def test_cli_generation(
-    destination_number: str,
-    country_override: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """Testa geração de CLI local para um número específico."""
-    try:
-        service = CliLocalRandomizationService(db)
-        
-        # Gerar 5 CLIs diferentes para mostrar variações
-        results = []
-        for i in range(5):
-            result = service.generate_local_cli(
-                destination_number=destination_number,
-                country_override=country_override
-            )
-            results.append(result)
-        
-        return {
-            "status": "success",
-            "message": f"5 CLIs gerados para teste: {destination_number}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {
-                "destination_number": destination_number,
-                "country_override": country_override,
-                "generated_clis": results,
-                "total_generated": len(results)
-            }
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ Erro no teste de geração: {str(e)}")
-        return {
-            "status": "error",
-            "message": f"Erro no teste: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
-            "data": {}
-        } 
-
-# ========== ROTAS CLI PATTERN GENERATOR (NOVO SISTEMA AVANÇADO) ==========
-
-@router.get("/cli-pattern/countries")
-async def get_supported_countries(db: Session = Depends(get_db)):
-    """Obtém lista de países suportados pelo sistema de padrões CLI."""
-    try:
-        if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
-            return {
-                "success": False,
-                "error": "Serviço de padrões CLI não disponível"
-            }
-        
-        service = CliPatternGeneratorService(db)
-        countries = service.get_all_supported_countries()
-        
-        return {
-            "success": True,
-            "data": countries,
-            "total_countries": len(countries)
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ Erro ao obter países suportados: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
-
-@router.get("/cli-pattern/patterns/{country}")
-async def get_country_patterns(country: str, db: Session = Depends(get_db)):
-    """Obtém padrões disponíveis para um país específico."""
-    try:
-        if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
-            return {
-                "success": False,
-                "error": "Serviço de padrões CLI não disponível"
-            }
-        
-        service = CliPatternGeneratorService(db)
-        patterns = service.get_available_patterns_for_country(country)
-        
-        if "error" in patterns:
-            return {
-                "success": False,
-                "error": patterns["error"]
-            }
-        
-        return {
-            "success": True,
-            "data": patterns
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ Erro ao obter padrões para {country}: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
+            "patterns": [],
+            "message": f"Erro: {str(e)}"
         }
 
 @router.post("/cli-pattern/generate")
@@ -1919,143 +795,145 @@ async def generate_cli_pattern(
     request: Dict[str, Any],
     db: Session = Depends(get_db)
 ):
-    """
-    Gera CLIs com padrões customizados.
-    
-    Body:
-    {
-        "destination_number": "+13055551234",
-        "custom_pattern": "2xx-xxxx",  // Opcional
-        "custom_area_code": "305",     // Opcional
-        "country_override": "usa",     // Opcional
-        "quantity": 5                  // Opcional, padrão 5
-    }
-    """
+    """Gera CLI baseado em padrão."""
     try:
         if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
-            return {
-                "success": False,
-                "error": "Serviço de padrões CLI não disponível"
-            }
+            raise HTTPException(
+                status_code=503,
+                detail="Serviço de padrões CLI não disponível"
+            )
         
-        service = CliPatternGeneratorService(db)
+        cli_service = CliPatternGeneratorService(db)
         
-        # Extrair parâmetros
+        # Parâmetros obrigatórios
         destination_number = request.get("destination_number")
-        custom_pattern = request.get("custom_pattern")
-        custom_area_code = request.get("custom_area_code")
-        country_override = request.get("country_override")
-        quantity = request.get("quantity", 5)
-        
         if not destination_number:
+            raise HTTPException(
+                status_code=400,
+                detail="destination_number é obrigatório"
+            )
+        
+        # Parâmetros opcionais
+        pattern = request.get("pattern")
+        country = request.get("country")
+        
+        if hasattr(cli_service, 'generate_cli_pattern'):
+            result = cli_service.generate_cli_pattern(
+                destination_number=destination_number,
+                pattern=pattern,
+                country=country
+            )
+            
             return {
-                "success": False,
-                "error": "Número de destino é obrigatório"
+                "status": "success",
+                "destination_number": destination_number,
+                "generated_cli": result.get("cli"),
+                "pattern_used": result.get("pattern"),
+                "country": result.get("country"),
+                "area_code": result.get("area_code"),
+                "timestamp": datetime.now().isoformat()
             }
         
-        # Gerar CLIs
-        result = service.generate_cli_with_pattern(
-            destination_number=destination_number,
-            custom_pattern=custom_pattern,
-            custom_area_code=custom_area_code,
-            quantity=quantity
+        raise HTTPException(
+            status_code=503,
+            detail="Método de geração não disponível"
         )
         
-        if not result.get("success"):
-            return {
-                "success": False,
-                "error": result.get("error", "Erro na geração")
-            }
-        
-        logger.info(f"✅ CLIs gerados com sucesso: {len(result.get('generated_clis', []))} CLIs")
-        
-        return {
-            "success": True,
-            "data": result
-        }
-        
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"❌ Erro ao gerar padrões CLI: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        logger.error(f"❌ Erro ao gerar padrão: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao gerar padrão: {str(e)}"
+        )
 
 @router.post("/cli-pattern/bulk-generate")
 async def bulk_generate_cli_patterns(
     request: Dict[str, Any],
     db: Session = Depends(get_db)
 ):
-    """
-    Gera CLIs em lote com padrões customizados.
-    
-    Body:
-    {
-        "destination_numbers": ["+13055551234", "+14255551234"],
-        "custom_pattern": "2xx-xxxx",  // Opcional
-        "country_override": "usa"      // Opcional
-    }
-    """
+    """Gera múltiplos CLIs baseados em padrões."""
     try:
         if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
-            return {
-                "success": False,
-                "error": "Serviço de padrões CLI não disponível"
-            }
+            raise HTTPException(
+                status_code=503,
+                detail="Serviço de padrões CLI não disponível"
+            )
         
-        service = CliPatternGeneratorService(db)
+        cli_service = CliPatternGeneratorService(db)
         
-        # Extrair parâmetros
+        # Parâmetros obrigatórios
         destination_numbers = request.get("destination_numbers", [])
-        custom_pattern = request.get("custom_pattern")
-        country_override = request.get("country_override")
-        
         if not destination_numbers:
-            return {
-                "success": False,
-                "error": "Lista de números de destino é obrigatória"
-            }
+            raise HTTPException(
+                status_code=400,
+                detail="destination_numbers é obrigatório"
+            )
         
-        # Gerar CLIs para cada número
-        results = []
-        total_clis = 0
+        # Parâmetros opcionais
+        pattern = request.get("pattern")
+        country = request.get("country")
         
-        for destination_number in destination_numbers:
-            result = service.generate_cli_with_pattern(
-                destination_number=destination_number,
-                custom_pattern=custom_pattern,
-                quantity=3  # 3 CLIs por número para lote
+        if hasattr(cli_service, 'bulk_generate_cli_patterns'):
+            results = cli_service.bulk_generate_cli_patterns(
+                destination_numbers=destination_numbers,
+                pattern=pattern,
+                country=country
             )
             
-            if result.get("success"):
-                results.append(result)
-                total_clis += len(result.get("generated_clis", []))
-            else:
+            return {
+                "status": "success",
+                "total_generated": len(results),
+                "results": results,
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        # Fallback para geração individual
+        results = []
+        for destination_number in destination_numbers:
+            try:
+                if hasattr(cli_service, 'generate_cli_pattern'):
+                    result = cli_service.generate_cli_pattern(
+                        destination_number=destination_number,
+                        pattern=pattern,
+                        country=country
+                    )
+                    results.append({
+                        "destination_number": destination_number,
+                        "generated_cli": result.get("cli"),
+                        "pattern_used": result.get("pattern"),
+                        "country": result.get("country"),
+                        "status": "success"
+                    })
+                else:
+                    results.append({
+                        "destination_number": destination_number,
+                        "status": "error",
+                        "error": "Método não disponível"
+                    })
+            except Exception as e:
                 results.append({
-                    "success": False,
                     "destination_number": destination_number,
-                    "error": result.get("error", "Erro na geração")
+                    "status": "error",
+                    "error": str(e)
                 })
         
-        logger.info(f"✅ Geração em lote completada: {total_clis} CLIs para {len(destination_numbers)} números")
-        
         return {
-            "success": True,
-            "data": {
-                "results": results,
-                "total_numbers": len(destination_numbers),
-                "total_clis": total_clis,
-                "successful_generations": len([r for r in results if r.get("success")]),
-                "failed_generations": len([r for r in results if not r.get("success")])
-            }
+            "status": "completed",
+            "total_generated": len([r for r in results if r.get("status") == "success"]),
+            "results": results,
+            "timestamp": datetime.now().isoformat()
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"❌ Erro na geração em lote: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        logger.error(f"❌ Erro ao gerar padrões em lote: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao gerar padrões em lote: {str(e)}"
+        )
 
 @router.get("/cli-pattern/stats")
 async def get_cli_pattern_stats(
@@ -2066,95 +944,81 @@ async def get_cli_pattern_stats(
     try:
         if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
             return {
-                "success": False,
-                "error": "Serviço de padrões CLI não disponível"
+                "stats": {},
+                "message": "Serviço de padrões CLI não disponível"
             }
         
-        # Para agora, retornar estatísticas básicas
-        # Em produção, você pode implementar um sistema de tracking
-        stats = {
-            "total_generations": 0,
-            "total_clis_generated": 0,
-            "countries_used": [],
-            "most_used_patterns": {},
-            "last_24h_generations": 0,
-            "success_rate": 100.0
-        }
+        cli_service = CliPatternGeneratorService(db)
         
-        if country:
-            stats["country_filter"] = country
+        if hasattr(cli_service, 'get_generation_stats'):
+            stats = cli_service.get_generation_stats(country)
+            return {
+                "stats": stats,
+                "country": country,
+                "timestamp": datetime.now().isoformat()
+            }
         
         return {
-            "success": True,
-            "data": stats
+            "stats": {},
+            "message": "Estatísticas não disponíveis"
         }
         
     except Exception as e:
         logger.error(f"❌ Erro ao obter estatísticas: {str(e)}")
         return {
-            "success": False,
-            "error": str(e)
+            "stats": {},
+            "message": f"Erro: {str(e)}"
         }
 
 @router.get("/cli-pattern/examples/{country}")
 async def get_pattern_examples(country: str, db: Session = Depends(get_db)):
-    """Obtém exemplos de padrões para um país específico."""
+    """Obtém exemplos de padrões para um país."""
     try:
         if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
             return {
-                "success": False,
-                "error": "Serviço de padrões CLI não disponível"
+                "examples": [],
+                "message": "Serviço de padrões CLI não disponível"
             }
         
-        service = CliPatternGeneratorService(db)
-        patterns = service.get_available_patterns_for_country(country)
+        cli_service = CliPatternGeneratorService(db)
         
-        if "error" in patterns:
+        if hasattr(cli_service, 'get_pattern_examples'):
+            examples = cli_service.get_pattern_examples(country)
             return {
-                "success": False,
-                "error": patterns["error"]
+                "country": country,
+                "examples": examples,
+                "total": len(examples),
+                "timestamp": datetime.now().isoformat()
             }
         
-        # Gerar exemplos para cada área code
-        examples = {}
-        
-        for area_code, area_info in patterns.get("area_codes", {}).items():
-            examples[area_code] = {
-                "area_name": area_info.get("name", "Desconhecida"),
-                "examples": []
-            }
-            
-            for pattern_info in area_info.get("patterns", []):
-                # Gerar exemplo baseado no padrão
-                pattern = pattern_info["mask"]
-                example_cli = service._generate_cli_with_custom_pattern(
-                    country_config={"country_code": patterns["country_code"]},
-                    area_code=area_code,
-                    pattern=pattern
-                )
-                
-                examples[area_code]["examples"].append({
-                    "pattern": pattern,
-                    "description": pattern_info.get("description", ""),
-                    "example_cli": example_cli,
-                    "weight": pattern_info.get("weight", 0)
-                })
+        # Fallback com exemplos padrão
+        examples = []
+        if country.lower() == "usa":
+            examples = [
+                {"pattern": "2xx-xxxx", "example": "+1 305 221-4567", "description": "Padrão Miami local"},
+                {"pattern": "35x-xxxx", "example": "+1 305 350-1234", "description": "Padrão Miami específico"}
+            ]
+        elif country.lower() == "mexico":
+            examples = [
+                {"pattern": "xxxx-xxxx", "example": "+52 55 1234-5678", "description": "Padrão CDMX geral"}
+            ]
+        elif country.lower() == "brasil":
+            examples = [
+                {"pattern": "9xxxx-xxxx", "example": "+55 11 99123-4567", "description": "Padrão São Paulo celular"}
+            ]
         
         return {
-            "success": True,
-            "data": {
-                "country": country,
-                "country_name": patterns.get("country_name", ""),
-                "country_code": patterns.get("country_code", ""),
-                "examples": examples
-            }
+            "country": country,
+            "examples": examples,
+            "total": len(examples),
+            "timestamp": datetime.now().isoformat()
         }
         
     except Exception as e:
-        logger.error(f"❌ Erro ao gerar exemplos para {country}: {str(e)}")
+        logger.error(f"❌ Erro ao obter exemplos: {str(e)}")
         return {
-            "success": False,
-            "error": str(e)
+            "examples": [],
+            "message": f"Erro: {str(e)}"
         }
 
 @router.post("/cli-pattern/validate")
@@ -2162,83 +1026,61 @@ async def validate_cli_pattern(
     request: Dict[str, Any],
     db: Session = Depends(get_db)
 ):
-    """
-    Valida um padrão CLI customizado.
-    
-    Body:
-    {
-        "pattern": "2xx-xxxx",
-        "country": "usa",
-        "area_code": "305"
-    }
-    """
+    """Valida um padrão CLI."""
     try:
         if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
-            return {
-                "success": False,
-                "error": "Serviço de padrões CLI não disponível"
-            }
+            raise HTTPException(
+                status_code=503,
+                detail="Serviço de padrões CLI não disponível"
+            )
         
-        service = CliPatternGeneratorService(db)
+        cli_service = CliPatternGeneratorService(db)
         
+        # Parâmetros obrigatórios
         pattern = request.get("pattern")
         country = request.get("country")
-        area_code = request.get("area_code")
         
-        if not pattern:
+        if not pattern or not country:
+            raise HTTPException(
+                status_code=400,
+                detail="pattern e country são obrigatórios"
+            )
+        
+        if hasattr(cli_service, 'validate_pattern'):
+            validation = cli_service.validate_pattern(pattern, country)
             return {
-                "success": False,
-                "error": "Padrão é obrigatório"
+                "pattern": pattern,
+                "country": country,
+                "is_valid": validation.get("valid", False),
+                "message": validation.get("message", ""),
+                "suggestions": validation.get("suggestions", []),
+                "timestamp": datetime.now().isoformat()
             }
         
-        # Validar padrão
+        # Validação básica
         is_valid = True
-        validation_errors = []
+        message = "Padrão válido"
+        suggestions = []
         
-        # Verificar se contém apenas caracteres válidos
-        valid_chars = set("0123456789xX-")
-        if not all(c in valid_chars for c in pattern):
+        if "x" not in pattern:
             is_valid = False
-            validation_errors.append("Padrão contém caracteres inválidos")
-        
-        # Verificar comprimento
-        if len(pattern.replace("-", "")) > 10:
-            is_valid = False
-            validation_errors.append("Padrão muito longo")
-        
-        if len(pattern.replace("-", "")) < 4:
-            is_valid = False
-            validation_errors.append("Padrão muito curto")
-        
-        # Gerar exemplo se válido
-        example_cli = None
-        if is_valid and country and area_code:
-            try:
-                country_patterns = service.get_available_patterns_for_country(country)
-                if not "error" in country_patterns:
-                    example_cli = service._generate_cli_with_custom_pattern(
-                        country_config={"country_code": country_patterns["country_code"]},
-                        area_code=area_code,
-                        pattern=pattern
-                    )
-            except:
-                pass
+            message = "Padrão deve conter pelo menos um 'x'"
+            suggestions.append("Use 'x' para dígitos variáveis")
         
         return {
-            "success": True,
-            "data": {
-                "pattern": pattern,
-                "is_valid": is_valid,
-                "validation_errors": validation_errors,
-                "example_cli": example_cli,
-                "pattern_length": len(pattern.replace("-", "")),
-                "random_digits": pattern.count('x') + pattern.count('X')
-            }
+            "pattern": pattern,
+            "country": country,
+            "is_valid": is_valid,
+            "message": message,
+            "suggestions": suggestions,
+            "timestamp": datetime.now().isoformat()
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"❌ Erro ao validar padrão: {str(e)}")
-        return {
-            "success": False,
-            "error": str(e)
-        } 
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao validar padrão: {str(e)}"
+        )
