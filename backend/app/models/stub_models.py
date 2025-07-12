@@ -279,3 +279,12 @@ class TipoLogEleitoral:
     CONFIGURACAO_ALTERADA = "configuracao_alterada"
     CHAMADA_REALIZADA = "chamada_realizada"
     ERRO_SISTEMA = "erro_sistema" 
+
+# Enumeração para Tipo de Eleição
+class TipoEleicao:
+    MUNICIPAL = "municipal"
+    ESTADUAL = "estadual"
+    FEDERAL = "federal"
+    PRESIDENCIAL = "presidencial"
+    REFERENDO = "referendo"
+    PLEBISCITO = "plebiscito" 

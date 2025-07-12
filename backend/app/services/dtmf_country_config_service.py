@@ -360,7 +360,7 @@ class DTMFCountryConfigService:
         if connect_key == dnc_key:
             errors.append("Tecla de conexão e DNC não podem ser iguais")
         
-                return {
+        return {
             "valid": len(errors) == 0,
             "errors": errors,
             "suggestions": {
