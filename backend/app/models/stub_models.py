@@ -234,3 +234,48 @@ class TipoNumero:
     MOVIL = "movil"
     FIJO = "fijo"
     ESPECIAL = "especial" 
+
+class ConfiguracaoEleitoral(Base):
+    __tablename__ = "configuracao_eleitoral"
+    id = Column(Integer, primary_key=True)
+    pais_codigo = Column(String(10))
+    nome = Column(String(100))
+    activo = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class CalendarioEleitoral(Base):
+    __tablename__ = "calendario_eleitoral"
+    id = Column(Integer, primary_key=True)
+    pais_codigo = Column(String(10))
+    nome_eleicao = Column(String(100))
+    data_eleicao = Column(DateTime)
+    activo = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class LogEleitoralImutavel(Base):
+    __tablename__ = "log_eleitoral_imutavel"
+    id = Column(Integer, primary_key=True)
+    tipo_log = Column(String(50))
+    dados = Column(JSON)
+    hash_integridade = Column(String(255))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class OptOutEleitoral(Base):
+    __tablename__ = "opt_out_eleitoral"
+    id = Column(Integer, primary_key=True)
+    numero_telefone = Column(String(20))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class StatusCampanhaPolitica(Base):
+    __tablename__ = "status_campanha_politica"
+    id = Column(Integer, primary_key=True)
+    nome = Column(String(50))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+# Enumeração para Tipo de Log Eleitoral
+class TipoLogEleitoral:
+    INICIO_CAMPANHA = "inicio_campanha"
+    PARADA_CAMPANHA = "parada_campanha"
+    CONFIGURACAO_ALTERADA = "configuracao_alterada"
+    CHAMADA_REALIZADA = "chamada_realizada"
+    ERRO_SISTEMA = "erro_sistema" 
