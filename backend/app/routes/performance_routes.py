@@ -728,125 +728,159 @@ async def test_endpoint():
 
 @router.get("/cli-pattern/countries")
 async def get_supported_countries(db: Session = Depends(get_db)):
-    """Obtém países suportados pelo gerador de padrões CLI."""
+    """Obtiene lista de países soportados para generación CLI."""
     try:
-        if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
-            return {
-                "countries": [],
-                "message": "Serviço de padrões CLI não disponível"
-            }
-        
         cli_service = CliPatternGeneratorService(db)
-        
-        if hasattr(cli_service, 'get_supported_countries'):
-            countries = cli_service.get_supported_countries()
-            return {
-                "countries": countries,
-                "total": len(countries),
-                "timestamp": datetime.now().isoformat()
-            }
+        countries = cli_service.get_supported_countries()
         
         return {
-            "countries": [],
-            "message": "Método não disponível"
+            "success": True,
+            "data": countries,
+            "timestamp": datetime.now().isoformat()
         }
         
     except Exception as e:
-        logger.error(f"❌ Erro ao obter países: {str(e)}")
-        return {
-            "countries": [],
-            "message": f"Erro: {str(e)}"
-        }
+        logger.error(f"❌ Error al obtener países soportados: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al obtener países soportados: {str(e)}"
+        )
 
 @router.get("/cli-pattern/patterns/{country}")
-async def get_country_patterns(country: str, db: Session = Depends(get_db)):
-    """Obtém padrões disponíveis para um país."""
+async def get_country_patterns(
+    country: str,
+    db: Session = Depends(get_db)
+):
+    """Obtiene patrones disponibles para un país."""
     try:
-        if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
-            return {
-                "patterns": [],
-                "message": "Serviço de padrões CLI não disponível"
-            }
-        
         cli_service = CliPatternGeneratorService(db)
+        patterns = cli_service.get_country_patterns(country)
         
-        if hasattr(cli_service, 'get_country_patterns'):
-            patterns = cli_service.get_country_patterns(country)
-            return {
-                "country": country,
-                "patterns": patterns,
-                "total": len(patterns),
-                "timestamp": datetime.now().isoformat()
-            }
+        if not patterns:
+            raise HTTPException(
+                status_code=404,
+                detail=f"País {country} no soportado"
+            )
         
         return {
-            "patterns": [],
-            "message": "Método não disponível"
+            "success": True,
+            "data": patterns,
+            "timestamp": datetime.now().isoformat()
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"❌ Erro ao obter padrões: {str(e)}")
-        return {
-            "patterns": [],
-            "message": f"Erro: {str(e)}"
-        }
+        logger.error(f"❌ Error al obtener patrones del país: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al obtener patrones del país: {str(e)}"
+        )
 
 @router.post("/cli-pattern/generate")
 async def generate_cli_pattern(
     request: Dict[str, Any],
     db: Session = Depends(get_db)
 ):
-    """Gera CLI baseado em padrão."""
+    """Genera CLIs con patrones personalizados."""
     try:
-        if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
-            raise HTTPException(
-                status_code=503,
-                detail="Serviço de padrões CLI não disponível"
-            )
-        
         cli_service = CliPatternGeneratorService(db)
         
-        # Parâmetros obrigatórios
+        # Parámetros obligatorios
         destination_number = request.get("destination_number")
         if not destination_number:
             raise HTTPException(
                 status_code=400,
-                detail="destination_number é obrigatório"
+                detail="destination_number es obligatorio"
             )
         
-        # Parâmetros opcionais
-        pattern = request.get("pattern")
-        country = request.get("country")
+        # Parámetros opcionales
+        custom_pattern = request.get("custom_pattern")
+        custom_area_code = request.get("custom_area_code")
+        quantity = request.get("quantity", 1)
+        country_override = request.get("country_override")
         
-        if hasattr(cli_service, 'generate_cli_pattern'):
-            result = cli_service.generate_cli_pattern(
-                destination_number=destination_number,
-                pattern=pattern,
-                country=country
-            )
-            
-            return {
-                "status": "success",
-                "destination_number": destination_number,
-                "generated_cli": result.get("cli"),
-                "pattern_used": result.get("pattern"),
-                "country": result.get("country"),
-                "area_code": result.get("area_code"),
-                "timestamp": datetime.now().isoformat()
-            }
-        
-        raise HTTPException(
-            status_code=503,
-            detail="Método de geração não disponível"
+        result = cli_service.generate_cli_with_pattern(
+            destination_number=destination_number,
+            custom_pattern=custom_pattern,
+            custom_area_code=custom_area_code,
+            quantity=quantity,
+            country_override=country_override
         )
+        
+        return {
+            "success": result.get("success", False),
+            "data": result,
+            "timestamp": datetime.now().isoformat()
+        }
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Erro ao gerar padrão: {str(e)}")
+        logger.error(f"❌ Error al generar patrones CLI: {str(e)}")
         raise HTTPException(
             status_code=500,
-            detail=f"Erro ao gerar padrão: {str(e)}"
+            detail=f"Error al generar patrones CLI: {str(e)}"
+        )
+
+@router.post("/cli-pattern/bulk-generate")
+async def generate_bulk_cli_patterns(
+    request: Dict[str, Any],
+    db: Session = Depends(get_db)
+):
+    """Genera CLIs para múltiples números."""
+    try:
+        cli_service = CliPatternGeneratorService(db)
+        
+        # Parámetros obligatorios
+        destination_numbers = request.get("destination_numbers")
+        if not destination_numbers or not isinstance(destination_numbers, list):
+            raise HTTPException(
+                status_code=400,
+                detail="destination_numbers es obligatorio y debe ser una lista"
+            )
+        
+        # Parámetros opcionales
+        custom_pattern = request.get("custom_pattern")
+        
+        result = cli_service.generate_bulk_patterns(
+            destination_numbers=destination_numbers,
+            custom_pattern=custom_pattern
+        )
+        
+        return {
+            "success": result.get("success", False),
+            "data": result,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error en generación masiva: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error en generación masiva: {str(e)}"
+        )
+
+@router.get("/cli-pattern/stats")
+async def get_cli_pattern_stats(db: Session = Depends(get_db)):
+    """Obtiene estadísticas de generación de patrones CLI."""
+    try:
+        cli_service = CliPatternGeneratorService(db)
+        stats = cli_service.get_generation_stats()
+        
+        return {
+            "success": True,
+            "data": stats,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error al obtener estadísticas: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al obtener estadísticas: {str(e)}"
         )
 
 @router.post("/cli-pattern/bulk-generate")

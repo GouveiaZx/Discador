@@ -1,13 +1,13 @@
 """
-Serviço Avançado de Geração de Padrões CLI Customizados
-Sistema completo para gerar CLIs locais com padrões personalizados por país.
+Servicio Avanzado de Generación de Patrones CLI Personalizados
+Sistema completo para generar CLIs locales con patrones personalizados por país.
 
 Funcionalidades:
-- Padrões customizados por país/área (ex: 305 2xx-xxxx, 305 35x-xxxx)
-- Suporte completo para todos os países
-- Configurações flexíveis de aleatorização
-- Validação e controle de qualidade
-- Integração com Performance Avançado
+- Patrones personalizados por país/área (ej: 305 2xx-xxxx, 305 35x-xxxx)
+- Soporte completo para todos los países
+- Configuraciones flexibles de aleatorización
+- Validación y control de calidad
+- Integración con Performance Avanzado
 """
 
 import random
@@ -19,8 +19,8 @@ from app.utils.logger import logger
 
 class CliPatternGeneratorService:
     """
-    Serviço para gerar CLIs com padrões customizados por país.
-    Permite configurações específicas como "305 2xx-xxxx" ou "55 xxxx-xxxx".
+    Servicio para generar CLIs con patrones personalizados por país.
+    Permite configuraciones específicas como "305 2xx-xxxx" o "55 xxxx-xxxx".
     """
     
     def __init__(self, db: Session):
@@ -28,378 +28,261 @@ class CliPatternGeneratorService:
         self.pattern_configs = self._load_pattern_configs()
         self.generation_cache = {}
         
-    def _load_pattern_configs(self) -> Dict[str, Dict[str, Any]]:
-        """Carrega configurações de padrões por país."""
+    def _load_pattern_configs(self) -> Dict[str, Any]:
+        """Carga configuraciones de patrones por país."""
         return {
-            "usa": {
-                "country_name": "Estados Unidos",
-                "country_code": "+1",
-                "pattern_type": "area_code_prefix",
-                "area_codes": {
-                    # Florida
-                    "305": {
-                        "name": "Miami",
-                        "state": "FL",
-                        "patterns": [
-                            {"mask": "2xx-xxxx", "description": "Padrão 2xx", "weight": 30},
-                            {"mask": "22x-xxxx", "description": "Padrão 22x", "weight": 25},
-                            {"mask": "25x-xxxx", "description": "Padrão 25x", "weight": 20},
-                            {"mask": "29x-xxxx", "description": "Padrão 29x", "weight": 15},
-                            {"mask": "3xx-xxxx", "description": "Padrão 3xx", "weight": 10}
+            'usa': {
+                'country_code': '+1',
+                'strategy': 'area_code_preservation',
+                'area_codes': {
+                    '305': {
+                        'name': 'Miami, FL',
+                        'patterns': [
+                            {'mask': '2xx-xxxx', 'weight': 0.4, 'description': 'Prefijo 2 + 5 aleatorios'},
+                            {'mask': '25x-xxxx', 'weight': 0.3, 'description': 'Prefijo 25 + 4 aleatorios'},
+                            {'mask': '3xx-xxxx', 'weight': 0.3, 'description': 'Prefijo 3 + 5 aleatorios'}
                         ]
                     },
-                    "321": {
-                        "name": "Orlando",
-                        "state": "FL",
-                        "patterns": [
-                            {"mask": "2xx-xxxx", "description": "Padrão 2xx", "weight": 35},
-                            {"mask": "3xx-xxxx", "description": "Padrão 3xx", "weight": 30},
-                            {"mask": "5xx-xxxx", "description": "Padrão 5xx", "weight": 20},
-                            {"mask": "6xx-xxxx", "description": "Padrão 6xx", "weight": 15}
+                    '425': {
+                        'name': 'Seattle, WA',
+                        'patterns': [
+                            {'mask': '2xx-xxxx', 'weight': 0.5, 'description': 'Prefijo 2 + 5 aleatorios'},
+                            {'mask': '4xx-xxxx', 'weight': 0.5, 'description': 'Prefijo 4 + 5 aleatorios'}
                         ]
                     },
-                    "407": {
-                        "name": "Orlando Central",
-                        "state": "FL",
-                        "patterns": [
-                            {"mask": "2xx-xxxx", "description": "Padrão 2xx", "weight": 40},
-                            {"mask": "3xx-xxxx", "description": "Padrão 3xx", "weight": 35},
-                            {"mask": "8xx-xxxx", "description": "Padrão 8xx", "weight": 25}
-                        ]
-                    },
-                    "786": {
-                        "name": "Miami Beach",
-                        "state": "FL",
-                        "patterns": [
-                            {"mask": "2xx-xxxx", "description": "Padrão 2xx", "weight": 30},
-                            {"mask": "3xx-xxxx", "description": "Padrão 3xx", "weight": 25},
-                            {"mask": "5xx-xxxx", "description": "Padrão 5xx", "weight": 20},
-                            {"mask": "7xx-xxxx", "description": "Padrão 7xx", "weight": 15},
-                            {"mask": "9xx-xxxx", "description": "Padrão 9xx", "weight": 10}
-                        ]
-                    },
-                    # Texas
-                    "214": {
-                        "name": "Dallas",
-                        "state": "TX",
-                        "patterns": [
-                            {"mask": "2xx-xxxx", "description": "Padrão 2xx", "weight": 30},
-                            {"mask": "3xx-xxxx", "description": "Padrão 3xx", "weight": 25},
-                            {"mask": "4xx-xxxx", "description": "Padrão 4xx", "weight": 20},
-                            {"mask": "8xx-xxxx", "description": "Padrão 8xx", "weight": 15},
-                            {"mask": "9xx-xxxx", "description": "Padrão 9xx", "weight": 10}
-                        ]
-                    },
-                    "713": {
-                        "name": "Houston",
-                        "state": "TX",
-                        "patterns": [
-                            {"mask": "2xx-xxxx", "description": "Padrão 2xx", "weight": 35},
-                            {"mask": "5xx-xxxx", "description": "Padrão 5xx", "weight": 30},
-                            {"mask": "7xx-xxxx", "description": "Padrão 7xx", "weight": 20},
-                            {"mask": "9xx-xxxx", "description": "Padrão 9xx", "weight": 15}
-                        ]
-                    },
-                    # California
-                    "213": {
-                        "name": "Los Angeles",
-                        "state": "CA",
-                        "patterns": [
-                            {"mask": "2xx-xxxx", "description": "Padrão 2xx", "weight": 30},
-                            {"mask": "3xx-xxxx", "description": "Padrão 3xx", "weight": 25},
-                            {"mask": "6xx-xxxx", "description": "Padrão 6xx", "weight": 20},
-                            {"mask": "8xx-xxxx", "description": "Padrão 8xx", "weight": 15},
-                            {"mask": "9xx-xxxx", "description": "Padrão 9xx", "weight": 10}
-                        ]
-                    },
-                    "310": {
-                        "name": "Beverly Hills",
-                        "state": "CA",
-                        "patterns": [
-                            {"mask": "2xx-xxxx", "description": "Padrão 2xx", "weight": 35},
-                            {"mask": "3xx-xxxx", "description": "Padrão 3xx", "weight": 30},
-                            {"mask": "5xx-xxxx", "description": "Padrão 5xx", "weight": 20},
-                            {"mask": "8xx-xxxx", "description": "Padrão 8xx", "weight": 15}
-                        ]
-                    },
-                    # New York
-                    "212": {
-                        "name": "Manhattan",
-                        "state": "NY",
-                        "patterns": [
-                            {"mask": "2xx-xxxx", "description": "Padrão 2xx", "weight": 30},
-                            {"mask": "3xx-xxxx", "description": "Padrão 3xx", "weight": 25},
-                            {"mask": "4xx-xxxx", "description": "Padrão 4xx", "weight": 20},
-                            {"mask": "7xx-xxxx", "description": "Padrão 7xx", "weight": 15},
-                            {"mask": "9xx-xxxx", "description": "Padrão 9xx", "weight": 10}
-                        ]
-                    },
-                    "646": {
-                        "name": "Manhattan Cell",
-                        "state": "NY",
-                        "patterns": [
-                            {"mask": "2xx-xxxx", "description": "Padrão 2xx", "weight": 35},
-                            {"mask": "3xx-xxxx", "description": "Padrão 3xx", "weight": 30},
-                            {"mask": "5xx-xxxx", "description": "Padrão 5xx", "weight": 20},
-                            {"mask": "8xx-xxxx", "description": "Padrão 8xx", "weight": 15}
+                    '213': {
+                        'name': 'Los Angeles, CA',
+                        'patterns': [
+                            {'mask': '2xx-xxxx', 'weight': 0.4, 'description': 'Prefijo 2 + 5 aleatorios'},
+                            {'mask': '3xx-xxxx', 'weight': 0.6, 'description': 'Prefijo 3 + 5 aleatorios'}
                         ]
                     }
                 }
             },
-            "canada": {
-                "country_name": "Canadá",
-                "country_code": "+1",
-                "pattern_type": "area_code_prefix",
-                "area_codes": {
-                    "416": {
-                        "name": "Toronto",
-                        "province": "ON",
-                        "patterns": [
-                            {"mask": "2xx-xxxx", "description": "Padrão 2xx", "weight": 30},
-                            {"mask": "3xx-xxxx", "description": "Padrão 3xx", "weight": 25},
-                            {"mask": "5xx-xxxx", "description": "Padrão 5xx", "weight": 20},
-                            {"mask": "8xx-xxxx", "description": "Padrão 8xx", "weight": 15},
-                            {"mask": "9xx-xxxx", "description": "Padrão 9xx", "weight": 10}
+            'canada': {
+                'country_code': '+1',
+                'strategy': 'area_code_preservation',
+                'area_codes': {
+                    '416': {
+                        'name': 'Toronto, ON',
+                        'patterns': [
+                            {'mask': '2xx-xxxx', 'weight': 0.5, 'description': 'Prefijo 2 + 5 aleatorios'},
+                            {'mask': '4xx-xxxx', 'weight': 0.5, 'description': 'Prefijo 4 + 5 aleatorios'}
                         ]
                     },
-                    "514": {
-                        "name": "Montreal",
-                        "province": "QC",
-                        "patterns": [
-                            {"mask": "2xx-xxxx", "description": "Padrão 2xx", "weight": 35},
-                            {"mask": "3xx-xxxx", "description": "Padrão 3xx", "weight": 30},
-                            {"mask": "8xx-xxxx", "description": "Padrão 8xx", "weight": 20},
-                            {"mask": "9xx-xxxx", "description": "Padrão 9xx", "weight": 15}
-                        ]
-                    },
-                    "604": {
-                        "name": "Vancouver",
-                        "province": "BC",
-                        "patterns": [
-                            {"mask": "2xx-xxxx", "description": "Padrão 2xx", "weight": 30},
-                            {"mask": "3xx-xxxx", "description": "Padrão 3xx", "weight": 25},
-                            {"mask": "7xx-xxxx", "description": "Padrão 7xx", "weight": 20},
-                            {"mask": "9xx-xxxx", "description": "Padrão 9xx", "weight": 15},
-                            {"mask": "4xx-xxxx", "description": "Padrão 4xx", "weight": 10}
+                    '514': {
+                        'name': 'Montreal, QC',
+                        'patterns': [
+                            {'mask': '2xx-xxxx', 'weight': 0.5, 'description': 'Prefijo 2 + 5 aleatorios'},
+                            {'mask': '5xx-xxxx', 'weight': 0.5, 'description': 'Prefijo 5 + 5 aleatorios'}
                         ]
                     }
                 }
             },
-            "mexico": {
-                "country_name": "México",
-                "country_code": "+52",
-                "pattern_type": "area_code_full",
-                "area_codes": {
-                    "55": {
-                        "name": "Ciudad de México (CDMX)",
-                        "state": "CDMX",
-                        "patterns": [
-                            {"mask": "xxxx-xxxx", "description": "8 dígitos completos", "weight": 100}
+            'mexico': {
+                'country_code': '+52',
+                'strategy': 'local_area_randomization',
+                'area_codes': {
+                    '55': {
+                        'name': 'Ciudad de México (CDMX)',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 1.0, 'description': '8 dígitos aleatorios completos'}
                         ]
                     },
-                    "81": {
-                        "name": "Monterrey",
-                        "state": "NL",
-                        "patterns": [
-                            {"mask": "xxxx-xxxx", "description": "8 dígitos completos", "weight": 100}
+                    '81': {
+                        'name': 'Monterrey, NL',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 1.0, 'description': '8 dígitos aleatorios completos'}
                         ]
                     },
-                    "33": {
-                        "name": "Guadalajara",
-                        "state": "JA",
-                        "patterns": [
-                            {"mask": "xxxx-xxxx", "description": "8 dígitos completos", "weight": 100}
+                    '33': {
+                        'name': 'Guadalajara, JAL',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 1.0, 'description': '8 dígitos aleatorios completos'}
                         ]
                     },
-                    "222": {
-                        "name": "Puebla",
-                        "state": "PU",
-                        "patterns": [
-                            {"mask": "xxx-xxxx", "description": "7 dígitos completos", "weight": 100}
-                        ]
-                    },
-                    "998": {
-                        "name": "Cancún",
-                        "state": "QR",
-                        "patterns": [
-                            {"mask": "xxx-xxxx", "description": "7 dígitos completos", "weight": 100}
+                    '222': {
+                        'name': 'Puebla, PUE',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 1.0, 'description': '7 dígitos aleatorios'}
                         ]
                     }
                 }
             },
-            "brasil": {
-                "country_name": "Brasil",
-                "country_code": "+55",
-                "pattern_type": "ddd_celular",
-                "area_codes": {
-                    "11": {
-                        "name": "São Paulo",
-                        "state": "SP",
-                        "patterns": [
-                            {"mask": "9xxxx-xxxx", "description": "Celular 9 dígitos", "weight": 80},
-                            {"mask": "8xxxx-xxxx", "description": "Celular 8 dígitos", "weight": 20}
+            'brasil': {
+                'country_code': '+55',
+                'strategy': 'ddd_preservation',
+                'area_codes': {
+                    '11': {
+                        'name': 'São Paulo, SP',
+                        'patterns': [
+                            {'mask': '9xxxx-xxxx', 'weight': 0.8, 'description': 'Celular 9 + 8 aleatorios'},
+                            {'mask': '8xxxx-xxxx', 'weight': 0.2, 'description': 'Celular 8 + 8 aleatorios'}
                         ]
                     },
-                    "21": {
-                        "name": "Rio de Janeiro",
-                        "state": "RJ",
-                        "patterns": [
-                            {"mask": "9xxxx-xxxx", "description": "Celular 9 dígitos", "weight": 80},
-                            {"mask": "8xxxx-xxxx", "description": "Celular 8 dígitos", "weight": 20}
+                    '21': {
+                        'name': 'Rio de Janeiro, RJ',
+                        'patterns': [
+                            {'mask': '9xxxx-xxxx', 'weight': 0.8, 'description': 'Celular 9 + 8 aleatorios'},
+                            {'mask': '8xxxx-xxxx', 'weight': 0.2, 'description': 'Celular 8 + 8 aleatorios'}
                         ]
                     },
-                    "31": {
-                        "name": "Belo Horizonte",
-                        "state": "MG",
-                        "patterns": [
-                            {"mask": "9xxxx-xxxx", "description": "Celular 9 dígitos", "weight": 80},
-                            {"mask": "8xxxx-xxxx", "description": "Celular 8 dígitos", "weight": 20}
-                        ]
-                    },
-                    "47": {
-                        "name": "Joinville",
-                        "state": "SC",
-                        "patterns": [
-                            {"mask": "9xxxx-xxxx", "description": "Celular 9 dígitos", "weight": 80},
-                            {"mask": "8xxxx-xxxx", "description": "Celular 8 dígitos", "weight": 20}
-                        ]
-                    },
-                    "85": {
-                        "name": "Fortaleza",
-                        "state": "CE",
-                        "patterns": [
-                            {"mask": "9xxxx-xxxx", "description": "Celular 9 dígitos", "weight": 80},
-                            {"mask": "8xxxx-xxxx", "description": "Celular 8 dígitos", "weight": 20}
+                    '31': {
+                        'name': 'Belo Horizonte, MG',
+                        'patterns': [
+                            {'mask': '9xxxx-xxxx', 'weight': 0.8, 'description': 'Celular 9 + 8 aleatorios'},
+                            {'mask': '8xxxx-xxxx', 'weight': 0.2, 'description': 'Celular 8 + 8 aleatorios'}
                         ]
                     }
                 }
             },
-            "colombia": {
-                "country_name": "Colombia",
-                "country_code": "+57",
-                "pattern_type": "area_code_full",
-                "area_codes": {
-                    "1": {
-                        "name": "Bogotá",
-                        "department": "DC",
-                        "patterns": [
-                            {"mask": "xxx-xxxx", "description": "7 dígitos completos", "weight": 100}
+            'colombia': {
+                'country_code': '+57',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '1': {
+                        'name': 'Bogotá, DC',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 1.0, 'description': '7 dígitos aleatorios'}
                         ]
                     },
-                    "4": {
-                        "name": "Medellín",
-                        "department": "AN",
-                        "patterns": [
-                            {"mask": "xxx-xxxx", "description": "7 dígitos completos", "weight": 100}
+                    '4': {
+                        'name': 'Medellín, ANT',
+                        'patterns': [
+                            {'mask': '3xx-xxxx', 'weight': 0.6, 'description': 'Celular 3 + 6 aleatorios'},
+                            {'mask': 'xxx-xxxx', 'weight': 0.4, 'description': '7 dígitos aleatorios'}
                         ]
                     },
-                    "5": {
-                        "name": "Barranquilla",
-                        "department": "AT",
-                        "patterns": [
-                            {"mask": "xxx-xxxx", "description": "7 dígitos completos", "weight": 100}
-                        ]
-                    },
-                    "2": {
-                        "name": "Cali",
-                        "department": "VC",
-                        "patterns": [
-                            {"mask": "xxx-xxxx", "description": "7 dígitos completos", "weight": 100}
+                    '5': {
+                        'name': 'Barranquilla, ATL',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 1.0, 'description': '7 dígitos aleatorios'}
                         ]
                     }
                 }
             },
-            "argentina": {
-                "country_name": "Argentina",
-                "country_code": "+54",
-                "pattern_type": "area_code_celular",
-                "area_codes": {
-                    "11": {
-                        "name": "Buenos Aires",
-                        "province": "BA",
-                        "patterns": [
-                            {"mask": "xxxx-xxxx", "description": "8 dígitos completos", "weight": 100}
+            'argentina': {
+                'country_code': '+54',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '11': {
+                        'name': 'Buenos Aires, CABA',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '15xx-xxxx', 'weight': 0.4, 'description': 'Celular 15 + 6 aleatorios'}
                         ]
                     },
-                    "341": {
-                        "name": "Rosario",
-                        "province": "SF",
-                        "patterns": [
-                            {"mask": "xxx-xxxx", "description": "7 dígitos completos", "weight": 100}
+                    '341': {
+                        'name': 'Rosario, SF',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '15x-xxxx', 'weight': 0.4, 'description': 'Celular 15 + 5 aleatorios'}
                         ]
                     },
-                    "351": {
-                        "name": "Córdoba",
-                        "province": "CB",
-                        "patterns": [
-                            {"mask": "xxx-xxxx", "description": "7 dígitos completos", "weight": 100}
-                        ]
-                    },
-                    "261": {
-                        "name": "Mendoza",
-                        "province": "MZ",
-                        "patterns": [
-                            {"mask": "xxx-xxxx", "description": "7 dígitos completos", "weight": 100}
+                    '351': {
+                        'name': 'Córdoba, COR',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '15x-xxxx', 'weight': 0.4, 'description': 'Celular 15 + 5 aleatorios'}
                         ]
                     }
                 }
             },
-            "chile": {
-                "country_name": "Chile",
-                "country_code": "+56",
-                "pattern_type": "area_code_full",
-                "area_codes": {
-                    "2": {
-                        "name": "Santiago",
-                        "region": "RM",
-                        "patterns": [
-                            {"mask": "xxxx-xxxx", "description": "8 dígitos completos", "weight": 100}
+            'chile': {
+                'country_code': '+56',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '2': {
+                        'name': 'Santiago, RM',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '9xxx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 7 aleatorios'}
                         ]
                     },
-                    "32": {
-                        "name": "Valparaíso",
-                        "region": "VS",
-                        "patterns": [
-                            {"mask": "xxx-xxxx", "description": "7 dígitos completos", "weight": 100}
+                    '32': {
+                        'name': 'Valparaíso, VAL',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 6 aleatorios'}
                         ]
                     },
-                    "41": {
-                        "name": "Concepción",
-                        "region": "BB",
-                        "patterns": [
-                            {"mask": "xxx-xxxx", "description": "7 dígitos completos", "weight": 100}
+                    '41': {
+                        'name': 'Concepción, BIO',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 6 aleatorios'}
                         ]
                     }
                 }
             },
-            "peru": {
-                "country_name": "Perú",
-                "country_code": "+51",
-                "pattern_type": "area_code_full",
-                "area_codes": {
-                    "1": {
-                        "name": "Lima",
-                        "department": "LM",
-                        "patterns": [
-                            {"mask": "xxxx-xxxx", "description": "8 dígitos completos", "weight": 100}
+            'peru': {
+                'country_code': '+51',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '1': {
+                        'name': 'Lima, LIM',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 6 aleatorios'}
                         ]
                     },
-                    "44": {
-                        "name": "Trujillo",
-                        "department": "LL",
-                        "patterns": [
-                            {"mask": "xxx-xxxx", "description": "7 dígitos completos", "weight": 100}
+                    '44': {
+                        'name': 'Trujillo, LAL',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 6 aleatorios'}
                         ]
                     },
-                    "54": {
-                        "name": "Arequipa",
-                        "department": "AR",
-                        "patterns": [
-                            {"mask": "xxx-xxxx", "description": "7 dígitos completos", "weight": 100}
+                    '51': {
+                        'name': 'Arequipa, ARE',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 6 aleatorios'}
                         ]
                     }
                 }
             }
+        }
+    
+    def get_supported_countries(self) -> List[Dict[str, Any]]:
+        """Obtiene lista de países soportados."""
+        countries = []
+        for country_code, config in self.pattern_configs.items():
+            countries.append({
+                'country_code': country_code,
+                'country_name': self._get_country_name(country_code),
+                'phone_code': config['country_code'],
+                'strategy': config['strategy'],
+                'area_codes': list(config['area_codes'].keys())
+            })
+        return countries
+    
+    def _get_country_name(self, country_code: str) -> str:
+        """Obtiene nombre del país en español."""
+        names = {
+            'usa': 'Estados Unidos',
+            'canada': 'Canadá',
+            'mexico': 'México',
+            'brasil': 'Brasil',
+            'colombia': 'Colombia',
+            'argentina': 'Argentina',
+            'chile': 'Chile',
+            'peru': 'Perú'
+        }
+        return names.get(country_code, country_code.upper())
+    
+    def get_country_patterns(self, country: str) -> Dict[str, Any]:
+        """Obtiene patrones disponibles para un país."""
+        if country not in self.pattern_configs:
+            return {}
+        
+        config = self.pattern_configs[country]
+        return {
+            'country_code': country,
+            'country_name': self._get_country_name(country),
+            'phone_code': config['country_code'],
+            'strategy': config['strategy'],
+            'area_codes': config['area_codes']
         }
     
     def generate_cli_with_pattern(
@@ -407,39 +290,41 @@ class CliPatternGeneratorService:
         destination_number: str,
         custom_pattern: Optional[str] = None,
         custom_area_code: Optional[str] = None,
-        quantity: int = 1
+        quantity: int = 1,
+        country_override: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Gera CLIs com padrões customizados.
+        Genera CLIs con patrones personalizados.
         
         Args:
             destination_number: Número de destino
-            custom_pattern: Padrão customizado (ex: "2xx-xxxx", "35x-xxxx")
-            custom_area_code: Área code específico para forçar
-            quantity: Quantidade de CLIs a gerar
+            custom_pattern: Patrón personalizado (ej: "2xx-xxxx", "35x-xxxx")
+            custom_area_code: Código de área específico para forzar
+            quantity: Cantidad de CLIs a generar
+            country_override: Forzar país específico
             
         Returns:
-            Dict com CLIs gerados e metadados
+            Dict con CLIs generados y metadatos
         """
         try:
             # Detectar país
-            country = self._detect_country(destination_number)
+            country = country_override or self._detect_country(destination_number)
             
             if country not in self.pattern_configs:
                 return self._generate_fallback_response(destination_number, country)
             
             country_config = self.pattern_configs[country]
             
-            # Extrair informações do número
+            # Extraer información del número
             area_info = self._extract_area_info(destination_number, country_config)
             
-            # Determinar área code a usar
+            # Determinar código de área a usar
             target_area_code = custom_area_code or area_info.get("area_code")
             
             if not target_area_code:
                 return self._generate_fallback_response(destination_number, country)
             
-            # Gerar CLIs
+            # Generar CLIs
             generated_clis = []
             
             for i in range(quantity):
@@ -455,50 +340,75 @@ class CliPatternGeneratorService:
                 if cli:
                     generated_clis.append(cli)
             
-            # Remover duplicatas
-            unique_clis = list(set(generated_clis))
+            # Registrar generación
+            self._track_generation(country, target_area_code, quantity)
             
             return {
-                "success": True,
-                "country": country,
-                "country_name": country_config["country_name"],
-                "country_code": country_config["country_code"],
-                "destination_number": destination_number,
-                "area_code": target_area_code,
-                "area_name": area_info.get("area_name", "Desconhecida"),
-                "pattern_used": custom_pattern or "default",
-                "generated_clis": unique_clis,
-                "quantity_requested": quantity,
-                "quantity_generated": len(unique_clis),
-                "generation_timestamp": datetime.now().isoformat()
+                'success': True,
+                'country': country,
+                'country_name': self._get_country_name(country),
+                'area_code': target_area_code,
+                'area_name': area_info.get('area_name', ''),
+                'pattern_used': custom_pattern or 'default',
+                'quantity': len(generated_clis),
+                'generated_clis': generated_clis,
+                'timestamp': datetime.now().isoformat()
             }
             
         except Exception as e:
-            logger.error(f"❌ Erro ao gerar CLI com padrão: {str(e)}")
-            return self._generate_fallback_response(destination_number, country)
+            logger.error(f"❌ Error al generar CLIs: {str(e)}")
+            return {
+                'success': False,
+                'error': f'Error al generar CLIs: {str(e)}',
+                'country': country_override or 'unknown',
+                'generated_clis': []
+            }
+    
+    def generate_bulk_patterns(
+        self,
+        destination_numbers: List[str],
+        custom_pattern: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Genera patrones para múltiples números."""
+        try:
+            results = []
+            
+            for number in destination_numbers:
+                result = self.generate_cli_with_pattern(
+                    destination_number=number,
+                    custom_pattern=custom_pattern,
+                    quantity=1
+                )
+                results.append(result)
+            
+            return {
+                'success': True,
+                'total_numbers': len(destination_numbers),
+                'successful_generations': len([r for r in results if r.get('success')]),
+                'generated_clis': results,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Error en generación masiva: {str(e)}")
+            return {
+                'success': False,
+                'error': f'Error en generación masiva: {str(e)}',
+                'generated_clis': []
+            }
     
     def _generate_cli_with_custom_pattern(
         self,
         country_config: Dict[str, Any],
         area_code: str,
-        pattern: str
+        custom_pattern: str
     ) -> str:
-        """
-        Gera CLI com padrão customizado.
-        
-        Args:
-            country_config: Configuração do país
-            area_code: Código de área
-            pattern: Padrão customizado (ex: "2xx-xxxx", "35x-xxxx")
-            
-        Returns:
-            CLI gerado
-        """
+        """Genera CLI con patrón personalizado."""
         try:
             country_code = country_config["country_code"]
             
-            # Processar padrão
-            processed_pattern = self._process_pattern(pattern)
+            # Procesar patrón personalizado
+            processed_pattern = self._process_pattern(custom_pattern)
             
             # Construir CLI
             cli = f"{country_code}{area_code}{processed_pattern}"
@@ -506,7 +416,7 @@ class CliPatternGeneratorService:
             return cli
             
         except Exception as e:
-            logger.error(f"❌ Erro ao gerar CLI com padrão customizado: {str(e)}")
+            logger.error(f"❌ Error al generar CLI con patrón personalizado: {str(e)}")
             return None
     
     def _generate_cli_with_default_pattern(
@@ -514,30 +424,21 @@ class CliPatternGeneratorService:
         country_config: Dict[str, Any],
         area_code: str
     ) -> str:
-        """
-        Gera CLI com padrão padrão da área.
-        
-        Args:
-            country_config: Configuração do país
-            area_code: Código de área
-            
-        Returns:
-            CLI gerado
-        """
+        """Genera CLI con patrón por defecto del área."""
         try:
             country_code = country_config["country_code"]
             area_config = country_config["area_codes"].get(area_code)
             
             if not area_config:
-                # Usar padrão genérico
+                # Usar patrón genérico
                 return f"{country_code}{area_code}{''.join([str(random.randint(0, 9)) for _ in range(7)])}"
             
-            # Selecionar padrão baseado no peso
+            # Seleccionar patrón basado en el peso
             patterns = area_config["patterns"]
             weights = [p["weight"] for p in patterns]
             selected_pattern = random.choices(patterns, weights=weights)[0]
             
-            # Processar padrão
+            # Procesar patrón
             processed_pattern = self._process_pattern(selected_pattern["mask"])
             
             # Construir CLI
@@ -546,19 +447,11 @@ class CliPatternGeneratorService:
             return cli
             
         except Exception as e:
-            logger.error(f"❌ Erro ao gerar CLI com padrão padrão: {str(e)}")
+            logger.error(f"❌ Error al generar CLI con patrón por defecto: {str(e)}")
             return None
     
     def _process_pattern(self, pattern: str) -> str:
-        """
-        Processa padrão de máscara convertendo 'x' em dígitos aleatórios.
-        
-        Args:
-            pattern: Padrão (ex: "2xx-xxxx", "35x-xxxx", "xxxx-xxxx")
-            
-        Returns:
-            Padrão processado com números
-        """
+        """Procesa patrón de máscara convirtiendo 'x' en dígitos aleatorios."""
         result = ""
         
         for char in pattern:
@@ -572,7 +465,7 @@ class CliPatternGeneratorService:
         return result
     
     def _detect_country(self, number: str) -> str:
-        """Detecta país baseado no número."""
+        """Detecta país basado en el número."""
         clean_number = re.sub(r'[^\d+]', '', number)
         
         if clean_number.startswith('+'):
@@ -580,7 +473,7 @@ class CliPatternGeneratorService:
         
         # Códigos de país
         if clean_number.startswith('1'):
-            # Verificar se é USA ou Canada
+            # Verificar si es USA o Canada
             if len(clean_number) >= 4:
                 area_code = clean_number[1:4]
                 canada_codes = ['204', '236', '249', '250', '289', '306', '343', '365', '403', '416', '418', '431', '437', '438', '450', '506', '514', '519', '548', '579', '581', '587', '604', '613', '639', '647', '672', '705', '709', '778', '780', '782', '807', '819', '825', '867', '873', '902', '905']
@@ -603,99 +496,57 @@ class CliPatternGeneratorService:
         return "usa"  # Default
     
     def _extract_area_info(self, number: str, country_config: Dict[str, Any]) -> Dict[str, Any]:
-        """Extrai informações da área do número."""
+        """Extrae información del código de área del número."""
         clean_number = re.sub(r'[^\d+]', '', number)
         
         if clean_number.startswith('+'):
             clean_number = clean_number[1:]
         
-        # Remover código do país
+        # Remover código de país
         country_code = country_config["country_code"].replace('+', '')
         if clean_number.startswith(country_code):
             clean_number = clean_number[len(country_code):]
         
-        # Extrair área code baseado no tipo
-        pattern_type = country_config["pattern_type"]
+        # Detectar código de área
+        area_codes = country_config["area_codes"].keys()
         
-        if pattern_type == "area_code_prefix":
-            # USA/Canada: 3 dígitos
-            area_code = clean_number[:3]
-        elif pattern_type == "area_code_full":
-            # México/Colombia: 1-3 dígitos
-            if len(clean_number) >= 10:
-                area_code = clean_number[:2]
-            else:
-                area_code = clean_number[:1]
-        elif pattern_type == "ddd_celular":
-            # Brasil: 2 dígitos
-            area_code = clean_number[:2]
-        elif pattern_type == "area_code_celular":
-            # Argentina: 2-3 dígitos
-            if clean_number.startswith('11'):
-                area_code = clean_number[:2]
-            else:
-                area_code = clean_number[:3]
-        else:
-            area_code = clean_number[:3]
+        for area_code in sorted(area_codes, key=len, reverse=True):
+            if clean_number.startswith(area_code):
+                area_config = country_config["area_codes"][area_code]
+                return {
+                    "area_code": area_code,
+                    "area_name": area_config["name"],
+                    "patterns": area_config["patterns"]
+                }
         
-        # Buscar informações da área
-        area_info = country_config["area_codes"].get(area_code, {})
-        
+        # Si no encuentra, usar el primer disponible
+        first_area = list(area_codes)[0]
         return {
-            "area_code": area_code,
-            "area_name": area_info.get("name", "Desconhecida"),
-            "patterns": area_info.get("patterns", []),
-            "area_info": area_info
+            "area_code": first_area,
+            "area_name": country_config["area_codes"][first_area]["name"],
+            "patterns": country_config["area_codes"][first_area]["patterns"]
         }
     
     def _generate_fallback_response(self, destination_number: str, country: str) -> Dict[str, Any]:
-        """Gera resposta de fallback."""
-        fallback_clis = {
-            "usa": ["+18885551000", "+18885551001"],
-            "canada": ["+18885551002", "+18885551003"],
-            "mexico": ["+528885551000", "+528885551001"],
-            "brasil": ["+558885551000", "+558885551001"],
-            "colombia": ["+578885551000", "+578885551001"],
-            "argentina": ["+548885551000", "+548885551001"],
-            "chile": ["+568885551000", "+568885551001"],
-            "peru": ["+518885551000", "+518885551001"]
-        }
-        
+        """Genera respuesta de fallback cuando no se puede procesar."""
         return {
-            "success": False,
-            "country": country,
-            "destination_number": destination_number,
-            "error": "País não suportado ou erro na geração",
-            "fallback_clis": fallback_clis.get(country, ["+18885559999"]),
-            "generation_timestamp": datetime.now().isoformat()
+            'success': False,
+            'error': f'País {country} no soportado o número inválido',
+            'country': country,
+            'destination_number': destination_number,
+            'generated_clis': []
         }
     
-    def get_available_patterns_for_country(self, country: str) -> Dict[str, Any]:
-        """Obtém padrões disponíveis para um país."""
-        if country not in self.pattern_configs:
-            return {"error": "País não suportado"}
-        
-        country_config = self.pattern_configs[country]
-        
-        return {
-            "country": country,
-            "country_name": country_config["country_name"],
-            "country_code": country_config["country_code"],
-            "pattern_type": country_config["pattern_type"],
-            "area_codes": country_config["area_codes"]
-        }
+    def _track_generation(self, country: str, area_code: str, quantity: int):
+        """Registra la generación para estadísticas."""
+        # Implementar tracking si es necesario
+        pass
     
-    def get_all_supported_countries(self) -> List[Dict[str, Any]]:
-        """Obtém lista de todos os países suportados."""
-        countries = []
-        
-        for country_key, config in self.pattern_configs.items():
-            countries.append({
-                "country_code": country_key,
-                "country_name": config["country_name"],
-                "country_calling_code": config["country_code"],
-                "pattern_type": config["pattern_type"],
-                "area_codes_count": len(config["area_codes"])
-            })
-        
-        return countries 
+    def get_generation_stats(self) -> Dict[str, Any]:
+        """Obtiene estadísticas de generación."""
+        return {
+            'total_countries': len(self.pattern_configs),
+            'total_area_codes': sum(len(config['area_codes']) for config in self.pattern_configs.values()),
+            'supported_countries': list(self.pattern_configs.keys()),
+            'generation_timestamp': datetime.now().isoformat()
+        } 

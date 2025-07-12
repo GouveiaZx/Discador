@@ -24,7 +24,7 @@ const CliPatternGenerator = () => {
   const [stats, setStats] = useState({});
   const [error, setError] = useState('');
 
-  // Bandeiras e dados dos países
+  // Información de países en español argentino
   const countryInfo = {
     'usa': { flag: '🇺🇸', name: 'Estados Unidos', code: '+1' },
     'canada': { flag: '🇨🇦', name: 'Canadá', code: '+1' },
@@ -36,7 +36,7 @@ const CliPatternGenerator = () => {
     'peru': { flag: '🇵🇪', name: 'Perú', code: '+51' }
   };
 
-  // Exemplos de números por país
+  // Números de ejemplo por país
   const exampleNumbers = {
     'usa': ['+13055551234', '+14255551234', '+12135551234'],
     'canada': ['+14165551234', '+15145551234', '+16045551234'],
@@ -66,8 +66,8 @@ const CliPatternGenerator = () => {
         setCountries(response.data.data);
       }
     } catch (error) {
-      console.error('Erro ao carregar países:', error);
-      setError('Erro ao carregar países suportados');
+      console.error('Error al cargar países:', error);
+      setError('Error al cargar países soportados');
     } finally {
       setLoading(false);
     }
@@ -80,13 +80,13 @@ const CliPatternGenerator = () => {
         setAvailablePatterns(response.data.data);
       }
     } catch (error) {
-      console.error('Erro ao carregar padrões:', error);
+      console.error('Error al cargar patrones:', error);
     }
   };
 
   const generateCliPattern = async () => {
     if (!destinationNumber.trim()) {
-      setError('Digite um número de destino');
+      setError('Ingresá un número de destino');
       return;
     }
 
@@ -117,11 +117,11 @@ const CliPatternGenerator = () => {
         setGeneratedClis(response.data.data.generated_clis);
         loadStats();
       } else {
-        setError(response.data.error || 'Erro ao gerar CLIs');
+        setError(response.data.error || 'Error al generar CLIs');
       }
     } catch (error) {
-      console.error('Erro ao gerar CLI:', error);
-      setError('Erro ao gerar padrões CLI');
+      console.error('Error al generar CLI:', error);
+      setError('Error al generar patrones CLI');
     } finally {
       setLoading(false);
     }
@@ -130,7 +130,7 @@ const CliPatternGenerator = () => {
   const generateBulkPatterns = async () => {
     const numbers = bulkNumbers.split('\n').filter(num => num.trim());
     if (numbers.length === 0) {
-      setError('Digite números para geração em lote');
+      setError('Ingresá números para generación masiva');
       return;
     }
 
@@ -152,11 +152,11 @@ const CliPatternGenerator = () => {
         setBulkResults(response.data.data);
         loadStats();
       } else {
-        setError(response.data.error || 'Erro na geração em lote');
+        setError(response.data.error || 'Error en la generación masiva');
       }
     } catch (error) {
-      console.error('Erro na geração em lote:', error);
-      setError('Erro na geração em lote');
+      console.error('Error en la generación masiva:', error);
+      setError('Error en la generación masiva');
     } finally {
       setLoading(false);
     }
@@ -169,7 +169,7 @@ const CliPatternGenerator = () => {
         setStats(response.data.data);
       }
     } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
+      console.error('Error al cargar estadísticas:', error);
     }
   };
 
@@ -183,15 +183,15 @@ const CliPatternGenerator = () => {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    // Aqui você pode adicionar uma notificação de sucesso
+    // Acá podés agregar una notificación de éxito
   };
 
   const getPatternDescription = (pattern) => {
     const descriptions = {
-      'area_code_prefix': 'Mantém código de área + prefixo personalizado',
-      'area_code_full': 'Código de área + aleatorização completa',
-      'ddd_celular': 'DDD + indicador celular + aleatorização',
-      'area_code_celular': 'Código de área + celular + aleatorização'
+      'area_code_prefix': 'Mantiene código de área + prefijo personalizado',
+      'area_code_full': 'Código de área + aleatorización completa',
+      'ddd_celular': 'DDD + indicador celular + aleatorización',
+      'area_code_celular': 'Código de área + celular + aleatorización'
     };
     return descriptions[pattern] || pattern;
   };
@@ -199,17 +199,33 @@ const CliPatternGenerator = () => {
   const renderPatternExamples = (country) => {
     const examples = {
       'usa': [
-        { pattern: '2xx-xxxx', description: 'Prefixo 2 + 5 aleatórios', example: '305-221-4567' },
-        { pattern: '25x-xxxx', description: 'Prefixo 25 + 4 aleatórios', example: '305-250-8901' },
-        { pattern: '3xx-xxxx', description: 'Prefixo 3 + 5 aleatórios', example: '305-321-4567' }
+        { pattern: '2xx-xxxx', description: 'Prefijo 2 + 5 aleatorios', example: '305-221-4567' },
+        { pattern: '25x-xxxx', description: 'Prefijo 25 + 4 aleatorios', example: '305-250-8901' },
+        { pattern: '3xx-xxxx', description: 'Prefijo 3 + 5 aleatorios', example: '305-321-4567' }
       ],
       'mexico': [
-        { pattern: 'xxxx-xxxx', description: '8 dígitos aleatórios', example: '55-1234-5678' },
-        { pattern: 'xxx-xxxx', description: '7 dígitos aleatórios', example: '222-123-4567' }
+        { pattern: 'xxxx-xxxx', description: '8 dígitos aleatorios', example: '55-1234-5678' },
+        { pattern: 'xxx-xxxx', description: '7 dígitos aleatorios', example: '222-123-4567' }
       ],
       'brasil': [
-        { pattern: '9xxxx-xxxx', description: 'Celular 9 + 8 aleatórios', example: '11-99123-4567' },
-        { pattern: '8xxxx-xxxx', description: 'Celular 8 + 8 aleatórios', example: '11-88765-4321' }
+        { pattern: '9xxxx-xxxx', description: 'Celular 9 + 8 aleatorios', example: '11-99123-4567' },
+        { pattern: '8xxxx-xxxx', description: 'Celular 8 + 8 aleatorios', example: '11-88765-4321' }
+      ],
+      'argentina': [
+        { pattern: 'xxxx-xxxx', description: '8 dígitos aleatorios', example: '11-1234-5678' },
+        { pattern: '15xx-xxxx', description: 'Celular 15 + 6 aleatorios', example: '11-1534-5678' }
+      ],
+      'colombia': [
+        { pattern: 'xxx-xxxx', description: '7 dígitos aleatorios', example: '1-234-5678' },
+        { pattern: '3xx-xxxx', description: 'Celular 3 + 6 aleatorios', example: '4-321-5678' }
+      ],
+      'chile': [
+        { pattern: 'xxxx-xxxx', description: '8 dígitos aleatorios', example: '2-1234-5678' },
+        { pattern: '9xxx-xxxx', description: 'Celular 9 + 7 aleatorios', example: '2-9123-4567' }
+      ],
+      'peru': [
+        { pattern: 'xxxx-xxxx', description: '8 dígitos aleatorios', example: '1-1234-5678' },
+        { pattern: '9xx-xxxx', description: 'Celular 9 + 6 aleatorios', example: '1-912-3456' }
       ]
     };
 
@@ -218,10 +234,10 @@ const CliPatternGenerator = () => {
 
   const renderGeneratorTab = () => (
     <div className="space-y-6">
-      {/* Seção de Configuração */}
+      {/* Sección de Configuración */}
       <Card className="bg-secondary-900 border-secondary-700">
         <CardHeader>
-          <CardTitle className="text-primary-400">🎯 Configuração de Padrões</CardTitle>
+          <CardTitle className="text-primary-400">🎯 Configuración de Patrones CLI</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Número de Destino */}
@@ -233,7 +249,7 @@ const CliPatternGenerator = () => {
               <Input
                 value={destinationNumber}
                 onChange={(e) => setDestinationNumber(e.target.value)}
-                placeholder="Ex: +13055551234"
+                placeholder="Ej: +13055551234"
                 className="flex-1"
               />
               <Select
@@ -241,7 +257,7 @@ const CliPatternGenerator = () => {
                 onValueChange={setSelectedCountry}
                 className="w-48"
               >
-                <option value="">Detectar automaticamente</option>
+                <option value="">Detectar automáticamente</option>
                 {countries.map(country => (
                   <option key={country.country_code} value={country.country_code}>
                     {countryInfo[country.country_code]?.flag} {countryInfo[country.country_code]?.name}
@@ -251,10 +267,10 @@ const CliPatternGenerator = () => {
             </div>
           </div>
 
-          {/* Exemplos por País */}
+          {/* Ejemplos por País */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-secondary-300">
-              Exemplos Rápidos
+              Ejemplos Rápidos
             </label>
             <div className="flex flex-wrap gap-2">
               {Object.entries(countryInfo).map(([code, info]) => (
@@ -271,22 +287,22 @@ const CliPatternGenerator = () => {
             </div>
           </div>
 
-          {/* Padrão Customizado */}
+          {/* Patrón Personalizado */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-secondary-300">
-              Padrão Customizado (Opcional)
+              Patrón Personalizado (Opcional)
             </label>
             <Input
               value={customPattern}
               onChange={(e) => setCustomPattern(e.target.value)}
-              placeholder="Ex: 2xx-xxxx, 35x-xxxx, xxxx-xxxx"
+              placeholder="Ej: 2xx-xxxx, 35x-xxxx, xxxx-xxxx"
             />
             <p className="text-xs text-secondary-400">
-              Use 'x' para dígitos aleatórios. Ex: "2xx-xxxx" = 2 + 5 dígitos aleatórios
+              Usá 'x' para dígitos aleatorios. Ej: "2xx-xxxx" = 2 + 5 dígitos aleatorios
             </p>
           </div>
 
-          {/* Área Code Específico */}
+          {/* Código de Área Específico */}
           {selectedCountry && availablePatterns.area_codes && (
             <div className="space-y-2">
               <label className="text-sm font-medium text-secondary-300">
@@ -296,7 +312,7 @@ const CliPatternGenerator = () => {
                 value={selectedAreaCode}
                 onValueChange={setSelectedAreaCode}
               >
-                <option value="">Detectar do número de destino</option>
+                <option value="">Detectar del número de destino</option>
                 {Object.entries(availablePatterns.area_codes).map(([code, info]) => (
                   <option key={code} value={code}>
                     {code} - {info.name}
@@ -306,10 +322,10 @@ const CliPatternGenerator = () => {
             </div>
           )}
 
-          {/* Quantidade */}
+          {/* Cantidad */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-secondary-300">
-              Quantidade de CLIs
+              Cantidad de CLIs
             </label>
             <Input
               type="number"
@@ -321,14 +337,14 @@ const CliPatternGenerator = () => {
             />
           </div>
 
-          {/* Botão de Geração */}
+          {/* Botón de Generación */}
           <Button
             onClick={generateCliPattern}
             disabled={loading || !destinationNumber.trim()}
             className="w-full"
             size="lg"
           >
-            {loading ? 'Gerando...' : `🎯 Gerar ${quantity} CLIs`}
+            {loading ? 'Generando...' : `🎯 Generar ${quantity} CLIs`}
           </Button>
 
           {error && (
@@ -339,78 +355,32 @@ const CliPatternGenerator = () => {
         </CardContent>
       </Card>
 
-      {/* Padrões Disponíveis */}
-      {selectedCountry && availablePatterns.area_codes && (
-        <Card className="bg-secondary-900 border-secondary-700">
-          <CardHeader>
-            <CardTitle className="text-primary-400">
-              📋 Padrões Disponíveis - {countryInfo[selectedCountry]?.flag} {countryInfo[selectedCountry]?.name}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {Object.entries(availablePatterns.area_codes).map(([areaCode, info]) => (
-                <div key={areaCode} className="p-4 bg-secondary-800 rounded-lg">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-semibold text-white">
-                      {areaCode} - {info.name}
-                    </h4>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedAreaCode(areaCode)}
-                    >
-                      Usar
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {info.patterns.map((pattern, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <Badge variant="outline" className="text-xs">
-                          {pattern.mask}
-                        </Badge>
-                        <span className="text-xs text-secondary-400">
-                          {pattern.description}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Resultados */}
       {generatedClis.length > 0 && (
         <Card className="bg-secondary-900 border-secondary-700">
           <CardHeader>
-            <CardTitle className="text-green-400">✅ CLIs Gerados</CardTitle>
+            <CardTitle className="text-green-400">✅ CLIs Generados</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {generatedClis.map((cli, index) => (
-                <div key={index} className="flex justify-between items-center p-3 bg-secondary-800 rounded-lg">
-                  <code className="text-green-400 font-mono text-lg">{cli}</code>
+                <div key={index} className="flex items-center justify-between p-3 bg-secondary-800 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Badge variant="outline" className="text-green-400">
+                      CLI {index + 1}
+                    </Badge>
+                    <span className="font-mono text-lg text-white">{cli}</span>
+                  </div>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
                     onClick={() => copyToClipboard(cli)}
+                    className="text-primary-400 hover:text-primary-300"
                   >
                     📋 Copiar
                   </Button>
                 </div>
               ))}
-            </div>
-            <div className="mt-4 pt-4 border-t border-secondary-700">
-              <Button
-                variant="outline"
-                onClick={() => copyToClipboard(generatedClis.join('\n'))}
-                className="w-full"
-              >
-                📋 Copiar Todos os CLIs
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -422,12 +392,12 @@ const CliPatternGenerator = () => {
     <div className="space-y-6">
       <Card className="bg-secondary-900 border-secondary-700">
         <CardHeader>
-          <CardTitle className="text-primary-400">📦 Geração em Lote</CardTitle>
+          <CardTitle className="text-primary-400">📦 Generación Masiva</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <label className="text-sm font-medium text-secondary-300">
-              Números de Destino (um por linha)
+              Números de Destino (uno por línea)
             </label>
             <textarea
               value={bulkNumbers}
@@ -439,12 +409,12 @@ const CliPatternGenerator = () => {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-secondary-300">
-              Padrão Customizado (Opcional)
+              Patrón Personalizado (Opcional)
             </label>
             <Input
               value={customPattern}
               onChange={(e) => setCustomPattern(e.target.value)}
-              placeholder="Ex: 2xx-xxxx, 35x-xxxx"
+              placeholder="Ej: 2xx-xxxx, 35x-xxxx"
             />
           </div>
 
@@ -454,7 +424,7 @@ const CliPatternGenerator = () => {
             className="w-full"
             size="lg"
           >
-            {loading ? 'Gerando...' : '📦 Gerar CLIs em Lote'}
+            {loading ? 'Generando...' : '📦 Generar CLIs Masivos'}
           </Button>
 
           {error && (
@@ -465,40 +435,33 @@ const CliPatternGenerator = () => {
         </CardContent>
       </Card>
 
+      {/* Resultados Masivos */}
       {bulkResults && (
         <Card className="bg-secondary-900 border-secondary-700">
           <CardHeader>
-            <CardTitle className="text-green-400">✅ Resultados da Geração em Lote</CardTitle>
+            <CardTitle className="text-green-400">✅ Resultados Masivos</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {bulkResults.results.map((result, index) => (
+              {bulkResults.generated_clis && bulkResults.generated_clis.map((result, index) => (
                 <div key={index} className="p-4 bg-secondary-800 rounded-lg">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <div className="font-semibold text-white">
-                        {result.destination_number}
-                      </div>
-                      <div className="text-sm text-secondary-400">
-                        {countryInfo[result.country]?.flag} {result.country_name} - {result.area_name}
-                      </div>
-                    </div>
-                    <Badge variant="outline">
-                      {result.generated_clis.length} CLIs
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-secondary-300">Para: {result.destination_number}</span>
+                    <Badge variant="outline" className="text-green-400">
+                      {result.country}
                     </Badge>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {result.generated_clis.map((cli, cliIndex) => (
-                      <div key={cliIndex} className="flex justify-between items-center p-2 bg-secondary-700 rounded">
-                        <code className="text-green-400 font-mono">{cli}</code>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => copyToClipboard(cli)}
-                        >
-                          📋
-                        </Button>
-                      </div>
+                      <Button
+                        key={cliIndex}
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(cli)}
+                        className="font-mono text-white hover:text-primary-300"
+                      >
+                        {cli}
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -514,11 +477,11 @@ const CliPatternGenerator = () => {
     <div className="space-y-6">
       <Card className="bg-secondary-900 border-secondary-700">
         <CardHeader>
-          <CardTitle className="text-primary-400">📚 Guia de Uso</CardTitle>
+          <CardTitle className="text-primary-400">📚 Guía de Uso</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Como Funciona</h3>
+            <h3 className="text-lg font-semibold text-white">¿Cómo Funciona?</h3>
             
             <div className="space-y-4">
               {Object.entries(countryInfo).map(([code, info]) => (
@@ -531,7 +494,7 @@ const CliPatternGenerator = () => {
                   </p>
                   
                   <div className="space-y-2">
-                    <h5 className="font-medium text-secondary-200">Exemplos de Padrões:</h5>
+                    <h5 className="font-medium text-secondary-200">Ejemplos de Patrones:</h5>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                       {renderPatternExamples(code).map((example, index) => (
                         <div key={index} className="p-2 bg-secondary-700 rounded text-sm">
@@ -540,7 +503,7 @@ const CliPatternGenerator = () => {
                             {example.description}
                           </div>
                           <div className="text-xs text-blue-400 mt-1">
-                            Ex: {example.example}
+                            Ej: {example.example}
                           </div>
                         </div>
                       ))}
@@ -552,25 +515,27 @@ const CliPatternGenerator = () => {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Dicas Avançadas</h3>
+            <h3 className="text-lg font-semibold text-white">Consejos Avanzados</h3>
             
             <div className="space-y-3">
               <Alert className="bg-blue-900/40 border-blue-500/50">
                 <div className="space-y-2">
                   <h4 className="font-semibold text-blue-200">🇺🇸 Estados Unidos</h4>
                   <p className="text-blue-100">
-                    Use padrões como "2xx-xxxx" para Miami (305) ou "3xx-xxxx" para outras áreas. 
-                    Evite começar com 0 ou 1.
+                    Para USA, el código de área son los 3 primeros dígitos (ej: 305 para Miami). 
+                    Usá patrones como "2xx-xxxx" para que aparezca una llamada local. 
+                    Los últimos 6 dígitos son aleatorios.
                   </p>
                 </div>
               </Alert>
 
               <Alert className="bg-red-900/40 border-red-500/50">
                 <div className="space-y-2">
-                  <h4 className="font-semibold text-red-200">🇲🇽 México</h4>
+                  <h4 className="font-semibold text-red-200">🇲🇽 México - MUY IMPORTANTE</h4>
                   <p className="text-red-100">
-                    Para México é CRÍTICO usar CLIs locais. Use "xxxx-xxxx" para CDMX (55) e 
-                    "xxx-xxxx" para outras cidades. Isso evita contestadoras automáticas.
+                    Para México es CRÍTICO usar CLIs locales. Si llamás a CDMX (55), 
+                    el sistema genera "55 xxxx-xxxx" donde los últimos 8 dígitos son aleatorios.
+                    Esto evita las contestadoras automáticas y aumenta la tasa de respuesta.
                   </p>
                 </div>
               </Alert>
@@ -579,8 +544,19 @@ const CliPatternGenerator = () => {
                 <div className="space-y-2">
                   <h4 className="font-semibold text-green-200">🇧🇷 Brasil</h4>
                   <p className="text-green-100">
-                    Use "9xxxx-xxxx" para celulares modernos ou "8xxxx-xxxx" para compatibilidade. 
-                    O DDD é sempre mantido.
+                    Para Brasil, mantiene el DDD (11, 21, 31, etc.) y agrega el indicador 
+                    de celular (9 o 8) seguido de aleatorización. 
+                    Ej: "11 9xxxx-xxxx" para São Paulo.
+                  </p>
+                </div>
+              </Alert>
+
+              <Alert className="bg-purple-900/40 border-purple-500/50">
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-purple-200">🇦🇷 Argentina</h4>
+                  <p className="text-purple-100">
+                    Para Argentina, mantiene el código de área (11 para Buenos Aires) 
+                    y aleatoriza los últimos 8 dígitos. Para celulares usa "15xx-xxxx".
                   </p>
                 </div>
               </Alert>
@@ -598,36 +574,39 @@ const CliPatternGenerator = () => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold text-white mb-2">
-              🎯 Gerador de Padrões CLI Customizados
+              🎯 Generador de CLIs Aleatorios Locales
             </h2>
             <p className="text-secondary-300 text-lg">
-              Sistema avançado para gerar CLIs locais com padrões personalizados por país
+              Sistema avanzado para generar CLIs locales con patrones personalizados por país
+            </p>
+            <p className="text-primary-300 text-sm mt-2">
+              <strong>Funciona para TODOS los países:</strong> USA, Canadá, México, Brasil, Colombia, Argentina, Chile, Perú
             </p>
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-primary-400">
-              {countries.length}
+              {Object.keys(countryInfo).length}
             </div>
             <div className="text-sm text-secondary-400">
-              Países Suportados
+              Países Soportados
             </div>
           </div>
         </div>
       </div>
 
-      {/* Aviso Importante */}
+      {/* Alerta Importante */}
       <Alert className="bg-gradient-to-r from-yellow-900/40 to-orange-900/40 border-2 border-yellow-500/50">
         <div className="flex items-start space-x-4">
           <span className="text-4xl">🚀</span>
           <div>
             <h4 className="font-semibold text-yellow-200 text-lg mb-2">
-              Sistema Avançado de CLIs Locais
+              Sistema de CLIs Locales - Como funciona
             </h4>
             <p className="text-yellow-100 leading-relaxed">
-              Este sistema permite criar padrões personalizados para cada país, como 
-              <code className="mx-1 px-2 py-1 bg-black/30 rounded">"305 2xx-xxxx"</code> para Miami ou 
-              <code className="mx-1 px-2 py-1 bg-black/30 rounded">"55 xxxx-xxxx"</code> para CDMX. 
-              Aumenta significativamente a taxa de resposta fazendo as chamadas parecerem locais.
+              <strong>Para USA:</strong> Si llamás a 305 300 9005, el cliente ve "305 2xx-xxxx" (últimos 6 aleatorios)<br/>
+              <strong>Para México:</strong> Si llamás a CDMX (55), el cliente ve "55 xxxx-xxxx" (últimos 8 aleatorios)<br/>
+              <strong>Para Brasil:</strong> Si llamás a SP (11), el cliente ve "11 9xxxx-xxxx" (últimos 8 aleatorios)<br/>
+              <strong>¡Funciona para todos los países!</strong> El cliente siempre recibe una llamada que parece local.
             </p>
           </div>
         </div>
@@ -636,9 +615,9 @@ const CliPatternGenerator = () => {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="generator">🎯 Gerador</TabsTrigger>
-          <TabsTrigger value="bulk">📦 Lote</TabsTrigger>
-          <TabsTrigger value="guide">📚 Guia</TabsTrigger>
+          <TabsTrigger value="generator">🎯 Generador</TabsTrigger>
+          <TabsTrigger value="bulk">📦 Masivo</TabsTrigger>
+          <TabsTrigger value="guide">📚 Guía</TabsTrigger>
         </TabsList>
 
         <TabsContent value="generator" className="mt-6">
