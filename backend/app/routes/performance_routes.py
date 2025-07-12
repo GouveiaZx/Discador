@@ -87,6 +87,14 @@ except ImportError:
     class CliLocalRandomizationService:
         def __init__(self, db): pass
 
+try:
+    from app.services.cli_pattern_generator_service import CliPatternGeneratorService
+    HAS_CLI_PATTERN_GENERATOR_SERVICE = True
+except ImportError:
+    HAS_CLI_PATTERN_GENERATOR_SERVICE = False
+    class CliPatternGeneratorService:
+        def __init__(self, db): pass
+
 router = APIRouter(prefix="/performance", tags=["performance"])
 
 # Instância global do dialer (seria melhor usar singleton ou dependency injection)
@@ -1845,4 +1853,392 @@ async def test_cli_generation(
             "message": f"Erro no teste: {str(e)}",
             "timestamp": datetime.now().isoformat(),
             "data": {}
-    } 
+        } 
+
+# ========== ROTAS CLI PATTERN GENERATOR (NOVO SISTEMA AVANÇADO) ==========
+
+@router.get("/cli-pattern/countries")
+async def get_supported_countries(db: Session = Depends(get_db)):
+    """Obtém lista de países suportados pelo sistema de padrões CLI."""
+    try:
+        if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
+            return {
+                "success": False,
+                "error": "Serviço de padrões CLI não disponível"
+            }
+        
+        service = CliPatternGeneratorService(db)
+        countries = service.get_all_supported_countries()
+        
+        return {
+            "success": True,
+            "data": countries,
+            "total_countries": len(countries)
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter países suportados: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@router.get("/cli-pattern/patterns/{country}")
+async def get_country_patterns(country: str, db: Session = Depends(get_db)):
+    """Obtém padrões disponíveis para um país específico."""
+    try:
+        if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
+            return {
+                "success": False,
+                "error": "Serviço de padrões CLI não disponível"
+            }
+        
+        service = CliPatternGeneratorService(db)
+        patterns = service.get_available_patterns_for_country(country)
+        
+        if "error" in patterns:
+            return {
+                "success": False,
+                "error": patterns["error"]
+            }
+        
+        return {
+            "success": True,
+            "data": patterns
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter padrões para {country}: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@router.post("/cli-pattern/generate")
+async def generate_cli_pattern(
+    request: Dict[str, Any],
+    db: Session = Depends(get_db)
+):
+    """
+    Gera CLIs com padrões customizados.
+    
+    Body:
+    {
+        "destination_number": "+13055551234",
+        "custom_pattern": "2xx-xxxx",  // Opcional
+        "custom_area_code": "305",     // Opcional
+        "country_override": "usa",     // Opcional
+        "quantity": 5                  // Opcional, padrão 5
+    }
+    """
+    try:
+        if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
+            return {
+                "success": False,
+                "error": "Serviço de padrões CLI não disponível"
+            }
+        
+        service = CliPatternGeneratorService(db)
+        
+        # Extrair parâmetros
+        destination_number = request.get("destination_number")
+        custom_pattern = request.get("custom_pattern")
+        custom_area_code = request.get("custom_area_code")
+        country_override = request.get("country_override")
+        quantity = request.get("quantity", 5)
+        
+        if not destination_number:
+            return {
+                "success": False,
+                "error": "Número de destino é obrigatório"
+            }
+        
+        # Gerar CLIs
+        result = service.generate_cli_with_pattern(
+            destination_number=destination_number,
+            custom_pattern=custom_pattern,
+            custom_area_code=custom_area_code,
+            quantity=quantity
+        )
+        
+        if not result.get("success"):
+            return {
+                "success": False,
+                "error": result.get("error", "Erro na geração")
+            }
+        
+        logger.info(f"✅ CLIs gerados com sucesso: {len(result.get('generated_clis', []))} CLIs")
+        
+        return {
+            "success": True,
+            "data": result
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao gerar padrões CLI: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@router.post("/cli-pattern/bulk-generate")
+async def bulk_generate_cli_patterns(
+    request: Dict[str, Any],
+    db: Session = Depends(get_db)
+):
+    """
+    Gera CLIs em lote com padrões customizados.
+    
+    Body:
+    {
+        "destination_numbers": ["+13055551234", "+14255551234"],
+        "custom_pattern": "2xx-xxxx",  // Opcional
+        "country_override": "usa"      // Opcional
+    }
+    """
+    try:
+        if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
+            return {
+                "success": False,
+                "error": "Serviço de padrões CLI não disponível"
+            }
+        
+        service = CliPatternGeneratorService(db)
+        
+        # Extrair parâmetros
+        destination_numbers = request.get("destination_numbers", [])
+        custom_pattern = request.get("custom_pattern")
+        country_override = request.get("country_override")
+        
+        if not destination_numbers:
+            return {
+                "success": False,
+                "error": "Lista de números de destino é obrigatória"
+            }
+        
+        # Gerar CLIs para cada número
+        results = []
+        total_clis = 0
+        
+        for destination_number in destination_numbers:
+            result = service.generate_cli_with_pattern(
+                destination_number=destination_number,
+                custom_pattern=custom_pattern,
+                quantity=3  # 3 CLIs por número para lote
+            )
+            
+            if result.get("success"):
+                results.append(result)
+                total_clis += len(result.get("generated_clis", []))
+            else:
+                results.append({
+                    "success": False,
+                    "destination_number": destination_number,
+                    "error": result.get("error", "Erro na geração")
+                })
+        
+        logger.info(f"✅ Geração em lote completada: {total_clis} CLIs para {len(destination_numbers)} números")
+        
+        return {
+            "success": True,
+            "data": {
+                "results": results,
+                "total_numbers": len(destination_numbers),
+                "total_clis": total_clis,
+                "successful_generations": len([r for r in results if r.get("success")]),
+                "failed_generations": len([r for r in results if not r.get("success")])
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro na geração em lote: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@router.get("/cli-pattern/stats")
+async def get_cli_pattern_stats(
+    country: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Obtém estatísticas de geração de padrões CLI."""
+    try:
+        if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
+            return {
+                "success": False,
+                "error": "Serviço de padrões CLI não disponível"
+            }
+        
+        # Para agora, retornar estatísticas básicas
+        # Em produção, você pode implementar um sistema de tracking
+        stats = {
+            "total_generations": 0,
+            "total_clis_generated": 0,
+            "countries_used": [],
+            "most_used_patterns": {},
+            "last_24h_generations": 0,
+            "success_rate": 100.0
+        }
+        
+        if country:
+            stats["country_filter"] = country
+        
+        return {
+            "success": True,
+            "data": stats
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter estatísticas: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@router.get("/cli-pattern/examples/{country}")
+async def get_pattern_examples(country: str, db: Session = Depends(get_db)):
+    """Obtém exemplos de padrões para um país específico."""
+    try:
+        if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
+            return {
+                "success": False,
+                "error": "Serviço de padrões CLI não disponível"
+            }
+        
+        service = CliPatternGeneratorService(db)
+        patterns = service.get_available_patterns_for_country(country)
+        
+        if "error" in patterns:
+            return {
+                "success": False,
+                "error": patterns["error"]
+            }
+        
+        # Gerar exemplos para cada área code
+        examples = {}
+        
+        for area_code, area_info in patterns.get("area_codes", {}).items():
+            examples[area_code] = {
+                "area_name": area_info.get("name", "Desconhecida"),
+                "examples": []
+            }
+            
+            for pattern_info in area_info.get("patterns", []):
+                # Gerar exemplo baseado no padrão
+                pattern = pattern_info["mask"]
+                example_cli = service._generate_cli_with_custom_pattern(
+                    country_config={"country_code": patterns["country_code"]},
+                    area_code=area_code,
+                    pattern=pattern
+                )
+                
+                examples[area_code]["examples"].append({
+                    "pattern": pattern,
+                    "description": pattern_info.get("description", ""),
+                    "example_cli": example_cli,
+                    "weight": pattern_info.get("weight", 0)
+                })
+        
+        return {
+            "success": True,
+            "data": {
+                "country": country,
+                "country_name": patterns.get("country_name", ""),
+                "country_code": patterns.get("country_code", ""),
+                "examples": examples
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao gerar exemplos para {country}: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@router.post("/cli-pattern/validate")
+async def validate_cli_pattern(
+    request: Dict[str, Any],
+    db: Session = Depends(get_db)
+):
+    """
+    Valida um padrão CLI customizado.
+    
+    Body:
+    {
+        "pattern": "2xx-xxxx",
+        "country": "usa",
+        "area_code": "305"
+    }
+    """
+    try:
+        if not HAS_CLI_PATTERN_GENERATOR_SERVICE:
+            return {
+                "success": False,
+                "error": "Serviço de padrões CLI não disponível"
+            }
+        
+        service = CliPatternGeneratorService(db)
+        
+        pattern = request.get("pattern")
+        country = request.get("country")
+        area_code = request.get("area_code")
+        
+        if not pattern:
+            return {
+                "success": False,
+                "error": "Padrão é obrigatório"
+            }
+        
+        # Validar padrão
+        is_valid = True
+        validation_errors = []
+        
+        # Verificar se contém apenas caracteres válidos
+        valid_chars = set("0123456789xX-")
+        if not all(c in valid_chars for c in pattern):
+            is_valid = False
+            validation_errors.append("Padrão contém caracteres inválidos")
+        
+        # Verificar comprimento
+        if len(pattern.replace("-", "")) > 10:
+            is_valid = False
+            validation_errors.append("Padrão muito longo")
+        
+        if len(pattern.replace("-", "")) < 4:
+            is_valid = False
+            validation_errors.append("Padrão muito curto")
+        
+        # Gerar exemplo se válido
+        example_cli = None
+        if is_valid and country and area_code:
+            try:
+                country_patterns = service.get_available_patterns_for_country(country)
+                if not "error" in country_patterns:
+                    example_cli = service._generate_cli_with_custom_pattern(
+                        country_config={"country_code": country_patterns["country_code"]},
+                        area_code=area_code,
+                        pattern=pattern
+                    )
+            except:
+                pass
+        
+        return {
+            "success": True,
+            "data": {
+                "pattern": pattern,
+                "is_valid": is_valid,
+                "validation_errors": validation_errors,
+                "example_cli": example_cli,
+                "pattern_length": len(pattern.replace("-", "")),
+                "random_digits": pattern.count('x') + pattern.count('X')
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao validar padrão: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        } 

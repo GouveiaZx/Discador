@@ -21,7 +21,7 @@ import LoadTestManager from './LoadTestManager';
 import CliLimitsManager from './CliLimitsManager';
 import DTMFCountryConfig from './DTMFCountryConfig';
 import CliRotationDashboard from './CliRotationDashboard';
-import CliLocalRandomizer from './CliLocalRandomizer';
+import CliPatternGenerator from './CliPatternGenerator';
 
 // Registrar componentes do Chart.js
 ChartJS.register(
@@ -611,7 +611,7 @@ const AdvancedPerformanceDashboard = () => {
             { id: 'loadtest', label: 'Tests de Carga', icon: '🧪' },
             { id: 'cli-limits', label: 'Límites CLI', icon: '🔢' },
             { id: 'cli-rotation', label: 'Rotación CLI', icon: '🔄' },
-            { id: 'cli-local', label: 'CLI Local', icon: '🎯' },
+            { id: 'cli-patterns', label: 'Padrões CLI', icon: '🎯' },
             { id: 'dtmf-config', label: 'Config DTMF', icon: '📞' }
           ].map(tab => (
               <button
@@ -636,7 +636,7 @@ const AdvancedPerformanceDashboard = () => {
         {selectedTab === 'loadtest' && <LoadTestManager />}
         {selectedTab === 'cli-limits' && <CliLimitsManager />}
         {selectedTab === 'cli-rotation' && <CliRotationDashboard />}
-        {selectedTab === 'cli-local' && <CliLocalRandomizer />}
+        {selectedTab === 'cli-patterns' && <CliPatternGenerator />}
         {selectedTab === 'dtmf-config' && <DTMFCountryConfig />}
       </div>
     </div>
