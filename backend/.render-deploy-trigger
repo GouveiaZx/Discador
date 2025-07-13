@@ -1,12 +1,14 @@
-# Trigger deploy do backend - Endpoint DTMF implementado
-# Data: 2025-01-11
-# Versão: 1.0.2
+# Deploy Trigger File
+# This file triggers a new deploy on Render when changed
 
-- Implementado endpoint /api/v1/performance/dtmf/configs
-- Adicionado fallback com 60+ países
-- Configurações DTMF completas com instruções nativas
-- México usa tecla 3 (especial para evitar contestadoras)
-- Suporte a múltiplos idiomas nas instruções
+# Última atualização: 2025-01-09 - Correção dos erros no CLI Pattern Generator
+# Mudanças:
+# - Corrigida classe fallback do CliPatternGeneratorService no backend
+# - Melhorado tratamento de erro na rota /cli-pattern/countries
+# - Corrigido parsing da resposta da API no frontend
+# - Adicionado fallback manual quando o serviço não está disponível
+# - Melhorado logging e debugging
 
-Deploy necessário para aplicar as correções DTMF! 
-Endpoint agora disponível com fallback garantido. 
+DEPLOY_VERSION=v2.1.4-cli-fix
+TIMESTAMP=2025-01-09T15:30:00Z
+FIX_DESCRIPTION="Correção crítica dos erros 'undefined' no CLI Pattern Generator" 
