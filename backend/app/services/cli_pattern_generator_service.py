@@ -241,6 +241,347 @@ class CliPatternGeneratorService:
                         ]
                     }
                 }
+            },
+            # Países Adicionais
+            'venezuela': {
+                'country_code': '+58',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '212': {
+                        'name': 'Caracas, DIS',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '4xx-xxxx', 'weight': 0.4, 'description': 'Celular 4 + 6 aleatorios'}
+                        ]
+                    },
+                    '414': {
+                        'name': 'Valencia, CAR',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '4xx-xxxx', 'weight': 0.4, 'description': 'Celular 4 + 6 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'ecuador': {
+                'country_code': '+593',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '2': {
+                        'name': 'Quito, PIC',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 6 aleatorios'}
+                        ]
+                    },
+                    '4': {
+                        'name': 'Guayaquil, GUA',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 6 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'bolivia': {
+                'country_code': '+591',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '2': {
+                        'name': 'La Paz, LAP',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '7xx-xxxx', 'weight': 0.4, 'description': 'Celular 7 + 6 aleatorios'}
+                        ]
+                    },
+                    '3': {
+                        'name': 'Santa Cruz, SCZ',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '7xx-xxxx', 'weight': 0.4, 'description': 'Celular 7 + 6 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'uruguay': {
+                'country_code': '+598',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '2': {
+                        'name': 'Montevideo, MON',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 6 aleatorios'}
+                        ]
+                    },
+                    '47': {
+                        'name': 'Maldonado, MAL',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 6 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'paraguay': {
+                'country_code': '+595',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '21': {
+                        'name': 'Asunción, ASU',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 6 aleatorios'}
+                        ]
+                    },
+                    '61': {
+                        'name': 'Ciudad del Este, ALC',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 6 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'espanha': {
+                'country_code': '+34',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '91': {
+                        'name': 'Madrid, MAD',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '6xx-xxxx', 'weight': 0.4, 'description': 'Celular 6 + 6 aleatorios'}
+                        ]
+                    },
+                    '93': {
+                        'name': 'Barcelona, BCN',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '6xx-xxxx', 'weight': 0.4, 'description': 'Celular 6 + 6 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'portugal': {
+                'country_code': '+351',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '21': {
+                        'name': 'Lisboa, LIS',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 6 aleatorios'}
+                        ]
+                    },
+                    '22': {
+                        'name': 'Porto, POR',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 6 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'franca': {
+                'country_code': '+33',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '1': {
+                        'name': 'Paris, IDF',
+                        'patterns': [
+                            {'mask': 'xx-xx-xx-xx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '6x-xx-xx-xx', 'weight': 0.4, 'description': 'Celular 6 + 7 aleatorios'}
+                        ]
+                    },
+                    '4': {
+                        'name': 'Lyon, ARA',
+                        'patterns': [
+                            {'mask': 'xx-xx-xx-xx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '6x-xx-xx-xx', 'weight': 0.4, 'description': 'Celular 6 + 7 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'alemanha': {
+                'country_code': '+49',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '30': {
+                        'name': 'Berlin, BER',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '1xx-xxxx', 'weight': 0.4, 'description': 'Celular 1 + 7 aleatorios'}
+                        ]
+                    },
+                    '89': {
+                        'name': 'Munich, BAV',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '1xx-xxxx', 'weight': 0.4, 'description': 'Celular 1 + 7 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'italia': {
+                'country_code': '+39',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '06': {
+                        'name': 'Roma, LAZ',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '3xx-xxxx', 'weight': 0.4, 'description': 'Celular 3 + 7 aleatorios'}
+                        ]
+                    },
+                    '02': {
+                        'name': 'Milano, LOM',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '3xx-xxxx', 'weight': 0.4, 'description': 'Celular 3 + 7 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'reino_unido': {
+                'country_code': '+44',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '20': {
+                        'name': 'London, LON',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '7xxx-xxxx', 'weight': 0.4, 'description': 'Celular 7 + 7 aleatorios'}
+                        ]
+                    },
+                    '161': {
+                        'name': 'Manchester, MAN',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '7xxx-xxxx', 'weight': 0.4, 'description': 'Celular 7 + 7 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'austrália': {
+                'country_code': '+61',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '2': {
+                        'name': 'Sydney, NSW',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '4xx-xxxx', 'weight': 0.4, 'description': 'Celular 4 + 7 aleatorios'}
+                        ]
+                    },
+                    '3': {
+                        'name': 'Melbourne, VIC',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '4xx-xxxx', 'weight': 0.4, 'description': 'Celular 4 + 7 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'nova_zelandia': {
+                'country_code': '+64',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '9': {
+                        'name': 'Auckland, AUK',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '2x-xxxx', 'weight': 0.4, 'description': 'Celular 2 + 6 aleatorios'}
+                        ]
+                    },
+                    '4': {
+                        'name': 'Wellington, WEL',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '2x-xxxx', 'weight': 0.4, 'description': 'Celular 2 + 6 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'india': {
+                'country_code': '+91',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '11': {
+                        'name': 'Delhi, DEL',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 7 aleatorios'}
+                        ]
+                    },
+                    '22': {
+                        'name': 'Mumbai, MUM',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 7 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'filipinas': {
+                'country_code': '+63',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '2': {
+                        'name': 'Manila, MNL',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 7 aleatorios'}
+                        ]
+                    },
+                    '32': {
+                        'name': 'Cebu, CEB',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '9xx-xxxx', 'weight': 0.4, 'description': 'Celular 9 + 7 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'japao': {
+                'country_code': '+81',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '3': {
+                        'name': 'Tokyo, TOK',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '90-xxxx', 'weight': 0.4, 'description': 'Celular 90 + 4 aleatorios'}
+                        ]
+                    },
+                    '6': {
+                        'name': 'Osaka, OSA',
+                        'patterns': [
+                            {'mask': 'xxxx-xxxx', 'weight': 0.6, 'description': '8 dígitos aleatorios'},
+                            {'mask': '90-xxxx', 'weight': 0.4, 'description': 'Celular 90 + 4 aleatorios'}
+                        ]
+                    }
+                }
+            },
+            'africa_do_sul': {
+                'country_code': '+27',
+                'strategy': 'area_code_full',
+                'area_codes': {
+                    '11': {
+                        'name': 'Johannesburg, JOH',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '8x-xxxx', 'weight': 0.4, 'description': 'Celular 8 + 6 aleatorios'}
+                        ]
+                    },
+                    '21': {
+                        'name': 'Cape Town, CPT',
+                        'patterns': [
+                            {'mask': 'xxx-xxxx', 'weight': 0.6, 'description': '7 dígitos aleatorios'},
+                            {'mask': '8x-xxxx', 'weight': 0.4, 'description': 'Celular 8 + 6 aleatorios'}
+                        ]
+                    }
+                }
             }
         }
     
@@ -267,7 +608,72 @@ class CliPatternGeneratorService:
             'colombia': 'Colombia',
             'argentina': 'Argentina',
             'chile': 'Chile',
-            'peru': 'Perú'
+            'peru': 'Perú',
+            'venezuela': 'Venezuela',
+            'ecuador': 'Ecuador',
+            'bolivia': 'Bolivia',
+            'uruguay': 'Uruguay',
+            'paraguay': 'Paraguay',
+            'espanha': 'España',
+            'portugal': 'Portugal',
+            'franca': 'França',
+            'alemanha': 'Alemanha',
+            'italia': 'Itália',
+            'reino_unido': 'Reino Unido',
+            'austrália': 'Austrália',
+            'nova_zelandia': 'Nova Zelândia',
+            'india': 'Índia',
+            'filipinas': 'Filipinas',
+            'japao': 'Japão',
+            'africa_do_sul': 'África do Sul',
+            'republica_dominicana': 'República Dominicana',
+            'jamaica': 'Jamaica',
+            'cuba': 'Cuba',
+            'costa_rica': 'Costa Rica',
+            'panama': 'Panamá',
+            'guatemala': 'Guatemala',
+            'honduras': 'Honduras',
+            'el_salvador': 'El Salvador',
+            'nicaragua': 'Nicaragua',
+            'holanda': 'Holanda',
+            'belgica': 'Bélgica',
+            'suica': 'Suíça',
+            'austria': 'Áustria',
+            'malasia': 'Malásia',
+            'singapura': 'Singapura',
+            'tailandia': 'Tailândia',
+            'indonesia': 'Indonésia',
+            'israel': 'Israel',
+            'suecia': 'Suécia',
+            'noruega': 'Noruega',
+            'dinamarca': 'Dinamarca',
+            'finlandia': 'Finlândia',
+            'polonia': 'Polônia',
+            'republica_checa': 'República Checa',
+            'hungria': 'Hungria',
+            'grecia': 'Grécia',
+            'turquia': 'Turquia',
+            'russia': 'Rússia',
+            'ucrania': 'Ucrânia',
+            'coreia_do_sul': 'Coreia do Sul',
+            'china': 'China',
+            'hong_kong': 'Hong Kong',
+            'taiwan': 'Taiwan',
+            'vietna': 'Vietnã',
+            'paquistao': 'Paquistão',
+            'bangladesh': 'Bangladesh',
+            'sri_lanka': 'Sri Lanka',
+            'nigeria': 'Nigéria',
+            'quenia': 'Quênia',
+            'marrocos': 'Marrocos',
+            'egito': 'Egito',
+            'emirados_arabes': 'Emirados Árabes Unidos',
+            'arabia_saudita': 'Arábia Saudita',
+            'qatar': 'Qatar',
+            'kuwait': 'Kuwait',
+            'libano': 'Líbano',
+            'jordania': 'Jordânia',
+            'ira': 'Irã'
         }
         return names.get(country_code, country_code.upper())
     
