@@ -112,28 +112,75 @@ const CliPatternGenerator = () => {
       console.log('🔄 Cargando países soportados...');
       
       const response = await api.get('/performance/cli-pattern/countries');
-      console.log('📞 Respuesta del servidor:', response.data);
+      console.log('📞 Respuesta del servidor completa:', response);
+      console.log('📞 Respuesta data:', response.data);
+      console.log('🔍 Tipo de resposta:', typeof response.data, Array.isArray(response.data));
+      console.log('🔍 Propriedades disponíveis:', Object.keys(response.data || {}));
       
-      // Verificar se há dados válidos, independente do success flag
-      if (response.data && response.data.data && Array.isArray(response.data.data) && response.data.data.length > 0) {
-        setCountries(response.data.data);
-        console.log('✅ Países cargados:', response.data.data.length, 'países');
+      // Verificar múltiplos formatos de resposta possíveis
+      let countriesData = null;
+      let responseInfo = {};
+      
+      // Formato 1: { success: true, data: [...] } (correto da API)
+      if (response.data && response.data.success === true && response.data.data && Array.isArray(response.data.data)) {
+        countriesData = response.data.data;
+        responseInfo = response.data;
+        console.log('✅ Formato 1 detectado (success + data)');
+      }
+      // Formato 2: { data: [...] } (sem success flag)
+      else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        countriesData = response.data.data;
+        responseInfo = response.data;
+        console.log('✅ Formato 2 detectado (apenas data)');
+      }
+      // Formato 3: Array direto
+      else if (response.data && Array.isArray(response.data)) {
+        countriesData = response.data;
+        responseInfo = { data: response.data, fallback: false };
+        console.log('✅ Formato 3 detectado (array direto)');
+      }
+      
+      console.log('🔍 Dados extraídos:', { 
+        countriesData: countriesData ? `Array[${countriesData.length}]` : null, 
+        responseInfo,
+        hasSuccess: responseInfo.success,
+        hasData: !!countriesData
+      });
+      
+      if (countriesData && Array.isArray(countriesData) && countriesData.length > 0) {
+        // Validar se os países têm a estrutura esperada
+        const validCountries = countriesData.filter(country => 
+          country && 
+          typeof country === 'object' && 
+          country.country_code && 
+          country.country_name
+        );
         
-        // Mostrar informação sobre o tipo de serviço
-        if (response.data.fallback) {
-          setSuccess(`Países cargados en modo fallback (${response.data.data.length} países)`);
-        } else if (!response.data.service_available) {
-          setSuccess(`Países cargados con servicio básico (${response.data.data.length} países)`);
-        } else {
-          setSuccess(`Países cargados correctamente (${response.data.data.length} países)`);
+        if (validCountries.length > 0) {
+          setCountries(validCountries);
+          console.log('✅ Países cargados e validados:', validCountries.length, 'países válidos de', countriesData.length);
+          
+          // Mostrar informação sobre o tipo de serviço
+          if (responseInfo.fallback) {
+            setSuccess(`Países cargados en modo fallback (${validCountries.length} países)`);
+          } else if (responseInfo.service_available === false) {
+            setSuccess(`Países cargados con servicio básico (${validCountries.length} países)`);
+          } else {
+            setSuccess(`Países cargados correctamente (${validCountries.length} países)`);
+          }
+          
+          return; // Sair da função aqui se tudo funcionou
         }
-        
-        return; // Sair da função aqui se tudo funcionou
       }
       
       // Se chegou aqui, algo deu errado
-      console.warn('⚠️ Resposta inválida ou vazia do servidor');
-      throw new Error('Resposta inválida do servidor');
+      console.warn('⚠️ Nenhum país válido encontrado na resposta:', {
+        responseData: response.data,
+        countriesData,
+        dataType: typeof response.data,
+        isArray: Array.isArray(response.data)
+      });
+      throw new Error('Nenhum país válido encontrado na resposta do servidor');
       
     } catch (error) {
       console.error('❌ Error al cargar países:', error);
