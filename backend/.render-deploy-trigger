@@ -1,14 +1,7 @@
-# Deploy Trigger File
-# This file triggers a new deploy on Render when changed
-
-# Última atualização: 2025-01-09 - Correção final do parsing de países CLI
-# Mudanças:
-# - Melhorado parsing da resposta da API no frontend
-# - Adicionada validação robusta da estrutura dos países
-# - Logs detalhados para debug
-# - Tratamento de múltiplos formatos de resposta
-# - Validação de estrutura dos objetos país
-
-DEPLOY_VERSION=v2.1.5-cli-fix-final
-TIMESTAMP=2025-01-09T16:00:00Z
-FIX_DESCRIPTION="Correção final do erro de parsing de países - validação robusta" 
+# Deploy trigger updated: 2024-01-21 22:35:00
+# Fixing campaign synchronization issues across components
+# - Fixed MonitoringDashboard accessing .data on arrays
+# - Created global CampaignContext for state management
+# - Integrated context in MonitoringDashboard and GestionCampanhas  
+# - Added automatic state updates when campaign status changes
+# Campaign sync fix deployment 

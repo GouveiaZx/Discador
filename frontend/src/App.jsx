@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
+import { CampaignProvider } from './contexts/CampaignContext.jsx';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './components/Login';
 import DashboardProfessional from './components/DashboardProfessional';
@@ -499,8 +500,12 @@ function AppContent() {
     return <Login />;
   }
 
-  // Se estiver logado, mostrar aplicação
-  return <AuthenticatedApp />;
+  // Se estiver logado, mostrar aplicação com contexto de campanhas
+  return (
+    <CampaignProvider>
+      <AuthenticatedApp />
+    </CampaignProvider>
+  );
 }
 
 export default App; 

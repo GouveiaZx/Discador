@@ -13,18 +13,28 @@ import {
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { makeApiRequest } from '../config/api';
+import { useCampaigns } from '../contexts/CampaignContext';
 
 // ============================================================================
 // COMPONENTE PRINCIPAL DO DASHBOARD
 // ============================================================================
 
 const MonitoringDashboard = () => {
+  // Usar contexto de campanhas
+  const { 
+    campaigns, 
+    activeCampaigns, 
+    loading: campaignsLoading, 
+    error: campaignsError,
+    lastUpdate,
+    activeCampaignsCount,
+    refreshCampaigns
+  } = useCampaigns();
+
   // Estados do dashboard
   const [dashboardData, setDashboardData] = useState(null);
-  const [activeCampaigns, setActiveCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [lastUpdate, setLastUpdate] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
@@ -43,16 +53,12 @@ const MonitoringDashboard = () => {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       
-      // Buscar campanhas ativas
-      const campaignsResponse = await makeApiRequest('/presione1/campanhas');
-      const campaigns = campaignsResponse.data || [];
+      // Usar campanhas ativas do contexto
+      console.log('📊 [MonitoringDashboard] Usando campanhas do contexto:', activeCampaigns.length);
       
-      // Filtrar campanhas ativas
-      const activeCampaigns = campaigns.filter(campaign => campaign.activa);
-      setActiveCampaigns(activeCampaigns);
-      
-      // Buscar estatísticas agregadas
+      // Buscar estatísticas agregadas para campanhas ativas
       const statsPromises = activeCampaigns.map(campaign => 
         makeApiRequest(`/presione1/campanhas/${campaign.id}/estadisticas`)
       );
@@ -86,15 +92,15 @@ const MonitoringDashboard = () => {
       };
       
       setDashboardData(aggregatedData);
-      setLastUpdate(new Date());
-      setError(null);
+      console.log('✅ [MonitoringDashboard] Dados agregados:', aggregatedData);
+      
     } catch (err) {
-      console.error('Erro ao carregar dashboard:', err);
+      console.error('❌ [MonitoringDashboard] Erro ao carregar dashboard:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeCampaigns]);
 
   // Função para conectar WebSocket (placeholder para futuro)
   const connectWebSocket = useCallback(() => {
@@ -107,11 +113,15 @@ const MonitoringDashboard = () => {
   // ============================================================================
 
   useEffect(() => {
-    // Buscar dados iniciais
-    fetchDashboardData();
+    // Buscar dados iniciais quando campanhas estiverem carregadas
+    if (!campaignsLoading && activeCampaigns) {
+      fetchDashboardData();
+    }
+  }, [campaignsLoading, activeCampaigns, fetchDashboardData]);
 
+  useEffect(() => {
     // Configurar auto-refresh
-    if (autoRefresh) {
+    if (autoRefresh && !campaignsLoading) {
       intervalRef.current = setInterval(fetchDashboardData, REFRESH_INTERVAL);
     }
 
@@ -124,7 +134,7 @@ const MonitoringDashboard = () => {
         websocketRef.current.close();
       }
     };
-  }, [autoRefresh, fetchDashboardData]);
+  }, [autoRefresh, campaignsLoading, fetchDashboardData]);
 
   // ============================================================================
   // COMPONENTES DE CARTÕES

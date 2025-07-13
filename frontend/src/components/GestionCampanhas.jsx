@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { makeApiRequest } from '../config/api.js';
+import { useCampaigns } from '../contexts/CampaignContext';
 
 /**
  * Componente de Métrica de Campanha Profissional
@@ -69,6 +70,19 @@ window.testCreateCampaign = async () => {
  * Componente para gestão de campanhas profissional
  */
 function GestionCampanhas({ onOpenCampaignControl }) {
+  // Usar contexto de campanhas
+  const { 
+    campaigns, 
+    loading: campaignsLoading, 
+    error: campaignsError,
+    refreshCampaigns,
+    updateCampaignStatus,
+    totalCampaigns,
+    activeCampaignsCount,
+    pausedCampaignsCount,
+    draftCampaignsCount
+  } = useCampaigns();
+
   const [campanhas, setCampanhas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -98,6 +112,24 @@ function GestionCampanhas({ onOpenCampaignControl }) {
   useEffect(() => {
     fetchCampanhas();
   }, []);
+
+  // Sincronizar com contexto de campanhas
+  useEffect(() => {
+    if (campaigns && campaigns.length > 0) {
+      console.log('🔄 [GestionCampanhas] Sincronizando com contexto:', campaigns.length);
+      setCampanhas(campaigns);
+      setMetrics({
+        total: totalCampaigns,
+        active: activeCampaignsCount,
+        paused: pausedCampaignsCount,
+        completed: draftCampaignsCount
+      });
+      setLoading(campaignsLoading);
+      if (campaignsError) {
+        setError(campaignsError);
+      }
+    }
+  }, [campaigns, totalCampaigns, activeCampaignsCount, pausedCampaignsCount, draftCampaignsCount, campaignsLoading, campaignsError]);
 
   const fetchCampanhas = async () => {
     try {
@@ -344,7 +376,11 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       
       if (startResponse && (startResponse.mensaje || startResponse.message || startResponse.success)) {
         setSuccess(startResponse.mensaje || 'Campaña iniciada con éxito');
+        
+        // Atualizar contexto e dados locais
+        updateCampaignStatus(campaignId, 'active');
         await fetchCampanhas();
+        refreshCampaigns();
         
         // Limpar mensagem de sucesso após 5 segundos
         setTimeout(() => setSuccess(''), 5000);
@@ -374,7 +410,11 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       
       if (pauseResponse && (pauseResponse.mensaje || pauseResponse.message)) {
         setSuccess(pauseResponse.mensaje || pauseResponse.message || 'Campaña pausada con éxito');
+        
+        // Atualizar contexto e dados locais
+        updateCampaignStatus(campaignId, 'paused');
         fetchCampanhas();
+        refreshCampaigns();
       } else {
         setError('Error al pausar campaña');
       }
@@ -401,7 +441,11 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       
       if (resumeResponse && (resumeResponse.mensaje || resumeResponse.message)) {
         setSuccess(resumeResponse.mensaje || resumeResponse.message || 'Campaña retomada con éxito');
+        
+        // Atualizar contexto e dados locais
+        updateCampaignStatus(campaignId, 'active');
         fetchCampanhas();
+        refreshCampaigns();
       } else {
         setError('Error al retomar campaña');
       }
@@ -427,7 +471,11 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       
       if (stopResponse && (stopResponse.mensaje || stopResponse.message)) {
         setSuccess(stopResponse.mensaje || stopResponse.message || 'Campaña parada con éxito');
+        
+        // Atualizar contexto e dados locais
+        updateCampaignStatus(campaignId, 'draft');
         fetchCampanhas();
+        refreshCampaigns();
       } else {
         setError('Error al parar campaña');
       }
