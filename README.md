@@ -180,6 +180,14 @@ O sistema já vem configurado com:
 
 ## 📚 DOCUMENTAÇÃO
 
+### **🇦🇷 Para o Cliente**
+- **[GUIA_COMPLETA_DISCADOR.md](docs/GUIA_COMPLETA_DISCADOR.md)** - **Guía completa en español argentino**
+  - ✅ Tudo em um único arquivo
+  - ✅ Acesso imediato ao sistema
+  - ✅ Configuração completa
+  - ✅ Casos de uso práticos
+
+### **Documentação Técnica (Desenvolvedores)**
 | Arquivo | Descrição |
 |---------|-----------|
 | `docs/README_SISTEMA_COMPLETO.md` | Documentação técnica completa |
@@ -188,7 +196,6 @@ O sistema já vem configurado com:
 | `docs/SISTEMA_CLI_LOCAL_RANDOMIZATION.md` | **🎯 CLI Local Randomization** - Números locais por país |
 | `docs/README_PRIMERA_ETAPA.md` | Análise Primera Etapa (100% implementado) |
 | `docs/CHECKLIST_COMPLETO.md` | Checklist completo de funcionalidades |
-| `docs/` | Documentação específica por módulo |
 
 ## 🆘 SUPORTE
 

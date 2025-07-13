@@ -34,14 +34,60 @@ const CountryConfigManager = () => {
   const [newDncNumber, setNewDncNumber] = useState('');
 
   const countries = [
+    // América do Norte
     { value: 'usa', label: 'Estados Unidos', flag: '🇺🇸' },
     { value: 'canada', label: 'Canadá', flag: '🇨🇦' },
+    
+    // América Latina
     { value: 'mexico', label: 'México', flag: '🇲🇽' },
     { value: 'brasil', label: 'Brasil', flag: '🇧🇷' },
-    { value: 'colombia', label: 'Colombia', flag: '🇨🇴' },
     { value: 'argentina', label: 'Argentina', flag: '🇦🇷' },
+    { value: 'colombia', label: 'Colombia', flag: '🇨🇴' },
     { value: 'chile', label: 'Chile', flag: '🇨🇱' },
-    { value: 'peru', label: 'Peru', flag: '🇵🇪' }
+    { value: 'peru', label: 'Peru', flag: '🇵🇪' },
+    { value: 'venezuela', label: 'Venezuela', flag: '🇻🇪' },
+    { value: 'ecuador', label: 'Ecuador', flag: '🇪🇨' },
+    { value: 'bolivia', label: 'Bolivia', flag: '🇧🇴' },
+    { value: 'uruguay', label: 'Uruguay', flag: '🇺🇾' },
+    { value: 'paraguay', label: 'Paraguay', flag: '🇵🇾' },
+    { value: 'costa_rica', label: 'Costa Rica', flag: '🇨🇷' },
+    { value: 'panama', label: 'Panamá', flag: '🇵🇦' },
+    { value: 'guatemala', label: 'Guatemala', flag: '🇬🇹' },
+    { value: 'honduras', label: 'Honduras', flag: '🇭🇳' },
+    { value: 'el_salvador', label: 'El Salvador', flag: '🇸🇻' },
+    { value: 'nicaragua', label: 'Nicaragua', flag: '🇳🇮' },
+    { value: 'republica_dominicana', label: 'República Dominicana', flag: '🇩🇴' },
+    { value: 'porto_rico', label: 'Porto Rico', flag: '🇵🇷' },
+    
+    // Europa
+    { value: 'espanha', label: 'España', flag: '🇪🇸' },
+    { value: 'portugal', label: 'Portugal', flag: '🇵🇹' },
+    { value: 'franca', label: 'França', flag: '🇫🇷' },
+    { value: 'alemanha', label: 'Alemanha', flag: '🇩🇪' },
+    { value: 'italia', label: 'Itália', flag: '🇮🇹' },
+    { value: 'reino_unido', label: 'Reino Unido', flag: '🇬🇧' },
+    { value: 'holanda', label: 'Holanda', flag: '🇳🇱' },
+    { value: 'belgica', label: 'Bélgica', flag: '🇧🇪' },
+    { value: 'suica', label: 'Suíça', flag: '🇨🇭' },
+    { value: 'austria', label: 'Áustria', flag: '🇦🇹' },
+    
+    // Ásia
+    { value: 'india', label: 'Índia', flag: '🇮🇳' },
+    { value: 'filipinas', label: 'Filipinas', flag: '🇵🇭' },
+    { value: 'malasia', label: 'Malásia', flag: '🇲🇾' },
+    { value: 'singapura', label: 'Singapura', flag: '🇸🇬' },
+    { value: 'tailandia', label: 'Tailândia', flag: '🇹🇭' },
+    { value: 'indonesia', label: 'Indonésia', flag: '🇮🇩' },
+    
+    // Oceania
+    { value: 'australia', label: 'Austrália', flag: '🇦🇺' },
+    { value: 'nova_zelandia', label: 'Nova Zelândia', flag: '🇳🇿' },
+    
+    // África
+    { value: 'africa_do_sul', label: 'África do Sul', flag: '🇿🇦' },
+    
+    // Oriente Médio
+    { value: 'israel', label: 'Israel', flag: '🇮🇱' }
   ];
 
   const availableKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];

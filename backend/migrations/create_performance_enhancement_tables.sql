@@ -83,16 +83,60 @@ CREATE TABLE IF NOT EXISTS dtmf_country_config (
 
 -- Dados iniciais de configurações DTMF
 INSERT OR REPLACE INTO dtmf_country_config (country, connect_key, disconnect_key, repeat_key, menu_timeout, instructions, instructions_audio, context_suffix) VALUES
+-- América do Norte
 ('usa', '1', '9', '0', 10, 'Press 1 to connect, 9 to be removed from list', 'press_1_connect_en.wav', '_usa'),
 ('canada', '1', '9', '0', 10, 'Press 1 to connect, 9 to be removed from list', 'press_1_connect_en.wav', '_canada'),
+('republica_dominicana', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_do.wav', '_republica_dominicana'),
+('porto_rico', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_pr.wav', '_porto_rico'),
+
+-- América Latina
 ('mexico', '3', '9', '0', 15, 'Presione 3 para conectar, 9 para salir de la lista', 'presione_3_conectar_mx.wav', '_mexico'),
 ('brasil', '1', '9', '0', 10, 'Pressione 1 para conectar, 9 para sair da lista', 'pressione_1_conectar_br.wav', '_brasil'),
-('colombia', '1', '9', '0', 12, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_co.wav', '_colombia'),
 ('argentina', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_ar.wav', '_argentina'),
+('colombia', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_co.wav', '_colombia'),
 ('chile', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_cl.wav', '_chile'),
-('peru', '1', '9', '0', 12, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_pe.wav', '_peru'),
-('venezuela', '1', '9', '0', 12, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_ve.wav', '_venezuela'),
-('default', '1', '9', '0', 10, 'Press 1 to connect, 9 to be removed from list', 'press_1_connect_default.wav', '_default');
+('peru', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_pe.wav', '_peru'),
+('venezuela', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_ve.wav', '_venezuela'),
+('ecuador', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_ec.wav', '_ecuador'),
+('bolivia', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_bo.wav', '_bolivia'),
+('uruguay', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_uy.wav', '_uruguay'),
+('paraguay', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_py.wav', '_paraguay'),
+('costa_rica', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_cr.wav', '_costa_rica'),
+('panama', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_pa.wav', '_panama'),
+('guatemala', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_gt.wav', '_guatemala'),
+('honduras', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_hn.wav', '_honduras'),
+('el_salvador', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_sv.wav', '_el_salvador'),
+('nicaragua', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_ni.wav', '_nicaragua'),
+
+-- Europa
+('espanha', '1', '9', '0', 10, 'Presione 1 para conectar, 9 para salir de la lista', 'presione_1_conectar_es.wav', '_espanha'),
+('portugal', '1', '9', '0', 10, 'Pressione 1 para conectar, 9 para sair da lista', 'pressione_1_conectar_pt.wav', '_portugal'),
+('franca', '1', '9', '0', 10, 'Appuyez sur 1 pour vous connecter, 9 pour être supprimé de la liste', 'appuyez_1_connecter_fr.wav', '_franca'),
+('alemanha', '1', '9', '0', 10, 'Drücken Sie 1 um zu verbinden, 9 um aus der Liste entfernt zu werden', 'drucken_1_verbinden_de.wav', '_alemanha'),
+('italia', '1', '9', '0', 10, 'Premi 1 per connettere, 9 per essere rimosso dall\'elenco', 'premi_1_connettere_it.wav', '_italia'),
+('reino_unido', '1', '9', '0', 10, 'Press 1 to connect, 9 to be removed from list', 'press_1_connect_uk.wav', '_reino_unido'),
+('holanda', '1', '9', '0', 10, 'Druk op 1 om te verbinden, 9 om uit de lijst te worden verwijderd', 'druk_1_verbinden_nl.wav', '_holanda'),
+('belgica', '1', '9', '0', 10, 'Appuyez sur 1 pour vous connecter, 9 pour être supprimé de la liste', 'appuyez_1_connecter_be.wav', '_belgica'),
+('suica', '1', '9', '0', 10, 'Drücken Sie 1 um zu verbinden, 9 um aus der Liste entfernt zu werden', 'drucken_1_verbinden_ch.wav', '_suica'),
+('austria', '1', '9', '0', 10, 'Drücken Sie 1 um zu verbinden, 9 um aus der Liste entfernt zu werden', 'drucken_1_verbinden_at.wav', '_austria'),
+
+-- Ásia
+('india', '1', '9', '0', 10, 'Press 1 to connect, 9 to be removed from list', 'press_1_connect_in.wav', '_india'),
+('filipinas', '1', '9', '0', 10, 'Press 1 to connect, 9 to be removed from list', 'press_1_connect_ph.wav', '_filipinas'),
+('malasia', '1', '9', '0', 10, 'Press 1 to connect, 9 to be removed from list', 'press_1_connect_my.wav', '_malasia'),
+('singapura', '1', '9', '0', 10, 'Press 1 to connect, 9 to be removed from list', 'press_1_connect_sg.wav', '_singapura'),
+('tailandia', '1', '9', '0', 10, 'Press 1 to connect, 9 to be removed from list', 'press_1_connect_th.wav', '_tailandia'),
+('indonesia', '1', '9', '0', 10, 'Press 1 to connect, 9 to be removed from list', 'press_1_connect_id.wav', '_indonesia'),
+
+-- Oceania
+('australia', '1', '9', '0', 10, 'Press 1 to connect, 9 to be removed from list', 'press_1_connect_au.wav', '_australia'),
+('nova_zelandia', '1', '9', '0', 10, 'Press 1 to connect, 9 to be removed from list', 'press_1_connect_nz.wav', '_nova_zelandia'),
+
+-- África
+('africa_do_sul', '1', '9', '0', 10, 'Press 1 to connect, 9 to be removed from list', 'press_1_connect_za.wav', '_africa_do_sul'),
+
+-- Oriente Médio
+('israel', '1', '9', '0', 10, 'Press 1 to connect, 9 to be removed from list', 'press_1_connect_il.wav', '_israel');
 
 -- =========== TABELA DE TESTES DE CARGA ===========
 CREATE TABLE IF NOT EXISTS load_test_results (

@@ -27,14 +27,60 @@ const CliPatternGenerator = () => {
 
   // Información de países en español argentino
   const countryInfo = {
+    // América do Norte
     'usa': { flag: '🇺🇸', name: 'Estados Unidos', code: '+1' },
     'canada': { flag: '🇨🇦', name: 'Canadá', code: '+1' },
+    
+    // América Latina
     'mexico': { flag: '🇲🇽', name: 'México', code: '+52' },
     'brasil': { flag: '🇧🇷', name: 'Brasil', code: '+55' },
-    'colombia': { flag: '🇨🇴', name: 'Colombia', code: '+57' },
     'argentina': { flag: '🇦🇷', name: 'Argentina', code: '+54' },
+    'colombia': { flag: '🇨🇴', name: 'Colombia', code: '+57' },
     'chile': { flag: '🇨🇱', name: 'Chile', code: '+56' },
-    'peru': { flag: '🇵🇪', name: 'Perú', code: '+51' }
+    'peru': { flag: '🇵🇪', name: 'Perú', code: '+51' },
+    'venezuela': { flag: '🇻🇪', name: 'Venezuela', code: '+58' },
+    'ecuador': { flag: '🇪🇨', name: 'Ecuador', code: '+593' },
+    'bolivia': { flag: '🇧🇴', name: 'Bolivia', code: '+591' },
+    'uruguay': { flag: '🇺🇾', name: 'Uruguay', code: '+598' },
+    'paraguay': { flag: '🇵🇾', name: 'Paraguay', code: '+595' },
+    'costa_rica': { flag: '🇨🇷', name: 'Costa Rica', code: '+506' },
+    'panama': { flag: '🇵🇦', name: 'Panamá', code: '+507' },
+    'guatemala': { flag: '🇬🇹', name: 'Guatemala', code: '+502' },
+    'honduras': { flag: '🇭🇳', name: 'Honduras', code: '+504' },
+    'el_salvador': { flag: '🇸🇻', name: 'El Salvador', code: '+503' },
+    'nicaragua': { flag: '🇳🇮', name: 'Nicaragua', code: '+505' },
+    'republica_dominicana': { flag: '🇩🇴', name: 'República Dominicana', code: '+1' },
+    'porto_rico': { flag: '🇵🇷', name: 'Porto Rico', code: '+1' },
+    
+    // Europa
+    'espanha': { flag: '🇪🇸', name: 'España', code: '+34' },
+    'portugal': { flag: '🇵🇹', name: 'Portugal', code: '+351' },
+    'franca': { flag: '🇫🇷', name: 'França', code: '+33' },
+    'alemanha': { flag: '🇩🇪', name: 'Alemanha', code: '+49' },
+    'italia': { flag: '🇮🇹', name: 'Itália', code: '+39' },
+    'reino_unido': { flag: '🇬🇧', name: 'Reino Unido', code: '+44' },
+    'holanda': { flag: '🇳🇱', name: 'Holanda', code: '+31' },
+    'belgica': { flag: '🇧🇪', name: 'Bélgica', code: '+32' },
+    'suica': { flag: '🇨🇭', name: 'Suíça', code: '+41' },
+    'austria': { flag: '🇦🇹', name: 'Áustria', code: '+43' },
+    
+    // Ásia
+    'india': { flag: '🇮🇳', name: 'Índia', code: '+91' },
+    'filipinas': { flag: '🇵🇭', name: 'Filipinas', code: '+63' },
+    'malasia': { flag: '🇲🇾', name: 'Malásia', code: '+60' },
+    'singapura': { flag: '🇸🇬', name: 'Singapura', code: '+65' },
+    'tailandia': { flag: '🇹🇭', name: 'Tailândia', code: '+66' },
+    'indonesia': { flag: '🇮🇩', name: 'Indonésia', code: '+62' },
+    
+    // Oceania
+    'australia': { flag: '🇦🇺', name: 'Austrália', code: '+61' },
+    'nova_zelandia': { flag: '🇳🇿', name: 'Nova Zelândia', code: '+64' },
+    
+    // África
+    'africa_do_sul': { flag: '🇿🇦', name: 'África do Sul', code: '+27' },
+    
+    // Oriente Médio
+    'israel': { flag: '🇮🇱', name: 'Israel', code: '+972' }
   };
 
   // Números de ejemplo por país

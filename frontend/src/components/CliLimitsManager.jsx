@@ -13,6 +13,7 @@ const CliLimitsManager = () => {
 
   // Configuraciones por defecto de países
   const countryConfigs = {
+    // América do Norte
     usa: {
       name: 'Estados Unidos',
       flag: '🇺🇸',
@@ -25,6 +26,8 @@ const CliLimitsManager = () => {
       defaultLimit: 100,
       description: 'Límite máximo de 100 usos por día para evitar bloqueos'
     },
+    
+    // América Latina
     mexico: {
       name: 'México',
       flag: '🇲🇽',
@@ -37,15 +40,15 @@ const CliLimitsManager = () => {
       defaultLimit: 0,
       description: 'Uso ilimitado - sin restricciones de operadora'
     },
-    colombia: {
-      name: 'Colombia',
-      flag: '🇨🇴',
-      defaultLimit: 0,
-      description: 'Uso ilimitado - sin restricciones de operadora'
-    },
     argentina: {
       name: 'Argentina',
       flag: '🇦🇷',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    colombia: {
+      name: 'Colombia',
+      flag: '🇨🇴',
       defaultLimit: 0,
       description: 'Uso ilimitado - sin restricciones de operadora'
     },
@@ -58,6 +61,214 @@ const CliLimitsManager = () => {
     peru: {
       name: 'Perú',
       flag: '🇵🇪',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    venezuela: {
+      name: 'Venezuela',
+      flag: '🇻🇪',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    ecuador: {
+      name: 'Ecuador',
+      flag: '🇪🇨',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    bolivia: {
+      name: 'Bolivia',
+      flag: '🇧🇴',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    uruguay: {
+      name: 'Uruguay',
+      flag: '🇺🇾',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    paraguay: {
+      name: 'Paraguay',
+      flag: '🇵🇾',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    costa_rica: {
+      name: 'Costa Rica',
+      flag: '🇨🇷',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    panama: {
+      name: 'Panamá',
+      flag: '🇵🇦',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    guatemala: {
+      name: 'Guatemala',
+      flag: '🇬🇹',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    honduras: {
+      name: 'Honduras',
+      flag: '🇭🇳',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    el_salvador: {
+      name: 'El Salvador',
+      flag: '🇸🇻',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    nicaragua: {
+      name: 'Nicaragua',
+      flag: '🇳🇮',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    republica_dominicana: {
+      name: 'República Dominicana',
+      flag: '🇩🇴',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    porto_rico: {
+      name: 'Porto Rico',
+      flag: '🇵🇷',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    
+    // Europa
+    espanha: {
+      name: 'España',
+      flag: '🇪🇸',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    portugal: {
+      name: 'Portugal',
+      flag: '🇵🇹',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    franca: {
+      name: 'França',
+      flag: '🇫🇷',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    alemanha: {
+      name: 'Alemanha',
+      flag: '🇩🇪',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    italia: {
+      name: 'Itália',
+      flag: '🇮🇹',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    reino_unido: {
+      name: 'Reino Unido',
+      flag: '🇬🇧',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    holanda: {
+      name: 'Holanda',
+      flag: '🇳🇱',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    belgica: {
+      name: 'Bélgica',
+      flag: '🇧🇪',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    suica: {
+      name: 'Suíça',
+      flag: '🇨🇭',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    austria: {
+      name: 'Áustria',
+      flag: '🇦🇹',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    
+    // Ásia
+    india: {
+      name: 'Índia',
+      flag: '🇮🇳',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    filipinas: {
+      name: 'Filipinas',
+      flag: '🇵🇭',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    malasia: {
+      name: 'Malásia',
+      flag: '🇲🇾',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    singapura: {
+      name: 'Singapura',
+      flag: '🇸🇬',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    tailandia: {
+      name: 'Tailândia',
+      flag: '🇹🇭',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    indonesia: {
+      name: 'Indonésia',
+      flag: '🇮🇩',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    
+    // Oceania
+    australia: {
+      name: 'Austrália',
+      flag: '🇦🇺',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    nova_zelandia: {
+      name: 'Nova Zelândia',
+      flag: '🇳🇿',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    
+    // África
+    africa_do_sul: {
+      name: 'África do Sul',
+      flag: '🇿🇦',
+      defaultLimit: 0,
+      description: 'Uso ilimitado - sin restricciones de operadora'
+    },
+    
+    // Oriente Médio
+    israel: {
+      name: 'Israel',
+      flag: '🇮🇱',
       defaultLimit: 0,
       description: 'Uso ilimitado - sin restricciones de operadora'
     }

@@ -430,7 +430,32 @@ class PerformanceService {
    * @param {string} country - Código del país
    */
   validateCountry(country) {
-    const validCountries = ['usa', 'canada', 'mexico', 'brasil', 'colombia', 'argentina', 'chile', 'peru'];
+    const validCountries = [
+      // América do Norte
+      'usa', 'canada',
+      
+      // América Latina
+      'mexico', 'brasil', 'argentina', 'colombia', 'chile', 'peru', 'venezuela', 'ecuador', 
+      'bolivia', 'uruguay', 'paraguay', 'costa_rica', 'panama', 'guatemala', 'honduras', 
+      'el_salvador', 'nicaragua', 'republica_dominicana', 'porto_rico',
+      
+      // Europa
+      'espanha', 'portugal', 'franca', 'alemanha', 'italia', 'reino_unido', 'holanda', 
+      'belgica', 'suica', 'austria',
+      
+      // Ásia
+      'india', 'filipinas', 'malasia', 'singapura', 'tailandia', 'indonesia',
+      
+      // Oceania
+      'australia', 'nova_zelandia',
+      
+      // África
+      'africa_do_sul',
+      
+      // Oriente Médio
+      'israel'
+    ];
+    
     if (!validCountries.includes(country)) {
       throw new Error(`País no válido: ${country}`);
     }
@@ -442,6 +467,7 @@ class PerformanceService {
    */
   getDefaultCountryConfigs() {
     return {
+      // América do Norte
       usa: {
         name: 'Estados Unidos',
         flag: '🇺🇸',
@@ -456,11 +482,13 @@ class PerformanceService {
         dtmf_key: '1',
         timezone: 'America/Toronto'
       },
+      
+      // América Latina
       mexico: {
         name: 'México',
         flag: '🇲🇽',
-        cli_limit: 0, // Sin límite
-        dtmf_key: '3', // Especial para México
+        cli_limit: 0,
+        dtmf_key: '3',
         timezone: 'America/Mexico_City'
       },
       brasil: {
@@ -470,19 +498,19 @@ class PerformanceService {
         dtmf_key: '1',
         timezone: 'America/Sao_Paulo'
       },
-      colombia: {
-        name: 'Colombia',
-        flag: '🇨🇴',
-        cli_limit: 0,
-        dtmf_key: '1',
-        timezone: 'America/Bogota'
-      },
       argentina: {
         name: 'Argentina',
         flag: '🇦🇷',
         cli_limit: 0,
         dtmf_key: '1',
         timezone: 'America/Argentina/Buenos_Aires'
+      },
+      colombia: {
+        name: 'Colombia',
+        flag: '🇨🇴',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Bogota'
       },
       chile: {
         name: 'Chile',
@@ -497,6 +525,247 @@ class PerformanceService {
         cli_limit: 0,
         dtmf_key: '1',
         timezone: 'America/Lima'
+      },
+      venezuela: {
+        name: 'Venezuela',
+        flag: '🇻🇪',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Caracas'
+      },
+      ecuador: {
+        name: 'Ecuador',
+        flag: '🇪🇨',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Guayaquil'
+      },
+      bolivia: {
+        name: 'Bolivia',
+        flag: '🇧🇴',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/La_Paz'
+      },
+      uruguay: {
+        name: 'Uruguay',
+        flag: '🇺🇾',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Montevideo'
+      },
+      paraguay: {
+        name: 'Paraguay',
+        flag: '🇵🇾',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Asuncion'
+      },
+      costa_rica: {
+        name: 'Costa Rica',
+        flag: '🇨🇷',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Costa_Rica'
+      },
+      panama: {
+        name: 'Panamá',
+        flag: '🇵🇦',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Panama'
+      },
+      guatemala: {
+        name: 'Guatemala',
+        flag: '🇬🇹',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Guatemala'
+      },
+      honduras: {
+        name: 'Honduras',
+        flag: '🇭🇳',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Tegucigalpa'
+      },
+      el_salvador: {
+        name: 'El Salvador',
+        flag: '🇸🇻',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/El_Salvador'
+      },
+      nicaragua: {
+        name: 'Nicaragua',
+        flag: '🇳🇮',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Managua'
+      },
+      republica_dominicana: {
+        name: 'República Dominicana',
+        flag: '🇩🇴',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Santo_Domingo'
+      },
+      porto_rico: {
+        name: 'Porto Rico',
+        flag: '🇵🇷',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'America/Puerto_Rico'
+      },
+      
+      // Europa
+      espanha: {
+        name: 'España',
+        flag: '🇪🇸',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Europe/Madrid'
+      },
+      portugal: {
+        name: 'Portugal',
+        flag: '🇵🇹',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Europe/Lisbon'
+      },
+      franca: {
+        name: 'França',
+        flag: '🇫🇷',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Europe/Paris'
+      },
+      alemanha: {
+        name: 'Alemanha',
+        flag: '🇩🇪',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Europe/Berlin'
+      },
+      italia: {
+        name: 'Itália',
+        flag: '🇮🇹',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Europe/Rome'
+      },
+      reino_unido: {
+        name: 'Reino Unido',
+        flag: '🇬🇧',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Europe/London'
+      },
+      holanda: {
+        name: 'Holanda',
+        flag: '🇳🇱',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Europe/Amsterdam'
+      },
+      belgica: {
+        name: 'Bélgica',
+        flag: '🇧🇪',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Europe/Brussels'
+      },
+      suica: {
+        name: 'Suíça',
+        flag: '🇨🇭',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Europe/Zurich'
+      },
+      austria: {
+        name: 'Áustria',
+        flag: '🇦🇹',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Europe/Vienna'
+      },
+      
+      // Ásia
+      india: {
+        name: 'Índia',
+        flag: '🇮🇳',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Asia/Kolkata'
+      },
+      filipinas: {
+        name: 'Filipinas',
+        flag: '🇵🇭',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Asia/Manila'
+      },
+      malasia: {
+        name: 'Malásia',
+        flag: '🇲🇾',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Asia/Kuala_Lumpur'
+      },
+      singapura: {
+        name: 'Singapura',
+        flag: '🇸🇬',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Asia/Singapore'
+      },
+      tailandia: {
+        name: 'Tailândia',
+        flag: '🇹🇭',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Asia/Bangkok'
+      },
+      indonesia: {
+        name: 'Indonésia',
+        flag: '🇮🇩',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Asia/Jakarta'
+      },
+      
+      // Oceania
+      australia: {
+        name: 'Austrália',
+        flag: '🇦🇺',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Australia/Sydney'
+      },
+      nova_zelandia: {
+        name: 'Nova Zelândia',
+        flag: '🇳🇿',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Pacific/Auckland'
+      },
+      
+      // África
+      africa_do_sul: {
+        name: 'África do Sul',
+        flag: '🇿🇦',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Africa/Johannesburg'
+      },
+      
+      // Oriente Médio
+      israel: {
+        name: 'Israel',
+        flag: '🇮🇱',
+        cli_limit: 0,
+        dtmf_key: '1',
+        timezone: 'Asia/Jerusalem'
       }
     };
   }

@@ -26,14 +26,60 @@ const TrunkCountryManager = () => {
   });
 
   const countryOptions = [
-    { code: '54', name: '🇦🇷 Argentina', flag: '🇦🇷' },
-    { code: '55', name: '🇧🇷 Brasil', flag: '🇧🇷' },
-    { code: '57', name: '🇨🇴 Colombia', flag: '🇨🇴' },
-    { code: '52', name: '🇲🇽 México', flag: '🇲🇽' },
+    // América do Norte
     { code: '1', name: '🇺🇸 Estados Unidos', flag: '🇺🇸' },
-    { code: '51', name: '🇵🇪 Perú', flag: '🇵🇪' },
+    { code: '1', name: '🇨🇦 Canadá', flag: '🇨🇦' },
+    { code: '1', name: '🇩🇴 República Dominicana', flag: '🇩🇴' },
+    { code: '1', name: '🇵🇷 Porto Rico', flag: '🇵🇷' },
+    
+    // América Latina
+    { code: '52', name: '🇲🇽 México', flag: '🇲🇽' },
+    { code: '55', name: '🇧🇷 Brasil', flag: '🇧🇷' },
+    { code: '54', name: '🇦🇷 Argentina', flag: '🇦🇷' },
+    { code: '57', name: '🇨🇴 Colombia', flag: '🇨🇴' },
     { code: '56', name: '🇨🇱 Chile', flag: '🇨🇱' },
-    { code: '34', name: '🇪🇸 España', flag: '🇪🇸' }
+    { code: '51', name: '🇵🇪 Perú', flag: '🇵🇪' },
+    { code: '58', name: '🇻🇪 Venezuela', flag: '🇻🇪' },
+    { code: '593', name: '🇪🇨 Ecuador', flag: '🇪🇨' },
+    { code: '591', name: '🇧🇴 Bolivia', flag: '🇧🇴' },
+    { code: '598', name: '🇺🇾 Uruguay', flag: '🇺🇾' },
+    { code: '595', name: '🇵🇾 Paraguay', flag: '🇵🇾' },
+    { code: '506', name: '🇨🇷 Costa Rica', flag: '🇨🇷' },
+    { code: '507', name: '🇵🇦 Panamá', flag: '🇵🇦' },
+    { code: '502', name: '🇬🇹 Guatemala', flag: '🇬🇹' },
+    { code: '504', name: '🇭🇳 Honduras', flag: '🇭🇳' },
+    { code: '503', name: '🇸🇻 El Salvador', flag: '🇸🇻' },
+    { code: '505', name: '🇳🇮 Nicaragua', flag: '🇳🇮' },
+    
+    // Europa
+    { code: '34', name: '🇪🇸 España', flag: '🇪🇸' },
+    { code: '351', name: '🇵🇹 Portugal', flag: '🇵🇹' },
+    { code: '33', name: '🇫🇷 França', flag: '🇫🇷' },
+    { code: '49', name: '🇩🇪 Alemanha', flag: '🇩🇪' },
+    { code: '39', name: '🇮🇹 Itália', flag: '🇮🇹' },
+    { code: '44', name: '🇬🇧 Reino Unido', flag: '🇬🇧' },
+    { code: '31', name: '🇳🇱 Holanda', flag: '🇳🇱' },
+    { code: '32', name: '🇧🇪 Bélgica', flag: '🇧🇪' },
+    { code: '41', name: '🇨🇭 Suíça', flag: '🇨🇭' },
+    { code: '43', name: '🇦🇹 Áustria', flag: '🇦🇹' },
+    
+    // Ásia
+    { code: '91', name: '🇮🇳 Índia', flag: '🇮🇳' },
+    { code: '63', name: '🇵🇭 Filipinas', flag: '🇵🇭' },
+    { code: '60', name: '🇲🇾 Malásia', flag: '🇲🇾' },
+    { code: '65', name: '🇸🇬 Singapura', flag: '🇸🇬' },
+    { code: '66', name: '🇹🇭 Tailândia', flag: '🇹🇭' },
+    { code: '62', name: '🇮🇩 Indonésia', flag: '🇮🇩' },
+    
+    // Oceania
+    { code: '61', name: '🇦🇺 Austrália', flag: '🇦🇺' },
+    { code: '64', name: '🇳🇿 Nova Zelândia', flag: '🇳🇿' },
+    
+    // África
+    { code: '27', name: '🇿🇦 África do Sul', flag: '🇿🇦' },
+    
+    // Oriente Médio
+    { code: '972', name: '🇮🇱 Israel', flag: '🇮🇱' }
   ];
 
   const codecOptions = [
