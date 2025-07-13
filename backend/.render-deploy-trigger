@@ -1,9 +1,12 @@
-# Trigger deploy do backend - Performance endpoints corrigidos
+# Trigger deploy do backend - Endpoint DTMF implementado
 # Data: 2025-01-11
-# Versão: 1.0.1
+# Versão: 1.0.2
 
-- Corrigido prefixo duplicado nas rotas de performance
-- Endpoints agora funcionam corretamente em /api/v1/performance/
-- Implementados todos os endpoints necessários para o dashboard
+- Implementado endpoint /api/v1/performance/dtmf/configs
+- Adicionado fallback com 60+ países
+- Configurações DTMF completas com instruções nativas
+- México usa tecla 3 (especial para evitar contestadoras)
+- Suporte a múltiplos idiomas nas instruções
 
-Deploy necessário para aplicar as correções! 
+Deploy necessário para aplicar as correções DTMF! 
+Endpoint agora disponível com fallback garantido. 

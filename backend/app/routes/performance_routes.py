@@ -724,6 +724,814 @@ async def test_endpoint():
         "timestamp": datetime.now().isoformat()
     }
 
+# ========== ROTAS DTMF ==========
+
+def get_dtmf_fallback_configs():
+    """Configurações DTMF fallback para garantir funcionamento com 60+ países."""
+    return {
+        # América do Norte
+        "usa": {
+            "country_name": "Estados Unidos",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "canada": {
+            "country_name": "Canadá",
+            "connect_key": "1", 
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "dominican_republic": {
+            "country_name": "República Dominicana",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "puerto_rico": {
+            "country_name": "Porto Rico",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "jamaica": {
+            "country_name": "Jamaica",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        
+        # América Latina
+        "mexico": {
+            "country_name": "México",
+            "connect_key": "3",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 15,
+            "instructions": "Presione 3 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "brasil": {
+            "country_name": "Brasil",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Pressione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "argentina": {
+            "country_name": "Argentina",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "colombia": {
+            "country_name": "Colombia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "chile": {
+            "country_name": "Chile",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "peru": {
+            "country_name": "Peru",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "venezuela": {
+            "country_name": "Venezuela",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "ecuador": {
+            "country_name": "Ecuador",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "bolivia": {
+            "country_name": "Bolivia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "uruguay": {
+            "country_name": "Uruguay",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "paraguay": {
+            "country_name": "Paraguay",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "costa_rica": {
+            "country_name": "Costa Rica",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "panama": {
+            "country_name": "Panamá",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "guatemala": {
+            "country_name": "Guatemala",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "honduras": {
+            "country_name": "Honduras",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "el_salvador": {
+            "country_name": "El Salvador",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "nicaragua": {
+            "country_name": "Nicaragua",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "cuba": {
+            "country_name": "Cuba",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Presione 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        
+        # Europa
+        "spain": {
+            "country_name": "España",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Pulse 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "portugal": {
+            "country_name": "Portugal",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Prima 1 para conectar, 9 para desconectar, 0 para repetir"
+        },
+        "france": {
+            "country_name": "França",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Appuyez sur 1 pour connecter, 9 pour déconnecter, 0 pour répéter"
+        },
+        "germany": {
+            "country_name": "Alemanha",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Drücken Sie 1 zum Verbinden, 9 zum Trennen, 0 zum Wiederholen"
+        },
+        "italy": {
+            "country_name": "Itália",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Premi 1 per connettere, 9 per disconnettere, 0 per ripetere"
+        },
+        "uk": {
+            "country_name": "Reino Unido",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "netherlands": {
+            "country_name": "Holanda",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Druk op 1 om te verbinden, 9 om te verbreken, 0 om te herhalen"
+        },
+        "belgium": {
+            "country_name": "Bélgica",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Appuyez sur 1 pour connecter, 9 pour déconnecter, 0 pour répéter"
+        },
+        "switzerland": {
+            "country_name": "Suíça",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Drücken Sie 1 zum Verbinden, 9 zum Trennen, 0 zum Wiederholen"
+        },
+        "austria": {
+            "country_name": "Áustria",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Drücken Sie 1 zum Verbinden, 9 zum Trennen, 0 zum Wiederholen"
+        },
+        "sweden": {
+            "country_name": "Suécia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Tryck 1 för att ansluta, 9 för att koppla från, 0 för att upprepa"
+        },
+        "norway": {
+            "country_name": "Noruega",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Trykk 1 for å koble til, 9 for å koble fra, 0 for å gjenta"
+        },
+        "denmark": {
+            "country_name": "Dinamarca",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Tryk på 1 for at forbinde, 9 for at afbryde, 0 for at gentage"
+        },
+        "finland": {
+            "country_name": "Finlândia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Paina 1 yhdistääksesi, 9 katkaistaksesi, 0 toistaaksesi"
+        },
+        "poland": {
+            "country_name": "Polônia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Naciśnij 1, aby połączyć, 9, aby rozłączyć, 0, aby powtórzyć"
+        },
+        "czech_republic": {
+            "country_name": "República Checa",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Stiskněte 1 pro připojení, 9 pro odpojení, 0 pro opakování"
+        },
+        "hungary": {
+            "country_name": "Hungria",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Nyomja meg az 1-et a csatlakozáshoz, a 9-et a bontáshoz, a 0-t az ismétléshez"
+        },
+        "greece": {
+            "country_name": "Grécia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Πατήστε 1 για σύνδεση, 9 για αποσύνδεση, 0 για επανάληψη"
+        },
+        "turkey": {
+            "country_name": "Turquia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Bağlanmak için 1'e, bağlantıyı kesmek için 9'a, tekrarlamak için 0'a basın"
+        },
+        "russia": {
+            "country_name": "Rússia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Нажмите 1 для соединения, 9 для отключения, 0 для повтора"
+        },
+        "ukraine": {
+            "country_name": "Ucrânia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Натисніть 1 для з'єднання, 9 для відключення, 0 для повтору"
+        },
+        
+        # Ásia
+        "india": {
+            "country_name": "Índia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "philippines": {
+            "country_name": "Filipinas",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "malaysia": {
+            "country_name": "Malásia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "singapore": {
+            "country_name": "Singapura",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "thailand": {
+            "country_name": "Tailândia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "indonesia": {
+            "country_name": "Indonésia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "japan": {
+            "country_name": "Japão",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "接続する場合は1を、切断する場合は9を、繰り返す場合は0を押してください"
+        },
+        "south_korea": {
+            "country_name": "Coreia do Sul",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "연결하려면 1번을, 끊으려면 9번을, 반복하려면 0번을 누르세요"
+        },
+        "china": {
+            "country_name": "China",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "按1连接，按9断开，按0重复"
+        },
+        "hong_kong": {
+            "country_name": "Hong Kong",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "taiwan": {
+            "country_name": "Taiwan",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "按1連接，按9斷開，按0重複"
+        },
+        "vietnam": {
+            "country_name": "Vietnã",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Nhấn 1 để kết nối, 9 để ngắt kết nối, 0 để lặp lại"
+        },
+        "pakistan": {
+            "country_name": "Paquistão",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "bangladesh": {
+            "country_name": "Bangladesh",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "sri_lanka": {
+            "country_name": "Sri Lanka",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        
+        # Oceania
+        "australia": {
+            "country_name": "Austrália",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "new_zealand": {
+            "country_name": "Nova Zelândia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        
+        # África
+        "south_africa": {
+            "country_name": "África do Sul",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "nigeria": {
+            "country_name": "Nigéria",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "kenya": {
+            "country_name": "Quênia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Press 1 to connect, 9 to disconnect, 0 to repeat"
+        },
+        "morocco": {
+            "country_name": "Marrocos",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "Appuyez sur 1 pour connecter, 9 pour déconnecter, 0 pour répéter"
+        },
+        "egypt": {
+            "country_name": "Egito",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "اضغط 1 للاتصال، 9 لقطع الاتصال، 0 للتكرار"
+        },
+        
+        # Oriente Médio
+        "israel": {
+            "country_name": "Israel",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "לחץ 1 להתחבר, 9 להתנתק, 0 לחזור"
+        },
+        "uae": {
+            "country_name": "Emirados Árabes Unidos",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "اضغط 1 للاتصال، 9 لقطع الاتصال، 0 للتكرار"
+        },
+        "saudi_arabia": {
+            "country_name": "Arábia Saudita",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "اضغط 1 للاتصال، 9 لقطع الاتصال، 0 للتكرار"
+        },
+        "qatar": {
+            "country_name": "Qatar",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "اضغط 1 للاتصال، 9 لقطع الاتصال، 0 للتكرار"
+        },
+        "kuwait": {
+            "country_name": "Kuwait",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "اضغط 1 للاتصال، 9 لقطع الاتصال، 0 للتكرار"
+        },
+        "lebanon": {
+            "country_name": "Líbano",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "اضغط 1 للاتصال، 9 لقطع الاتصال، 0 للتكرار"
+        },
+        "jordan": {
+            "country_name": "Jordânia",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "اضغط 1 للاتصال، 9 لقطع الاتصال، 0 للتكرار"
+        },
+        "iran": {
+            "country_name": "Irã",
+            "connect_key": "1",
+            "disconnect_key": "9",
+            "dnc_key": "2",
+            "repeat_key": "0",
+            "menu_timeout": 10,
+            "instructions": "برای اتصال 1 را فشار دهید، برای قطع اتصال 9 را، برای تکرار 0 را"
+        }
+    }
+
+@router.get("/dtmf/configs")
+async def get_dtmf_configs(db: Session = Depends(get_db)):
+    """Obtém todas as configurações DTMF dos países."""
+    try:
+        if not HAS_DTMF_CONFIG_SERVICE:
+            # Fallback com configurações diretas
+            return {
+                "status": "success",
+                "configs": get_dtmf_fallback_configs(),
+                "timestamp": datetime.now().isoformat(),
+                "message": "Usando configurações fallback"
+            }
+        
+        dtmf_service = DTMFCountryConfigService(db)
+        
+        if hasattr(dtmf_service, 'get_all_country_configs'):
+            configs = dtmf_service.get_all_country_configs()
+            return {
+                "status": "success",
+                "configs": configs,
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        # Fallback se método não existe
+        return {
+            "status": "success",
+            "configs": get_dtmf_fallback_configs(),
+            "timestamp": datetime.now().isoformat(),
+            "message": "Usando configurações fallback"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter configurações DTMF: {str(e)}")
+        # Ainda assim retorna fallback para não quebrar o frontend
+        return {
+            "status": "success",
+            "configs": get_dtmf_fallback_configs(),
+            "timestamp": datetime.now().isoformat(),
+            "message": f"Usando fallback devido a erro: {str(e)}"
+        }
+
+@router.get("/dtmf/configs/{country}")
+async def get_dtmf_config_by_country(country: str, db: Session = Depends(get_db)):
+    """Obtém configuração DTMF específica de um país."""
+    try:
+        if not HAS_DTMF_CONFIG_SERVICE:
+            raise HTTPException(
+                status_code=503,
+                detail="Serviço DTMF não disponível"
+            )
+        
+        dtmf_service = DTMFCountryConfigService(db)
+        
+        if hasattr(dtmf_service, 'get_country_config'):
+            config = dtmf_service.get_country_config(country)
+            if not config:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Configuração DTMF não encontrada para país: {country}"
+                )
+            
+            return {
+                "status": "success",
+                "country": country,
+                "config": config,
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        raise HTTPException(
+            status_code=503,
+            detail="Método não disponível"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Erro ao obter configuração DTMF para {country}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao obter configuração: {str(e)}"
+        )
+
+@router.post("/dtmf/configs/{country}")
+async def update_dtmf_config(
+    country: str,
+    config: CountryConfigRequest,
+    db: Session = Depends(get_db)
+):
+    """Atualiza configuração DTMF de um país."""
+    try:
+        if not HAS_DTMF_CONFIG_SERVICE:
+            raise HTTPException(
+                status_code=503,
+                detail="Serviço DTMF não disponível"
+            )
+        
+        dtmf_service = DTMFCountryConfigService(db)
+        
+        if hasattr(dtmf_service, 'update_country_config'):
+            result = dtmf_service.update_country_config(country, config.dict())
+            return {
+                "status": "success",
+                "country": country,
+                "config": result,
+                "message": f"Configuração DTMF atualizada para {country}",
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        raise HTTPException(
+            status_code=503,
+            detail="Método não disponível"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Erro ao atualizar configuração DTMF para {country}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao atualizar configuração: {str(e)}"
+        )
+
 # ========== ROTAS CLI PATTERN GENERATOR ==========
 
 @router.get("/cli-pattern/countries")
