@@ -6,10 +6,12 @@ const cleanUrl = (url) => {
   return url.trim().replace(/[^\w\-.:\/]/g, '');
 };
 
-// CORREÇÃO: Forçar URL correta em produção
-const BASE_URL = import.meta.env.DEV 
-  ? 'http://localhost:8000'  // Desenvolvimento: usar backend local
-  : 'http://localhost:8000'; // Produção: temporariamente usando porta 8000
+// CORREÇÃO: Usar variável de ambiente para URL da API
+const BASE_URL = import.meta.env.VITE_API_URL || (
+  import.meta.env.DEV 
+    ? 'http://localhost:8000'  // Desenvolvimento: usar backend local
+    : 'https://discador.onrender.com' // Produção: backend no Render
+);
 
 // Garantir que não há /api/v1 duplicado
 export const API_BASE_URL = BASE_URL.replace(/\/api\/v1$/, '');
