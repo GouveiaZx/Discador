@@ -385,6 +385,7 @@ const CallerIdManager = () => {
                       </div>
                     </div>
                   </div>
+                </div>
 
                 {/* Configuración de Caller ID */}
                 <div className="bg-gray-800/40 backdrop-blur-xl rounded-xl border border-gray-700/50 p-6">
@@ -397,7 +398,8 @@ const CallerIdManager = () => {
                       <span className="text-blue-300 text-sm font-medium">✨ Dinâmico Ativado</span>
                     </div>
                   </div>
-                <div className="space-y-4">
+                  
+                  <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
                       Nombre del Caller ID
@@ -517,6 +519,7 @@ const CallerIdManager = () => {
                   >
                     💾 Guardar Configuración
                   </button>
+                  </div>
                 </div>
               </div>
             ) : (
