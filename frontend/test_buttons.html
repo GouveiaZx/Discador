@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Campaign Buttons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        .button {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .start { background-color: #10b981; }
+        .pause { background-color: #f59e0b; }
+        .stop { background-color: #ef4444; }
+        .resume { background-color: #10b981; }
+        .log {
+            background-color: #2a2a2a;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Campaign Buttons</h1>
+    <div>
+        <button class="button start" onclick="testStart()">Iniciar Campanha 1</button>
+        <button class="button pause" onclick="testPause()">Pausar Campanha 1</button>
+        <button class="button stop" onclick="testStop()">Parar Campanha 1</button>
+        <button class="button resume" onclick="testResume()">Retomar Campanha 1</button>
+    </div>
+    
+    <div class="log" id="log">Aguardando testes...</div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api/v1';
+        const CAMPAIGN_ID = 1;
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#ffffff';
+            logDiv.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        async function makeRequest(endpoint, method = 'GET', data = null) {
+            try {
+                const url = `${API_BASE_URL}${endpoint}`;
+                log(`${method} ${url}`);
+                
+                const config = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                };
+                
+                if (data && (method === 'POST' || method === 'PUT')) {
+                    config.body = JSON.stringify(data);
+                }
+                
+                const response = await fetch(url, config);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Sucesso: ${JSON.stringify(result)}`, 'success');
+                } else {
+                    log(`❌ Erro ${response.status}: ${JSON.stringify(result)}`, 'error');
+                }
+                
+                return result;
+            } catch (error) {
+                log(`❌ Erro de rede: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        async function testStart() {
+            log('🚀 Testando iniciar campanha...');
+            await makeRequest(`/presione1/campanhas/${CAMPAIGN_ID}/iniciar`, 'POST', {
+                usuario_id: "1"
+            });
+        }
+        
+        async function testPause() {
+            log('⏸️ Testando pausar campanha...');
+            await makeRequest(`/presione1/campanhas/${CAMPAIGN_ID}/pausar`, 'POST', {
+                usuario_id: "1"
+            });
+        }
+        
+        async function testStop() {
+            log('🛑 Testando parar campanha...');
+            await makeRequest(`/presione1/campanhas/${CAMPAIGN_ID}/parar`, 'POST', {
+                usuario_id: "1"
+            });
+        }
+        
+        async function testResume() {
+            log('▶️ Testando retomar campanha...');
+            await makeRequest(`/presione1/campanhas/${CAMPAIGN_ID}/retomar`, 'POST', {
+                usuario_id: "1"
+            });
+        }
+        
+        // Testar conexão inicial
+        window.onload = async () => {
+            log('🔍 Testando conexão com backend...');
+            await makeRequest('/presione1/campanhas');
+        };
+    </script>
+</body>
+</html>

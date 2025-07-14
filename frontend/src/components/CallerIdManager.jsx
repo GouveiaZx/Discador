@@ -337,7 +337,66 @@ const CallerIdManager = () => {
                   </p>
                 </div>
 
-                {/* Configuración Básica */}
+                {/* Configuración de Caller ID Dinámico por País */}
+                <div className="bg-gray-800/40 backdrop-blur-xl rounded-xl border border-gray-700/50 p-6 mb-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">🌍</span>
+                      <h3 className="text-xl font-semibold text-white">Caller ID Dinámico por País</h3>
+                    </div>
+                    <div className="bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-1">
+                      <span className="text-green-300 text-sm font-medium">🚀 Funcionalidad Avanzada</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6 mb-6">
+                    <div className="flex items-center mb-4">
+                      <span className="text-blue-300 mr-2">💡</span>
+                      <h4 className="text-blue-100 font-medium text-lg">¿Qué es el Caller ID Dinámico?</h4>
+                    </div>
+                    <p className="text-blue-200/80 mb-4">
+                      El sistema selecciona automáticamente el mejor Caller ID según el país de destino, 
+                      mejorando las tasas de respuesta y cumpliendo con regulaciones locales.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-blue-600/20 border border-blue-500/40 rounded-lg p-4">
+                        <div className="flex items-center mb-2">
+                          <span className="text-blue-300 mr-2">🎯</span>
+                          <span className="text-blue-200 font-medium">Ventajas</span>
+                        </div>
+                        <ul className="text-blue-200/80 text-sm space-y-1">
+                          <li>• Mayor tasa de respuesta</li>
+                          <li>• Cumplimiento regulatorio</li>
+                          <li>• Rotación automática</li>
+                          <li>• Optimización por país</li>
+                        </ul>
+                      </div>
+                      <div className="bg-blue-600/20 border border-blue-500/40 rounded-lg p-4">
+                        <div className="flex items-center mb-2">
+                          <span className="text-blue-300 mr-2">⚙️</span>
+                          <span className="text-blue-200 font-medium">Configuración</span>
+                        </div>
+                        <ul className="text-blue-200/80 text-sm space-y-1">
+                          <li>• Configure por trunk o campaña</li>
+                          <li>• Defina pool de números</li>
+                          <li>• Active rotación automática</li>
+                          <li>• Monitoree performance</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                {/* Configuración de Caller ID */}
+                <div className="bg-gray-800/40 backdrop-blur-xl rounded-xl border border-gray-700/50 p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-3">🎯</span>
+                      <h3 className="text-xl font-semibold text-white">Configuração de Caller ID</h3>
+                    </div>
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg px-3 py-1">
+                      <span className="text-blue-300 text-sm font-medium">✨ Dinâmico Ativado</span>
+                    </div>
+                  </div>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -476,4 +535,4 @@ const CallerIdManager = () => {
   );
 };
 
-export default CallerIdManager; 
+export default CallerIdManager;

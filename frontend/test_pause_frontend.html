@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Pausar Campanha - Frontend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .pause-btn {
+            background: #ffc107;
+            color: #000;
+        }
+        .resume-btn {
+            background: #28a745;
+        }
+        .stop-btn {
+            background: #dc3545;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .info {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste de Funcionalidade - Pausar Campanha</h1>
+        
+        <div class="test-section">
+            <h3>📋 Informações do Teste</h3>
+            <p><strong>Objetivo:</strong> Testar se o frontend consegue pausar/retomar campanhas via API</p>
+            <p><strong>Backend URL:</strong> <span id="backend-url">http://localhost:8000</span></p>
+            <p><strong>Campanha ID:</strong> <span id="campaign-id">1</span></p>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Controles de Teste</h3>
+            <button onclick="testBackendConnection()">🔍 Testar Conexão Backend</button>
+            <button onclick="testGetCampaign()" class="info">📋 Buscar Campanha</button>
+            <button onclick="testPauseCampaign()" class="pause-btn">⏸️ Pausar Campanha</button>
+            <button onclick="testResumeCampaign()" class="resume-btn">▶️ Retomar Campanha</button>
+            <button onclick="testStopCampaign()" class="stop-btn">⏹️ Parar Campanha</button>
+            <button onclick="clearLog()">🗑️ Limpar Log</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Log de Resultados</h3>
+            <div id="log" class="log">Aguardando testes...
+</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api/v1';
+        const CAMPAIGN_ID = 1;
+        
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            logElement.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = 'Log limpo...\n';
+        }
+        
+        async function makeApiRequest(endpoint, method = 'GET', data = null) {
+            try {
+                const config = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                };
+                
+                if (data && method !== 'GET') {
+                    config.body = JSON.stringify(data);
+                }
+                
+                log(`🔄 ${method} ${endpoint}`, 'info');
+                
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+                
+                log(`📡 Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                const result = await response.json();
+                log(`✅ Resposta: ${JSON.stringify(result, null, 2)}`, 'success');
+                return result;
+                
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        async function testBackendConnection() {
+            log('🔍 Testando conexão com backend...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                if (response.ok) {
+                    log('✅ Backend conectado com sucesso!', 'success');
+                } else {
+                    log(`❌ Backend respondeu com erro: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Erro de conexão: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGetCampaign() {
+            log('📋 Buscando informações da campanha...', 'info');
+            try {
+                await makeApiRequest(`/presione1/campanhas/${CAMPAIGN_ID}`);
+            } catch (error) {
+                log(`❌ Falha ao buscar campanha: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testPauseCampaign() {
+            log('⏸️ Testando pausar campanha...', 'info');
+            try {
+                const data = {
+                    pausar: true,
+                    motivo: 'Teste via frontend'
+                };
+                await makeApiRequest(`/presione1/campanhas/${CAMPAIGN_ID}/pausar`, 'POST', data);
+            } catch (error) {
+                log(`❌ Falha ao pausar: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testResumeCampaign() {
+            log('▶️ Testando retomar campanha...', 'info');
+            try {
+                const data = {
+                    pausar: false,
+                    motivo: 'Retomar via frontend'
+                };
+                await makeApiRequest(`/presione1/campanhas/${CAMPAIGN_ID}/pausar`, 'POST', data);
+            } catch (error) {
+                log(`❌ Falha ao retomar: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testStopCampaign() {
+            log('⏹️ Testando parar campanha...', 'info');
+            try {
+                await makeApiRequest(`/presione1/campanhas/${CAMPAIGN_ID}/parar`, 'POST');
+            } catch (error) {
+                log(`❌ Falha ao parar: ${error.message}`, 'error');
+            }
+        }
+        
+        // Teste inicial de conexão
+        window.onload = function() {
+            log('🚀 Página carregada. Pronto para testes!', 'info');
+        };
+    </script>
+</body>
+</html>

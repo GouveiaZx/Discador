@@ -7,9 +7,10 @@ el sistema de audio inteligente y el sistema CODE2BASE para selecao inteligente 
 
 # Importar solo los servicios esenciales para evitar problemas de dependencias
 try:
-    from app.services.asterisk import asterisk_service
+    # Importar o serviço real do Asterisk AMI ao invés do mock
+    from app.services.asterisk_ami import asterisk_ami as asterisk_service
     from app.services.cli_generator import generar_cli, validar_cli
-    print("Core services imported successfully")
+    print("Core services imported successfully - Real Asterisk AMI activated")
 except ImportError as e:
     print(f"Warning: Could not import core services: {e}")
     asterisk_service = None
@@ -20,4 +21,4 @@ __all__ = [
     'asterisk_service',
     'generar_cli',
     'validar_cli'
-] 
+]

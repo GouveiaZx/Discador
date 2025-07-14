@@ -18,8 +18,8 @@ export const CampaignProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
 
-  // Intervalo de atualização automática (5 segundos)
-  const REFRESH_INTERVAL = 5000;
+  // Intervalo de atualização automática (30 segundos)
+  const REFRESH_INTERVAL = 30000;
 
   /**
    * Buscar campanhas do servidor
@@ -117,20 +117,8 @@ export const CampaignProvider = ({ children }) => {
    * Atualizar status de uma campanha específica
    */
   const updateCampaignStatus = useCallback((campaignId, newStatus) => {
-    setCampaigns(prev => prev.map(campaign => 
-      campaign.id === campaignId 
-        ? { 
-            ...campaign, 
-            status: newStatus,
-            isActive: newStatus === 'active',
-            isPaused: newStatus === 'paused'
-          }
-        : campaign
-    ));
-    
-    // Atualizar campanhas ativas
-    setActiveCampaigns(prev => {
-      const updated = campaigns.map(campaign => 
+    setCampaigns(prev => {
+      const updated = prev.map(campaign => 
         campaign.id === campaignId 
           ? { 
               ...campaign, 
@@ -139,13 +127,17 @@ export const CampaignProvider = ({ children }) => {
               isPaused: newStatus === 'paused'
             }
           : campaign
-      ).filter(campaign => campaign.isActive && !campaign.isPaused);
+      );
+      
+      // Atualizar campanhas ativas baseado no estado atualizado
+      const active = updated.filter(campaign => campaign.isActive && !campaign.isPaused);
+      setActiveCampaigns(active);
       
       return updated;
     });
     
     console.log(`🔄 [CampaignContext] Status da campanha ${campaignId} atualizado para: ${newStatus}`);
-  }, [campaigns]);
+  }, []);
 
   /**
    * Forçar atualização das campanhas
@@ -213,4 +205,4 @@ export const CampaignProvider = ({ children }) => {
       {children}
     </CampaignContext.Provider>
   );
-}; 
+};

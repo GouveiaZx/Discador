@@ -7,7 +7,8 @@ from app.models.llamada import Llamada
 from app.models.audio_sistema import TipoEvento, EstadoAudio
 from app.services.audio_engine import AudioIntelligentSystem
 from app.services.audio_context_manager import AudioContextManager
-from app.services.asterisk import AsteriskAMIService
+# Importar o serviço real do Asterisk AMI
+from app.services.asterisk_ami import asterisk_ami
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class AudioIntegrationService:
         self.db = db
         self.audio_system = AudioIntelligentSystem(db)
         self.context_manager = AudioContextManager(db)
-        self.asterisk_service = AsteriskAMIService()
+        self.asterisk_service = asterisk_ami
     
     async def iniciar_chamada_com_audio_inteligente(
         self,
@@ -368,4 +369,4 @@ class AudioIntegrationService:
             return {
                 "sucesso": False,
                 "erro": str(e)
-            } 
+            }

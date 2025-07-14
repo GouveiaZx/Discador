@@ -83,8 +83,6 @@ function GestionCampanhas({ onOpenCampaignControl }) {
     draftCampaignsCount
   } = useCampaigns();
 
-  const [campanhas, setCampanhas] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -93,12 +91,6 @@ function GestionCampanhas({ onOpenCampaignControl }) {
     creating: false,
     updating: false,
     deleting: false
-  });
-  const [metrics, setMetrics] = useState({
-    total: 0,
-    active: 0,
-    paused: 0,
-    completed: 0
   });
   const [formData, setFormData] = useState({
     name: '',
@@ -109,114 +101,22 @@ function GestionCampanhas({ onOpenCampaignControl }) {
     retry_interval: 300
   });
 
-  useEffect(() => {
-    fetchCampanhas();
-  }, []);
-
-  // Sincronizar com contexto de campanhas
-  useEffect(() => {
-    if (campaigns && campaigns.length > 0) {
-      console.log('🔄 [GestionCampanhas] Sincronizando com contexto:', campaigns.length);
-      setCampanhas(campaigns);
-      setMetrics({
-        total: totalCampaigns,
-        active: activeCampaignsCount,
-        paused: pausedCampaignsCount,
-        completed: draftCampaignsCount
-      });
-      setLoading(campaignsLoading);
-      if (campaignsError) {
-        setError(campaignsError);
-      }
-    }
-  }, [campaigns, totalCampaigns, activeCampaignsCount, pausedCampaignsCount, draftCampaignsCount, campaignsLoading, campaignsError]);
-
-  const fetchCampanhas = async () => {
-    try {
-      setLoading(true);
-      setError(''); // Limpar erro anterior
-      console.log('📋 Buscando lista de campanhas presione1...');
-      const response = await makeApiRequest('/presione1/campanhas');
-      console.log('📋 Resposta da listagem de campanhas presione1:', response);
-      
-      if (response && Array.isArray(response)) {
-        // Buscar dados das campanhas principais para cada campanha presione1
-        console.log('🔗 Buscando dados das campanhas principais...');
-        const campanhasWithMainData = await Promise.all(
-          response.map(async (campanha) => {
-            try {
-              // Buscar dados da campanha principal
-              const mainCampaignResponse = await makeApiRequest('/campaigns');
-              const mainCampaigns = mainCampaignResponse?.campaigns || [];
-              const mainCampaign = mainCampaigns.find(c => c.id === campanha.campaign_id);
-              
-              return {
-                id: campanha.id,
-                name: campanha.nombre,
-                description: campanha.descripcion,
-                status: campanha.activa ? 'active' : (campanha.pausada ? 'paused' : 'draft'),
-                // Dados da campanha principal (contatos e CLI)
-                cli_number: mainCampaign?.cli_number || 'N/A',
-                contacts_total: mainCampaign?.contacts_total || 0,
-                created_at: campanha.fecha_creacion,
-                updated_at: campanha.fecha_actualizacion,
-                // Dados específicos presione1
-                campaign_id: campanha.campaign_id,
-                activa: campanha.activa,
-                pausada: campanha.pausada,
-                llamadas_simultaneas: campanha.llamadas_simultaneas,
-                tiempo_entre_llamadas: campanha.tiempo_entre_llamadas
-              };
-            } catch (err) {
-              console.error(`Erro ao buscar dados da campanha principal ${campanha.campaign_id}:`, err);
-              // Retornar dados básicos em caso de erro
-              return {
-                id: campanha.id,
-                name: campanha.nombre,
-                description: campanha.descripcion,
-                status: campanha.activa ? 'active' : (campanha.pausada ? 'paused' : 'draft'),
-                cli_number: 'N/A',
-                contacts_total: 0,
-                created_at: campanha.fecha_creacion,
-                updated_at: campanha.fecha_actualizacion,
-                campaign_id: campanha.campaign_id,
-                activa: campanha.activa,
-                pausada: campanha.pausada,
-                llamadas_simultaneas: campanha.llamadas_simultaneas,
-                tiempo_entre_llamadas: campanha.tiempo_entre_llamadas
-              };
-            }
-          })
-        );
-        
-        console.log('✅ Campanhas com dados principais:', campanhasWithMainData);
-        setCampanhas(campanhasWithMainData);
-        updateMetrics(campanhasWithMainData);
-        setError(''); // Limpar qualquer erro anterior
-      } else {
-        setError('Error al cargar campañas: respuesta inválida');
-        console.error('Resposta inválida:', response);
-      }
-    } catch (err) {
-      console.error('Erro ao carregar campanhas:', err);
-      setError('Error de conexión con el servidor');
-    } finally {
-      setLoading(false);
-    }
+  // Usar dados diretamente do contexto
+  const campanhas = campaigns;
+  const loading = campaignsLoading;
+  const metrics = {
+    total: totalCampaigns,
+    active: activeCampaignsCount,
+    paused: pausedCampaignsCount,
+    completed: draftCampaignsCount
   };
 
-  const updateMetrics = (campaigns) => {
-    const total = campaigns.length;
-    const active = campaigns.filter(c => c.status === 'active').length;
-    const paused = campaigns.filter(c => c.status === 'paused').length;
-    const completed = campaigns.filter(c => c.status === 'completed').length;
-    setMetrics({ total, active, paused, completed });
-  };
+
 
   const handleCreateCampaign = async (e) => {
     e.preventDefault();
     try {
-      setActionLoading({ ...actionLoading, creating: true });
+      setActionLoading(prev => ({ ...prev, creating: true }));
       setError('');
       setSuccess('');
       
@@ -246,7 +146,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
         
         // Recarregar a lista após a criação
         console.log('🔄 Recarregando lista de campanhas...');
-        await fetchCampanhas();
+        refreshCampaigns();
         handleCloseModal();
         
         // Limpar mensagem de sucesso após 5 segundos
@@ -264,7 +164,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       console.error('Erro ao criar campanha:', err);
       setError(`Error al crear campaña: ${err.message || 'Error desconocido'}`);
     } finally {
-      setActionLoading({ ...actionLoading, creating: false });
+      setActionLoading(prev => ({ ...prev, creating: false }));
     }
   };
 
@@ -301,7 +201,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
     if (!editingCampanha) return;
 
     try {
-      setActionLoading({ ...actionLoading, updating: true });
+      setActionLoading(prev => ({ ...prev, updating: true }));
       setError('');
       setSuccess('');
       
@@ -312,7 +212,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       // A API retorna um objeto com id, name, message etc. quando atualiza com sucesso
       if (updateResponse && updateResponse.id) {
         setSuccess('Campaña actualizada con éxito');
-        await fetchCampanhas();
+        refreshCampaigns();
         handleCloseModal();
         
         // Limpar mensagem de sucesso após 5 segundos
@@ -324,7 +224,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       console.error('Erro ao atualizar campanha:', err);
       setError(`Error al actualizar campaña: ${err.message || 'Error desconocido'}`);
     } finally {
-      setActionLoading({ ...actionLoading, updating: false });
+      setActionLoading(prev => ({ ...prev, updating: false }));
     }
   };
 
@@ -334,7 +234,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
     }
 
     try {
-      setActionLoading({ ...actionLoading, [`deleting_${campaignId}`]: true });
+      setActionLoading(prev => ({ ...prev, [`deleting_${campaignId}`]: true }));
       setError('');
       setSuccess('');
       
@@ -344,7 +244,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       // A API retorna um objeto com message quando deleta com sucesso
       if (deleteResponse && (deleteResponse.mensaje || deleteResponse.message)) {
         setSuccess(deleteResponse.mensaje || 'Campaña eliminada con éxito');
-        await fetchCampanhas();
+        refreshCampaigns();
         
         // Limpar mensagem de sucesso após 5 segundos
         setTimeout(() => setSuccess(''), 5000);
@@ -355,15 +255,17 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       console.error('Erro ao deletar campanha:', err);
       setError(`Error al eliminar campaña: ${err.message || 'Error desconocido'}`);
     } finally {
-      setActionLoading({ ...actionLoading, [`deleting_${campaignId}`]: false });
+      setActionLoading(prev => ({ ...prev, [`deleting_${campaignId}`]: false }));
     }
   };
 
   const handleStartCampaign = async (campaignId) => {
+    console.log('🔥 [DEBUG] handleStartCampaign chamado com ID:', campaignId);
+    
     try {
       setError('');
       setSuccess('');
-      setActionLoading({ ...actionLoading, [`starting_${campaignId}`]: true });
+      setActionLoading(prev => ({ ...prev, [`starting_${campaignId}`]: true }));
       
       console.log('🚀 Iniciando campanha:', campaignId);
       
@@ -377,10 +279,8 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       if (startResponse && (startResponse.mensaje || startResponse.message || startResponse.success)) {
         setSuccess(startResponse.mensaje || 'Campaña iniciada con éxito');
         
-        // Atualizar contexto e dados locais
+        // Atualizar apenas o contexto
         updateCampaignStatus(campaignId, 'active');
-        await fetchCampanhas();
-        refreshCampaigns();
         
         // Limpar mensagem de sucesso após 5 segundos
         setTimeout(() => setSuccess(''), 5000);
@@ -391,19 +291,18 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       console.error('Erro ao iniciar campanha:', err);
       setError(`Error al iniciar campaña: ${err.message || 'Error desconocido'}`);
     } finally {
-      setActionLoading({ ...actionLoading, [`starting_${campaignId}`]: false });
+      setActionLoading(prev => ({ ...prev, [`starting_${campaignId}`]: false }));
     }
   };
 
   const handlePauseCampaign = async (campaignId) => {
+    console.log('🔥 [DEBUG] handlePauseCampaign chamado com ID:', campaignId);
+    
     try {
       setActionLoading(prev => ({ ...prev, [`pausing_${campaignId}`]: true }));
       
       const pauseResponse = await makeApiRequest(`/presione1/campanhas/${campaignId}/pausar`, 'POST', {
-        campana_id: campaignId,
-        pausar: true,
-        usuario_id: 'frontend_user',
-        motivo: 'Pausado via interface'
+        usuario_id: "1"
       });
       
       console.log('✅ Resposta de pausar:', pauseResponse);
@@ -411,10 +310,8 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       if (pauseResponse && (pauseResponse.mensaje || pauseResponse.message)) {
         setSuccess(pauseResponse.mensaje || pauseResponse.message || 'Campaña pausada con éxito');
         
-        // Atualizar contexto e dados locais
+        // Atualizar apenas o contexto
         updateCampaignStatus(campaignId, 'paused');
-        fetchCampanhas();
-        refreshCampaigns();
       } else {
         setError('Error al pausar campaña');
       }
@@ -427,14 +324,13 @@ function GestionCampanhas({ onOpenCampaignControl }) {
   };
 
   const handleResumeCampaign = async (campaignId) => {
+    console.log('🔥 [DEBUG] handleResumeCampaign chamado com ID:', campaignId);
+    
     try {
       setActionLoading(prev => ({ ...prev, [`resuming_${campaignId}`]: true }));
       
-      const resumeResponse = await makeApiRequest(`/presione1/campanhas/${campaignId}/pausar`, 'POST', {
-        campana_id: campaignId,
-        pausar: false,
-        usuario_id: 'frontend_user',
-        motivo: 'Retomado via interface'
+      const resumeResponse = await makeApiRequest(`/presione1/campanhas/${campaignId}/retomar`, 'POST', {
+        usuario_id: "1"
       });
       
       console.log('✅ Resposta de retomar:', resumeResponse);
@@ -442,10 +338,8 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       if (resumeResponse && (resumeResponse.mensaje || resumeResponse.message)) {
         setSuccess(resumeResponse.mensaje || resumeResponse.message || 'Campaña retomada con éxito');
         
-        // Atualizar contexto e dados locais
+        // Atualizar apenas o contexto
         updateCampaignStatus(campaignId, 'active');
-        fetchCampanhas();
-        refreshCampaigns();
       } else {
         setError('Error al retomar campaña');
       }
@@ -458,13 +352,13 @@ function GestionCampanhas({ onOpenCampaignControl }) {
   };
 
   const handleStopCampaign = async (campaignId) => {
+    console.log('🔥 [DEBUG] handleStopCampaign chamado com ID:', campaignId);
+    
     try {
       setActionLoading(prev => ({ ...prev, [`stopping_${campaignId}`]: true }));
       
       const stopResponse = await makeApiRequest(`/presione1/campanhas/${campaignId}/parar`, 'POST', {
-        campana_id: campaignId,
-        usuario_id: 'frontend_user',
-        motivo: 'Parado via interface'
+        usuario_id: "1"
       });
       
       console.log('✅ Resposta de parar:', stopResponse);
@@ -472,10 +366,8 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       if (stopResponse && (stopResponse.mensaje || stopResponse.message)) {
         setSuccess(stopResponse.mensaje || stopResponse.message || 'Campaña parada con éxito');
         
-        // Atualizar contexto e dados locais
+        // Atualizar apenas o contexto
         updateCampaignStatus(campaignId, 'draft');
-        fetchCampanhas();
-        refreshCampaigns();
       } else {
         setError('Error al parar campaña');
       }
@@ -985,4 +877,4 @@ function GestionCampanhas({ onOpenCampaignControl }) {
   );
 }
 
-export default GestionCampanhas; 
+export default GestionCampanhas;

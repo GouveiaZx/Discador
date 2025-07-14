@@ -43,8 +43,90 @@ const MonitoringDashboard = () => {
   const [isConnected, setIsConnected] = useState(false);
   const intervalRef = useRef(null);
 
-  // Configurações
-  const REFRESH_INTERVAL = 3000; // 3 segundos
+  // Cache local para otimização
+  const cacheRef = useRef(new Map());
+  const lastFetchRef = useRef(0);
+  const [cacheHitRate, setCacheHitRate] = useState(0);
+  const [totalRequests, setTotalRequests] = useState(0);
+  const [cacheHits, setCacheHits] = useState(0);
+
+  // Configurações otimizadas
+  const REFRESH_INTERVAL = 5000; // 5 segundos (reduzido de 3s)
+  const CACHE_TTL = 30000; // 30 segundos
+  const BATCH_SIZE = 5; // Processar campanhas em lotes
+
+  // ============================================================================
+  // FUNÇÕES DE CACHE E OTIMIZAÇÃO
+  // ============================================================================
+
+  const getCachedData = useCallback((key) => {
+    const cached = cacheRef.current.get(key);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      setCacheHits(prev => prev + 1);
+      return cached.data;
+    }
+    return null;
+  }, [CACHE_TTL]);
+
+  const setCachedData = useCallback((key, data) => {
+    cacheRef.current.set(key, {
+      data,
+      timestamp: Date.now()
+    });
+  }, []);
+
+  const updateCacheStats = useCallback(() => {
+    setTotalRequests(prev => {
+      const newTotal = prev + 1;
+      setCacheHitRate((cacheHits / newTotal * 100).toFixed(1));
+      return newTotal;
+    });
+  }, [cacheHits]);
+
+  const fetchCampaignStatsOptimized = useCallback(async (campaigns) => {
+    const results = [];
+    
+    // Processar em lotes para evitar sobrecarga
+    for (let i = 0; i < campaigns.length; i += BATCH_SIZE) {
+      const batch = campaigns.slice(i, i + BATCH_SIZE);
+      
+      const batchPromises = batch.map(async (campaign) => {
+        updateCacheStats();
+        
+        // Verificar cache primeiro
+        const cacheKey = `campaign_stats_${campaign.id}`;
+        const cachedStats = getCachedData(cacheKey);
+        
+        if (cachedStats) {
+          console.log(`📋 Cache hit para campanha ${campaign.id}`);
+          return { ...campaign, stats: cachedStats };
+        }
+        
+        // Buscar dados se não estiver em cache
+        try {
+          const stats = await makeApiRequest(`/presione1/campanhas/${campaign.id}/estadisticas`);
+          setCachedData(cacheKey, stats);
+          console.log(`🔄 Dados atualizados para campanha ${campaign.id}`);
+          return { ...campaign, stats };
+        } catch (error) {
+          console.error(`❌ Erro ao buscar stats da campanha ${campaign.id}:`, error);
+          return { ...campaign, stats: null };
+        }
+      });
+      
+      const batchResults = await Promise.allSettled(batchPromises);
+      results.push(...batchResults.map(result => 
+        result.status === 'fulfilled' ? result.value : null
+      ).filter(Boolean));
+      
+      // Pequena pausa entre lotes para não sobrecarregar
+      if (i + BATCH_SIZE < campaigns.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    
+    return results;
+  }, [BATCH_SIZE, getCachedData, setCachedData, updateCacheStats]);
 
   // ============================================================================
   // FUNÇÕES DE API
@@ -55,40 +137,74 @@ const MonitoringDashboard = () => {
       setLoading(true);
       setError(null);
       
+      // Verificar se é necessário atualizar (throttling)
+      const now = Date.now();
+      if (now - lastFetchRef.current < 2000) { // Mínimo 2s entre atualizações
+        console.log('⏭️ [MonitoringDashboard] Throttling - aguardando...');
+        setLoading(false);
+        return;
+      }
+      lastFetchRef.current = now;
+      
       // Usar campanhas ativas do contexto
       console.log('📊 [MonitoringDashboard] Usando campanhas do contexto:', activeCampaigns.length);
       
-      // Buscar estatísticas agregadas para campanhas ativas
-      const statsPromises = activeCampaigns.map(campaign => 
-        makeApiRequest(`/presione1/campanhas/${campaign.id}/estadisticas`)
-      );
+      if (activeCampaigns.length === 0) {
+        setDashboardData({
+          campanhas_ativas: 0,
+          llamadas_realizadas: 0,
+          llamadas_contestadas: 0,
+          llamadas_presiono_1: 0,
+          llamadas_transferidas: 0,
+          tasa_contestacion: 0,
+          tasa_presiono_1: 0,
+          tasa_transferencia: 0,
+          campaign_details: []
+        });
+        setLoading(false);
+        return;
+      }
       
-      const statsResults = await Promise.allSettled(statsPromises);
-      const campaignStats = statsResults.map((result, index) => ({
-        ...activeCampaigns[index],
-        stats: result.status === 'fulfilled' ? result.value : null
-      }));
+      // Buscar estatísticas usando método otimizado
+      const startTime = performance.now();
+      const campaignStats = await fetchCampaignStatsOptimized(activeCampaigns);
+      const fetchTime = performance.now() - startTime;
       
-      // Calcular métricas agregadas
-      const totalCalls = campaignStats.reduce((sum, campaign) => 
-        sum + (campaign.stats?.llamadas_realizadas || 0), 0);
-      const totalContacted = campaignStats.reduce((sum, campaign) => 
-        sum + (campaign.stats?.llamadas_contestadas || 0), 0);
-      const totalPressed1 = campaignStats.reduce((sum, campaign) => 
-        sum + (campaign.stats?.llamadas_presiono_1 || 0), 0);
-      const totalTransferred = campaignStats.reduce((sum, campaign) => 
-        sum + (campaign.stats?.llamadas_transferidas || 0), 0);
+      console.log(`⚡ [MonitoringDashboard] Dados carregados em ${fetchTime.toFixed(2)}ms`);
+      console.log(`📈 [MonitoringDashboard] Cache hit rate: ${cacheHitRate}%`);
+      
+      // Calcular métricas agregadas de forma otimizada
+      const metrics = campaignStats.reduce((acc, campaign) => {
+        const stats = campaign.stats;
+        if (stats) {
+          acc.totalCalls += stats.llamadas_realizadas || 0;
+          acc.totalContacted += stats.llamadas_contestadas || 0;
+          acc.totalPressed1 += stats.llamadas_presiono_1 || 0;
+          acc.totalTransferred += stats.llamadas_transferidas || 0;
+        }
+        return acc;
+      }, {
+        totalCalls: 0,
+        totalContacted: 0,
+        totalPressed1: 0,
+        totalTransferred: 0
+      });
       
       const aggregatedData = {
         campanhas_ativas: activeCampaigns.length,
-        llamadas_realizadas: totalCalls,
-        llamadas_contestadas: totalContacted,
-        llamadas_presiono_1: totalPressed1,
-        llamadas_transferidas: totalTransferred,
-        tasa_contestacion: totalCalls > 0 ? (totalContacted / totalCalls * 100).toFixed(1) : 0,
-        tasa_presiono_1: totalContacted > 0 ? (totalPressed1 / totalContacted * 100).toFixed(1) : 0,
-        tasa_transferencia: totalPressed1 > 0 ? (totalTransferred / totalPressed1 * 100).toFixed(1) : 0,
-        campaign_details: campaignStats
+        llamadas_realizadas: metrics.totalCalls,
+        llamadas_contestadas: metrics.totalContacted,
+        llamadas_presiono_1: metrics.totalPressed1,
+        llamadas_transferidas: metrics.totalTransferred,
+        tasa_contestacion: metrics.totalCalls > 0 ? (metrics.totalContacted / metrics.totalCalls * 100).toFixed(1) : 0,
+        tasa_presiono_1: metrics.totalContacted > 0 ? (metrics.totalPressed1 / metrics.totalContacted * 100).toFixed(1) : 0,
+        tasa_transferencia: metrics.totalPressed1 > 0 ? (metrics.totalTransferred / metrics.totalPressed1 * 100).toFixed(1) : 0,
+        campaign_details: campaignStats,
+        performance: {
+          fetchTime: fetchTime.toFixed(2),
+          cacheHitRate: cacheHitRate,
+          totalRequests: totalRequests
+        }
       };
       
       setDashboardData(aggregatedData);
@@ -100,7 +216,7 @@ const MonitoringDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [activeCampaigns]);
+  }, [activeCampaigns, fetchCampaignStatsOptimized, cacheHitRate, totalRequests]);
 
   // Função para conectar WebSocket (placeholder para futuro)
   const connectWebSocket = useCallback(() => {
@@ -461,10 +577,11 @@ const MonitoringDashboard = () => {
                 color="indigo"
               />
               <StatusCard
-                title="Tasa Atención"
-                value={`${dashboardData.tasa_contestacion}%`}
-                icon="📈"
-                color="purple"
+                title="Performance"
+                value={`${dashboardData.performance?.fetchTime || 0}ms`}
+                icon="⚡"
+                color="yellow"
+                subtitle={`Cache: ${dashboardData.performance?.cacheHitRate || 0}%`}
               />
             </div>
 
@@ -642,4 +759,4 @@ const MonitoringDashboard = () => {
   );
 };
 
-export default MonitoringDashboard; 
+export default MonitoringDashboard;

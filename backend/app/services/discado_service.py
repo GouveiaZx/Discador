@@ -11,7 +11,8 @@ from app.models.llamada import Llamada
 from app.models.lista_llamadas import ListaLlamadas, NumeroLlamada
 from app.services.blacklist_service import BlacklistService
 from app.services.cli_service import CliService
-from app.services.asterisk import asterisk_service
+# Importar o serviço real do Asterisk AMI
+from app.services.asterisk_ami import asterisk_ami as asterisk_service
 from app.schemas.lista_llamadas import validar_numero_telefone
 from app.utils.logger import logger
 
@@ -345,4 +346,4 @@ class DiscadoService:
             "numeros_pendientes": numeros_pendientes,
             "porcentaje_completado": round((llamadas_realizadas / total_numeros) * 100, 2) if total_numeros > 0 else 0,
             "tasa_exito": round((llamadas_exitosas / llamadas_realizadas) * 100, 2) if llamadas_realizadas > 0 else 0
-        } 
+        }

@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Carregar variáveis de ambiente primeiro
+import os
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    print("✅ Environment variables loaded from .env")
+except ImportError:
+    print("⚠️ python-dotenv not available, using system environment variables")
+
 from fastapi import FastAPI, APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -12,7 +21,6 @@ except ImportError as e:
     # Criar fallback para tipagem
     Session = object
 import uvicorn
-import os
 from datetime import datetime, timedelta
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
@@ -265,17 +273,25 @@ app = FastAPI(
 )
 
 # Configurar CORS com configuração mais robusta
+# Carregar origens permitidas do arquivo .env
+import ast
+cors_origins_str = os.getenv("CORS_ORIGINS", '["http://localhost:3000","http://localhost:5173","https://discador.vercel.app"]')
+try:
+    cors_origins = ast.literal_eval(cors_origins_str)
+except:
+    cors_origins = ["http://localhost:3000", "http://localhost:5173", "https://discador.vercel.app"]
+
+# Adicionar origens extras para desenvolvimento
+cors_origins.extend([
+    "http://127.0.0.1:3000",
+    "https://localhost:3000",
+    "https://localhost:5173",
+    "*"  # Permitir todas as origens temporariamente para debugging
+])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://discador.vercel.app",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://localhost:3000",
-        "http://localhost:5173",
-        "https://localhost:5173",
-        "*"  # Permitir todas as origens temporariamente para debugging
-    ],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
@@ -289,9 +305,9 @@ api_prefix = "/api/v1"
 try:
     # Incluir apenas as rotas essenciais primeiro
     # Comentado para usar endpoint de fallback
-    # if presione1:
-    #     app.include_router(presione1.router, prefix=f"{api_prefix}")
-    #     print("✅ Presione1 router included successfully")
+    if presione1:
+        app.include_router(presione1.router, prefix=f"{api_prefix}")
+        print("✅ Presione1 router included successfully")
     
     # Incluir outras rotas se disponíveis
     if 'llamadas' in globals():
@@ -358,13 +374,13 @@ except Exception as e:
     
     # Incluir apenas as rotas essenciais que funcionam
     # Comentado para usar endpoint de fallback no missing_routes
-    # if presione1:
-    #     try:
-    #         app.include_router(presione1.router, prefix=f"{api_prefix}")
-    #         print("✅ Presione1 router included as fallback")
-    #     except Exception as presione1_error:
-    #         print(f"❌ Error including presione1 router: {presione1_error}")
-    #         logger.error(f"Error including presione1 router: {presione1_error}")
+    if presione1:
+        try:
+            app.include_router(presione1.router, prefix=f"{api_prefix}")
+            print("✅ Presione1 router included as fallback")
+        except Exception as presione1_error:
+            print(f"❌ Error including presione1 router: {presione1_error}")
+            logger.error(f"Error including presione1 router: {presione1_error}")
 
 # Router para rotas ausentes deve ser definido antes de ser usado
 
@@ -1222,6 +1238,72 @@ async def criar_campanha_presione1_fallback(campanha_data: dict):
         "message": "Campanha criada via fallback"
     }
 
+# Endpoints de fallback para pausar/retomar campanhas presione1
+@missing_routes.post("/presione1/campanhas/{campana_id}/pausar")
+async def pausar_campana_presione1_fallback(campana_id: int, pause_data: dict = None):
+    """Pausar/retomar campanha presione1 - fallback"""
+    from datetime import datetime
+    
+    logger.info(f"🔧 [FALLBACK] Pausar/retomar campanha {campana_id}")
+    
+    pausar = pause_data.get("pausar", True) if pause_data else True
+    motivo = pause_data.get("motivo", "Operação via fallback") if pause_data else "Operação via fallback"
+    action = "pausada" if pausar else "retomada"
+    
+    logger.info(f"📊 [FALLBACK] Campanha {campana_id} será {action}. Motivo: {motivo}")
+    
+    return {
+        "success": True,
+        "status": "success",
+        "campana_id": campana_id,
+        "action": action,
+        "pausada": pausar,
+        "motivo": motivo,
+        "message": f"Campanha {campana_id} {action} com sucesso via fallback",
+        "timestamp": datetime.now().isoformat()
+    }
+
+@missing_routes.post("/presione1/campanhas/{campana_id}/retomar")
+async def retomar_campana_presione1_fallback(campana_id: int, resume_data: dict = None):
+    """Retomar campanha presione1 - fallback"""
+    from datetime import datetime
+    
+    logger.info(f"🔧 [FALLBACK] Retomar campanha {campana_id}")
+    
+    motivo = resume_data.get("motivo", "Retomada via fallback") if resume_data else "Retomada via fallback"
+    
+    logger.info(f"📊 [FALLBACK] Campanha {campana_id} será retomada. Motivo: {motivo}")
+    
+    return {
+        "success": True,
+        "status": "success",
+        "campana_id": campana_id,
+        "action": "retomada",
+        "pausada": False,
+        "motivo": motivo,
+        "message": f"Campanha {campana_id} retomada com sucesso via fallback",
+        "timestamp": datetime.now().isoformat()
+    }
+
+@missing_routes.post("/presione1/campanhas/{campana_id}/parar")
+async def parar_campana_presione1_fallback(campana_id: int, stop_data: dict = None):
+    """Parar campanha presione1 - fallback"""
+    from datetime import datetime
+    
+    logger.info(f"🔧 [FALLBACK] Parar campanha {campana_id}")
+    
+    motivo = stop_data.get("motivo", "Parada via fallback") if stop_data else "Parada via fallback"
+    
+    return {
+        "success": True,
+        "status": "success",
+        "campana_id": campana_id,
+        "message": f"Campanha {campana_id} parada com sucesso via fallback",
+        "motivo": motivo,
+        "llamadas_finalizadas": 3,
+        "timestamp": datetime.now().isoformat()
+    }
+
 # Fallback para timing-configs se Supabase não estiver configurado
 @missing_routes.get("/timing-configs")
 async def timing_configs_list_fallback():
@@ -1616,49 +1698,49 @@ async def monitor_campana_presione1(campana_id: int):
         "timestamp": now.isoformat()
     }
 
-@app.post(f"{api_prefix}/presione1/campanhas/{{campana_id}}/iniciar")
-async def iniciar_campana_presione1(campana_id: int, usuario_data: dict = None):
-    """Iniciar campanha presione1"""
-    from datetime import datetime
-    
-    return {
-        "status": "success",
-        "campana_id": campana_id,
-        "message": f"Campanha {campana_id} iniciada com sucesso",
-        "usuario_id": usuario_data.get("usuario_id", "usuario_01") if usuario_data else "usuario_01",
-        "timestamp": datetime.now().isoformat(),
-        "llamadas_programadas": 1000 - (campana_id * 50)
-    }
+# @app.post(f"{api_prefix}/presione1/campanhas/{{campana_id}}/iniciar")
+# async def iniciar_campana_presione1(campana_id: int, usuario_data: dict = None):
+#     """Iniciar campanha presione1"""
+#     from datetime import datetime
+#     
+#     return {
+#         "status": "success",
+#         "campana_id": campana_id,
+#         "message": f"Campanha {campana_id} iniciada com sucesso",
+#         "usuario_id": usuario_data.get("usuario_id", "usuario_01") if usuario_data else "usuario_01",
+#         "timestamp": datetime.now().isoformat(),
+#         "llamadas_programadas": 1000 - (campana_id * 50)
+#     }
 
-@app.post(f"{api_prefix}/presione1/campanhas/{{campana_id}}/pausar")
-async def pausar_campana_presione1(campana_id: int, pause_data: dict = None):
-    """Pausar/retomar campanha presione1"""
-    from datetime import datetime
-    
-    pausar = pause_data.get("pausar", True) if pause_data else True
-    action = "pausada" if pausar else "retomada"
-    
-    return {
-        "status": "success",
-        "campana_id": campana_id,
-        "action": action,
-        "pausada": pausar,
-        "message": f"Campanha {campana_id} {action} com sucesso",
-        "timestamp": datetime.now().isoformat()
-    }
+# @app.post(f"{api_prefix}/presione1/campanhas/{{campana_id}}/pausar")
+# async def pausar_campana_presione1(campana_id: int, pause_data: dict = None):
+#     """Pausar/retomar campanha presione1"""
+#     from datetime import datetime
+#     
+#     pausar = pause_data.get("pausar", True) if pause_data else True
+#     action = "pausada" if pausar else "retomada"
+#     
+#     return {
+#         "status": "success",
+#         "campana_id": campana_id,
+#         "action": action,
+#         "pausada": pausar,
+#         "message": f"Campanha {campana_id} {action} com sucesso",
+#         "timestamp": datetime.now().isoformat()
+#     }
 
-@app.post(f"{api_prefix}/presione1/campanhas/{{campana_id}}/parar")
-async def parar_campana_presione1(campana_id: int):
-    """Parar campanha presione1"""
-    from datetime import datetime
-    
-    return {
-        "status": "success",
-        "campana_id": campana_id,
-        "message": f"Campanha {campana_id} parada com sucesso",
-        "llamadas_finalizadas": 3,
-        "timestamp": datetime.now().isoformat()
-    }
+# @app.post(f"{api_prefix}/presione1/campanhas/{{campana_id}}/parar")
+# async def parar_campana_presione1(campana_id: int):
+#     """Parar campanha presione1"""
+#     from datetime import datetime
+#     
+#     return {
+#         "status": "success",
+#         "campana_id": campana_id,
+#         "message": f"Campanha {campana_id} parada com sucesso",
+#         "llamadas_finalizadas": 3,
+#         "timestamp": datetime.now().isoformat()
+#     }
 
 @app.get(f"{api_prefix}/presione1/campanhas/{{campana_id}}/llamadas")
 async def listar_llamadas_campana(campana_id: int, estado: str = None, presiono_1: bool = None):
@@ -3074,14 +3156,14 @@ SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY')
 
 # Debug: Log das configurações do Supabase para diagnosticar problemas de produção
-logger.info(f"🔧 [SUPABASE-CONFIG] SUPABASE_URL configurada: {'✅ SIM' if SUPABASE_URL else '❌ NÃO'}")
-logger.info(f"🔧 [SUPABASE-CONFIG] SUPABASE_ANON_KEY configurada: {'✅ SIM' if SUPABASE_ANON_KEY else '❌ NÃO'}")
+logger.info(f"[SUPABASE-CONFIG] SUPABASE_URL configurada: {'SIM' if SUPABASE_URL else 'NAO'}")
+logger.info(f"[SUPABASE-CONFIG] SUPABASE_ANON_KEY configurada: {'SIM' if SUPABASE_ANON_KEY else 'NAO'}")
 if SUPABASE_URL:
-    logger.info(f"🔧 [SUPABASE-CONFIG] URL: {SUPABASE_URL}")
+    logger.info(f"[SUPABASE-CONFIG] URL: {SUPABASE_URL}")
 if SUPABASE_ANON_KEY:
-    logger.info(f"🔧 [SUPABASE-CONFIG] API Key: {SUPABASE_ANON_KEY[:20]}...{SUPABASE_ANON_KEY[-10:] if len(SUPABASE_ANON_KEY) > 30 else SUPABASE_ANON_KEY}")
+    logger.info(f"[SUPABASE-CONFIG] API Key: {SUPABASE_ANON_KEY[:20]}...{SUPABASE_ANON_KEY[-10:] if len(SUPABASE_ANON_KEY) > 30 else SUPABASE_ANON_KEY}")
 else:
-    logger.error("❌ [SUPABASE-CONFIG] CRITICAL: Variáveis do Supabase não configuradas! Backend não funcionará corretamente.")
+    logger.error("[SUPABASE-CONFIG] CRITICAL: Variáveis do Supabase não configuradas! Backend não funcionará corretamente.")
 
 def create_campaign_in_supabase(campaign_data: dict):
     """Cria uma campanha no Supabase"""
@@ -3142,7 +3224,7 @@ def get_campaigns_from_supabase():
             "Content-Type": "application/json"
         }
         
-        logger.info(f"🔍 [DEBUG] Buscando campanhas do Supabase: {SUPABASE_URL}")
+        logger.info(f"[DEBUG] Buscando campanhas do Supabase: {SUPABASE_URL}")
         
         # Buscar campanhas do Supabase
         response = requests.get(
@@ -3150,16 +3232,16 @@ def get_campaigns_from_supabase():
             headers=headers
         )
         
-        logger.info(f"🔍 [DEBUG] Status da resposta campanhas: {response.status_code}")
+        logger.info(f"[DEBUG] Status da resposta campanhas: {response.status_code}")
         
         if response.status_code == 200:
             campaigns = response.json()
-            logger.info(f"🔍 [DEBUG] Campanhas recebidas: {len(campaigns)}")
+            logger.info(f"[DEBUG] Campanhas recebidas: {len(campaigns)}")
             
             # Converter para formato compatível com frontend
             formatted_campaigns = []
             for campaign in campaigns:
-                logger.info(f"🔍 [DEBUG] Processando campanha ID {campaign['id']}: {campaign['name']}")
+                logger.info(f"[DEBUG] Processando campanha ID {campaign['id']}: {campaign['name']}")
                 
                 # CORREÇÃO: Buscar total de contatos usando método content-range (método agregação removido porque não é suportado)
                 contacts_total = 0
@@ -3167,7 +3249,7 @@ def get_campaigns_from_supabase():
                 # Método 1: Content-range (método principal e confiável)
                 try:
                     range_url = f"{SUPABASE_URL}/rest/v1/contacts?campaign_id=eq.{campaign['id']}&select=id&limit=1"
-                    logger.info(f"🔍 [DEBUG] URL range: {range_url}")
+                    logger.info(f"[DEBUG] URL range: {range_url}")
                     
                     contacts_response = requests.get(
                         range_url,
@@ -3175,42 +3257,42 @@ def get_campaigns_from_supabase():
                         timeout=10
                     )
                     
-                    logger.info(f"🔍 [DEBUG] Status range: {contacts_response.status_code}")
-                    logger.info(f"🔍 [DEBUG] Headers range: {dict(contacts_response.headers)}")
+                    logger.info(f"[DEBUG] Status range: {contacts_response.status_code}")
+                    logger.info(f"[DEBUG] Headers range: {dict(contacts_response.headers)}")
                     
                     if contacts_response.status_code == 200 or contacts_response.status_code == 206:
                         content_range = contacts_response.headers.get('content-range', '0')
-                        logger.info(f"📊 [CONTAGEM-RANGE] Campanha {campaign['id']}: content-range = '{content_range}'")
+                        logger.info(f"[CONTAGEM-RANGE] Campanha {campaign['id']}: content-range = '{content_range}'")
                         
                         # Parsing robusto do content-range: formatos "0-0/N" ou "*/N"
                         if '/' in content_range:
                             try:
                                 total_str = content_range.split('/')[-1].strip()
-                                logger.info(f"🔍 [DEBUG] Total string extraída: '{total_str}'")
+                                logger.info(f"[DEBUG] Total string extraida: '{total_str}'")
                                 if total_str.isdigit():
                                     contacts_total = int(total_str)
-                                    logger.info(f"✅ [CONTAGEM-RANGE] Campanha {campaign['id']}: {contacts_total:,} contatos")
+                                    logger.info(f"[CONTAGEM-RANGE] Campanha {campaign['id']}: {contacts_total:,} contatos")
                                 else:
-                                    logger.warning(f"⚠️ [CONTAGEM-RANGE] Total não numérico: '{total_str}'")
+                                    logger.warning(f"[CONTAGEM-RANGE] Total nao numerico: '{total_str}'")
                                     contacts_total = 0
                             except (ValueError, IndexError) as parse_error:
-                                logger.warning(f"⚠️ [CONTAGEM-RANGE] Erro parsing: {parse_error}")
+                                logger.warning(f"[CONTAGEM-RANGE] Erro parsing: {parse_error}")
                                 contacts_total = 0
                         else:
-                            logger.warning(f"⚠️ [CONTAGEM-RANGE] Formato inválido: '{content_range}'")
+                            logger.warning(f"[CONTAGEM-RANGE] Formato invalido: '{content_range}'")
                             contacts_total = 0
                     else:
-                        logger.warning(f"⚠️ [CONTAGEM-RANGE] Status erro: {contacts_response.status_code}")
+                        logger.warning(f"[CONTAGEM-RANGE] Status erro: {contacts_response.status_code}")
                         # Fallback para método 2
                         raise Exception(f"Content-range falhou com status {contacts_response.status_code}")
                         
                 except Exception as range_error:
-                    logger.warning(f"⚠️ [CONTAGEM-RANGE] Erro geral: {range_error}")
+                    logger.warning(f"[CONTAGEM-RANGE] Erro geral: {range_error}")
                     
                     # Método 2: Fallback - buscar amostra de contatos
                     try:
                         fallback_url = f"{SUPABASE_URL}/rest/v1/contacts?campaign_id=eq.{campaign['id']}&limit=5"
-                        logger.info(f"🔍 [DEBUG] URL fallback: {fallback_url}")
+                        logger.info(f"[DEBUG] URL fallback: {fallback_url}")
                         
                         contacts_response = requests.get(
                             fallback_url,
@@ -3218,31 +3300,31 @@ def get_campaigns_from_supabase():
                             timeout=10
                         )
                         
-                        logger.info(f"🔍 [DEBUG] Status fallback: {contacts_response.status_code}")
-                        logger.info(f"🔍 [DEBUG] Resposta fallback: {contacts_response.text[:200]}")
+                        logger.info(f"[DEBUG] Status fallback: {contacts_response.status_code}")
+                        logger.info(f"[DEBUG] Resposta fallback: {contacts_response.text[:200]}")
                         
                         if contacts_response.status_code == 200:
                             contacts_list = contacts_response.json()
-                            logger.info(f"🔍 [DEBUG] Lista contatos (amostra): {type(contacts_list)} - {len(contacts_list) if isinstance(contacts_list, list) else 'N/A'}")
+                            logger.info(f"[DEBUG] Lista contatos (amostra): {type(contacts_list)} - {len(contacts_list) if isinstance(contacts_list, list) else 'N/A'}")
                             
                             if isinstance(contacts_list, list):
                                 if len(contacts_list) > 0:
-                                    logger.info(f"🔍 [DEBUG] Amostra do primeiro contato: {contacts_list[0]}")
+                                    logger.info(f"[DEBUG] Amostra do primeiro contato: {contacts_list[0]}")
                                     # Se encontrou contatos, usar valor estimado
                                     contacts_total = 999  # Indicar que há contatos mas não sabemos quantos
-                                    logger.info(f"✅ [CONTAGEM-FALLBACK] Campanha {campaign['id']}: {len(contacts_list)} contatos na amostra (999 = há contatos)")
+                                    logger.info(f"[CONTAGEM-FALLBACK] Campanha {campaign['id']}: {len(contacts_list)} contatos na amostra (999 = ha contatos)")
                                 else:
                                     contacts_total = 0
-                                    logger.info(f"✅ [CONTAGEM-FALLBACK] Campanha {campaign['id']}: 0 contatos")
+                                    logger.info(f"[CONTAGEM-FALLBACK] Campanha {campaign['id']}: 0 contatos")
                             else:
                                 contacts_total = 0
                         else:
                             contacts_total = 0
                     except Exception as fallback_error:
-                        logger.error(f"❌ [CONTAGEM-FALLBACK] Erro final: {fallback_error}")
+                        logger.error(f"[CONTAGEM-FALLBACK] Erro final: {fallback_error}")
                         contacts_total = 0
                 
-                logger.info(f"🎯 [RESULTADO] Campanha {campaign['id']} ({campaign['name']}): {contacts_total} contatos")
+                logger.info(f"[RESULTADO] Campanha {campaign['id']} ({campaign['name']}): {contacts_total} contatos")
                 
                 formatted_campaign = {
                     "id": campaign["id"],
@@ -3276,7 +3358,7 @@ def get_campaigns_from_supabase():
             # Log do resultado final
             total_campaigns = len(formatted_campaigns)
             total_contacts = sum(c.get('contacts_total', 0) for c in formatted_campaigns)
-            logger.info(f"🎯 [CAMPANHAS] Retornando {total_campaigns} campanhas com {total_contacts:,} contatos total")
+            logger.info(f"[CAMPANHAS] Retornando {total_campaigns} campanhas com {total_contacts:,} contatos total")
             
             return formatted_campaigns
         else:
@@ -3685,4 +3767,4 @@ if __name__ == "__main__":
         host=configuracion.HOST, 
         port=configuracion.PUERTO, 
         reload=configuracion.DEBUG
-    ) 
+    )

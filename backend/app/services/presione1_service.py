@@ -4,6 +4,7 @@ Serviço para gerenciar campanhas de discado preditivo com modo "Presione 1".
 
 import asyncio
 import random
+import time
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
@@ -22,7 +23,7 @@ from app.schemas.presione1 import (
 )
 from app.services.cli_service import CliService
 from app.services.blacklist_service import BlacklistService
-# from app.services.asterisk import asterisk_service  # TODO: Implementar integração com Asterisk
+from app.services.asterisk import asterisk_service  # Integração com Asterisk ativada
 from app.utils.logger import logger
 
 
@@ -35,6 +36,10 @@ class PresionE1Service:
         self.blacklist_service = BlacklistService(db) if db else None
         self.campanhas_ativas = {}  # Armazena campanhas em execução
         self._supabase_config = self._init_supabase()
+        # Cache para otimização de performance
+        self._cache = {}
+        self._cache_ttl = {}
+        self._query_times = {}  # Para monitorar tempos de consulta
     
     def _init_supabase(self) -> Dict[str, str]:
         """Inicializa configuração do Supabase."""
@@ -57,9 +62,12 @@ class PresionE1Service:
             }
         }
     
-    def _supabase_request(self, method: str, table: str, data=None, filters=None, select=None) -> Dict[str, Any]:
-        """Método centralizado para requests ao Supabase."""
+    def _supabase_request(self, method: str, table: str, data=None, filters=None, select=None, use_count=False) -> Dict[str, Any]:
+        """Método centralizado para requests ao Supabase com monitoramento de performance."""
         import requests
+        
+        start_time = time.time()
+        query_key = f"{method}_{table}"
         
         url = f"{self._supabase_config['url']}/rest/v1/{table}"
         headers = self._supabase_config['headers'].copy()
@@ -77,15 +85,16 @@ class PresionE1Service:
             if filter_params:
                 url += "?" + "&".join(filter_params)
         
-        # Adicionar select
-        if select:
-            separator = "?" if "?" not in url else "&"
+        # Adicionar select ou count
+        separator = "?" if "?" not in url else "&"
+        if use_count:
+            url += f"{separator}select=count"
+            headers["Prefer"] = "count=exact"
+        elif select:
             url += f"{separator}select={select}"
         
         # Configurar headers específicos por método
-        if method.upper() in ["PATCH", "PUT"]:
-            headers["Prefer"] = "return=representation"
-        elif method.upper() == "POST":
+        if method.upper() in ["PATCH", "PUT", "POST"]:
             headers["Prefer"] = "return=representation"
         
         try:
@@ -100,6 +109,18 @@ class PresionE1Service:
             else:
                 raise ValueError(f"Método HTTP não suportado: {method}")
             
+            # Monitorar tempo de consulta
+            query_time = time.time() - start_time
+            if query_key not in self._query_times:
+                self._query_times[query_key] = []
+            self._query_times[query_key].append(query_time)
+            
+            # Log consultas lentas
+            if query_time > 1.0:
+                logger.warning(f"⚠️ Consulta lenta detectada: {method} {table} - {query_time:.2f}s")
+            elif query_time > 0.5:
+                logger.info(f"📊 Consulta moderada: {method} {table} - {query_time:.2f}s")
+            
             if response.status_code not in [200, 201, 204, 206]:
                 logger.error(f"Erro Supabase {method} {table}: {response.status_code} - {response.text}")
                 raise HTTPException(
@@ -109,6 +130,13 @@ class PresionE1Service:
             
             if response.status_code == 204:
                 return {"success": True}
+            
+            # Para count, retornar o número do header
+            if use_count and "content-range" in response.headers:
+                count_info = response.headers["content-range"]
+                if "/" in count_info:
+                    total = count_info.split("/")[1]
+                    return {"count": int(total) if total != "*" else 0}
             
             return response.json()
             
@@ -202,8 +230,9 @@ class PresionE1Service:
         return nova_campana
     
     def obter_campana(self, campana_id: int) -> Dict[str, Any]:
-        """Obtém uma campanha por ID do Supabase."""
+        """Obtém uma campanha por ID, considerando estado em memória se ativa."""
         try:
+            # Buscar dados base do Supabase
             campanhas = self._supabase_request(
                 "GET",
                 "campanas_presione1",
@@ -216,7 +245,16 @@ class PresionE1Service:
                     detail=f"Campanha {campana_id} não encontrada"
                 )
             
-            return campanhas[0]
+            campana = campanhas[0]
+            
+            # Se a campanha está ativa em memória, usar estado em memória
+            if campana_id in self.campanhas_ativas:
+                estado_memoria = self.campanhas_ativas[campana_id]
+                campana["activa"] = estado_memoria.get("ativa", campana.get("activa"))
+                campana["pausada"] = estado_memoria.get("pausada", campana.get("pausada"))
+                logger.debug(f"Campanha {campana_id} - usando estado em memória: ativa={campana['activa']}, pausada={campana['pausada']}")
+            
+            return campana
             
         except HTTPException:
             raise
@@ -412,22 +450,65 @@ class PresionE1Service:
     def _atualizar_campana_supabase(self, campana_id: int, dados: Dict[str, Any]) -> bool:
         """Atualiza uma campanha no Supabase usando método centralizado."""
         try:
+            # Adicionar timestamp de atualização
+            dados_com_timestamp = dados.copy()
+            dados_com_timestamp["fecha_actualizacion"] = datetime.utcnow().isoformat()
+            
+            logger.info(f"🔄 Atualizando campanha {campana_id} no Supabase com dados: {dados_com_timestamp}")
+            
             resultado = self._supabase_request(
                 "PATCH",
                 "campanas_presione1",
-                data=dados,
+                data=dados_com_timestamp,
                 filters={"id": campana_id}
             )
             
             if resultado:
-                logger.info(f"Campanha {campana_id} atualizada no Supabase: {dados}")
+                logger.info(f"✅ Campanha {campana_id} atualizada no Supabase com sucesso: {dados_com_timestamp}")
+                
+                # Verificar se a atualização foi persistida
+                campana_verificacao = self._supabase_request(
+                    "GET",
+                    "campanas_presione1",
+                    filters={"id": campana_id},
+                    select="id,activa,pausada,fecha_actualizacion"
+                )
+                
+                if campana_verificacao:
+                    logger.info(f"🔍 Verificação pós-atualização campanha {campana_id}: {campana_verificacao[0]}")
+                
                 return True
             else:
-                logger.error(f"Erro ao atualizar campanha {campana_id}")
+                logger.error(f"❌ Erro ao atualizar campanha {campana_id} - resultado vazio")
                 return False
-            
+                
         except Exception as e:
-            logger.error(f"Erro ao atualizar campanha {campana_id}: {str(e)}")
+            logger.error(f"💥 Erro ao atualizar campanha {campana_id}: {str(e)}")
+            return False
+    
+    def _atualizar_campanha_principal(self, campaign_id: int, status: str) -> bool:
+        """Atualiza o status da campanha principal na tabela campaigns."""
+        if not campaign_id:
+            logger.warning("ID da campanha principal não fornecido")
+            return False
+            
+        try:
+            resultado = self._supabase_request(
+                "PATCH",
+                "campaigns",
+                data={"status": status},
+                filters={"id": campaign_id}
+            )
+            
+            if resultado:
+                logger.info(f"Campanha principal {campaign_id} atualizada para status '{status}'")
+                return True
+            else:
+                logger.warning(f"Falha ao atualizar campanha principal {campaign_id}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Erro ao atualizar campanha principal {campaign_id}: {str(e)}")
             return False
     
     async def iniciar_campana(self, campana_id: int, usuario_id: Optional[str] = None) -> Dict[str, Any]:
@@ -527,6 +608,9 @@ class PresionE1Service:
         logger.info(f"🔄 Marcando campanha {campana_id} como ativa...")
         self._atualizar_campana_supabase(campana_id, {"activa": True, "pausada": False})
         
+        # Atualizar status da campanha principal
+        self._atualizar_campanha_principal(campana.get("campaign_id"), "active")
+        
         # Iniciar processo de discado em background
         self.campanhas_ativas[campana_id] = {
             "campana": campana,
@@ -551,23 +635,52 @@ class PresionE1Service:
     
     async def pausar_campana(self, campana_id: int, pausar: bool, motivo: Optional[str] = None) -> Dict[str, Any]:
         """Pausa ou retoma uma campanha."""
+        acao = "pausar" if pausar else "retomar"
+        logger.info(f"🎯 Iniciando {acao} da campanha {campana_id}")
+        
         campana = self.obter_campana(campana_id)
+        logger.info(f"📊 Dados da campanha obtidos: activa={campana.get('activa')}, pausada={campana.get('pausada')}")
         
         if not campana.get("activa"):
+            logger.error(f"❌ Campanha {campana_id} não está ativa")
             raise HTTPException(
                 status_code=400,
                 detail="Campanha não está ativa"
             )
         
+        # Verificar estado atual na memória
+        if campana_id in self.campanhas_ativas:
+            estado_memoria = self.campanhas_ativas[campana_id]
+            logger.info(f"🧠 Estado atual na memória: {estado_memoria}")
+        else:
+            logger.warning(f"⚠️ Campanha {campana_id} não encontrada na memória")
+        
         # Atualizar no Supabase
-        self._atualizar_campana_supabase(campana_id, {"pausada": pausar})
+        logger.info(f"💾 Atualizando no Supabase: pausada={pausar}")
+        sucesso_supabase = self._atualizar_campana_supabase(campana_id, {"pausada": pausar})
+        
+        if not sucesso_supabase:
+            logger.error(f"❌ Falha ao atualizar no Supabase")
+            raise HTTPException(
+                status_code=500,
+                detail="Erro ao atualizar campanha no banco de dados"
+            )
+        
+        # Atualizar status da campanha principal
+        status_principal = "paused" if pausar else "active"
+        logger.info(f"📝 Atualizando campanha principal (ID: {campana.get('campaign_id')}) para status: {status_principal}")
+        self._atualizar_campanha_principal(campana.get("campaign_id"), status_principal)
         
         # Atualizar estado em memória
         if campana_id in self.campanhas_ativas:
+            estado_anterior = self.campanhas_ativas[campana_id]["pausada"]
             self.campanhas_ativas[campana_id]["pausada"] = pausar
+            logger.info(f"🔄 Estado na memória atualizado: {estado_anterior} -> {pausar}")
+        else:
+            logger.warning(f"⚠️ Campanha {campana_id} não está na memória para atualizar")
         
         action = "pausada" if pausar else "retomada"
-        logger.info(f"Campanha {campana_id} {action}. Motivo: {motivo}")
+        logger.info(f"✅ Campanha {campana_id} {action} com sucesso. Motivo: {motivo}")
         
         return {
             "mensaje": f"Campanha {action} com sucesso",
@@ -588,6 +701,9 @@ class PresionE1Service:
         
         # Marcar como inativa no Supabase
         self._atualizar_campana_supabase(campana_id, {"activa": False, "pausada": False})
+        
+        # Atualizar status da campanha principal para draft
+        self._atualizar_campanha_principal(campana.get("campaign_id"), "draft")
         
         # Remover de campanhas ativas
         if campana_id in self.campanhas_ativas:
@@ -688,23 +804,23 @@ class PresionE1Service:
             # Adicionar à lista de chamadas ativas
             self.campanhas_ativas[campana_id]["llamadas_activas"][llamada_id] = nueva_llamada
             
-            # TODO: Iniciar chamada via Asterisk com suporte a voicemail (não implementado)
-            # respuesta_asterisk = await asterisk_service.originar_llamada_presione1(
-            #     numero_destino=numero_info["numero_normalizado"],
-            #     cli=cli,
-            #     audio_url=campana.get("mensaje_audio_url"),
-            #     timeout_dtmf=campana.get("timeout_presione1", 15),
-            #     llamada_id=nueva_llamada.get("id"),
-            #     detectar_voicemail=campana.get("detectar_voicemail", True),
-            #     mensaje_voicemail_url=campana.get("mensaje_voicemail_url"),
-            #     duracion_maxima_voicemail=campana.get("duracion_maxima_voicemail", 30)
-            # )
+            # Iniciar chamada via Asterisk com suporte a voicemail
+            respuesta_asterisk = await asterisk_service.originar_llamada_presione1(
+                numero_destino=numero_info["numero_normalizado"],
+                cli=cli,
+                audio_url=campana.get("mensaje_audio_url"),
+                timeout_dtmf=campana.get("timeout_presione1", 15),
+                llamada_id=nueva_llamada.get("id"),
+                detectar_voicemail=campana.get("detectar_voicemail", True),
+                mensaje_voicemail_url=campana.get("mensaje_voicemail_url"),
+                duracion_maxima_voicemail=campana.get("duracion_maxima_voicemail", 30)
+            )
             
-            # Simulação para teste
-            respuesta_asterisk = {
-                "UniqueID": f"sim_{llamada_id}_{int(datetime.now().timestamp())}",
-                "Channel": f"SIP/teste-{llamada_id}"
-            }
+            # Simulação desativada - usando Asterisk real
+            # respuesta_asterisk = {
+            #     "UniqueID": f"sim_{llamada_id}_{int(datetime.now().timestamp())}",
+            #     "Channel": f"SIP/teste-{llamada_id}"
+            # }
             
             # Atualizar dados técnicos no Supabase
             self._supabase_request(
@@ -900,19 +1016,19 @@ class PresionE1Service:
             cola_transferencia = campana.get("cola_transferencia")
             
             if extension_transferencia:
-                # TODO: Transferir para extensão específica (não implementado)
-                # await asterisk_service.transferir_llamada(
-                #     channel=llamada.get("channel"),
-                #     destino=extension_transferencia
-                # )
-                logger.info(f"Simulação: transferindo para extensão {extension_transferencia}")
+                # Transferir para extensão específica
+                await asterisk_service.transferir_llamada(
+                    channel=llamada.get("channel"),
+                    destino=extension_transferencia
+                )
+                logger.info(f"Transferindo para extensão {extension_transferencia}")
             elif cola_transferencia:
-                # TODO: Transferir para fila de agentes (não implementado)
-                # await asterisk_service.transferir_a_cola(
-                #     channel=llamada.get("channel"),
-                #     cola=cola_transferencia
-                # )
-                logger.info(f"Simulação: transferindo para fila {cola_transferencia}")
+                # Transferir para fila de agentes
+                await asterisk_service.transferir_a_cola(
+                    channel=llamada.get("channel"),
+                    cola=cola_transferencia
+                )
+                logger.info(f"Transferindo para fila {cola_transferencia}")
             
             # Atualizar estado no Supabase
             self._supabase_request(
@@ -1000,34 +1116,157 @@ class PresionE1Service:
         except Exception as e:
             logger.error(f"Erro ao finalizar chamada {llamada_id}: {str(e)}")
     
+    def _get_cached_result(self, cache_key: str, ttl: int = 30) -> Optional[Any]:
+        """Obtém resultado do cache se ainda válido."""
+        if cache_key in self._cache:
+            cache_time = self._cache_ttl.get(cache_key, 0)
+            if time.time() - cache_time < ttl:
+                logger.debug(f"Cache hit para {cache_key}")
+                return self._cache[cache_key]
+        return None
+    
+    def _set_cache_result(self, cache_key: str, result: Any):
+        """Armazena resultado no cache."""
+        self._cache[cache_key] = result
+        self._cache_ttl[cache_key] = time.time()
+        logger.debug(f"Resultado cacheado para {cache_key}")
+    
+    def _calculate_statistics_optimized(self, llamadas: List[Dict]) -> Dict[str, Any]:
+        """Calcula estatísticas de forma otimizada usando uma única passada."""
+        stats = {
+            "llamadas_realizadas": len(llamadas),
+            "llamadas_contestadas": 0,
+            "llamadas_presiono_1": 0,
+            "llamadas_no_presiono": 0,
+            "llamadas_transferidas": 0,
+            "llamadas_error": 0,
+            "llamadas_voicemail": 0,
+            "llamadas_voicemail_mensaje_dejado": 0,
+            "tasa_contestacion": 0.0,
+            "tasa_presiono_1": 0.0,
+            "tasa_transferencia": 0.0,
+            "tasa_voicemail": 0.0,
+            "tasa_mensaje_voicemail": 0.0,
+            "tiempo_medio_respuesta": None,
+            "duracion_media_llamada": None,
+            "duracion_media_mensaje_voicemail": None
+        }
+        
+        if not llamadas:
+            return stats
+        
+        # Listas para cálculos de média
+        tiempos_respuesta = []
+        duraciones_llamada = []
+        duraciones_voicemail = []
+        
+        # Uma única passada pelos dados
+        for llamada in llamadas:
+            # Contestadas
+            if llamada.get("fecha_contestada"):
+                stats["llamadas_contestadas"] += 1
+                
+                # Presiono 1
+                if llamada.get("presiono_1") is True:
+                    stats["llamadas_presiono_1"] += 1
+                elif llamada.get("presiono_1") is False:
+                    stats["llamadas_no_presiono"] += 1
+            
+            # Transferidas
+            if llamada.get("transferencia_exitosa") is True:
+                stats["llamadas_transferidas"] += 1
+            
+            # Erro
+            if llamada.get("estado") == "error":
+                stats["llamadas_error"] += 1
+            
+            # Voicemail
+            if llamada.get("voicemail_detectado") is True:
+                stats["llamadas_voicemail"] += 1
+                
+                if llamada.get("motivo_finalizacion") == "voicemail_mensaje_dejado":
+                    stats["llamadas_voicemail_mensaje_dejado"] += 1
+                
+                # Duração voicemail
+                duracion_vm = llamada.get("duracion_mensaje_voicemail")
+                if duracion_vm:
+                    duraciones_voicemail.append(duracion_vm)
+            
+            # Tempos de resposta
+            tiempo_resp = llamada.get("tiempo_respuesta_dtmf")
+            if tiempo_resp:
+                tiempos_respuesta.append(tiempo_resp)
+            
+            # Duração da chamada
+            duracion = llamada.get("duracion_total")
+            if duracion:
+                duraciones_llamada.append(duracion)
+        
+        # Calcular percentuais
+        if stats["llamadas_realizadas"] > 0:
+            stats["tasa_contestacion"] = round((stats["llamadas_contestadas"] / stats["llamadas_realizadas"]) * 100, 2)
+            stats["tasa_voicemail"] = round((stats["llamadas_voicemail"] / stats["llamadas_realizadas"]) * 100, 2)
+        
+        if stats["llamadas_contestadas"] > 0:
+            stats["tasa_presiono_1"] = round((stats["llamadas_presiono_1"] / stats["llamadas_contestadas"]) * 100, 2)
+        
+        if stats["llamadas_presiono_1"] > 0:
+            stats["tasa_transferencia"] = round((stats["llamadas_transferidas"] / stats["llamadas_presiono_1"]) * 100, 2)
+        
+        if stats["llamadas_voicemail"] > 0:
+            stats["tasa_mensaje_voicemail"] = round((stats["llamadas_voicemail_mensaje_dejado"] / stats["llamadas_voicemail"]) * 100, 2)
+        
+        # Calcular médias
+        if tiempos_respuesta:
+            stats["tiempo_medio_respuesta"] = round(sum(tiempos_respuesta) / len(tiempos_respuesta), 2)
+        
+        if duraciones_llamada:
+            stats["duracion_media_llamada"] = round(sum(duraciones_llamada) / len(duraciones_llamada), 2)
+        
+        if duraciones_voicemail:
+            stats["duracion_media_mensaje_voicemail"] = round(sum(duraciones_voicemail) / len(duraciones_voicemail), 2)
+        
+        return stats
+    
     def obter_estadisticas_campana(self, campana_id: int) -> EstadisticasCampanaResponse:
-        """Obtém estatísticas detalhadas de uma campanha usando Supabase."""
+        """Obtém estatísticas detalhadas de uma campanha usando Supabase com cache."""
         try:
-            # Buscar dados da campanha
-            campana = self.obter_campana(campana_id)
+            # Verificar cache (30 segundos)
+            cache_key = f"stats_campana_{campana_id}"
+            cached_result = self._get_cached_result(cache_key, 30)
+            if cached_result:
+                return cached_result
+            
+            # Buscar dados da campanha (cache por 5 minutos)
+            campana_cache_key = f"campana_{campana_id}"
+            campana = self._get_cached_result(campana_cache_key, 300)
+            if not campana:
+                campana = self.obter_campana(campana_id)
+                self._set_cache_result(campana_cache_key, campana)
+            
             campaign_id = campana.get("campaign_id")
             
-            # Buscar contatos totais da campanha principal
+            # Buscar contatos totais usando count otimizado
             total_numeros = 0
             if campaign_id:
                 try:
-                    contatos = self._supabase_request(
+                    count_result = self._supabase_request(
                         "GET",
                         "contacts",
                         filters={"campaign_id": campaign_id},
-                        select="id"
+                        use_count=True
                     )
-                    total_numeros = len(contatos) if contatos else 0
+                    total_numeros = count_result.get("count", 0) if count_result else 0
                 except Exception as e:
                     logger.warning(f"Erro ao buscar contatos da campanha {campaign_id}: {str(e)}")
             
-            # Buscar llamadas da campanha presione1
+            # Buscar llamadas com select otimizado
             try:
                 llamadas = self._supabase_request(
                     "GET",
                     "llamadas_presione1",
                     filters={"campana_id": campana_id},
-                    select="*"
+                    select="estado,fecha_contestada,presiono_1,transferencia_exitosa,voicemail_detectado,motivo_finalizacion,duracion_mensaje_voicemail,tiempo_respuesta_dtmf,duracion_total"
                 )
                 
                 if not llamadas:
@@ -1037,70 +1276,46 @@ class PresionE1Service:
                 logger.warning(f"Erro ao buscar llamadas da campanha {campana_id}: {str(e)}")
                 llamadas = []
             
-            # Calcular estatísticas
-            llamadas_realizadas = len(llamadas)
-            llamadas_contestadas = len([l for l in llamadas if l.get("fecha_contestada")])
-            llamadas_presiono_1 = len([l for l in llamadas if l.get("presiono_1") is True])
-            llamadas_no_presiono = len([l for l in llamadas if l.get("presiono_1") is False])
-            llamadas_transferidas = len([l for l in llamadas if l.get("transferencia_exitosa") is True])
-            llamadas_error = len([l for l in llamadas if l.get("estado") == "error"])
-            
-            # Estatísticas de voicemail
-            llamadas_voicemail = len([l for l in llamadas if l.get("voicemail_detectado") is True])
-            llamadas_voicemail_mensaje_dejado = len([l for l in llamadas if l.get("motivo_finalizacion") == "voicemail_mensaje_dejado"])
-            
-            # Duração média das mensagens no voicemail
-            duraciones_voicemail = [l.get("duracion_mensaje_voicemail", 0) for l in llamadas if l.get("duracion_mensaje_voicemail")]
-            duracion_media_mensaje_voicemail = sum(duraciones_voicemail) / len(duraciones_voicemail) if duraciones_voicemail else None
-            
-            # Cálculos de percentuais
-            tasa_contestacion = (llamadas_contestadas / llamadas_realizadas * 100) if llamadas_realizadas > 0 else 0
-            tasa_presiono_1 = (llamadas_presiono_1 / llamadas_contestadas * 100) if llamadas_contestadas > 0 else 0
-            tasa_transferencia = (llamadas_transferidas / llamadas_presiono_1 * 100) if llamadas_presiono_1 > 0 else 0
-            
-            # Percentuais de voicemail
-            tasa_voicemail = (llamadas_voicemail / llamadas_realizadas * 100) if llamadas_realizadas > 0 else 0
-            tasa_mensaje_voicemail = (llamadas_voicemail_mensaje_dejado / llamadas_voicemail * 100) if llamadas_voicemail > 0 else 0
-            
-            # Tempos médios
-            tempos_respuesta = [l.get("tiempo_respuesta_dtmf", 0) for l in llamadas if l.get("tiempo_respuesta_dtmf")]
-            tiempo_medio_respuesta = sum(tempos_respuesta) / len(tempos_respuesta) if tempos_respuesta else None
-            
-            duraciones_llamada = [l.get("duracion_total", 0) for l in llamadas if l.get("duracion_total")]
-            duracion_media_llamada = sum(duraciones_llamada) / len(duraciones_llamada) if duraciones_llamada else None
+            # Calcular estatísticas usando método otimizado
+            stats = self._calculate_statistics_optimized(llamadas)
             
             # Chamadas ativas
             llamadas_activas = 0
             if campana_id in self.campanhas_ativas:
                 llamadas_activas = len(self.campanhas_ativas[campana_id].get("llamadas_activas", []))
             
-            return EstadisticasCampanaResponse(
+            response = EstadisticasCampanaResponse(
                 campana_id=campana_id,
                 nombre_campana=campana.get("nombre", "Campanha"),
                 total_numeros=total_numeros,
-                llamadas_realizadas=llamadas_realizadas,
-                llamadas_pendientes=total_numeros - llamadas_realizadas,
-                llamadas_contestadas=llamadas_contestadas,
-                llamadas_presiono_1=llamadas_presiono_1,
-                llamadas_no_presiono=llamadas_no_presiono,
-                llamadas_transferidas=llamadas_transferidas,
-                llamadas_error=llamadas_error,
+                llamadas_realizadas=stats["llamadas_realizadas"],
+                llamadas_pendientes=total_numeros - stats["llamadas_realizadas"],
+                llamadas_contestadas=stats["llamadas_contestadas"],
+                llamadas_presiono_1=stats["llamadas_presiono_1"],
+                llamadas_no_presiono=stats["llamadas_no_presiono"],
+                llamadas_transferidas=stats["llamadas_transferidas"],
+                llamadas_error=stats["llamadas_error"],
                 # Estatísticas de voicemail
-                llamadas_voicemail=llamadas_voicemail,
-                llamadas_voicemail_mensaje_dejado=llamadas_voicemail_mensaje_dejado,
-                tasa_voicemail=round(tasa_voicemail, 2),
-                tasa_mensaje_voicemail=round(tasa_mensaje_voicemail, 2),
-                duracion_media_mensaje_voicemail=round(duracion_media_mensaje_voicemail, 2) if duracion_media_mensaje_voicemail else None,
+                llamadas_voicemail=stats["llamadas_voicemail"],
+                llamadas_voicemail_mensaje_dejado=stats["llamadas_voicemail_mensaje_dejado"],
+                tasa_voicemail=stats["tasa_voicemail"],
+                tasa_mensaje_voicemail=stats["tasa_mensaje_voicemail"],
+                duracion_media_mensaje_voicemail=stats["duracion_media_mensaje_voicemail"],
                 # Percentuais existentes
-                tasa_contestacion=round(tasa_contestacion, 2),
-                tasa_presiono_1=round(tasa_presiono_1, 2),
-                tasa_transferencia=round(tasa_transferencia, 2),
-                tiempo_medio_respuesta=tiempo_medio_respuesta,
-                duracion_media_llamada=duracion_media_llamada,
+                tasa_contestacion=stats["tasa_contestacion"],
+                tasa_presiono_1=stats["tasa_presiono_1"],
+                tasa_transferencia=stats["tasa_transferencia"],
+                tiempo_medio_respuesta=stats["tiempo_medio_respuesta"],
+                duracion_media_llamada=stats["duracion_media_llamada"],
                 activa=campana.get("activa", False),
                 pausada=campana.get("pausada", False),
                 llamadas_activas=llamadas_activas
             )
+            
+            # Armazenar no cache
+            self._set_cache_result(cache_key, response)
+            
+            return response
             
         except Exception as e:
             logger.error(f"Erro ao obter estatísticas da campanha {campana_id}: {str(e)}")
@@ -1717,4 +1932,4 @@ class PresionE1Service:
         except Exception as e:
             logger.error(f"❌ Erro durante investigação: {str(e)}")
             investigacao["erro"] = str(e)
-            return investigacao 
+            return investigacao

@@ -290,6 +290,34 @@ async def pausar_campana_presione1(
         )
 
 
+@router.post("/campanhas/{campana_id}/retomar")
+async def retomar_campana_presione1(
+    campana_id: int,
+    service: PresionE1Service = Depends(get_presione1_service)
+) -> dict:
+    """
+    Retoma uma campanha pausada.
+    
+    **Ação**:
+    - Retoma discado automático
+    - Continua de onde parou
+    - Marca campanha como não pausada
+    """
+    try:
+        # Usar a função pausar_campana com pausar=False para retomar
+        resultado = await service.pausar_campana(campana_id, False, "Campanha retomada")
+        return resultado
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao retomar campanha {campana_id}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Erro interno ao retomar campanha"
+        )
+
+
 @router.post("/campanhas/{campana_id}/parar")
 async def parar_campana_presione1(
     campana_id: int,
@@ -767,4 +795,4 @@ async def finalizar_llamada(
         raise HTTPException(
             status_code=500,
             detail=f"Erro interno ao finalizar chamada: {str(e)}"
-        ) 
+        )

@@ -57,19 +57,8 @@ class Configuracion(BaseSettings):
             if v.startswith('postgres'):
                 return v
         
-        # Se não tem URL configurada, usar Supabase em produção
-        if not values.get("DEBUG", False):
-            return "postgresql://postgres.orxxocptgaeoyrtlxwkv:%21Gouveia1@aws-0-us-east-1.pooler.supabase.com:6543/postgres"
-        
-        # Construir a URL de conexão a partir dos componentes (PostgreSQL)
-        return PostgresDsn.build(
-            scheme="postgresql",
-            user=values.get("DB_USUARIO"),
-            password=values.get("DB_PASSWORD"),
-            host=values.get("DB_HOST"),
-            port=str(values.get("DB_PUERTO")),
-            path=f"/{values.get('DB_NOME') or ''}",
-        )
+        # Usar URL do Supabase por padrão
+        return "postgresql://postgres.orxxocptgaeoyrtlxwkv:%21Gouveia1@aws-0-us-east-1.pooler.supabase.com:6543/postgres"
     
     class Config:
         """Configuração do Pydantic"""
@@ -120,4 +109,4 @@ def recargar_configuracion(archivo_env: str = ".env") -> Configuracion:
     SERVER_HOST = configuracion.HOST
     SERVER_PORT = configuracion.PUERTO
     
-    return nueva_config 
+    return nueva_config

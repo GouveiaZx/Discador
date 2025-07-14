@@ -10,6 +10,7 @@ import time
 import uuid
 import json
 import logging
+import os
 from typing import Dict, List, Optional, Callable
 from dataclasses import dataclass
 from enum import Enum
@@ -46,12 +47,13 @@ class AsteriskAMI:
     Permite fazer chamadas, monitorar status e controlar o sistema
     """
     
-    def __init__(self, host: str = "localhost", port: int = 5038, 
-                 username: str = "admin", password: str = "admin123"):
-        self.host = host
-        self.port = port
-        self.username = username
-        self.password = password
+    def __init__(self, host: str = None, port: int = None, 
+                 username: str = None, password: str = None):
+        # Usar variáveis de ambiente se disponíveis
+        self.host = host or os.getenv('ASTERISK_HOST', 'localhost')
+        self.port = port or int(os.getenv('ASTERISK_PORT', '5038'))
+        self.username = username or os.getenv('ASTERISK_USERNAME', 'admin')
+        self.password = password or os.getenv('ASTERISK_PASSWORD', 'amp111')
         
         # Conexão
         self.socket = None
@@ -199,7 +201,137 @@ class AsteriskAMI:
                 # Remover da lista de chamadas ativas
                 if call_id in self.active_calls:
                     del self.active_calls[call_id]
-                return ""
+                return None
+                
+        except Exception as e:
+            logger.error(f"❌ Erro ao originar chamada: {str(e)}")
+            if call_id in self.active_calls:
+                del self.active_calls[call_id]
+            return None
+    
+    async def originar_llamada_presione1(self, numero_destino: str, cli: str, 
+                                        audio_url: str = None, timeout_dtmf: int = 15,
+                                        llamada_id: int = None, detectar_voicemail: bool = True,
+                                        mensaje_voicemail_url: str = None, 
+                                        duracion_maxima_voicemail: int = 30) -> Dict[str, any]:
+        """Origina uma chamada específica para campanhas Presione 1"""
+        try:
+            # Gerar ID único para a chamada
+            call_id = f"presione1_{llamada_id}_{int(time.time())}"
+            
+            # Limpar número
+            clean_number = ''.join(filter(str.isdigit, numero_destino))
+            
+            logger.info(f"📞 Originando chamada Presione 1: {numero_destino} (ID: {call_id})")
+            
+            # Dados da ação Originate para Presione 1
+            originate_data = {
+                "Action": "Originate",
+                "Channel": f"Local/{clean_number}@discador-presione1",
+                "Context": "discador-presione1",
+                "Exten": clean_number,
+                "Priority": "1",
+                "CallerID": f"Discador <{cli}>",
+                "Timeout": "30000",
+                "Variables": f"CALL_ID={call_id},LLAMADA_ID={llamada_id},AUDIO_URL={audio_url or ''},TIMEOUT_DTMF={timeout_dtmf},DETECTAR_VM={detectar_voicemail},VM_URL={mensaje_voicemail_url or ''},VM_MAX_DUR={duracion_maxima_voicemail}",
+                "ActionID": call_id
+            }
+            
+            # Registrar chamada
+            call_event = CallEvent(
+                call_id=call_id,
+                phone_number=numero_destino,
+                campaign_id=llamada_id or 0,
+                status=CallStatus.INITIATED,
+                timestamp=time.time()
+            )
+            
+            self.active_calls[call_id] = call_event
+            
+            # Enviar comando
+            response = await self._send_action(originate_data)
+            
+            if response.get("Response") == "Success":
+                logger.info(f"✅ Chamada Presione 1 originada: {call_id}")
+                return {
+                    "UniqueID": call_id,
+                    "Channel": f"Local/{clean_number}@discador-presione1",
+                    "success": True
+                }
+            else:
+                logger.error(f"❌ Falha ao originar chamada Presione 1: {response.get('Message')}")
+                if call_id in self.active_calls:
+                    del self.active_calls[call_id]
+                return {
+                    "UniqueID": None,
+                    "Channel": None,
+                    "success": False,
+                    "error": response.get('Message', 'Unknown error')
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ Erro ao originar chamada Presione 1: {str(e)}")
+            return {
+                "UniqueID": None,
+                "Channel": None,
+                "success": False,
+                "error": str(e)
+            }
+    
+    async def transferir_llamada(self, channel: str, destino: str) -> Dict[str, any]:
+        """Transfere uma chamada para uma extensão específica"""
+        try:
+            logger.info(f"📞 Transferindo chamada {channel} para extensão {destino}")
+            
+            transfer_data = {
+                "Action": "Redirect",
+                "Channel": channel,
+                "Context": "discador-transfer",
+                "Exten": destino,
+                "Priority": "1",
+                "ActionID": f"transfer_{int(time.time())}"
+            }
+            
+            response = await self._send_action(transfer_data)
+            
+            if response.get("Response") == "Success":
+                logger.info(f"✅ Chamada transferida com sucesso para {destino}")
+                return {"success": True, "message": "Transferência realizada"}
+            else:
+                logger.error(f"❌ Falha na transferência: {response.get('Message')}")
+                return {"success": False, "error": response.get('Message', 'Unknown error')}
+                
+        except Exception as e:
+            logger.error(f"❌ Erro ao transferir chamada: {str(e)}")
+            return {"success": False, "error": str(e)}
+    
+    async def transferir_a_cola(self, channel: str, cola: str) -> Dict[str, any]:
+        """Transfere uma chamada para uma fila de agentes"""
+        try:
+            logger.info(f"📞 Transferindo chamada {channel} para fila {cola}")
+            
+            # Transferir para fila usando Queue
+            transfer_data = {
+                "Action": "Redirect",
+                "Channel": channel,
+                "Context": "discador-queues",
+                "Exten": cola,
+                "Priority": "1",
+                "ActionID": f"queue_transfer_{int(time.time())}"
+            }
+            
+            response = await self._send_action(transfer_data)
+            
+            if response.get("Response") == "Success":
+                logger.info(f"✅ Chamada transferida com sucesso para fila {cola}")
+                return {"success": True, "message": f"Transferido para fila {cola}"}
+            else:
+                logger.error(f"❌ Falha na transferência para fila: {response.get('Message')}")
+                return {"success": False, "error": response.get('Message', 'Unknown error')}
+                
+        except Exception as e:
+            logger.error(f"❌ Erro ao transferir para fila: {str(e)}")
+            return {"success": False, "error": str(e)}
                 
         except Exception as e:
             logger.error(f"❌ Erro ao originar chamada: {str(e)}")
@@ -494,4 +626,4 @@ async def init_asterisk():
 
 async def cleanup_asterisk():
     """Limpa conexão com Asterisk"""
-    await asterisk_ami.disconnect() 
+    await asterisk_ami.disconnect()
