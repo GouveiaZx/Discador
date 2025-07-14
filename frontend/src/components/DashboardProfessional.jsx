@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { makeApiRequest } from '../config/api';
+import { useCampaigns } from '../contexts/CampaignContext';
 import { 
   PhoneIcon, 
   UserGroupIcon, 
@@ -251,6 +252,17 @@ const QuickActionButton = ({ title, icon, onClick, color = 'primary', descriptio
  * Dashboard Principal Profissional
  */
 const DashboardProfessional = () => {
+  // Usar contexto de campanhas para dados em tempo real
+  const { 
+    campaigns, 
+    activeCampaigns, 
+    loading: campaignsLoading, 
+    error: campaignsError,
+    lastUpdate: campaignsLastUpdate,
+    activeCampaignsCount,
+    totalCampaigns
+  } = useCampaigns();
+
   const [data, setData] = useState({
     metricas: {},
     provedores: [],
@@ -262,11 +274,19 @@ const DashboardProfessional = () => {
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
 
-  // Métricas calculadas
+  // Métricas calculadas com dados reais do contexto
   const metrics = useMemo(() => {
     const provedores = Array.isArray(data.provedores) ? data.provedores : [];
-    const campanhas = Array.isArray(data.campanhas) ? data.campanhas : [];
     const clis = Array.isArray(data.clis) ? data.clis : [];
+    
+    // Usar dados reais das campanhas do contexto
+    const campanhasActivas = activeCampaignsCount || 0;
+    
+    console.log('📊 [DashboardProfessional] Métricas calculadas:', {
+      campanhasActivas,
+      totalCampaigns,
+      activeCampaigns: activeCampaigns.length
+    });
     
     return {
       llamadasActivas: data.metricas.llamadasActivas || 0,
@@ -274,12 +294,12 @@ const DashboardProfessional = () => {
       operadoresOnline: data.metricas.operadoresOnline || 0,
       sesionesAudio: data.audio.sesionesActivas || 0,
       totalCLIs: clis.length || 0,
-      campanhasActivas: campanhas.filter(c => c.status === 'active' || c.status === 'ativa').length,
+      campanhasActivas: campanhasActivas, // Usar dados reais do contexto
       provedoresActivos: provedores.filter(p => p.status === 'ativo').length,
       tiempoMedio: '2:34',
       tasaExito: '87.2%'
     };
-  }, [data]);
+  }, [data, activeCampaignsCount, totalCampaigns, activeCampaigns]);
 
   // Carregar dados do dashboard
   const loadDashboardData = async () => {
@@ -331,6 +351,18 @@ const DashboardProfessional = () => {
     const interval = setInterval(loadDashboardData, 30000); // Auto-refresh a cada 30s
     return () => clearInterval(interval);
   }, []);
+
+  // Atualizar timestamp quando campanhas mudarem
+  useEffect(() => {
+    if (campaignsLastUpdate) {
+      setLastUpdate(campaignsLastUpdate);
+      console.log('📊 [DashboardProfessional] Campanhas atualizadas:', {
+        total: totalCampaigns,
+        ativas: activeCampaignsCount,
+        timestamp: campaignsLastUpdate
+      });
+    }
+  }, [campaignsLastUpdate, totalCampaigns, activeCampaignsCount]);
 
   return (
     <div className="p-6 space-y-8 min-h-screen">
@@ -486,16 +518,16 @@ const DashboardProfessional = () => {
           <RealTimeStatusPanel
             title="Campanhas Políticas"
             icon="🗳️"
-            items={(Array.isArray(data.campanhas) ? data.campanhas : []).map(c => ({
-              name: c.nome || c.name,
-              description: `${c.contatos || c.contacts || 0} contatos • ${c.tipo || 'Campanha padrão'}`,
-              status: c.status || 'inativa',
-              badge: c.compliance ? { 
-                text: 'Compliance ✓', 
+            items={(Array.isArray(campaigns) ? campaigns : []).map(c => ({
+              name: c.name || c.nombre || 'Campanha sem nome',
+              description: `${c.contacts_total || 0} contatos • ${c.isActive ? 'Ativa' : 'Inativa'}`,
+              status: c.isActive ? 'ativo' : (c.isPaused ? 'pausada' : 'inativo'),
+              badge: c.isActive ? { 
+                text: 'Em Execução ▶️', 
                 color: 'bg-success-500/20 text-success-300 border border-success-500/30' 
               } : null
             }))}
-            loading={loading}
+            loading={campaignsLoading}
           />
           
           <RealTimeStatusPanel

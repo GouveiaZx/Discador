@@ -165,7 +165,7 @@ const CliPatternGenerator = () => {
             setSuccess(`Países cargados en modo fallback (${validCountries.length} países)`);
           } else if (responseInfo.service_available === false) {
             setSuccess(`Países cargados con servicio básico (${validCountries.length} países)`);
-          } else {
+      } else {
             setSuccess(`Países cargados correctamente (${validCountries.length} países)`);
           }
           
@@ -263,26 +263,26 @@ const CliPatternGenerator = () => {
       console.log('📞 Respuesta generación:', response.data);
       
       // Tratar diferentes formatos de resposta da API
-      let clis = [];
-      
+        let clis = [];
+        
       if (response.data && response.data.data && response.data.data.generated_clis) {
-        // Formato: { success: true, data: { generated_clis: [...] } }
-        clis = response.data.data.generated_clis;
+          // Formato: { success: true, data: { generated_clis: [...] } }
+          clis = response.data.data.generated_clis;
       } else if (response.data && response.data.generated_clis) {
-        // Formato: { success: true, generated_clis: [...] }
-        clis = response.data.generated_clis;
+          // Formato: { success: true, generated_clis: [...] }
+          clis = response.data.generated_clis;
       } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
         // Formato: { success: true, data: [...] }
         clis = response.data.data;
-      }
-      
-      console.log('📞 CLIs extraídos:', clis);
-      
-      if (clis && clis.length > 0) {
-        setGeneratedClis(clis);
-        setSuccess(`✅ Se generaron ${clis.length} CLIs correctamente`);
-        loadStats();
-      } else {
+        }
+        
+        console.log('📞 CLIs extraídos:', clis);
+        
+        if (clis && clis.length > 0) {
+          setGeneratedClis(clis);
+          setSuccess(`✅ Se generaron ${clis.length} CLIs correctamente`);
+          loadStats();
+        } else {
         // Verificar se há mensagem de erro específica
         const errorMsg = response.data?.error || response.data?.message || 'No se generaron CLIs. Verifica la configuración.';
         setError(errorMsg);
