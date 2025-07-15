@@ -116,6 +116,14 @@ except ImportError as e:
 # Importar as novas rotas
 # Audio routes são carregados dinamicamente quando necessário
 
+# Importar rotas de CLI automático
+try:
+    from routes.cli_auto_routes import router as cli_auto_router
+    print("✅ CLI Auto Calculator routes imported successfully")
+except ImportError as e:
+    print(f"⚠️ Warning: Could not import CLI Auto Calculator routes: {e}")
+    cli_auto_router = None
+
 # Modelos para autenticação
 class LoginRequest(BaseModel):
     username: str
@@ -434,6 +442,13 @@ try:
         print("⚠️ Performance routes not available")
 except NameError:
     print("⚠️ Performance routes not imported")
+
+# Incluir rotas de CLI automático
+if cli_auto_router:
+    app.include_router(cli_auto_router, prefix=f"{api_prefix}")
+    print(f"✅ CLI Auto Calculator router included with prefix: {api_prefix}")
+else:
+    print("⚠️ CLI Auto Calculator router NOT available")
 
 # Router para rotas ausentes
 missing_routes = APIRouter()

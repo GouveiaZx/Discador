@@ -20,6 +20,7 @@ import RealtimeCallDisplay from './components/RealtimeCallDisplay';
 import AudioManager from './components/AudioManager';
 import AdvancedPerformanceDashboard from './components/AdvancedPerformanceDashboard';
 import DialerControl from './components/DialerControl';
+import CliAutoCalculator from './components/CliAutoCalculator';
 
 /**
  * Sistema de Ícones Profissional
@@ -106,6 +107,11 @@ const Icons = {
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
     </svg>
+  ),
+  Calculator: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+    </svg>
   )
   };
 
@@ -164,6 +170,7 @@ const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermiss
     { id: 'audios', label: 'Gestión de Audios', icon: Icons.Audio, permission: 'supervisor' },
     { id: 'trunks', label: 'Gestión de Troncales', icon: Icons.Trunk, permission: 'admin' },
     { id: 'caller-id', label: 'Identificador de Llamada', icon: Icons.Phone, permission: 'supervisor' },
+    { id: 'cli-auto', label: 'Calculadora CLI Auto', icon: Icons.Calculator, permission: 'admin' },
     { id: 'timing', label: 'Tiempo de Espera', icon: Icons.Settings, permission: 'supervisor' },
     { id: 'blacklist', label: 'Lista Negra', icon: Icons.Blacklist, permission: 'admin' },
     { id: 'configuracion', label: 'Configuración', icon: Icons.Settings, permission: 'admin' },
@@ -322,6 +329,7 @@ const ProfessionalHeader = ({ setSidebarOpen, activeTab }) => {
       audios: 'Gestión de Audios',
       trunks: 'Gestión de Troncales SIP',
       'caller-id': 'Configuración Identificador de Llamada',
+      'cli-auto': 'Calculadora Automática de CLIs',
       timing: 'Configuración Tiempo de Espera',
       blacklist: 'Lista Negra',
       configuracion: 'Configuración Avanzada',
@@ -459,6 +467,7 @@ function AuthenticatedApp() {
                 {activeTab === 'audios' && hasPermission('supervisor') && <AudioManager />}
                 {activeTab === 'trunks' && hasPermission('admin') && <TrunkCountryManager />}
                 {activeTab === 'caller-id' && hasPermission('supervisor') && <CallerIdManager />}
+                {activeTab === 'cli-auto' && hasPermission('admin') && <CliAutoCalculator />}
                 {activeTab === 'timing' && hasPermission('supervisor') && <CallTimingConfig />}
                 {activeTab === 'blacklist' && hasPermission('admin') && <GestionBlacklist />}
                 {activeTab === 'configuracion' && hasPermission('admin') && <ConfiguracionAvanzada />}
@@ -470,7 +479,7 @@ function AuthenticatedApp() {
             {((activeTab === 'campanhas' || activeTab === 'listas' || activeTab === 'audios' || activeTab === 'caller-id' || activeTab === 'timing' || activeTab === 'control') && !hasPermission('supervisor')) && (
               <AccessDenied requiredLevel="Supervisor" />
             )}
-            {((activeTab === 'blacklist' || activeTab === 'configuracion' || activeTab === 'trunks' || activeTab === 'performance') && !hasPermission('admin')) && (
+            {((activeTab === 'blacklist' || activeTab === 'configuracion' || activeTab === 'trunks' || activeTab === 'performance' || activeTab === 'cli-auto') && !hasPermission('admin')) && (
               <AccessDenied requiredLevel="Administrador" />
             )}
           </div>
