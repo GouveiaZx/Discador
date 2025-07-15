@@ -536,13 +536,22 @@ class DynamicCallerIdService:
         return clis
     
     def _generate_brasil_clis(self) -> List[str]:
-        """Gera CLIs específicos para Brasil."""
+        """Gera CLIs específicos para Brasil (formato sem +55 para compatibilidade com provedores)."""
         clis = []
         area_codes = ["11", "21", "13", "47", "800", "85", "31", "51"]
         
         for area_code in area_codes:
-            for i in range(200):  # 200 CLIs por área
-                number = f"+55{area_code}555{i:04d}"
+            # Gerar números de 7, 8 e 10 dígitos conforme solicitado
+            for i in range(100):  # 100 CLIs de 7 dígitos por área
+                number = f"55{area_code}{i:07d}"[:9]  # 55 + área + 7 dígitos = 9 total
+                clis.append(number)
+            
+            for i in range(100):  # 100 CLIs de 8 dígitos por área
+                number = f"55{area_code}{i:08d}"[:10]  # 55 + área + 8 dígitos = 10 total
+                clis.append(number)
+            
+            for i in range(100):  # 100 CLIs de 10 dígitos por área
+                number = f"55{area_code}{i:010d}"[:12]  # 55 + área + 10 dígitos = 12 total
                 clis.append(number)
         
         return clis
@@ -1215,4 +1224,4 @@ class DynamicCallerIdService:
             return {
                 "success": False,
                 "error": str(e)
-            } 
+            }

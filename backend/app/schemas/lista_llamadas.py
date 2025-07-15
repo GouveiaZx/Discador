@@ -130,11 +130,11 @@ WIRELESS_AREA_CODES = {
 
 def validar_numero_telefone(numero: str, pais_preferido: str = "auto") -> ValidacionNumero:
     """
-    Valida y normaliza un numero de telefono para Argentina o EUA.
+    Valida y normaliza un numero de telefono para Argentina, EUA o Brasil.
     
     Args:
         numero: Numero a validar
-        pais_preferido: "argentina", "usa", "auto" (detecta automaticamente)
+        pais_preferido: "argentina", "usa", "brasil", "auto" (detecta automaticamente)
         
     Returns:
         ValidacionNumero con resultado de la validacion
@@ -161,6 +161,8 @@ def validar_numero_telefone(numero: str, pais_preferido: str = "auto") -> Valida
     # Validar según el país detectado
     if pais_detectado == "usa":
         return validar_numero_usa(numero_original, numero_limpio)
+    elif pais_detectado == "brasil":
+        return validar_numero_brasil(numero_original, numero_limpio)
     else:
         return validar_numero_argentina(numero_original, numero_limpio)
 
@@ -169,7 +171,7 @@ def detectar_pais_numero(numero_limpio: str) -> str:
     """Detecta el país basado en el formato del número."""
     
     if not numero_limpio:
-        return "argentina"  # Default
+        return "brasil"  # Default para Brasil
     
     # Remover + inicial si existe
     if numero_limpio.startswith('+'):
@@ -182,14 +184,20 @@ def detectar_pais_numero(numero_limpio: str) -> str:
     elif numero_limpio.startswith('54'):
         # +54 = Argentina
         return "argentina"
+    elif numero_limpio.startswith('55'):
+        # +55 = Brasil
+        return "brasil"
     elif len(numero_limpio) == 10 and numero_limpio[0] in '2356789':
         # 10 dígitos empezando con 2-9 = probablemente EUA
         codigo_area = numero_limpio[:3]
         if codigo_area in CODIGOS_AREA_USA_VALIDOS:
             return "usa"
+    elif len(numero_limpio) >= 7 and len(numero_limpio) <= 12:
+        # Números brasileiros sem prefixo (7-12 dígitos)
+        return "brasil"
     
-    # Default para Argentina
-    return "argentina"
+    # Default para Brasil
+    return "brasil"
 
 
 def validar_numero_usa(numero_original: str, numero_limpio: str) -> ValidacionNumero:
@@ -283,6 +291,107 @@ def validar_numero_usa(numero_original: str, numero_limpio: str) -> ValidacionNu
         pais_detectado="usa",
         es_toll_free=es_toll_free,
         es_wireless=es_wireless
+    )
+
+
+def validar_numero_brasil(numero_original: str, numero_limpio: str) -> ValidacionNumero:
+    """
+    Valida un número de teléfono de Brasil.
+    
+    Formatos aceptados:
+    - 55 + código de área + número (7, 8 ou 10 dígitos)
+    - Código de área + número (7, 8 ou 10 dígitos)
+    - Número direto (7, 8 ou 10 dígitos)
+    
+    Códigos de área brasileiros válidos: 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 24, 27, 28, etc.
+    """
+    
+    # Remover + inicial si existe
+    if numero_limpio.startswith('+'):
+        numero_limpio = numero_limpio[1:]
+    
+    # Remover código de país 55 si está presente
+    if numero_limpio.startswith('55'):
+        numero_sin_codigo_pais = numero_limpio[2:]
+    else:
+        numero_sin_codigo_pais = numero_limpio
+    
+    # Validar longitud (7, 8 ou 10 dígitos para o número)
+    if len(numero_sin_codigo_pais) < 7 or len(numero_sin_codigo_pais) > 12:
+        return ValidacionNumero(
+            numero_original=numero_original,
+            numero_normalizado="",
+            valido=False,
+            motivo_invalido=f"Longitud inválida para número Brasil: {len(numero_sin_codigo_pais)} dígitos (debe tener entre 7-12)",
+            pais_detectado="brasil"
+        )
+    
+    # Códigos de área brasileiros válidos (principais)
+    codigos_area_brasil = [
+        "11", "12", "13", "14", "15", "16", "17", "18", "19",  # São Paulo
+        "21", "22", "24",  # Rio de Janeiro
+        "27", "28",  # Espírito Santo
+        "31", "32", "33", "34", "35", "37", "38",  # Minas Gerais
+        "41", "42", "43", "44", "45", "46",  # Paraná
+        "47", "48", "49",  # Santa Catarina
+        "51", "53", "54", "55",  # Rio Grande do Sul
+        "61",  # Distrito Federal
+        "62", "64",  # Goiás
+        "63",  # Tocantins
+        "65", "66",  # Mato Grosso
+        "67",  # Mato Grosso do Sul
+        "68",  # Acre
+        "69",  # Rondônia
+        "71", "73", "74", "75", "77",  # Bahia
+        "79",  # Sergipe
+        "81", "87",  # Pernambuco
+        "82",  # Alagoas
+        "83",  # Paraíba
+        "84",  # Rio Grande do Norte
+        "85", "88",  # Ceará
+        "86", "89",  # Piauí
+        "91", "93", "94",  # Pará
+        "92", "97",  # Amazonas
+        "95",  # Roraima
+        "96",  # Amapá
+        "98", "99"   # Maranhão
+    ]
+    
+    # Verificar se tem código de área válido
+    if len(numero_sin_codigo_pais) >= 9:  # Código de área + número
+        codigo_area = numero_sin_codigo_pais[:2]
+        numero_final = numero_sin_codigo_pais[2:]
+        
+        if codigo_area not in codigos_area_brasil:
+            # Se não tem código de área válido, tratar como número direto
+            numero_final = numero_sin_codigo_pais
+            codigo_area = None
+    else:
+        # Número direto sem código de área
+        numero_final = numero_sin_codigo_pais
+        codigo_area = None
+    
+    # Validar longitud do número final (7, 8 ou 10 dígitos)
+    if len(numero_final) not in [7, 8, 9, 10]:
+        return ValidacionNumero(
+            numero_original=numero_original,
+            numero_normalizado="",
+            valido=False,
+            motivo_invalido=f"Número deve ter 7, 8, 9 ou 10 dígitos, tem {len(numero_final)}",
+            pais_detectado="brasil"
+        )
+    
+    # Número normalizado (formato sem +55 conforme solicitado)
+    if codigo_area:
+        numero_normalizado = f"55{codigo_area}{numero_final}"
+    else:
+        numero_normalizado = f"55{numero_final}"
+    
+    return ValidacionNumero(
+        numero_original=numero_original,
+        numero_normalizado=numero_normalizado,
+        valido=True,
+        pais_detectado="brasil"
     )
 
 
@@ -408,4 +517,4 @@ def formatear_numero_para_discado(numero_normalizado: str, formato: str = "e164"
         elif formato == "international":
             return numero_normalizado.replace('+549', '+54 9 ')
     
-    return numero_normalizado 
+    return numero_normalizado

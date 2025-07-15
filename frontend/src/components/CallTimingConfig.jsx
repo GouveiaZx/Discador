@@ -19,7 +19,15 @@ const CallTimingConfig = () => {
     night_hours_multiplier: 1.0,
     retry_attempts: 3,
     retry_interval: 300,
-    timeout_settings: {}
+    timeout_settings: {},
+    // Nuevos campos para timer y timer de almoço
+    horario_inicio: '08:00',
+    horario_fim: '18:00',
+    pausar_almoco: false,
+    horario_almoco_inicio: '12:00',
+    horario_almoco_fim: '13:00',
+    dias_semana: [1, 2, 3, 4, 5], // Lunes a Viernes
+    timezone: 'America/Sao_Paulo'
   });
 
   const presets = [
@@ -35,7 +43,14 @@ const CallTimingConfig = () => {
         progressive_delay: false,
         adaptive_timing: false,
         retry_attempts: 5,
-        retry_interval: 180
+        retry_interval: 180,
+        horario_inicio: '08:00',
+        horario_fim: '20:00',
+        pausar_almoco: false,
+        horario_almoco_inicio: '12:00',
+        horario_almoco_fim: '13:00',
+        dias_semana: [1, 2, 3, 4, 5, 6],
+        timezone: 'America/Sao_Paulo'
       }
     },
     {
@@ -50,7 +65,14 @@ const CallTimingConfig = () => {
         progressive_delay: true,
         adaptive_timing: false,
         retry_attempts: 3,
-        retry_interval: 300
+        retry_interval: 300,
+        horario_inicio: '09:00',
+        horario_fim: '18:00',
+        pausar_almoco: true,
+        horario_almoco_inicio: '12:00',
+        horario_almoco_fim: '13:00',
+        dias_semana: [1, 2, 3, 4, 5],
+        timezone: 'America/Sao_Paulo'
       }
     },
     {
@@ -65,7 +87,36 @@ const CallTimingConfig = () => {
         progressive_delay: true,
         adaptive_timing: true,
         retry_attempts: 2,
-        retry_interval: 600
+        retry_interval: 600,
+        horario_inicio: '09:00',
+        horario_fim: '17:00',
+        pausar_almoco: true,
+        horario_almoco_inicio: '12:00',
+        horario_almoco_fim: '14:00',
+        dias_semana: [1, 2, 3, 4, 5],
+        timezone: 'America/Sao_Paulo'
+      }
+    },
+    {
+      id: 'brasil_padrao',
+      name: 'Brasil Padrão',
+      icon: '🇧🇷',
+      description: 'Configuración optimizada para Brasil',
+      color: 'yellow',
+      settings: {
+        wait_time: 35,
+        sleep_time: 3,
+        progressive_delay: true,
+        adaptive_timing: false,
+        retry_attempts: 3,
+        retry_interval: 300,
+        horario_inicio: '08:00',
+        horario_fim: '18:00',
+        pausar_almoco: true,
+        horario_almoco_inicio: '12:00',
+        horario_almoco_fim: '13:00',
+        dias_semana: [1, 2, 3, 4, 5],
+        timezone: 'America/Sao_Paulo'
       }
     }
   ];
@@ -125,7 +176,14 @@ const CallTimingConfig = () => {
         night_hours_multiplier: existing.night_hours_multiplier || 1.0,
         retry_attempts: existing.retry_attempts || 3,
         retry_interval: existing.retry_interval || 300,
-        timeout_settings: existing.timeout_settings || {}
+        timeout_settings: existing.timeout_settings || {},
+        horario_inicio: existing.horario_inicio || '08:00',
+        horario_fim: existing.horario_fim || '18:00',
+        pausar_almoco: existing.pausar_almoco || false,
+        horario_almoco_inicio: existing.horario_almoco_inicio || '12:00',
+        horario_almoco_fim: existing.horario_almoco_fim || '13:00',
+        dias_semana: existing.dias_semana || [1, 2, 3, 4, 5],
+        timezone: existing.timezone || 'America/Sao_Paulo'
       });
       setActivePreset(existing.preset_name || 'balanced');
     } else {
@@ -183,7 +241,8 @@ const CallTimingConfig = () => {
     const colors = {
       red: 'border-red-500 bg-red-600/20 text-red-300',
       blue: 'border-blue-500 bg-blue-600/20 text-blue-300',
-      green: 'border-green-500 bg-green-600/20 text-green-300'
+      green: 'border-green-500 bg-green-600/20 text-green-300',
+      yellow: 'border-yellow-500 bg-yellow-600/20 text-yellow-300'
     };
     return colors[preset?.color] || colors.blue;
   };
@@ -404,6 +463,116 @@ const CallTimingConfig = () => {
                       </button>
                     </div>
                   </div>
+
+                  {/* Configuración de Horarios */}
+                  <div className="space-y-4">
+                    <h5 className="font-medium text-white">⏰ Horarios de Operación</h5>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Hora de Inicio
+                        </label>
+                        <input
+                          type="time"
+                          value={formData.horario_inicio}
+                          onChange={(e) => setFormData(prev => ({ ...prev, horario_inicio: e.target.value }))}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Hora de Fin
+                        </label>
+                        <input
+                          type="time"
+                          value={formData.horario_fim}
+                          onChange={(e) => setFormData(prev => ({ ...prev, horario_fim: e.target.value }))}
+                          className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Días de la Semana
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { id: 1, name: 'Lun' },
+                          { id: 2, name: 'Mar' },
+                          { id: 3, name: 'Mié' },
+                          { id: 4, name: 'Jue' },
+                          { id: 5, name: 'Vie' },
+                          { id: 6, name: 'Sáb' },
+                          { id: 0, name: 'Dom' }
+                        ].map((day) => (
+                          <button
+                            key={day.id}
+                            onClick={() => {
+                              const newDays = formData.dias_semana.includes(day.id)
+                                ? formData.dias_semana.filter(d => d !== day.id)
+                                : [...formData.dias_semana, day.id];
+                              setFormData(prev => ({ ...prev, dias_semana: newDays }));
+                            }}
+                            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                              formData.dias_semana.includes(day.id)
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                            }`}
+                          >
+                            {day.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Timer de Almoço */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h5 className="font-medium text-white">🍽️ Timer de Almoço</h5>
+                      <button
+                        onClick={() => setFormData(prev => ({ ...prev, pausar_almoco: !prev.pausar_almoco }))}
+                        className={`w-12 h-6 rounded-full transition-colors ${
+                          formData.pausar_almoco ? 'bg-blue-600' : 'bg-gray-600'
+                        }`}
+                      >
+                        <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
+                          formData.pausar_almoco ? 'translate-x-6' : 'translate-x-0.5'
+                        }`}></div>
+                      </button>
+                    </div>
+
+                    {formData.pausar_almoco && (
+                      <div className="grid grid-cols-2 gap-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Inicio del Almoço
+                          </label>
+                          <input
+                            type="time"
+                            value={formData.horario_almoco_inicio}
+                            onChange={(e) => setFormData(prev => ({ ...prev, horario_almoco_inicio: e.target.value }))}
+                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">
+                            Fin del Almoço
+                          </label>
+                          <input
+                            type="time"
+                            value={formData.horario_almoco_fim}
+                            onChange={(e) => setFormData(prev => ({ ...prev, horario_almoco_fim: e.target.value }))}
+                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Estadísticas */}
@@ -428,6 +597,30 @@ const CallTimingConfig = () => {
                       <span className="text-gray-400">Reintentos máx:</span>
                       <span className="text-white ml-2 font-bold">{formData.retry_attempts}</span>
                     </div>
+                    <div>
+                      <span className="text-gray-400">Horario operación:</span>
+                      <span className="text-white ml-2 font-bold">{formData.horario_inicio} - {formData.horario_fim}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Días activos:</span>
+                      <span className="text-white ml-2 font-bold">{formData.dias_semana.length} días</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Pausa almoço:</span>
+                      <span className={`ml-2 font-bold ${
+                        formData.pausar_almoco ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {formData.pausar_almoco ? 'Activada' : 'Desactivada'}
+                      </span>
+                    </div>
+                    {formData.pausar_almoco && (
+                      <div>
+                        <span className="text-gray-400">Horario almoço:</span>
+                        <span className="text-white ml-2 font-bold">
+                          {formData.horario_almoco_inicio} - {formData.horario_almoco_fim}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -456,4 +649,4 @@ const CallTimingConfig = () => {
   );
 };
 
-export default CallTimingConfig; 
+export default CallTimingConfig;

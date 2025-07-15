@@ -37,10 +37,11 @@ def validar_telefone_melhorado(numero: str) -> bool:
     # Padrões válidos para números brasileiros e internacionais
     patterns = [
         r'^\+\d{8,15}$',           # Formato internacional
-        r'^\d{8,11}$',             # Números locais (8-11 dígitos)
-        r'^(\d{2,3})\d{8,9}$',     # Com código de área
-        r'^(0\d{2})\d{8,9}$',      # Com 0 + código de área
-        r'^(\+55)(\d{2})\d{8,9}$', # Brasil formato completo
+        r'^\d{7,12}$',             # Números brasileiros (7-12 dígitos) - MODIFICADO
+        r'^(\d{2})\d{7,10}$',      # Código de área brasileiro + número (7-10 dígitos)
+        r'^(55)(\d{2})\d{7,10}$',  # Brasil: 55 + código de área + número
+        r'^(0\d{2})\d{8,9}$',      # Com 0 + código de área (outros países)
+        r'^(\+55)(\d{2})\d{8,9}$', # Brasil formato completo com +55
     ]
     
     for pattern in patterns:
@@ -152,9 +153,9 @@ async def upload_contatos(
         linhas_validas = []
         numeros_invalidos = 0
         
-        # Regex pré-compilada para máxima velocidade
+        # Regex pré-compilada para máxima velocidade - MODIFICADO PARA BRASIL
         import re
-        telefone_regex = re.compile(r'^[\d\s\+\-\(\)]{8,15}$')
+        telefone_regex = re.compile(r'^[\d\s\+\-\(\)]{7,15}$')  # Aceita de 7-15 caracteres
         numero_regex = re.compile(r'\d')
         
         for linha in linhas:
@@ -163,10 +164,10 @@ async def upload_contatos(
             
             if linha_limpa:
                 # Validação ultra-rápida com regex pré-compilada
-                if telefone_regex.match(linha_limpa) and len(numero_regex.findall(linha_limpa)) >= 8:
+                if telefone_regex.match(linha_limpa) and len(numero_regex.findall(linha_limpa)) >= 7:  # MODIFICADO: mínimo 7 dígitos
                     # Normalização mínima (apenas remover caracteres não-numéricos)
                     numero_limpo = re.sub(r'[^\d]', '', linha_limpa)
-                    if 8 <= len(numero_limpo) <= 15:
+                    if 7 <= len(numero_limpo) <= 15:  # MODIFICADO: aceita de 7-15 dígitos
                         linhas_validas.append(numero_limpo)
                     else:
                         numeros_invalidos += 1
@@ -632,4 +633,4 @@ async def upload_large_file(
 @router.options("/")
 async def options_root():
     """CORS para root."""
-    return {"message": "OK"} 
+    return {"message": "OK"}

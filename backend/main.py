@@ -285,9 +285,15 @@ except:
 cors_origins.extend([
     "http://127.0.0.1:3000",
     "https://localhost:3000",
-    "https://localhost:5173",
-    "*"  # Permitir todas as origens temporariamente para debugging
+    "https://localhost:5173"
 ])
+
+# Remover duplicatas e garantir que https://discador.vercel.app está incluído
+cors_origins = list(set(cors_origins))
+if "https://discador.vercel.app" not in cors_origins:
+    cors_origins.append("https://discador.vercel.app")
+
+print(f"🌐 CORS Origins configuradas: {cors_origins}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -705,6 +711,22 @@ async def options_campaigns():
 async def options_campanhas():
     """Endpoint OPTIONS para CORS - campanhas"""
     return {"message": "OK"}
+
+@missing_routes.get("/cors-test")
+async def cors_test():
+    """Endpoint para testar configuração de CORS"""
+    return {
+        "message": "CORS funcionando corretamente",
+        "cors_origins": cors_origins,
+        "timestamp": datetime.now().isoformat(),
+        "server": "discador-backend",
+        "status": "success"
+    }
+
+@missing_routes.options("/cors-test")
+async def options_cors_test():
+    """Endpoint OPTIONS para teste de CORS"""
+    return {"message": "CORS OPTIONS OK"}
 
 @missing_routes.get("/code2base/clis")
 async def listar_clis():
