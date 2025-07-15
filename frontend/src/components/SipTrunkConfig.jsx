@@ -24,6 +24,12 @@ const SipTrunkConfig = () => {
     codec_preferido: 'ulaw',
     codecs_permitidos: ['ulaw', 'alaw', 'g729'],
     
+    // Configurações de Roteamento e Códigos de Proveedor
+    prefixo_discagem: '',
+    sufixo_discagem: '',
+    codigo_pais: '+1',
+    codigo_area_default: '',
+    
     // Configurações SIP
     nat: 'auto_force_rport',
     qualify: 'yes',
@@ -34,6 +40,7 @@ const SipTrunkConfig = () => {
     // Limitações
     call_limit: 10,
     max_forwards: 20,
+    max_canais_simultaneos: 10,
     
     // Configurações avançadas
     fromuser: '',
@@ -128,6 +135,10 @@ const SipTrunkConfig = () => {
       contexto: 'from-trunk',
       codec_preferido: 'ulaw',
       codecs_permitidos: ['ulaw', 'alaw', 'g729'],
+      prefixo_discagem: '',
+      sufixo_discagem: '',
+      codigo_pais: '+1',
+      codigo_area_default: '',
       nat: 'auto_force_rport',
       qualify: 'yes',
       canreinvite: 'no',
@@ -135,6 +146,7 @@ const SipTrunkConfig = () => {
       disallow: 'all',
       call_limit: 10,
       max_forwards: 20,
+      max_canais_simultaneos: 10,
       fromuser: '',
       fromdomain: '',
       outboundproxy: '',
@@ -247,7 +259,20 @@ trustrpid=${trunkConfig.trustrpid}
 sendrpid=${trunkConfig.sendrpid}
 rtptimeout=${trunkConfig.rtptimeout}
 rtpholdtimeout=${trunkConfig.rtpholdtimeout}
-encryption=${trunkConfig.encryption}`;
+encryption=${trunkConfig.encryption}
+
+; === Configurações de Roteamento ===
+${trunkConfig.prefixo_discagem ? `; Prefixo de discagem: ${trunkConfig.prefixo_discagem}` : ''}
+${trunkConfig.sufixo_discagem ? `; Sufixo de discagem: ${trunkConfig.sufixo_discagem}` : ''}
+${trunkConfig.codigo_pais ? `; Código do país: ${trunkConfig.codigo_pais}` : ''}
+${trunkConfig.codigo_area_default ? `; Código de área padrão: ${trunkConfig.codigo_area_default}` : ''}
+
+; === Configurações de Capacidade ===
+max_channels=${trunkConfig.max_canais_simultaneos}
+
+; === Configurações de Caller ID ===
+${trunkConfig.callerid_padrao ? `callerid=${trunkConfig.callerid_padrao}` : ''}
+${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por campanha: habilitado' : '; Caller ID personalizado por campanha: desabilitado'}`;
 
     return config;
   };
@@ -536,6 +561,119 @@ encryption=${trunkConfig.encryption}`;
                 </div>
               </div>
 
+              {/* Configurações de Roteamento e Códigos de Proveedor */}
+              <div className="bg-yellow-50 rounded-lg p-4 mb-6">
+                <h4 className="font-semibold text-gray-800 mb-4">📞 Códigos de Proveedor e Roteamento</h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  Configure códigos que seu provedor VOIP exige antes do número de destino
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Prefixo de Discagem
+                      </label>
+                      <input
+                        type="text"
+                        value={trunkConfig.prefixo_discagem}
+                        onChange={(e) => setTrunkConfig(prev => ({
+                          ...prev,
+                          prefixo_discagem: e.target.value
+                        }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ex: 9, 0, 00"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Código que o provedor exige antes do número (ex: 9 para linha externa)
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Código do País
+                      </label>
+                      <input
+                        type="text"
+                        value={trunkConfig.codigo_pais}
+                        onChange={(e) => setTrunkConfig(prev => ({
+                          ...prev,
+                          codigo_pais: e.target.value
+                        }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ex: +55, +1, +54"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Código do país para chamadas internacionais
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Sufixo de Discagem
+                      </label>
+                      <input
+                        type="text"
+                        value={trunkConfig.sufixo_discagem}
+                        onChange={(e) => setTrunkConfig(prev => ({
+                          ...prev,
+                          sufixo_discagem: e.target.value
+                        }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ex: #, *, vazio"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Código que o provedor exige depois do número (opcional)
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Código de Área Padrão
+                      </label>
+                      <input
+                        type="text"
+                        value={trunkConfig.codigo_area_default}
+                        onChange={(e) => setTrunkConfig(prev => ({
+                          ...prev,
+                          codigo_area_default: e.target.value
+                        }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ex: 11, 21, 47"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Código de área para números locais sem DDD
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                  <h5 className="font-medium text-blue-800 mb-2">💡 Exemplo de Configuração:</h5>
+                  <div className="text-sm text-blue-700">
+                    <p><strong>Número original:</strong> 11987654321</p>
+                    <p><strong>Com prefixo "9":</strong> 911987654321</p>
+                    <p><strong>Com sufixo "#":</strong> 911987654321#</p>
+                    <p className="text-xs mt-2 text-blue-600">
+                      O sistema aplicará automaticamente estes códigos antes de discar
+                    </p>
+                  </div>
+                  
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h5 className="text-sm font-semibold text-blue-800 mb-2">💡 Casos de Uso Comunes</h5>
+                    <ul className="text-xs text-blue-700 space-y-1">
+                      <li><strong>Prefijo "0":</strong> Alguns provedores requerem "0" antes do número</li>
+                      <li><strong>Prefijo "9":</strong> Para acesso a linha externa em alguns sistemas</li>
+                      <li><strong>Sufijo "#":</strong> Para indicar fim de marcação</li>
+                      <li><strong>Código de país:</strong> Para normalizar números internacionais</li>
+                      <li><strong>Área por padrão:</strong> Para completar números locais</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
               {/* Configurações SIP */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
                 <div className="flex justify-between items-center mb-4">
@@ -694,6 +832,23 @@ encryption=${trunkConfig.encryption}`;
                           />
                         </div>
 
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Máximo Canais Simultâneos
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="1000"
+                            value={trunkConfig.max_canais_simultaneos}
+                            onChange={(e) => setTrunkConfig(prev => ({
+                              ...prev,
+                              max_canais_simultaneos: parseInt(e.target.value)
+                            }))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+
                         <div className="space-y-2">
                           <label className="flex items-center space-x-2">
                             <input
@@ -729,6 +884,69 @@ encryption=${trunkConfig.encryption}`;
                     </div>
                   </div>
                 )}
+
+                {/* Configurações de Caller ID */}
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">📞 Configurações de Caller ID</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Caller ID Padrão
+                      </label>
+                      <input
+                        type="text"
+                        value={trunkConfig.callerid_padrao || ''}
+                        onChange={(e) => setTrunkConfig(prev => ({
+                          ...prev,
+                          callerid_padrao: e.target.value
+                        }))}
+                        placeholder="Nome <numero>"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Exemplo: "Empresa LTDA" &lt;5511999999999&gt;
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Formato de Saída
+                      </label>
+                      <select
+                        value={trunkConfig.formato_callerid || 'completo'}
+                        onChange={(e) => setTrunkConfig(prev => ({
+                          ...prev,
+                          formato_callerid: e.target.value
+                        }))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="completo">Nome e Número</option>
+                        <option value="numero">Apenas Número</option>
+                        <option value="nome">Apenas Nome</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={trunkConfig.permitir_callerid_personalizado || false}
+                        onChange={(e) => setTrunkConfig(prev => ({
+                          ...prev,
+                          permitir_callerid_personalizado: e.target.checked
+                        }))}
+                        className="rounded text-blue-600"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        Permitir Caller ID Personalizado por Campanha
+                      </span>
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1 ml-6">
+                      Permite que cada campanha defina seu próprio Caller ID
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Prévia da Configuração Asterisk */}
@@ -765,4 +983,4 @@ encryption=${trunkConfig.encryption}`;
   );
 };
 
-export default SipTrunkConfig; 
+export default SipTrunkConfig;
