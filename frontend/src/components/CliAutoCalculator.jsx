@@ -2,44 +2,37 @@ import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from './ui/card';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from './ui/tabs';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Select } from './ui/select';
+import { Badge } from './ui/badge';
+import { Alert, AlertDescription } from './ui/alert';
+import { Progress } from './ui/progress';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
-import {
-  Calculator,
-  Settings,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  Info,
-  Phone,
-  Clock,
-  Users,
-  BarChart3,
-  Zap,
-  Shield
-} from 'lucide-react';
-import { toast } from 'sonner';
+  CalculatorIcon,
+  Cog6ToothIcon as Settings,
+  ArrowTrendingUpIcon as TrendingUp,
+  ExclamationTriangleIcon as AlertTriangle,
+  CheckCircleIcon as CheckCircle,
+  InformationCircleIcon as Info,
+  PhoneIcon as Phone,
+  ClockIcon as Clock,
+  UsersIcon as Users,
+  ChartBarIcon as BarChart3,
+  BoltIcon as Zap,
+  ShieldCheckIcon as Shield
+} from '@heroicons/react/24/outline';
+import { toast } from './ui/toast';
 
 const CliAutoCalculator = () => {
   const [activeTab, setActiveTab] = useState('calculator');
@@ -239,12 +232,12 @@ const CliAutoCalculator = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Calculator className="h-5 w-5" />
+                <CalculatorIcon className="h-5 w-5" />
                 <span>Cálculo de CLIs Necessários</span>
               </CardTitle>
-              <CardDescription>
+              <div className="text-sm text-gray-600">
                 Calcule quantos CLIs são necessários para sua campanha baseado no volume e velocidade de discagem
-              </CardDescription>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -432,9 +425,9 @@ const CliAutoCalculator = () => {
                 <Settings className="h-5 w-5" />
                 <span>Criar Configuração Automática</span>
               </CardTitle>
-              <CardDescription>
+              <div className="text-sm text-gray-600">
                 Crie uma configuração completa com geração automática de CLIs
-              </CardDescription>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -495,17 +488,16 @@ const CliAutoCalculator = () => {
                 
                 <div className="space-y-2">
                   <Label htmlFor="config_country">País</Label>
-                  <Select value={configForm.country} onValueChange={(value) => setConfigForm({...configForm, country: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o país" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="usa">Estados Unidos</SelectItem>
-                      <SelectItem value="canada">Canadá</SelectItem>
-                      <SelectItem value="mexico">México</SelectItem>
-                      <SelectItem value="brazil">Brasil</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Select 
+                    value={configForm.country} 
+                    onChange={(e) => setConfigForm({...configForm, country: e.target.value})}
+                    options={[
+                      { value: 'usa', label: 'Estados Unidos' },
+                      { value: 'canada', label: 'Canadá' },
+                      { value: 'mexico', label: 'México' },
+                      { value: 'brazil', label: 'Brasil' }
+                    ]}
+                  />
                 </div>
               </div>
               
@@ -555,9 +547,9 @@ const CliAutoCalculator = () => {
                 <BarChart3 className="h-5 w-5" />
                 <span>Gerenciamento de Configurações</span>
               </CardTitle>
-              <CardDescription>
+              <div className="text-sm text-gray-600">
                 Monitore e gerencie suas configurações automáticas de CLIs
-              </CardDescription>
+              </div>
             </CardHeader>
             <CardContent>
               {configs.length === 0 ? (
@@ -588,16 +580,16 @@ const CliAutoCalculator = () => {
                 <Info className="h-5 w-5" />
                 <span>Exemplos Práticos</span>
               </CardTitle>
-              <CardDescription>
+              <div className="text-sm text-gray-600">
                 Entenda como o sistema calcula CLIs para diferentes cenários
-              </CardDescription>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="border-blue-200">
                   <CardHeader>
                     <CardTitle className="text-lg text-blue-700">Campanha Pequena</CardTitle>
-                    <CardDescription>Volume baixo, operação local</CardDescription>
+                    <div className="text-sm text-gray-600">Volume baixo, operação local</div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 text-sm">
@@ -629,7 +621,7 @@ const CliAutoCalculator = () => {
                 <Card className="border-green-200">
                   <CardHeader>
                     <CardTitle className="text-lg text-green-700">Campanha Média</CardTitle>
-                    <CardDescription>Volume moderado, operação regional</CardDescription>
+                    <div className="text-sm text-gray-600">Volume moderado, operação regional</div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 text-sm">
@@ -661,7 +653,7 @@ const CliAutoCalculator = () => {
                 <Card className="border-orange-200">
                   <CardHeader>
                     <CardTitle className="text-lg text-orange-700">Campanha Grande</CardTitle>
-                    <CardDescription>Alto volume, operação nacional</CardDescription>
+                    <div className="text-sm text-gray-600">Alto volume, operação nacional</div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 text-sm">
@@ -693,7 +685,7 @@ const CliAutoCalculator = () => {
                 <Card className="border-red-200">
                   <CardHeader>
                     <CardTitle className="text-lg text-red-700">Campanha Intensiva</CardTitle>
-                    <CardDescription>Discagem muito agressiva</CardDescription>
+                    <div className="text-sm text-gray-600">Discagem muito agressiva</div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 text-sm">
