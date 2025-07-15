@@ -211,9 +211,9 @@ const CliAutoCalculator = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="calculator" className="flex items-center space-x-2">
-            <Calculator className="h-4 w-4" />
-            <span>Calculadora</span>
-          </TabsTrigger>
+              <CalculatorIcon className="h-4 w-4" />
+              <span>Calculadora</span>
+            </TabsTrigger>
           <TabsTrigger value="config" className="flex items-center space-x-2">
             <Settings className="h-4 w-4" />
             <span>Configuração</span>
