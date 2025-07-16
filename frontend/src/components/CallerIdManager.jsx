@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { makeApiRequest } from '../config/api';
+import { useCampaigns } from '../contexts/CampaignContext';
 
 const CallerIdManager = () => {
   const [activeTab, setActiveTab] = useState('trunk');
   const [trunks, setTrunks] = useState([]);
-  const [campaigns, setCampaigns] = useState([]);
   const [callerConfigs, setCallerConfigs] = useState([]);
   const [selectedTrunk, setSelectedTrunk] = useState(null);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Usar contexto de campanhas
+  const { campaigns } = useCampaigns();
 
   const [formData, setFormData] = useState({
     caller_name: '',
@@ -29,16 +32,7 @@ const CallerIdManager = () => {
         setTrunks(trunksResponse.trunks);
       }
 
-      // Buscar campanhas (si existe el endpoint)
-      try {
-        const campaignsResponse = await makeApiRequest('/campaigns');
-        if (campaignsResponse?.campaigns) {
-          setCampaigns(campaignsResponse.campaigns);
-        }
-      } catch (err) {
-        console.log('Campañas no disponibles aún');
-        setCampaigns([]);
-      }
+      // Campanhas são obtidas do contexto, não precisamos buscar aqui
 
       // Buscar configuraciones de Caller ID
       try {

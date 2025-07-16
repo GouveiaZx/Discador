@@ -143,3 +143,84 @@ class PresionE1Service:
                 status_code=500,
                 detail=f"Erro interno ao buscar campanha: {str(e)}"
             )
+    
+    async def excluir_campana_otimizada(self, campana_id: int) -> Dict[str, Any]:
+        """
+        Exclui completamente uma campanha e todos os dados relacionados.
+        
+        Args:
+            campana_id: ID da campanha a ser excluída
+            
+        Returns:
+            Resultado da operação
+        """
+        try:
+            import requests
+            
+            logger.info(f"🗑️ Excluindo campanha {campana_id} e dados relacionados")
+            
+            # Primeiro, parar a campanha se estiver ativa
+            try:
+                campana = self.obter_campana(campana_id)
+                if campana.get("activa"):
+                    await self.parar_campana(campana_id, "system", "Exclusão da campanha")
+            except Exception as e:
+                logger.warning(f"Erro ao parar campanha antes da exclusão: {str(e)}")
+            
+            # Excluir do Supabase
+            supabase_url = f"{self._supabase_config['url']}/rest/v1/campanhas_presione1"
+            params = {"id": f"eq.{campana_id}"}
+            
+            response = requests.delete(
+                supabase_url,
+                headers=self._supabase_config["headers"],
+                params=params,
+                timeout=30
+            )
+            
+            if response.status_code == 204:
+                logger.info(f"✅ Campanha {campana_id} excluída do Supabase com sucesso")
+            else:
+                logger.warning(f"⚠️ Resposta inesperada do Supabase: {response.status_code}")
+            
+            # Excluir chamadas relacionadas
+            try:
+                llamadas_url = f"{self._supabase_config['url']}/rest/v1/llamadas_presione1"
+                llamadas_params = {"campana_id": f"eq.{campana_id}"}
+                
+                llamadas_response = requests.delete(
+                    llamadas_url,
+                    headers=self._supabase_config["headers"],
+                    params=llamadas_params,
+                    timeout=30
+                )
+                
+                if llamadas_response.status_code == 204:
+                    logger.info(f"✅ Chamadas da campanha {campana_id} excluídas com sucesso")
+                else:
+                    logger.warning(f"⚠️ Resposta inesperada ao excluir chamadas: {llamadas_response.status_code}")
+                    
+            except Exception as e:
+                logger.warning(f"Erro ao excluir chamadas da campanha {campana_id}: {str(e)}")
+            
+            # Remover da memória se existir
+            if campana_id in self.campanhas_ativas:
+                del self.campanhas_ativas[campana_id]
+            
+            # Limpar cache
+            clear_campaign_cache(str(campana_id))
+            
+            logger.info(f"✅ Campanha {campana_id} excluída completamente")
+            
+            return {
+                "success": True,
+                "message": "Campanha excluída com sucesso",
+                "campana_id": campana_id
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao excluir campanha {campana_id}: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Erro ao excluir campanha: {str(e)}"
+            )

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../config/api';
+import { useCampaigns } from '../contexts/CampaignContext';
 
 const DialerControl = () => {
+  const { campaigns } = useCampaigns();
   const [dialerStatus, setDialerStatus] = useState({
     running: false,
     active_campaigns: 0,
@@ -9,8 +11,6 @@ const DialerControl = () => {
     concurrent_calls: 0,
     asterisk_connected: false
   });
-  
-  const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [dialerConfig, setDialerConfig] = useState({
@@ -63,15 +63,7 @@ const DialerControl = () => {
     }
   };
 
-  // Carregar campanhas ativas
-  const loadActiveCampaigns = async () => {
-    try {
-      const response = await makeApiRequest('/dialer/campaigns');
-      setCampaigns(response.campaigns || []);
-    } catch (error) {
-      console.error('Erro ao carregar campanhas:', error);
-    }
-  };
+
 
   // Iniciar discador
   const startDialer = async () => {
@@ -129,7 +121,6 @@ const DialerControl = () => {
         })
       });
       showMessage('success', `Campanha ${action === 'start' ? 'iniciada' : action === 'pause' ? 'pausada' : action === 'resume' ? 'retomada' : 'parada'} com sucesso!`);
-      await loadActiveCampaigns();
     } catch (error) {
       showMessage('error', 'Erro ao controlar campanha: ' + error.message);
     } finally {
@@ -140,12 +131,10 @@ const DialerControl = () => {
   // Carregar dados iniciais
   useEffect(() => {
     loadDialerStatus();
-    loadActiveCampaigns();
     
     // Atualizar status a cada 5 segundos
     const interval = setInterval(() => {
       loadDialerStatus();
-      loadActiveCampaigns();
     }, 5000);
     
     return () => clearInterval(interval);

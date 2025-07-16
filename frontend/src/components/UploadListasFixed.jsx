@@ -1,31 +1,24 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Upload, AlertCircle, CheckCircle, X, ChevronDown, FileText, Users, Phone, Loader } from 'lucide-react';
 import api from '../config/api';
+import { useCampaigns } from '../contexts/CampaignContext';
 
 const UploadListasFixed = () => {
+  const { campaigns } = useCampaigns();
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState({});
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [campaigns, setCampaigns] = useState([]);
   const [selectedCampaign, setSelectedCampaign] = useState('');
   const [progress, setProgress] = useState({});
 
   useEffect(() => {
-    loadCampaigns();
-  }, []);
-
-  const loadCampaigns = async () => {
-    try {
-      const response = await api.get('/campaigns');
-      if (response.data && response.data.campaigns) {
-        setCampaigns(response.data.campaigns);
-      }
-    } catch (error) {
-      console.error('Error al cargar campañas:', error);
+    // Selecionar primeira campanha se disponível
+    if (campaigns.length > 0 && !selectedCampaign) {
+      setSelectedCampaign(campaigns[0].id.toString());
     }
-  };
+  }, [campaigns, selectedCampaign]);
 
   const processLargeFile = async (file, campaignId) => {
     const fileId = file.name;
@@ -430,4 +423,4 @@ const UploadListasFixed = () => {
   );
 };
 
-export default UploadListasFixed; 
+export default UploadListasFixed;

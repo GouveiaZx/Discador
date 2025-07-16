@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { makeApiRequest } from '../config/api.js';
+import { useCampaigns } from '../contexts/CampaignContext';
 
 /**
  * Componente de Estado Profesional para Upload
@@ -56,7 +57,7 @@ const FileStates = {
  * Componente para upload y gestión de listas de contactos profesional
  */
 function UploadListas() {
-  const [campaigns, setCampaigns] = useState([]);
+  const { campaigns } = useCampaigns();
   const [selectedCampaign, setSelectedCampaign] = useState('');
   const [file, setFile] = useState(null);
   const [fileState, setFileState] = useState(FileStates.IDLE);
@@ -68,9 +69,11 @@ function UploadListas() {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    // Cargar campañas disponibles
-    loadCampaigns();
-  }, []);
+    // Selecionar primeira campanha se disponível
+    if (campaigns.length > 0 && !selectedCampaign) {
+      setSelectedCampaign(campaigns[0].id.toString());
+    }
+  }, [campaigns, selectedCampaign]);
 
   // Debug: Log dos estados principais
   useEffect(() => {
@@ -84,68 +87,7 @@ function UploadListas() {
     });
   }, [fileState, uploading, selectedCampaign, file, campaigns, previewData]);
 
-  /**
-   * Buscar campañas de la API
-   */
-  const loadCampaigns = async () => {
-    try {
-      const data = await makeApiRequest('/campaigns');
-      console.log('📋 Campanhas carregadas:', data);
-      const campaignsList = data.campaigns || [];
-      setCampaigns(campaignsList);
-      
-      // Si no hay campañas, crear una campaña por defecto automáticamente
-      if (campaignsList.length === 0) {
-        console.log('🏗️ Creando campaña por defecto...');
-        await createDefaultCampaign();
-      } else {
-        // Si hay campañas, seleccionar la primera automáticamente
-        setSelectedCampaign(campaignsList[0].id.toString());
-      }
-    } catch (err) {
-      console.error('❌ Error al cargar campañas:', err);
-              // Si falla al cargar campañas, crear una por defecto
-      await createDefaultCampaign();
-    }
-  };
 
-  /**
-       * Crear campaña por defecto para carga
-   */
-  const createDefaultCampaign = async () => {
-    try {
-      const defaultCampaign = {
-        name: 'Campaña Carga Automática',
-        description: 'Campaña creada automáticamente para cargas de listas',
-        status: 'active',
-        wait_time: 2.0
-      };
-
-              console.log('🎯 Creando campaña por defecto:', defaultCampaign);
-      const response = await makeApiRequest('/campaigns', 'POST', defaultCampaign);
-      
-      if (response && response.id) {
-        const newCampaign = {
-          id: response.id,
-          name: defaultCampaign.name,
-          status: defaultCampaign.status
-        };
-        
-        setCampaigns([newCampaign]);
-        setSelectedCampaign(response.id.toString());
-        console.log('✅ Campaña por defecto creada:', newCampaign);
-      }
-    } catch (err) {
-              console.error('❌ Error al crear campaña por defecto:', err);
-        // Si falla, permitir carga sin campaña
-      setCampaigns([{
-        id: 'default',
-          name: 'Sin Campaña (Carga Directa)',
-        status: 'active'
-      }]);
-      setSelectedCampaign('default');
-    }
-  };
 
   const handleFileSelect = (selectedFile) => {
     if (!selectedFile) return;
@@ -748,4 +690,4 @@ function UploadListas() {
   );
 }
 
-export default UploadListas; 
+export default UploadListas;

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { makeApiRequest } from '../config/api';
+import { useCampaigns } from '../contexts/CampaignContext';
 
 const CallTimingConfig = () => {
-  const [campaigns, setCampaigns] = useState([]);
+  const { campaigns } = useCampaigns();
   const [timingConfigs, setTimingConfigs] = useState([]);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -125,17 +126,6 @@ const CallTimingConfig = () => {
     try {
       setError(null);
       setLoading(true);
-
-      // Buscar campañas (si existe el endpoint)
-      try {
-        const campaignsResponse = await makeApiRequest('/campaigns');
-        if (campaignsResponse?.campaigns) {
-          setCampaigns(campaignsResponse.campaigns);
-        }
-      } catch (err) {
-        console.log('Campañas no disponibles aún');
-        setCampaigns([]);
-      }
 
       // Buscar configuraciones de timing
       try {

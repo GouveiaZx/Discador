@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { API_BASE_URL } from '../config/api';
+import { useCampaigns } from '../contexts/CampaignContext';
 
 // Ícones usando SVG simples (consistente con el resto del proyecto)
 const Icons = {
@@ -76,8 +77,8 @@ const makeApiRequest = async (endpoint, options = {}) => {
 };
 
 const AudioManager = () => {
+  const { campaigns } = useCampaigns();
   const [audioFiles, setAudioFiles] = useState([]);
-  const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
@@ -100,7 +101,6 @@ const AudioManager = () => {
 
   useEffect(() => {
     loadAudioFiles();
-    loadCampaigns();
   }, []);
 
   const loadAudioFiles = async () => {
@@ -116,14 +116,7 @@ const AudioManager = () => {
     }
   };
 
-  const loadCampaigns = async () => {
-    try {
-      const response = await makeApiRequest('/campaigns');
-      setCampaigns(response.data || response || []);
-    } catch (error) {
-      console.error('Erro ao carregar campanhas:', error);
-    }
-  };
+
 
   const loadStats = async () => {
     try {
@@ -599,4 +592,4 @@ const AudioManager = () => {
   );
 };
 
-export default AudioManager; 
+export default AudioManager;

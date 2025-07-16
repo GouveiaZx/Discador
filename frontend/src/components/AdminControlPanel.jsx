@@ -313,6 +313,8 @@ const AdminControlPanel = () => {
       });
 
       showMessage('success', 'Campanha deletada com sucesso!');
+      
+      // Limpar seleção e dados da campanha
       setSelectedCampaign('');
       setCampaignData({
         name: '',
@@ -320,8 +322,15 @@ const AdminControlPanel = () => {
         maxConcurrentCalls: 10,
         callsPerSecond: 1
       });
-      loadCampaigns();
-      refreshCampaigns();
+      
+      // Forçar atualização do estado local removendo a campanha deletada
+      setCampaigns(prevCampaigns => 
+        prevCampaigns.filter(campaign => campaign.id.toString() !== selectedCampaign)
+      );
+      
+      // Atualizar contexto global e recarregar lista
+      await refreshCampaigns(true); // Force refresh
+      await loadCampaigns(); // Reload local state
       
     } catch (error) {
       console.error('Erro ao deletar campanha:', error);

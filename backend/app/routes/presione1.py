@@ -213,12 +213,12 @@ def listar_campanhas_presione1(
         )
 
 
-@router.delete("/campanhas/{campana_id}")
+@router.delete("/campanhas/{campana_id}", status_code=204)
 @sync_operation(operation_type="delete_campaign")
 async def excluir_campana_presione1(
     campana_id: int,
     service: PresionE1Service = Depends(get_presione1_service)
-) -> dict:
+):
     """
     Exclui uma campanha presione1 e todos os dados relacionados.
     
@@ -237,12 +237,13 @@ async def excluir_campana_presione1(
         logger.info(f"🗑️ Iniciando exclusão da campanha presione1 {validated_id}")
         
         # Usar o método otimizado de exclusão
-        resultado = await service.excluir_campana_otimizada(validated_id)
+        await service.excluir_campana_otimizada(validated_id)
         
         # Clear cache after successful deletion
         clear_campaign_cache()
         
-        return resultado
+        # Retornar sem conteúdo com status 204
+        return
         
     except HTTPException:
         raise

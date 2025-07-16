@@ -1061,7 +1061,7 @@ async def atualizar_campaign_alias(campaign_id: int, campaign_data: dict):
             detail=f"Erro interno ao atualizar campanha: {str(e)}"
         )
 
-@missing_routes.delete("/campaigns/{campaign_id}")
+@missing_routes.delete("/campaigns/{campaign_id}", status_code=204)
 async def deletar_campaign_alias(campaign_id: int):
     """Deleta uma campanha do Supabase"""
     try:
@@ -1079,10 +1079,8 @@ async def deletar_campaign_alias(campaign_id: int):
             )
             
             if response.status_code == 204:
-                return {
-                    "status": "success",
-                    "message": "Campanha deletada com sucesso"
-                }
+                # Retornar sem conteúdo com status 204
+                return
             elif response.status_code == 404:
                 raise HTTPException(
                     status_code=404,
@@ -1096,11 +1094,8 @@ async def deletar_campaign_alias(campaign_id: int):
         except Exception as supabase_error:
             logger.error(f"Erro ao deletar do Supabase: {str(supabase_error)}")
         
-        # Retorno mock se Supabase falhar (mas campanha não existe)
-        return {
-            "status": "success",
-            "message": f"Campanha {campaign_id} deletada com sucesso (mock)"
-        }
+        # Retorno sem conteúdo se Supabase falhar (mas consideramos deletado)
+        return
         
     except HTTPException:
         raise
