@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { makeApiRequest } from '../config/api';
+import { campaignSync, SYNC_CONFIG } from '../config/sync';
 
 const CampaignContext = createContext(null);
 
@@ -124,7 +125,9 @@ export const CampaignProvider = ({ children }) => {
               ...campaign, 
               status: newStatus,
               isActive: newStatus === 'active',
-              isPaused: newStatus === 'paused'
+              isPaused: newStatus === 'paused',
+              activa: newStatus === 'active',
+              pausada: newStatus === 'paused'
             }
           : campaign
       );
@@ -136,16 +139,33 @@ export const CampaignProvider = ({ children }) => {
       return updated;
     });
     
+    // Limpar cache para garantir sincronização
+    campaignSync.clearCache();
+    
     console.log(`🔄 [CampaignContext] Status da campanha ${campaignId} atualizado para: ${newStatus}`);
   }, []);
 
   /**
    * Forçar atualização das campanhas
    */
-  const refreshCampaigns = useCallback(() => {
-    setLoading(true);
-    fetchCampaigns();
-  }, [fetchCampaigns]);
+  const refreshCampaigns = useCallback(async (forceRefresh = false) => {
+    try {
+      setLoading(true);
+      console.log('🔄 Atualizando campanhas...');
+      
+      // Usar o novo serviço de sincronização
+      const campaigns = await campaignSync.listCampaigns(forceRefresh);
+      
+      setCampaigns(campaigns);
+      console.log('✅ Campanhas atualizadas:', campaigns.length);
+      setError(null); // Limpar erros anteriores
+    } catch (error) {
+      console.error('❌ Erro ao buscar campanhas:', error);
+      setError('Erro ao carregar campanhas: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   /**
    * Obter campanha por ID
@@ -169,14 +189,16 @@ export const CampaignProvider = ({ children }) => {
   // Configurar atualização automática
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log('🔄 [CampaignContext] Atualização automática das campanhas');
-      fetchCampaigns();
-    }, REFRESH_INTERVAL);
+      if (!loading) {
+        console.log('🔄 [CampaignContext] Atualização automática das campanhas');
+        refreshCampaigns(false); // Usar cache quando possível
+      }
+    }, SYNC_CONFIG.CAMPAIGN_REFRESH_INTERVAL);
 
     return () => {
       clearInterval(interval);
     };
-  }, [fetchCampaigns]);
+  }, [loading, refreshCampaigns]);
 
   const value = {
     // Estados

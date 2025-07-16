@@ -10,8 +10,8 @@ router = APIRouter(prefix="/api/cli-auto", tags=["CLI Auto Calculator"])
 # Schemas
 class CliCalculationRequest(BaseModel):
     total_numbers: int = Field(..., gt=0, description="Quantidade total de números")
-    calls_per_hour: int = Field(500, gt=0, le=2000, description="Chamadas por hora")
-    daily_call_limit: int = Field(100, gt=0, le=1000, description="Limite diário por CLI")
+    calls_per_hour: int = Field(500, gt=0, le=5000, description="Chamadas por hora (sem limite rígido)")
+    daily_call_limit: int = Field(100, gt=0, le=10000, description="Limite diário por CLI (configurável)")
     work_hours: int = Field(8, gt=0, le=24, description="Horas de trabalho por dia")
     country: str = Field("usa", description="País")
 

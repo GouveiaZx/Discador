@@ -18,6 +18,31 @@ except ImportError:
     def obtener_sesion():
         """Fallback para obtener_sesion quando não está disponível"""
         return None
+
+try:
+    from app.config.database_sync import (
+        sync_operation,
+        DatabaseValidator,
+        clear_campaign_cache
+    )
+except ImportError:
+    # Fallback decorators when sync module is not available
+    def sync_operation(operation_type="unknown"):
+        def decorator(func):
+            return func
+        return decorator
+    
+    class DatabaseValidator:
+        @staticmethod
+        def validate_campaign_data(data):
+            return data
+        
+        @staticmethod
+        def validate_campaign_id(campaign_id):
+            return campaign_id
+    
+    def clear_campaign_cache():
+        pass
         
 try:
     from app.services.presione1_service import PresionE1Service
@@ -119,6 +144,7 @@ def get_presione1_service(db: Session = Depends(obtener_sesion)) -> PresionE1Ser
 
 
 @router.post("/campanhas", response_model=CampanaPresione1Response)
+@sync_operation(operation_type="create_campaign")
 def crear_campana_presione1(
     campana_data: CampanaPresione1Create,
     db: Session = Depends(obtener_sesion),
@@ -141,7 +167,14 @@ def crear_campana_presione1(
     4. Se não pressionar ou pressionar outra tecla: encerra
     """
     try:
-        campana = service.crear_campana(campana_data)
+        # Validate input data
+        validated_data = DatabaseValidator.validate_campaign_data(campana_data)
+        
+        campana = service.crear_campana(validated_data)
+        
+        # Clear cache after successful creation
+        clear_campaign_cache()
+        
         return CampanaPresione1Response.from_orm(campana)
         
     except HTTPException:
@@ -180,6 +213,47 @@ def listar_campanhas_presione1(
         )
 
 
+@router.delete("/campanhas/{campana_id}")
+@sync_operation(operation_type="delete_campaign")
+async def excluir_campana_presione1(
+    campana_id: int,
+    service: PresionE1Service = Depends(get_presione1_service)
+) -> dict:
+    """
+    Exclui uma campanha presione1 e todos os dados relacionados.
+    
+    **Operações realizadas**:
+    - Para a campanha se estiver ativa
+    - Remove todas las llamadas da campanha
+    - Exclui a campanha presione1 do Supabase
+    - Limpa cache relacionado
+    
+    **⚠️ ATENÇÃO**: Esta operação é irreversível!
+    """
+    try:
+        # Validate campaign ID
+        validated_id = DatabaseValidator.validate_campaign_id(campana_id)
+        
+        logger.info(f"🗑️ Iniciando exclusão da campanha presione1 {validated_id}")
+        
+        # Usar o método otimizado de exclusão
+        resultado = await service.excluir_campana_otimizada(validated_id)
+        
+        # Clear cache after successful deletion
+        clear_campaign_cache()
+        
+        return resultado
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao excluir campanha presione1 {campana_id}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro interno ao excluir campanha: {str(e)}"
+        )
+
+
 @router.get("/campanhas/{campana_id}", response_model=CampanaPresione1Response)
 def obter_campana_presione1(
     campana_id: int,
@@ -201,6 +275,7 @@ def obter_campana_presione1(
 
 
 @router.put("/campanhas/{campana_id}", response_model=CampanaPresione1Response)
+@sync_operation(operation_type="update_campaign")
 def atualizar_campana_presione1(
     campana_id: int,
     dados_atualizacao: CampanaPresione1Update,
@@ -213,7 +288,15 @@ def atualizar_campana_presione1(
     Pare a campanha primeiro para fazer alterações.
     """
     try:
-        campana = service.atualizar_campana(campana_id, dados_atualizacao)
+        # Validate campaign ID and input data
+        validated_id = DatabaseValidator.validate_campaign_id(campana_id)
+        validated_data = DatabaseValidator.validate_campaign_data(dados_atualizacao)
+        
+        campana = service.atualizar_campana(validated_id, validated_data)
+        
+        # Clear cache after successful update
+        clear_campaign_cache()
+        
         return CampanaPresione1Response.from_orm(campana)
         
     except HTTPException:
@@ -227,6 +310,7 @@ def atualizar_campana_presione1(
 
 
 @router.post("/campanhas/{campana_id}/iniciar")
+@sync_operation(operation_type="start_campaign")
 async def iniciar_campana_presione1(
     campana_id: int,
     request: IniciarCampanaRequest,
@@ -245,7 +329,14 @@ async def iniciar_campana_presione1(
     **Monitoramento**: Use `/campanhas/{id}/monitor` para acompanhar progresso
     """
     try:
-        resultado = await service.iniciar_campana(campana_id, request.usuario_id)
+        # Validate campaign ID
+        validated_id = DatabaseValidator.validate_campaign_id(campana_id)
+        
+        resultado = await service.iniciar_campana(validated_id, request.usuario_id)
+        
+        # Clear cache after successful start
+        clear_campaign_cache()
+        
         return resultado
         
     except HTTPException:
@@ -259,6 +350,7 @@ async def iniciar_campana_presione1(
 
 
 @router.post("/campanhas/{campana_id}/pausar")
+@sync_operation(operation_type="pause_campaign")
 async def pausar_campana_presione1(
     campana_id: int,
     request: PausarCampanaRequest,
@@ -277,7 +369,14 @@ async def pausar_campana_presione1(
     - Continua de onde parou
     """
     try:
-        resultado = await service.pausar_campana(campana_id, request.pausar, request.motivo)
+        # Validate campaign ID
+        validated_id = DatabaseValidator.validate_campaign_id(campana_id)
+        
+        resultado = await service.pausar_campana(validated_id, request.pausar, request.motivo)
+        
+        # Clear cache after successful pause/resume
+        clear_campaign_cache()
+        
         return resultado
         
     except HTTPException:
@@ -291,6 +390,7 @@ async def pausar_campana_presione1(
 
 
 @router.post("/campanhas/{campana_id}/retomar")
+@sync_operation(operation_type="resume_campaign")
 async def retomar_campana_presione1(
     campana_id: int,
     service: PresionE1Service = Depends(get_presione1_service)
@@ -304,8 +404,15 @@ async def retomar_campana_presione1(
     - Marca campanha como não pausada
     """
     try:
+        # Validate campaign ID
+        validated_id = DatabaseValidator.validate_campaign_id(campana_id)
+        
         # Usar a função pausar_campana com pausar=False para retomar
-        resultado = await service.pausar_campana(campana_id, False, "Campanha retomada")
+        resultado = await service.pausar_campana(validated_id, False, "Campanha retomada")
+        
+        # Clear cache after successful resume
+        clear_campaign_cache()
+        
         return resultado
         
     except HTTPException:
@@ -319,6 +426,7 @@ async def retomar_campana_presione1(
 
 
 @router.post("/campanhas/{campana_id}/parar")
+@sync_operation(operation_type="stop_campaign")
 async def parar_campana_presione1(
     campana_id: int,
     service: PresionE1Service = Depends(get_presione1_service)
@@ -335,7 +443,14 @@ async def parar_campana_presione1(
     **Nota**: Para reiniciar será necessário usar `/iniciar` novamente
     """
     try:
-        resultado = await service.parar_campana(campana_id)
+        # Validate campaign ID
+        validated_id = DatabaseValidator.validate_campaign_id(campana_id)
+        
+        resultado = await service.parar_campana(validated_id)
+        
+        # Clear cache after successful stop
+        clear_campaign_cache()
+        
         return resultado
         
     except HTTPException:
@@ -662,6 +777,9 @@ async def resetar_llamadas_campana(
             status_code=500,
             detail="Erro interno ao resetar llamadas da campanha"
         )
+
+
+
 
 
 @router.get("/campanhas/{campana_id}/investigar-llamadas")

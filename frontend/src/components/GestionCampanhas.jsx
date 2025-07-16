@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { makeApiRequest } from '../config/api.js';
 import { useCampaigns } from '../contexts/CampaignContext';
+import { campaignSync, withRetry } from '../config/sync';
 
 /**
  * Componente de Métrica de Campanha Profissional
@@ -127,7 +128,8 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       }
       
       console.log('🚀 Dados para criar campanha:', formData);
-      const createResponse = await makeApiRequest('/campaigns', 'POST', formData);
+      // Usar o novo serviço de sincronização
+      const createResponse = await campaignSync.createCampaign(formData);
       console.log('✅ Resposta da API de criação:', createResponse);
       
       // A API retorna um objeto com id, name, message etc. quando cria com sucesso
@@ -144,9 +146,9 @@ function GestionCampanhas({ onOpenCampaignControl }) {
         console.log('✅ Condição atendida! ID encontrado:', createResponse.id);
         setSuccess('Campaña creada con éxito');
         
-        // Recarregar a lista após a criação
+        // Recarregar a lista após a criação com refresh forçado
         console.log('🔄 Recarregando lista de campanhas...');
-        refreshCampaigns();
+        refreshCampaigns(true);
         handleCloseModal();
         
         // Limpar mensagem de sucesso após 5 segundos
@@ -206,13 +208,14 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       setSuccess('');
       
       console.log('🔄 Dados para atualizar campanha:', formData);
-      const updateResponse = await makeApiRequest(`/campaigns/${editingCampanha.id}`, 'PUT', formData);
+      // Usar o novo serviço de sincronização
+      const updateResponse = await campaignSync.updateCampaign(editingCampanha.id, formData);
       console.log('🔄 Resposta da atualização:', updateResponse);
       
       // A API retorna um objeto com id, name, message etc. quando atualiza com sucesso
       if (updateResponse && updateResponse.id) {
         setSuccess('Campaña actualizada con éxito');
-        refreshCampaigns();
+        refreshCampaigns(true); // Refresh forçado
         handleCloseModal();
         
         // Limpar mensagem de sucesso após 5 segundos
@@ -229,7 +232,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
   };
 
   const handleDeleteCampaign = async (campaignId) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar esta campaña?')) {
+    if (!confirm('¿Estás seguro de que deseas eliminar esta campaña? Esta operación es irreversible y eliminará todos los datos relacionados.')) {
       return;
     }
 
@@ -238,21 +241,56 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       setError('');
       setSuccess('');
       
-      const deleteResponse = await makeApiRequest(`/campaigns/${campaignId}`, 'DELETE');
-      console.log('🗑️ Resposta da exclusão:', deleteResponse);
+      console.log('🗑️ Iniciando exclusão otimizada da campanha:', campaignId);
       
-      // A API retorna um objeto com message quando deleta com sucesso
-      if (deleteResponse && (deleteResponse.mensaje || deleteResponse.message)) {
-        setSuccess(deleteResponse.mensaje || 'Campaña eliminada con éxito');
-        refreshCampaigns();
+      // Usar o novo serviço de sincronização com retry automático
+      const deleteResponse = await campaignSync.deleteCampaign(campaignId);
+      console.log('✅ Resposta da exclusão otimizada:', deleteResponse);
+      
+      // O novo endpoint retorna informações detalhadas sobre as operações realizadas
+      if (deleteResponse && deleteResponse.success) {
+        const operacoes = deleteResponse.operacoes_realizadas || [];
+        const operacoesTexto = operacoes.length > 0 ? ` (${operacoes.join(', ')})` : '';
+        const method = deleteResponse.method ? ` (${deleteResponse.method})` : '';
         
-        // Limpar mensagem de sucesso após 5 segundos
-        setTimeout(() => setSuccess(''), 5000);
+        setSuccess(`${deleteResponse.message}${operacoesTexto}${method}`);
+        refreshCampaigns(true); // Refresh forçado
+        
+        // Limpar mensagem de sucesso após 7 segundos (mais tempo para ler as operações)
+        setTimeout(() => setSuccess(''), 7000);
       } else {
-        setError('Error al eliminar campaña');
+        // Fallback para o endpoint antigo se o novo falhar
+        console.log('⚠️ Tentando endpoint de fallback...');
+        const fallbackResponse = await makeApiRequest(`/campaigns/${campaignId}`, 'DELETE');
+        
+        if (fallbackResponse && (fallbackResponse.mensaje || fallbackResponse.message)) {
+          setSuccess(fallbackResponse.mensaje || 'Campaña eliminada con éxito (método alternativo)');
+          refreshCampaigns();
+          setTimeout(() => setSuccess(''), 5000);
+        } else {
+          setError('Error al eliminar campaña');
+        }
       }
     } catch (err) {
       console.error('Erro ao deletar campanha:', err);
+      
+      // Se o novo endpoint falhar, tentar o antigo como fallback
+      if (err.message && err.message.includes('404')) {
+        try {
+          console.log('🔄 Tentando método de exclusão alternativo...');
+          const fallbackResponse = await makeApiRequest(`/campaigns/${campaignId}`, 'DELETE');
+          
+          if (fallbackResponse && (fallbackResponse.mensaje || fallbackResponse.message)) {
+            setSuccess(fallbackResponse.mensaje || 'Campaña eliminada con éxito (método alternativo)');
+            refreshCampaigns();
+            setTimeout(() => setSuccess(''), 5000);
+            return;
+          }
+        } catch (fallbackErr) {
+          console.error('Erro no método alternativo:', fallbackErr);
+        }
+      }
+      
       setError(`Error al eliminar campaña: ${err.message || 'Error desconocido'}`);
     } finally {
       setActionLoading(prev => ({ ...prev, [`deleting_${campaignId}`]: false }));
@@ -269,10 +307,12 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       
       console.log('🚀 Iniciando campanha:', campaignId);
       
-      // Endpoint para iniciar campanha Presione 1 - FIX: usuario_id como string
-      const startResponse = await makeApiRequest(`/presione1/campanhas/${campaignId}/iniciar`, 'POST', {
-        usuario_id: "1" // FIX: Mudado de número para string
-      });
+      // Usar o novo serviço de sincronização
+      const startResponse = await campaignSync.controlCampaign(
+        campaignId, 
+        'iniciar', 
+        { usuario_id: "1" }
+      );
       
       console.log('✅ Resposta de iniciar:', startResponse);
       
@@ -281,6 +321,8 @@ function GestionCampanhas({ onOpenCampaignControl }) {
         
         // Atualizar apenas o contexto
         updateCampaignStatus(campaignId, 'active');
+        refreshCampaigns(true);
+        refreshCampaigns(true);
         
         // Limpar mensagem de sucesso após 5 segundos
         setTimeout(() => setSuccess(''), 5000);
@@ -301,9 +343,12 @@ function GestionCampanhas({ onOpenCampaignControl }) {
     try {
       setActionLoading(prev => ({ ...prev, [`pausing_${campaignId}`]: true }));
       
-      const pauseResponse = await makeApiRequest(`/presione1/campanhas/${campaignId}/pausar`, 'POST', {
-        usuario_id: "1"
-      });
+      // Usar o novo serviço de sincronização
+      const pauseResponse = await campaignSync.controlCampaign(
+        campaignId, 
+        'pausar', 
+        { usuario_id: "1" }
+      );
       
       console.log('✅ Resposta de pausar:', pauseResponse);
       
@@ -312,6 +357,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
         
         // Atualizar apenas o contexto
         updateCampaignStatus(campaignId, 'paused');
+        refreshCampaigns(true);
       } else {
         setError('Error al pausar campaña');
       }
@@ -329,9 +375,12 @@ function GestionCampanhas({ onOpenCampaignControl }) {
     try {
       setActionLoading(prev => ({ ...prev, [`resuming_${campaignId}`]: true }));
       
-      const resumeResponse = await makeApiRequest(`/presione1/campanhas/${campaignId}/retomar`, 'POST', {
-        usuario_id: "1"
-      });
+      // Usar o novo serviço de sincronização
+      const resumeResponse = await campaignSync.controlCampaign(
+        campaignId, 
+        'retomar', 
+        { usuario_id: "1" }
+      );
       
       console.log('✅ Resposta de retomar:', resumeResponse);
       
@@ -357,9 +406,12 @@ function GestionCampanhas({ onOpenCampaignControl }) {
     try {
       setActionLoading(prev => ({ ...prev, [`stopping_${campaignId}`]: true }));
       
-      const stopResponse = await makeApiRequest(`/presione1/campanhas/${campaignId}/parar`, 'POST', {
-        usuario_id: "1"
-      });
+      // Usar o novo serviço de sincronização
+      const stopResponse = await campaignSync.controlCampaign(
+        campaignId, 
+        'parar', 
+        { usuario_id: "1" }
+      );
       
       console.log('✅ Resposta de parar:', stopResponse);
       
@@ -368,6 +420,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
         
         // Atualizar apenas o contexto
         updateCampaignStatus(campaignId, 'draft');
+        refreshCampaigns(true);
       } else {
         setError('Error al parar campaña');
       }

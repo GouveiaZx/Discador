@@ -21,6 +21,7 @@ import AudioManager from './components/AudioManager';
 import AdvancedPerformanceDashboard from './components/AdvancedPerformanceDashboard';
 import DialerControl from './components/DialerControl';
 import CliAutoCalculator from './components/CliAutoCalculator';
+import AdminControlPanel from './components/AdminControlPanel';
 
 /**
  * Sistema de Ícones Profissional
@@ -112,6 +113,11 @@ const Icons = {
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
     </svg>
+  ),
+  Admin: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+    </svg>
   )
   };
 
@@ -159,23 +165,62 @@ const ProfessionalLoader = () => (
  * Sidebar de Navegación Profesional
  */
 const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermission, sidebarOpen, setSidebarOpen }) => {
-  const navigationItems = [
-    { id: 'dashboard', label: 'Panel Principal', icon: Icons.Dashboard, permission: null },
-    { id: 'realtime', label: 'Llamadas en Vivo', icon: Icons.RealTime, permission: null },
-    { id: 'monitor', label: 'Monitor Avanzado', icon: Icons.Monitor, permission: null },
-    { id: 'control', label: 'Control de Discado', icon: Icons.Control, permission: 'supervisor' },
-    { id: 'performance', label: 'Rendimiento Avanzado', icon: Icons.Performance, permission: 'admin' },
-    { id: 'campanhas', label: 'Campañas', icon: Icons.Campaigns, permission: 'supervisor' },
-    { id: 'listas', label: 'Listas', icon: Icons.Lists, permission: 'supervisor' },
-    { id: 'audios', label: 'Gestión de Audios', icon: Icons.Audio, permission: 'supervisor' },
-    { id: 'trunks', label: 'Gestión de Troncales', icon: Icons.Trunk, permission: 'admin' },
-    { id: 'caller-id', label: 'Identificador de Llamada', icon: Icons.Phone, permission: 'supervisor' },
-    { id: 'cli-auto', label: 'Calculadora CLI Auto', icon: Icons.Calculator, permission: 'admin' },
-    { id: 'timing', label: 'Tiempo de Espera', icon: Icons.Settings, permission: 'supervisor' },
-    { id: 'blacklist', label: 'Lista Negra', icon: Icons.Blacklist, permission: 'admin' },
-    { id: 'configuracion', label: 'Configuración', icon: Icons.Settings, permission: 'admin' },
-    { id: 'historico', label: 'Histórico', icon: Icons.History, permission: null },
+  // Funcionalidades organizadas por categorías para mejor usabilidad
+  const navigationSections = [
+    {
+      title: "📊 PANEL PRINCIPAL",
+      items: [
+        { id: 'admin-control', label: 'Control Administrativo', icon: Icons.Admin, permission: null, essential: true },
+        { id: 'dashboard', label: 'Panel Principal', icon: Icons.Dashboard, permission: null, essential: true },
+        { id: 'realtime', label: 'Llamadas en Vivo', icon: Icons.RealTime, permission: null, essential: true },
+      ]
+    },
+    {
+      title: "📞 OPERACIONES",
+      items: [
+        { id: 'control', label: 'Control de Discado', icon: Icons.Control, permission: 'supervisor', essential: true },
+        { id: 'campanhas', label: 'Gestión de Campañas', icon: Icons.Campaigns, permission: 'supervisor', essential: true },
+        { id: 'listas', label: 'Gestión de Listas', icon: Icons.Lists, permission: 'supervisor', essential: true },
+      ]
+    },
+    {
+      title: "⚙️ CONFIGURACIÓN",
+      items: [
+        { id: 'caller-id', label: 'Identificador de Llamada', icon: Icons.Phone, permission: 'supervisor', essential: true },
+        { id: 'cli-auto', label: 'Calculadora CLI Auto', icon: Icons.Calculator, permission: 'admin', essential: true },
+        { id: 'audios', label: 'Gestión de Audios', icon: Icons.Audio, permission: 'supervisor', essential: false },
+      ]
+    },
+    {
+      title: "📈 MONITOREO",
+      items: [
+        { id: 'monitor', label: 'Monitor Avanzado', icon: Icons.Monitor, permission: null, essential: false },
+        { id: 'performance', label: 'Rendimiento Avanzado', icon: Icons.Performance, permission: 'admin', essential: false },
+        { id: 'historico', label: 'Histórico', icon: Icons.History, permission: null, essential: true },
+      ]
+    },
+    {
+      title: "🔧 AVANZADO",
+      items: [
+        { id: 'trunks', label: 'Gestión de Troncales', icon: Icons.Trunk, permission: 'admin', essential: false },
+        { id: 'timing', label: 'Tiempo de Espera', icon: Icons.Settings, permission: 'supervisor', essential: false },
+        { id: 'blacklist', label: 'Lista Negra', icon: Icons.Blacklist, permission: 'admin', essential: false },
+        { id: 'configuracion', label: 'Configuración', icon: Icons.Settings, permission: 'admin', essential: false },
+      ]
+    }
   ];
+
+  // Modo simplificado - solo funciones esenciales
+  const [simpleMode, setSimpleMode] = useState(true);
+  
+  const getVisibleItems = () => {
+    if (simpleMode) {
+      return navigationSections.flatMap(section => 
+        section.items.filter(item => item.essential)
+      );
+    }
+    return navigationSections.flatMap(section => section.items);
+  };
 
   const getRoleColor = () => {
     switch (user?.role) {
@@ -247,50 +292,128 @@ const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermiss
             </div>
           </div>
           
+          {/* Mode Toggle */}
+          <div className="p-4 border-b border-white/10">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-white">Modo de Vista</span>
+              <button
+                onClick={() => setSimpleMode(!simpleMode)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  simpleMode ? 'bg-green-600' : 'bg-gray-600'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    simpleMode ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            <p className="text-xs text-secondary-400">
+              {simpleMode ? '✅ Funciones Esenciales' : '⚙️ Todas las Funciones'}
+            </p>
+          </div>
+
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
-            {navigationItems.map((item) => {
-              const hasAccess = !item.permission || hasPermission(item.permission);
-              if (!hasAccess) return null;
-              
-              const isActive = activeTab === item.id;
-              const IconComponent = item.icon;
-              
-              return (
-                  <button 
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    setSidebarOpen(false); // Close sidebar on mobile after selection
-                  }}
-                  className={`
-                    w-full flex items-center space-x-3 px-4 py-3 rounded-xl
-                    transition-all duration-200 group relative
-                    ${isActive 
-                      ? 'bg-gradient-to-r from-primary-500/20 to-accent-500/20 text-white border border-primary-500/30 shadow-lg' 
-                      : 'text-secondary-300 hover:text-white hover:bg-white/5'
-                    }
-                  `}
-                >
-                  {/* Active indicator */}
-                  {isActive && (
-                    <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-primary-500 to-accent-500 rounded-r-full"></div>
-                  )}
+          <nav className="flex-1 p-4 space-y-4 overflow-y-auto custom-scrollbar">
+            {simpleMode ? (
+              // Modo Simplificado - Solo items esenciales
+              <div className="space-y-1">
+                {getVisibleItems().map((item) => {
+                  const hasAccess = !item.permission || hasPermission(item.permission);
+                  if (!hasAccess) return null;
                   
-                  <div className={`transition-colors duration-200 ${isActive ? 'text-primary-400' : 'group-hover:text-primary-400'}`}>
-                    <IconComponent />
-                  </div>
-                  <span className="font-medium">{item.label}</span>
+                  const isActive = activeTab === item.id;
+                  const IconComponent = item.icon;
                   
-                  {/* Hover effect */}
-                  {!isActive && (
-                    <div className="absolute right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <div className="w-1 h-1 bg-primary-400 rounded-full"></div>
+                  return (
+                    <button 
+                      key={item.id}
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setSidebarOpen(false);
+                      }}
+                      className={`
+                        w-full flex items-center space-x-3 px-4 py-3 rounded-lg
+                        transition-all duration-150 text-left
+                        ${isActive 
+                          ? 'bg-blue-600 text-white shadow-md' 
+                          : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                        }
+                      `}
+                    >
+                      <div className={`text-lg ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                        <IconComponent />
+                      </div>
+                      <span className="font-medium text-sm">{item.label}</span>
+                      
+                      {isActive && (
+                        <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              // Modo Avanzado - Organizado por secciones
+              <div className="space-y-4">
+                {navigationSections.map((section, sectionIndex) => {
+                  const visibleItems = section.items.filter(item => 
+                    !item.permission || hasPermission(item.permission)
+                  );
+                  
+                  if (visibleItems.length === 0) return null;
+                  
+                  return (
+                    <div key={sectionIndex} className="space-y-1">
+                      <div className="px-3 py-2 bg-gray-800/50 rounded-lg">
+                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wide">
+                          {section.title}
+                        </h4>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        {visibleItems.map((item) => {
+                          const isActive = activeTab === item.id;
+                          const IconComponent = item.icon;
+                          
+                          return (
+                            <button 
+                              key={item.id}
+                              onClick={() => {
+                                setActiveTab(item.id);
+                                setSidebarOpen(false);
+                              }}
+                              className={`
+                                w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg
+                                transition-all duration-150 text-left
+                                ${isActive 
+                                  ? 'bg-blue-600 text-white shadow-md' 
+                                  : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                                }
+                              `}
+                            >
+                              <div className={`text-base ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                                <IconComponent />
+                              </div>
+                              <span className="font-medium text-sm flex-1">{item.label}</span>
+                              
+                              {!item.essential && !isActive && (
+                                <span className="text-xs text-gray-500 bg-gray-700 px-1.5 py-0.5 rounded text-[10px]">PRO</span>
+                              )}
+                              
+                              {isActive && (
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  )}
-                </button>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
           </nav>
           
           {/* Logout Button */}
@@ -319,6 +442,7 @@ const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermiss
 const ProfessionalHeader = ({ setSidebarOpen, activeTab }) => {
   const getPageTitle = () => {
     const titles = {
+      'admin-control': 'Control Administrativo',
       dashboard: 'Panel Principal',
       realtime: 'Llamadas en Tiempo Real',
       monitor: 'Monitor Avanzado',
@@ -403,7 +527,7 @@ const AccessDenied = ({ requiredLevel }) => (
  * Componente principal da aplicação autenticada
  */
 function AuthenticatedApp() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('admin-control');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [campaignControlId, setCampaignControlId] = useState(null);
   const { user, logout, hasPermission } = useAuth();
@@ -455,6 +579,7 @@ function AuthenticatedApp() {
             {/* Telas Principais */}
             {!campaignControlId && (
               <>
+                {activeTab === 'admin-control' && <AdminControlPanel />}
                 {activeTab === 'dashboard' && <DashboardProfessional />}
                 {activeTab === 'realtime' && <RealtimeCallDisplay />}
                 {activeTab === 'monitor' && <MonitorLlamadasEnProgreso />}

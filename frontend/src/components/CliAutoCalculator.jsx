@@ -512,6 +512,20 @@ const CliAutoCalculator = () => {
                 <Label htmlFor="auto_generate">Gerar CLIs automaticamente</Label>
               </div>
               
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <h3 className="text-lg font-semibold text-green-800 mb-2">🚀 Sistema de CLIs Ilimitado</h3>
+                <p className="text-green-700 mb-2">
+                  <strong>✅ Configuração Ilimitada:</strong> Sem limite artificial de CLIs - calcula baseado no volume real
+                </p>
+                <ul className="text-green-600 text-sm space-y-1">
+                  <li>• Base completa de códigos de área dos EUA (300+ códigos)</li>
+                  <li>• Cálculo inteligente baseado em volume e velocidade</li>
+                  <li>• Prevenção automática de blacklisting</li>
+                  <li>• Distribuição equitativa de carga entre CLIs</li>
+                  <li>• Monitoramento de uso em tempo real</li>
+                </ul>
+              </div>
+              
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
@@ -595,11 +609,11 @@ const CliAutoCalculator = () => {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Números:</span>
-                        <span className="font-medium">1.000</span>
+                        <span className="font-medium">5.000</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Chamadas/hora:</span>
-                        <span className="font-medium">200</span>
+                        <span className="font-medium">800</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Limite diário:</span>
@@ -612,8 +626,9 @@ const CliAutoCalculator = () => {
                       <hr className="my-2" />
                       <div className="flex justify-between font-bold text-blue-700">
                         <span>CLIs necessários:</span>
-                        <span>~3</span>
+                        <span>~96</span>
                       </div>
+                      <div className="text-xs text-blue-600 mt-1">Sem limite artificial</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -627,11 +642,11 @@ const CliAutoCalculator = () => {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Números:</span>
-                        <span className="font-medium">10.000</span>
+                        <span className="font-medium">50.000</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Chamadas/hora:</span>
-                        <span className="font-medium">500</span>
+                        <span className="font-medium">1.500</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Limite diário:</span>
@@ -639,13 +654,14 @@ const CliAutoCalculator = () => {
                       </div>
                       <div className="flex justify-between">
                         <span>Horas trabalho:</span>
-                        <span className="font-medium">8h</span>
+                        <span className="font-medium">10h</span>
                       </div>
                       <hr className="my-2" />
                       <div className="flex justify-between font-bold text-green-700">
                         <span>CLIs necessários:</span>
-                        <span>~63</span>
+                        <span>~720</span>
                       </div>
+                      <div className="text-xs text-green-600 mt-1">Cálculo baseado em volume</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -659,11 +675,11 @@ const CliAutoCalculator = () => {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Números:</span>
-                        <span className="font-medium">100.000</span>
+                        <span className="font-medium">200.000</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Chamadas/hora:</span>
-                        <span className="font-medium">1.000</span>
+                        <span className="font-medium">2.500</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Limite diário:</span>
@@ -671,31 +687,32 @@ const CliAutoCalculator = () => {
                       </div>
                       <div className="flex justify-between">
                         <span>Horas trabalho:</span>
-                        <span className="font-medium">8h</span>
+                        <span className="font-medium">10h</span>
                       </div>
                       <hr className="my-2" />
                       <div className="flex justify-between font-bold text-orange-700">
                         <span>CLIs necessários:</span>
-                        <span>~1.500</span>
+                        <span>~3.000</span>
                       </div>
+                      <div className="text-xs text-orange-600 mt-1">Escala empresarial</div>
                     </div>
                   </CardContent>
                 </Card>
                 
                 <Card className="border-red-200">
                   <CardHeader>
-                    <CardTitle className="text-lg text-red-700">Campanha Intensiva</CardTitle>
-                    <div className="text-sm text-gray-600">Discagem muito agressiva</div>
+                    <CardTitle className="text-lg text-red-700">Campanha Massiva</CardTitle>
+                    <div className="text-sm text-gray-600">Volume extremo, operação global</div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Números:</span>
-                        <span className="font-medium">50.000</span>
+                        <span className="font-medium">500.000</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Chamadas/hora:</span>
-                        <span className="font-medium">2.000</span>
+                        <span className="font-medium">3.000</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Limite diário:</span>
@@ -703,13 +720,14 @@ const CliAutoCalculator = () => {
                       </div>
                       <div className="flex justify-between">
                         <span>Horas trabalho:</span>
-                        <span className="font-medium">8h</span>
+                        <span className="font-medium">12h</span>
                       </div>
                       <hr className="my-2" />
                       <div className="flex justify-between font-bold text-red-700">
                         <span>CLIs necessários:</span>
-                        <span>~3.000</span>
+                        <span>~7.200</span>
                       </div>
+                      <div className="text-xs text-red-600 mt-1">Escala ilimitada</div>
                     </div>
                   </CardContent>
                 </Card>

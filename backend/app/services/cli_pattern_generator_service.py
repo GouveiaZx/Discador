@@ -30,34 +30,18 @@ class CliPatternGeneratorService:
         
     def _load_pattern_configs(self) -> Dict[str, Any]:
         """Carga configuraciones de patrones por país."""
-        return {
+        configs = {
             'usa': {
                 'country_code': '+1',
                 'strategy': 'area_code_preservation',
-                'area_codes': {
-                    '305': {
-                        'name': 'Miami, FL',
-                        'patterns': [
-                            {'mask': '2xx-xxxx', 'weight': 0.4, 'description': 'Prefijo 2 + 5 aleatorios'},
-                            {'mask': '25x-xxxx', 'weight': 0.3, 'description': 'Prefijo 25 + 4 aleatorios'},
-                            {'mask': '3xx-xxxx', 'weight': 0.3, 'description': 'Prefijo 3 + 5 aleatorios'}
-                        ]
-                    },
-                    '425': {
-                        'name': 'Seattle, WA',
-                        'patterns': [
-                            {'mask': '2xx-xxxx', 'weight': 0.5, 'description': 'Prefijo 2 + 5 aleatorios'},
-                            {'mask': '4xx-xxxx', 'weight': 0.5, 'description': 'Prefijo 4 + 5 aleatorios'}
-                        ]
-                    },
-                    '213': {
-                        'name': 'Los Angeles, CA',
-                        'patterns': [
-                            {'mask': '2xx-xxxx', 'weight': 0.4, 'description': 'Prefijo 2 + 5 aleatorios'},
-                            {'mask': '3xx-xxxx', 'weight': 0.6, 'description': 'Prefijo 3 + 5 aleatorios'}
-                        ]
-                    }
-                }
+                'use_database': True,  # Usar base de dados completa
+                'default_patterns': [
+                    {'mask': '2xx-xxxx', 'weight': 0.3, 'description': 'Prefijo 2 + 5 aleatorios'},
+                    {'mask': '3xx-xxxx', 'weight': 0.3, 'description': 'Prefijo 3 + 5 aleatorios'},
+                    {'mask': '4xx-xxxx', 'weight': 0.2, 'description': 'Prefijo 4 + 5 aleatorios'},
+                    {'mask': '5xx-xxxx', 'weight': 0.2, 'description': 'Prefijo 5 + 5 aleatorios'}
+                ],
+                'area_codes': {}  # Será carregado dinamicamente da base de dados
             },
             'canada': {
                 'country_code': '+1',
@@ -584,6 +568,47 @@ class CliPatternGeneratorService:
                 }
             }
         }
+        
+        # Carregar códigos de área dos EUA da base de dados
+        if 'usa' in configs and configs['usa'].get('use_database', False):
+            try:
+                from app.database.connection import get_db_connection
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                    SELECT area_code, state, city, timezone, region 
+                    FROM usa_area_codes 
+                    ORDER BY area_code
+                """)
+                
+                area_codes_data = cursor.fetchall()
+                
+                for row in area_codes_data:
+                    area_code, state, city, timezone, region = row
+                    configs['usa']['area_codes'][area_code] = {
+                        'name': f"{city}, {state}",
+                        'state': state,
+                        'timezone': timezone,
+                        'region': region,
+                        'patterns': configs['usa']['default_patterns']
+                    }
+                
+                cursor.close()
+                conn.close()
+                
+                logger.info(f"Carregados {len(configs['usa']['area_codes'])} códigos de área dos EUA")
+                
+            except Exception as e:
+                logger.error(f"Erro ao carregar códigos de área dos EUA: {e}")
+                # Fallback para códigos básicos se houver erro
+                configs['usa']['area_codes'] = {
+                    '305': {'name': 'Miami, FL', 'patterns': configs['usa']['default_patterns']},
+                    '425': {'name': 'Seattle, WA', 'patterns': configs['usa']['default_patterns']},
+                    '213': {'name': 'Los Angeles, CA', 'patterns': configs['usa']['default_patterns']}
+                }
+        
+        return configs
     
     def get_supported_countries(self) -> List[Dict[str, Any]]:
         """Obtiene lista de países soportados."""
@@ -955,4 +980,4 @@ class CliPatternGeneratorService:
             'total_area_codes': sum(len(config['area_codes']) for config in self.pattern_configs.values()),
             'supported_countries': list(self.pattern_configs.keys()),
             'generation_timestamp': datetime.now().isoformat()
-        } 
+        }

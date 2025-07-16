@@ -42,9 +42,17 @@ class CliAutoCalculatorService:
             Dict com cálculos detalhados
         """
         try:
-            # Ajustar limite baseado no país
-            if country.lower() in ['usa', 'canada']:
-                daily_call_limit = min(daily_call_limit, 100)
+            # Limites recomendados por país (sem limite máximo rígido)
+            recommended_limits = {
+                'usa': 100, 'canada': 100,
+                'mexico': 150, 'brazil': 150,
+                'colombia': 120, 'argentina': 120,
+                'chile': 100, 'peru': 100
+            }
+            
+            # Usar limite fornecido ou recomendado (sem forçar limite máximo)
+            if daily_call_limit <= 0:
+                daily_call_limit = recommended_limits.get(country.lower(), 100)
             
             # Cálculo básico
             calls_per_day = calls_per_hour * work_hours
@@ -61,6 +69,9 @@ class CliAutoCalculatorService:
             
             # Aplicar margem de segurança
             recommended_clis = math.ceil(base_clis_needed * self.safety_margin)
+            
+            # Remover qualquer limite artificial de CLIs - permitir configuração ilimitada
+            # O sistema agora calcula baseado puramente no volume e velocidade necessária
             
             # Cálculos adicionais
             calls_per_cli_per_hour = daily_call_limit / work_hours

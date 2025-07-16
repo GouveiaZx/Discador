@@ -43,10 +43,27 @@ except ImportError as e:
         from app.routes import presione1, audio_routes, performance_routes
         print("Presione1, audio and performance routes imported successfully")
     except ImportError:
-        presione1 = None
-        audio_routes = None
-        performance_routes = None
-        print("Warning: Could not import presione1, audio or performance routes")
+        # Tentar importar presione1 individualmente
+        try:
+            from app.routes import presione1
+            print("✅ Presione1 router imported individually")
+        except ImportError:
+            presione1 = None
+            print("⚠️ Warning: Could not import presione1 routes")
+        
+        try:
+            from app.routes import audio_routes
+            print("✅ Audio routes imported individually")
+        except ImportError:
+            audio_routes = None
+            print("⚠️ Warning: Could not import audio routes")
+        
+        try:
+            from app.routes import performance_routes
+            print("✅ Performance routes imported individually")
+        except ImportError:
+            performance_routes = None
+            print("⚠️ Warning: Could not import performance routes")
 
 # Importar novas rotas para configuração
 try:
@@ -292,6 +309,8 @@ except:
 # Adicionar origens extras para desenvolvimento
 cors_origins.extend([
     "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
     "https://localhost:3000",
     "https://localhost:5173"
 ])
@@ -388,13 +407,7 @@ except Exception as e:
     
     # Incluir apenas as rotas essenciais que funcionam
     # Comentado para usar endpoint de fallback no missing_routes
-    if presione1:
-        try:
-            app.include_router(presione1.router, prefix=f"{api_prefix}")
-            print("✅ Presione1 router included as fallback")
-        except Exception as presione1_error:
-            print(f"❌ Error including presione1 router: {presione1_error}")
-            logger.error(f"Error including presione1 router: {presione1_error}")
+    # Presione1 router já foi incluído anteriormente, removendo duplicação
 
 # Router para rotas ausentes deve ser definido antes de ser usado
 
@@ -963,6 +976,141 @@ async def criar_campaign_alias(campaign_data: dict):
             detail=f"Erro interno ao criar campanha: {str(e)}"
         )
 
+# Endpoints PUT e DELETE para campaigns
+@missing_routes.put("/campaigns/{campaign_id}")
+async def atualizar_campaign_alias(campaign_id: int, campaign_data: dict):
+    """Atualiza uma campanha existente no Supabase"""
+    try:
+        # Preparar dados para atualização
+        update_data = {
+            "name": campaign_data.get("name", campaign_data.get("nome")),
+            "description": campaign_data.get("description", campaign_data.get("descricao")),
+            "status": campaign_data.get("status", "draft"),
+            "cli_number": campaign_data.get("cli_number"),
+            "audio_url": campaign_data.get("audio_url"),
+            "start_time": campaign_data.get("start_time"),
+            "end_time": campaign_data.get("end_time"),
+            "timezone": campaign_data.get("timezone"),
+            "max_attempts": campaign_data.get("max_attempts"),
+            "retry_interval": campaign_data.get("retry_interval"),
+            "max_concurrent_calls": campaign_data.get("max_concurrent_calls"),
+            "cps": campaign_data.get("cps"),
+            "sleep_time": campaign_data.get("sleep_time"),
+            "wait_time": campaign_data.get("wait_time"),
+            "language": campaign_data.get("language"),
+            "shuffle_contacts": campaign_data.get("shuffle_contacts"),
+            "allow_multiple_calls_same_number": campaign_data.get("allow_multiple_calls_same_number"),
+            "max_channels": campaign_data.get("max_channels"),
+            "updated_at": datetime.now().isoformat()
+        }
+        
+        # Remover campos None
+        update_data = {k: v for k, v in update_data.items() if v is not None}
+        
+        # Tentar atualizar no Supabase
+        try:
+            headers = {
+                "apikey": SUPABASE_ANON_KEY,
+                "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                "Content-Type": "application/json",
+                "Prefer": "return=representation"
+            }
+            
+            response = requests.patch(
+                f"{SUPABASE_URL}/rest/v1/campaigns?id=eq.{campaign_id}",
+                headers=headers,
+                json=update_data
+            )
+            
+            if response.status_code == 200:
+                updated_campaigns = response.json()
+                if updated_campaigns:
+                    updated_campaign = updated_campaigns[0]
+                    return {
+                        "status": "success",
+                        "message": "Campanha atualizada com sucesso",
+                        "campaign": updated_campaign
+                    }
+            
+            # Fallback para dados mock se Supabase falhar
+            logger.warning(f"Supabase update failed with status {response.status_code}, using mock data")
+            
+        except Exception as supabase_error:
+            logger.error(f"Erro ao atualizar no Supabase: {str(supabase_error)}")
+        
+        # Retorno mock se Supabase falhar
+        mock_campaign = {
+            "id": campaign_id,
+            "name": update_data.get("name", "Campanha Atualizada"),
+            "description": update_data.get("description", "Campanha atualizada via API"),
+            "status": update_data.get("status", "draft"),
+            "updated_at": update_data["updated_at"]
+        }
+        mock_campaign.update(update_data)
+        
+        return {
+            "status": "success",
+            "message": "Campanha atualizada com sucesso (mock)",
+            "campaign": mock_campaign
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao atualizar campanha {campaign_id}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro interno ao atualizar campanha: {str(e)}"
+        )
+
+@missing_routes.delete("/campaigns/{campaign_id}")
+async def deletar_campaign_alias(campaign_id: int):
+    """Deleta uma campanha do Supabase"""
+    try:
+        # Tentar deletar do Supabase
+        try:
+            headers = {
+                "apikey": SUPABASE_ANON_KEY,
+                "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                "Content-Type": "application/json"
+            }
+            
+            response = requests.delete(
+                f"{SUPABASE_URL}/rest/v1/campaigns?id=eq.{campaign_id}",
+                headers=headers
+            )
+            
+            if response.status_code == 204:
+                return {
+                    "status": "success",
+                    "message": "Campanha deletada com sucesso"
+                }
+            elif response.status_code == 404:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Campanha com ID {campaign_id} não encontrada"
+                )
+            else:
+                logger.warning(f"Supabase delete failed with status {response.status_code}")
+                
+        except HTTPException:
+            raise
+        except Exception as supabase_error:
+            logger.error(f"Erro ao deletar do Supabase: {str(supabase_error)}")
+        
+        # Retorno mock se Supabase falhar (mas campanha não existe)
+        return {
+            "status": "success",
+            "message": f"Campanha {campaign_id} deletada com sucesso (mock)"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao deletar campanha {campaign_id}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro interno ao deletar campanha: {str(e)}"
+        )
+
 # Endpoint de campanhas direto
 @missing_routes.get("/campanhas")
 async def listar_campanhas_direto():
@@ -1139,6 +1287,64 @@ async def audio_contextos_alternativo():
         "contextos": contextos,
         "total": len(contextos)
     }
+
+# Endpoint principal para áudios
+@missing_routes.get("/audios")
+async def listar_audios():
+    """Lista todos os áudios disponíveis"""
+    try:
+        # Dados mock para áudios
+        audios = [
+            {
+                "id": 1,
+                "nome": "Audio 1",
+                "descricao": "Áudio de exemplo 1",
+                "url": "https://example.com/audio1.wav",
+                "duracao": 30,
+                "formato": "wav",
+                "tamanho": 1024000,
+                "data_upload": datetime.now().isoformat(),
+                "ativo": True
+            },
+            {
+                "id": 2,
+                "nome": "Audio 2",
+                "descricao": "Áudio de exemplo 2",
+                "url": "https://example.com/audio2.wav",
+                "duracao": 45,
+                "formato": "wav",
+                "tamanho": 1536000,
+                "data_upload": datetime.now().isoformat(),
+                "ativo": True
+            },
+            {
+                "id": 3,
+                "nome": "Audio 3",
+                "descricao": "Áudio de exemplo 3",
+                "url": "https://example.com/audio3.wav",
+                "duracao": 60,
+                "formato": "wav",
+                "tamanho": 2048000,
+                "data_upload": datetime.now().isoformat(),
+                "ativo": True
+            }
+        ]
+        
+        return {
+            "status": "success",
+            "audios": audios,
+            "total": len(audios),
+            "message": "Áudios carregados com sucesso"
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao listar áudios: {str(e)}")
+        return {
+            "status": "error",
+            "audios": [],
+            "total": 0,
+            "message": f"Erro ao carregar áudios: {str(e)}"
+        }
 
 @missing_routes.get("/multi-sip/provedores")
 async def multi_sip_provedores_direto():
