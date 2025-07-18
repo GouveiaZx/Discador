@@ -58,7 +58,7 @@ const makeApiRequest = async (endpoint, options = {}) => {
     ...options
   };
 
-  console.log('🔧 API Request:', { url, method: config.method || 'GET' });
+  // API Request
 
   try {
     const response = await fetch(url, config);
@@ -68,10 +68,10 @@ const makeApiRequest = async (endpoint, options = {}) => {
     }
 
     const data = await response.json();
-    console.log('✅ API Success:', { url, data });
+    // API Success
     return data;
   } catch (error) {
-    console.error('❌ API Error:', { url, error: error.message });
+    // API Error
     throw error;
   }
 };
@@ -110,7 +110,6 @@ const AudioManager = () => {
       setAudioFiles(response.files || response || []);
     } catch (error) {
               setError('Error al cargar archivos de audio');
-      console.error('Erro ao carregar áudios:', error);
     } finally {
       setLoading(false);
     }
@@ -123,7 +122,7 @@ const AudioManager = () => {
       const response = await makeApiRequest('/audio/stats');
       setStats(response.data || response || {});
     } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
+      // Error loading stats
     }
   };
 
@@ -222,7 +221,6 @@ const AudioManager = () => {
       }
     } catch (error) {
               setError('Error al reproducir audio');
-      console.error('Erro ao reproduzir áudio:', error);
     }
   };
 

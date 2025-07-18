@@ -21,7 +21,6 @@ const TrunksManager = () => {
       const response = await makeApiRequest('/trunks');
       setTrunks(response.data || []);
     } catch (error) {
-      console.error('Erro ao carregar trunks:', error);
       setTrunks([]);
     } finally {
       setLoading(false);
@@ -51,7 +50,6 @@ const TrunksManager = () => {
       resetForm();
       loadTrunks();
     } catch (error) {
-      console.error('Erro ao salvar trunk:', error);
     }
   };
 
@@ -74,7 +72,6 @@ const TrunksManager = () => {
         await makeApiRequest(`/trunks/${id}`, { method: 'DELETE' });
         loadTrunks();
       } catch (error) {
-        console.error('Erro ao excluir trunk:', error);
       }
     }
   };
@@ -95,7 +92,7 @@ const TrunksManager = () => {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-2 text-gray-600">Cargando trunks...</span>
+        <span className="ml-2 text-gray-600">Carregando trunks...</span>
       </div>
     );
   }
@@ -274,4 +271,4 @@ const TrunksManager = () => {
   );
 };
 
-export default TrunksManager; 
+export default TrunksManager;

@@ -98,7 +98,7 @@ const MonitoringDashboard = () => {
         const cachedStats = getCachedData(cacheKey);
         
         if (cachedStats) {
-          console.log(`📋 Cache hit para campanha ${campaign.id}`);
+  
           return { ...campaign, stats: cachedStats };
         }
         
@@ -106,10 +106,9 @@ const MonitoringDashboard = () => {
         try {
           const stats = await makeApiRequest(`/presione1/campanhas/${campaign.id}/estadisticas`);
           setCachedData(cacheKey, stats);
-          console.log(`🔄 Dados atualizados para campanha ${campaign.id}`);
+  
           return { ...campaign, stats };
         } catch (error) {
-          console.error(`❌ Erro ao buscar stats da campanha ${campaign.id}:`, error);
           return { ...campaign, stats: null };
         }
       });
@@ -140,14 +139,14 @@ const MonitoringDashboard = () => {
       // Verificar se é necessário atualizar (throttling)
       const now = Date.now();
       if (now - lastFetchRef.current < 2000) { // Mínimo 2s entre atualizações
-        console.log('⏭️ [MonitoringDashboard] Throttling - aguardando...');
+  
         setLoading(false);
         return;
       }
       lastFetchRef.current = now;
       
       // Usar campanhas ativas do contexto
-      console.log('📊 [MonitoringDashboard] Usando campanhas do contexto:', activeCampaigns.length);
+  
       
       if (activeCampaigns.length === 0) {
         setDashboardData({
@@ -170,8 +169,7 @@ const MonitoringDashboard = () => {
       const campaignStats = await fetchCampaignStatsOptimized(activeCampaigns);
       const fetchTime = performance.now() - startTime;
       
-      console.log(`⚡ [MonitoringDashboard] Dados carregados em ${fetchTime.toFixed(2)}ms`);
-      console.log(`📈 [MonitoringDashboard] Cache hit rate: ${cacheHitRate}%`);
+
       
       // Calcular métricas agregadas de forma otimizada
       const metrics = campaignStats.reduce((acc, campaign) => {
@@ -208,10 +206,9 @@ const MonitoringDashboard = () => {
       };
       
       setDashboardData(aggregatedData);
-      console.log('✅ [MonitoringDashboard] Dados agregados:', aggregatedData);
+
       
     } catch (err) {
-      console.error('❌ [MonitoringDashboard] Erro ao carregar dashboard:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -221,7 +218,7 @@ const MonitoringDashboard = () => {
   // Função para conectar WebSocket (placeholder para futuro)
   const connectWebSocket = useCallback(() => {
     // TODO: Implementar WebSocket específico para presione1
-    console.log('WebSocket para presione1 não implementado ainda');
+
   }, []);
 
   // ============================================================================

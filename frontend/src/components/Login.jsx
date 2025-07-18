@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
 /**
- * Componente de Login Premium com Glass Morphism
+ * Componente de Login Premium con Glass Morphism
  */
 function Login() {
   const { login, loading, error } = useAuth();
@@ -20,7 +20,7 @@ function Login() {
   }, []);
 
   /**
-   * Manipular mudanças no formulário
+   * Manejar cambios en el formulario
    */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -28,12 +28,12 @@ function Login() {
       ...prev,
       [name]: value
     }));
-    // Limpar erro quando usuário digita
+    // Limpiar error cuando el usuario escribe
     if (loginError) setLoginError('');
   };
 
   /**
-   * Submeter formulário de login
+   * Enviar formulario de login
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,7 +52,7 @@ function Login() {
   };
 
   /**
-   * Login rápido com credenciais predefinidas
+   * Login rápido con credenciales predefinidas
    */
   const quickLogin = (username, password) => {
     setFormData({ username, password });
@@ -101,14 +101,14 @@ function Login() {
       
       <div className={`relative z-10 w-full max-w-md mx-auto transition-all duration-1000 ${mounted ? 'animate-fade-in-up' : 'opacity-0'}`}>
         
-        {/* Header com logo animado */}
+        {/* Header con logo animado */}
         <div className="text-center mb-6 sm:mb-8">
           <div className="relative mx-auto w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-6">
             <div className="absolute inset-0 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl shadow-glow animate-glow"></div>
             <div className="relative w-full h-full bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center">
               <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-            </svg>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
             </div>
           </div>
           
@@ -120,7 +120,7 @@ function Login() {
           </p>
         </div>
 
-        {/* Formulário de Login com Glass Morphism */}
+        {/* Formulario de Login con Glass Morphism */}
         <div className="card-glass p-6 sm:p-8 mb-4 sm:mb-6">
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             
@@ -194,7 +194,7 @@ function Login() {
               </div>
             </div>
 
-            {/* Erro de login */}
+            {/* Error de login */}
             {(loginError || error) && (
               <div className="bg-error-500/20 border border-error-500/50 text-error-200 px-4 py-3 rounded-xl text-sm backdrop-blur-sm animate-fade-in">
                 <div className="flex items-center space-x-2">
@@ -206,7 +206,7 @@ function Login() {
               </div>
             )}
 
-            {/* Botão de submit */}
+            {/* Botón de envío */}
             <button
               type="submit"
               disabled={loading}
@@ -229,10 +229,10 @@ function Login() {
           </form>
         </div>
 
-          {/* Credenciais de teste */}
+        {/* Credenciales de prueba */}
         <div className="card-glass p-6">
-            <button
-              onClick={() => setShowCredentials(!showCredentials)}
+          <button
+            onClick={() => setShowCredentials(!showCredentials)}
             className="w-full flex items-center justify-between text-sm text-secondary-300 hover:text-white transition-colors group"
           >
             <div className="flex items-center space-x-2">
@@ -244,50 +244,50 @@ function Login() {
             <svg className={`w-4 h-4 transition-transform ${showCredentials ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/>
             </svg>
-            </button>
+          </button>
 
-            {showCredentials && (
+          {showCredentials && (
             <div className="mt-6 space-y-3 animate-fade-in">
               <p className="text-xs text-secondary-500 mb-4">
                 Hacé clic en cualquier cuenta para login automático:
               </p>
                 
               {testAccounts.map((account, index) => (
-                  <button
+                <button
                   key={account.username}
                   onClick={() => quickLogin(account.username, account.password)}
-                    disabled={loading}
+                  disabled={loading}
                   className="w-full p-3 sm:p-4 rounded-xl bg-secondary-800/40 hover:bg-secondary-700/60 
                            disabled:opacity-50 disabled:cursor-not-allowed
                            border border-transparent hover:border-primary-500/30
                            transition-all duration-200 group text-left
                            animate-slide-in-right"
                   style={{ animationDelay: `${index * 100}ms` }}
-                  >
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
                       <div className="text-xl sm:text-2xl flex-shrink-0">{account.icon}</div>
                       <div className="min-w-0 flex-1">
                         <div className="text-xs sm:text-sm font-medium text-white group-hover:text-primary-300 transition-colors truncate">
                           {account.username} / {account.password}
-                      </div>
+                        </div>
                         <div className="text-xs text-secondary-400 mt-1 hidden sm:block">
                           {account.role} • {account.description}
-                    </div>
+                        </div>
                         <div className="text-xs text-secondary-400 mt-1 sm:hidden">
                           {account.role}
-                    </div>
+                        </div>
                       </div>
                     </div>
                     <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${account.badgeColor}`}>
                       <span className="hidden sm:inline">{account.badge}</span>
                       <span className="sm:hidden">{account.badge.slice(0, 3)}</span>
                     </span>
-                    </div>
-                  </button>
+                  </div>
+                </button>
               ))}
-              </div>
-            )}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -311,4 +311,4 @@ function Login() {
   );
 }
 
-export default Login; 
+export default Login;

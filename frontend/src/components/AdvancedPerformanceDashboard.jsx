@@ -64,7 +64,7 @@ const AdvancedPerformanceDashboard = () => {
   useEffect(() => {
     // Não tentar conectar WebSocket no Vercel (produção)
     if (window.location.hostname.includes('vercel.app')) {
-      console.log('🚫 WebSocket desabilitado no Vercel');
+
       setLoading(false);
       return;
     }
@@ -104,23 +104,20 @@ const AdvancedPerformanceDashboard = () => {
         }
         
       } catch (err) {
-        console.error('Error al procesar WebSocket:', err);
       }
     };
     
     wsRef.current.onopen = () => {
-      console.log('🔗 WebSocket conectado');
+
       setLoading(false);
       };
       
       wsRef.current.onerror = (error) => {
-      console.error('❌ Error WebSocket:', error);
-      setError('Error de conexión WebSocket');
-      setLoading(false);
-    };
-    
-    wsRef.current.onclose = () => {
-      console.log('🔌 WebSocket desconectado');
+        setError('Error de conexión WebSocket');
+        setLoading(false);
+      };
+      
+     wsRef.current.onclose = () => {
       // Intentar reconectar después de 5 segundos
       setTimeout(() => {
         if (wsRef.current?.readyState === WebSocket.CLOSED) {
@@ -165,9 +162,8 @@ const AdvancedPerformanceDashboard = () => {
       }
       
       const result = await response.json();
-      console.log('🧪 Test de carga iniciado:', result);
+
     } catch (error) {
-      console.error('❌ Error al iniciar test:', error);
       setTestRunning(false);
     }
   };
@@ -184,9 +180,8 @@ const AdvancedPerformanceDashboard = () => {
       }
       
       setTestRunning(false);
-      console.log('🛑 Test de carga parado');
+
     } catch (error) {
-      console.error('❌ Error al parar test:', error);
     }
   };
 
@@ -643,4 +638,4 @@ const AdvancedPerformanceDashboard = () => {
   );
 };
 
-export default AdvancedPerformanceDashboard; 
+export default AdvancedPerformanceDashboard;

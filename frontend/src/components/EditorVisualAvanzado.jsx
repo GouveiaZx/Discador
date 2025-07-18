@@ -72,7 +72,7 @@ const EditorVisualAvanzado = () => {
         }
       }));
     } catch (error) {
-      console.error('Erro ao carregar configuração:', error);
+      // Erro ao carregar configuração
     }
   };
 
@@ -451,7 +451,7 @@ const EditorVisualAvanzado = () => {
 
   // Funções auxiliares
   const editarEstado = (estado) => {
-    console.log('Editando estado:', estado);
+    // Editando estado
   };
 
   const adicionarEstado = () => {
@@ -486,7 +486,7 @@ const EditorVisualAvanzado = () => {
   };
 
   const adicionarProvedor = () => {
-    console.log('Adicionando novo provedor SIP');
+    // Adicionando novo provedor SIP
   };
 
   const simularFlujo = () => {
@@ -514,7 +514,7 @@ const EditorVisualAvanzado = () => {
     const rect = canvasRef.current.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    console.log('Canvas click:', x, y);
+    // Canvas click
   };
 
   const salvarConfiguracion = async () => {
@@ -537,7 +537,7 @@ const EditorVisualAvanzado = () => {
         }
       ]);
     } catch (error) {
-      console.error('Erro ao salvar:', error);
+      // Erro ao salvar
     }
   };
 
@@ -561,7 +561,7 @@ const EditorVisualAvanzado = () => {
           setConfiguracion(config);
           setConfiguracionGuardada(false);
         } catch (error) {
-          console.error('Erro ao importar:', error);
+          // Erro ao importar
           alert('Erro ao importar configuração');
         }
       };
@@ -668,4 +668,4 @@ const EditorVisualAvanzado = () => {
   );
 };
 
-export default EditorVisualAvanzado; 
+export default EditorVisualAvanzado;

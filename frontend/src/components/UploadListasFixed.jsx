@@ -14,7 +14,7 @@ const UploadListasFixed = () => {
   const [progress, setProgress] = useState({});
 
   useEffect(() => {
-    // Selecionar primeira campanha se disponível
+    // Seleccionar primera campaña si está disponible
     if (campaigns.length > 0 && !selectedCampaign) {
       setSelectedCampaign(campaigns[0].id.toString());
     }
@@ -50,13 +50,13 @@ const UploadListasFixed = () => {
         chunks.push(lines.slice(i, i + CHUNK_SIZE));
       }
 
-      console.log(`📦 Archivo ${file.name}: ${totalLines} líneas en ${chunks.length} chunks de ${CHUNK_SIZE}`);
+      
 
       let processedTotal = 0;
       let successTotal = 0;
       let errorTotal = 0;
 
-      // Processar TODOS os chunks
+      // Procesar TODOS los chunks
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
         const chunkNumber = i + 1;
@@ -94,14 +94,13 @@ const UploadListasFixed = () => {
             errorTotal += response.data.contatos_invalidos || 0;
           }
 
-          console.log(`✅ Chunk ${chunkNumber}/${chunks.length} processado`);
+  
         } catch (error) {
-          console.error(`❌ Error en chunk ${chunkNumber}:`, error);
           errorTotal += chunk.length;
           
           // Continuar incluso con error
           if (error.response?.status === 504 || error.code === 'ECONNABORTED') {
-            console.log('⚠️ Timeout en chunk, continuando...');
+    
           }
         }
 
@@ -135,7 +134,6 @@ const UploadListasFixed = () => {
       };
 
     } catch (error) {
-      console.error('Error al procesar archivo:', error);
       throw error;
     }
   };
@@ -200,7 +198,6 @@ const UploadListasFixed = () => {
         }));
 
       } catch (error) {
-        console.error(`Error en carga de ${file.name}:`, error);
         setUploadStatus(prev => ({
           ...prev,
           [file.name]: {

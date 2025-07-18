@@ -27,7 +27,7 @@ try:
     )
 except ImportError:
     # Fallback decorators when sync module is not available
-    def sync_operation(operation_type="unknown"):
+    def sync_operation(cache_key_func=None, ttl=None):
         def decorator(func):
             return func
         return decorator
@@ -43,29 +43,19 @@ except ImportError:
     
     def clear_campaign_cache():
         pass
+
+try:
+    from app.utils.logger import logger
+except ImportError:
+    import logging
+    logger = logging.getLogger(__name__)
         
 try:
     from app.services.presione1_service import PresionE1Service
-except ImportError:
-    # Fallback para quando o serviço não está disponível
-    class PresionE1Service:
-        def __init__(self, db=None):
-            self.db = db
-        
-        def listar_campanas(self, skip=0, limit=100, apenas_ativas=False):
-            return []
-        
-        def crear_campana(self, campana_data):
-            raise HTTPException(
-                status_code=503,
-                detail="Serviço Presione1 não está disponível"
-            )
-        
-        def obter_campana(self, campana_id):
-            raise HTTPException(
-                status_code=503,
-                detail="Serviço Presione1 não está disponível"
-            )
+except ImportError as e:
+    logger.error(f"Erro ao importar PresionE1Service: {e}")
+    # Fallback simples sem redefinir a classe
+    PresionE1Service = None
 try:
     from app.schemas.presione1 import (
         CampanaPresione1Create,
@@ -111,11 +101,6 @@ except ImportError:
     class LlamadaPresione1Response(BaseModel):
         id: int
         numero_destino: str
-try:
-    from app.utils.logger import logger
-except ImportError:
-    import logging
-    logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/presione1", tags=["Discado Preditivo - Presione 1"])
 
@@ -123,11 +108,18 @@ router = APIRouter(prefix="/presione1", tags=["Discado Preditivo - Presione 1"])
 presione1_service_instance = None
 
 
-def get_presione1_service(db: Session = Depends(obtener_sesion)) -> PresionE1Service:
+def get_presione1_service(db: Session = Depends(obtener_sesion)):
     """Obtém instância do serviço Presione1."""
     global presione1_service_instance
     
-    if presione1_service_instance is None:
+    if PresionE1Service is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Serviço Presione1 não está disponível"
+        )
+    
+    # Forçar recriação da instância para garantir que tenha os métodos atualizados
+    if presione1_service_instance is None or not hasattr(presione1_service_instance, 'iniciar_campana'):
         presione1_service_instance = PresionE1Service(db)
         # TODO: Registrar callback para eventos do Asterisk (não implementado ainda)
         # AsteriskMonitoringService.registrar_callback_evento(
@@ -144,7 +136,7 @@ def get_presione1_service(db: Session = Depends(obtener_sesion)) -> PresionE1Ser
 
 
 @router.post("/campanhas", response_model=CampanaPresione1Response)
-@sync_operation(operation_type="create_campaign")
+@sync_operation()
 def crear_campana_presione1(
     campana_data: CampanaPresione1Create,
     db: Session = Depends(obtener_sesion),
@@ -214,7 +206,7 @@ def listar_campanhas_presione1(
 
 
 @router.delete("/campanhas/{campana_id}", status_code=204)
-@sync_operation(operation_type="delete_campaign")
+@sync_operation()
 async def excluir_campana_presione1(
     campana_id: int,
     service: PresionE1Service = Depends(get_presione1_service)
@@ -276,7 +268,7 @@ def obter_campana_presione1(
 
 
 @router.put("/campanhas/{campana_id}", response_model=CampanaPresione1Response)
-@sync_operation(operation_type="update_campaign")
+@sync_operation()
 def atualizar_campana_presione1(
     campana_id: int,
     dados_atualizacao: CampanaPresione1Update,
@@ -311,7 +303,7 @@ def atualizar_campana_presione1(
 
 
 @router.post("/campanhas/{campana_id}/iniciar")
-@sync_operation(operation_type="start_campaign")
+@sync_operation()
 async def iniciar_campana_presione1(
     campana_id: int,
     request: IniciarCampanaRequest,
@@ -351,7 +343,7 @@ async def iniciar_campana_presione1(
 
 
 @router.post("/campanhas/{campana_id}/pausar")
-@sync_operation(operation_type="pause_campaign")
+@sync_operation()
 async def pausar_campana_presione1(
     campana_id: int,
     request: PausarCampanaRequest,
@@ -391,7 +383,7 @@ async def pausar_campana_presione1(
 
 
 @router.post("/campanhas/{campana_id}/retomar")
-@sync_operation(operation_type="resume_campaign")
+@sync_operation()
 async def retomar_campana_presione1(
     campana_id: int,
     service: PresionE1Service = Depends(get_presione1_service)
@@ -427,7 +419,7 @@ async def retomar_campana_presione1(
 
 
 @router.post("/campanhas/{campana_id}/parar")
-@sync_operation(operation_type="stop_campaign")
+@sync_operation()
 async def parar_campana_presione1(
     campana_id: int,
     service: PresionE1Service = Depends(get_presione1_service)

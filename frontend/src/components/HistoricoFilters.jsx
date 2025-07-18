@@ -20,6 +20,7 @@ const HistoricoFilters = ({
 }) => {
   // Opciones para filtro de estados
   const estadosOptions = [
+    { value: '', label: 'Todos los estados' },
     { value: 'en_progreso', label: 'En curso' },
     { value: 'pendiente', label: 'Pendiente' },
     { value: 'finalizada', label: 'Finalizada' }
@@ -27,6 +28,7 @@ const HistoricoFilters = ({
 
   // Opciones para filtro de resultados
   const resultadosOptions = [
+    { value: '', label: 'Todos los resultados' },
     { value: 'finalizada_exito', label: 'Finalizada con éxito' },
     { value: 'finalizada_por_admin', label: 'Finalizada por admin' },
     { value: 'ocupado', label: 'Ocupado' },
@@ -175,4 +177,4 @@ HistoricoFilters.propTypes = {
   onReset: PropTypes.func.isRequired
 };
 
-export default HistoricoFilters; 
+export default HistoricoFilters;

@@ -12,7 +12,7 @@ const makeApiRequest = async (endpoint, options = {}) => {
     ...options
   };
 
-  console.log('🔧 API Request:', { url, method: config.method || 'GET' });
+  
 
   try {
     const response = await fetch(url, config);
@@ -22,10 +22,9 @@ const makeApiRequest = async (endpoint, options = {}) => {
     }
 
     const data = await response.json();
-    console.log('✅ API Success:', { url, data });
+    
     return data;
   } catch (error) {
-    console.error('❌ API Error:', { url, error: error.message });
     throw error;
   }
 };
@@ -55,7 +54,6 @@ function ConfiguracionAvanzada() {
       try {
         await Promise.all([cargarCLIs(), cargarContextos()]);
       } catch (error) {
-        console.error('Error al cargar datos:', error);
       } finally {
         setLoading(false);
       }
@@ -488,4 +486,4 @@ function ConfiguracionAvanzada() {
   );
 }
 
-export default ConfiguracionAvanzada; 
+export default ConfiguracionAvanzada;

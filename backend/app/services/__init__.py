@@ -17,8 +17,17 @@ except ImportError as e:
     generar_cli = None
     validar_cli = None
 
+# Importar presione1_service
+try:
+    from app.services import presione1_service
+    print("Presione1 service imported successfully")
+except ImportError as e:
+    print(f"Warning: Could not import presione1_service: {e}")
+    presione1_service = None
+
 __all__ = [
     'asterisk_service',
     'generar_cli',
-    'validar_cli'
+    'validar_cli',
+    'presione1_service'
 ]

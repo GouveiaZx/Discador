@@ -109,13 +109,8 @@ const CliPatternGenerator = () => {
     try {
       setLoading(true);
       setError('');
-      console.log('🔄 Cargando países soportados...');
       
       const response = await api.get('/performance/cli-pattern/countries');
-      console.log('📞 Respuesta del servidor completa:', response);
-      console.log('📞 Respuesta data:', response.data);
-      console.log('🔍 Tipo de resposta:', typeof response.data, Array.isArray(response.data));
-      console.log('🔍 Propriedades disponíveis:', Object.keys(response.data || {}));
       
       // Verificar múltiplos formatos de resposta possíveis
       let countriesData = null;
@@ -125,27 +120,22 @@ const CliPatternGenerator = () => {
       if (response.data && response.data.success === true && response.data.data && Array.isArray(response.data.data)) {
         countriesData = response.data.data;
         responseInfo = response.data;
-        console.log('✅ Formato 1 detectado (success + data)');
+        // Formato 1 detectado
       }
       // Formato 2: { data: [...] } (sem success flag)
       else if (response.data && response.data.data && Array.isArray(response.data.data)) {
         countriesData = response.data.data;
         responseInfo = response.data;
-        console.log('✅ Formato 2 detectado (apenas data)');
+        // Formato 2 detectado
       }
       // Formato 3: Array direto
       else if (response.data && Array.isArray(response.data)) {
         countriesData = response.data;
         responseInfo = { data: response.data, fallback: false };
-        console.log('✅ Formato 3 detectado (array direto)');
+        // Formato 3 detectado
       }
       
-      console.log('🔍 Dados extraídos:', { 
-        countriesData: countriesData ? `Array[${countriesData.length}]` : null, 
-        responseInfo,
-        hasSuccess: responseInfo.success,
-        hasData: !!countriesData
-      });
+      // Dados extraídos
       
       if (countriesData && Array.isArray(countriesData) && countriesData.length > 0) {
         // Validar se os países têm a estrutura esperada
@@ -158,7 +148,7 @@ const CliPatternGenerator = () => {
         
         if (validCountries.length > 0) {
           setCountries(validCountries);
-          console.log('✅ Países cargados e validados:', validCountries.length, 'países válidos de', countriesData.length);
+          // Países cargados e validados
           
           // Mostrar informação sobre o tipo de serviço
           if (responseInfo.fallback) {
@@ -174,16 +164,11 @@ const CliPatternGenerator = () => {
       }
       
       // Se chegou aqui, algo deu errado
-      console.warn('⚠️ Nenhum país válido encontrado na resposta:', {
-        responseData: response.data,
-        countriesData,
-        dataType: typeof response.data,
-        isArray: Array.isArray(response.data)
-      });
+      // Nenhum país válido encontrado na resposta
       throw new Error('Nenhum país válido encontrado na resposta do servidor');
       
     } catch (error) {
-      console.error('❌ Error al cargar países:', error);
+      // Error al cargar países
       setError('Error al cargar países del servidor. Usando configuración local.');
       
       // Fallback: cargar países por defecto
@@ -204,22 +189,20 @@ const CliPatternGenerator = () => {
     }));
     
     setCountries(fallbackCountries);
-    console.log('🔄 Usando países por defecto:', fallbackCountries.length, 'países');
+    // Usando países por defecto
     setSuccess(`Configuração local carregada (${fallbackCountries.length} países disponíveis)`);
   };
 
   const loadCountryPatterns = async (country) => {
     try {
-      console.log(`🔄 Cargando patrones para ${country}...`);
       const response = await api.get(`/performance/cli-pattern/patterns/${country}`);
-      console.log('📞 Patrones recibidos:', response.data);
       
       if (response.data.success) {
         setAvailablePatterns(response.data.data);
-        console.log('✅ Patrones cargados:', response.data.data);
+        // Patrones cargados
       }
     } catch (error) {
-      console.error('❌ Error al cargar patrones:', error);
+      // Error al cargar patrones
     }
   };
 
@@ -234,13 +217,7 @@ const CliPatternGenerator = () => {
       setError('');
       setSuccess('');
       
-      console.log('🔄 Generando CLI patterns...', {
-        destination_number: destinationNumber,
-        quantity: quantity,
-        country_override: selectedCountry,
-        custom_pattern: customPattern,
-        custom_area_code: selectedAreaCode
-      });
+      // Generando CLI patterns
 
       const payload = {
         destination_number: destinationNumber,
@@ -260,7 +237,6 @@ const CliPatternGenerator = () => {
       }
 
       const response = await api.post('/performance/cli-pattern/generate', payload);
-      console.log('📞 Respuesta generación:', response.data);
       
       // Tratar diferentes formatos de resposta da API
         let clis = [];
@@ -276,7 +252,7 @@ const CliPatternGenerator = () => {
         clis = response.data.data;
         }
         
-        console.log('📞 CLIs extraídos:', clis);
+        // CLIs extraídos
         
         if (clis && clis.length > 0) {
           setGeneratedClis(clis);
@@ -286,10 +262,10 @@ const CliPatternGenerator = () => {
         // Verificar se há mensagem de erro específica
         const errorMsg = response.data?.error || response.data?.message || 'No se generaron CLIs. Verifica la configuración.';
         setError(errorMsg);
-        console.warn('⚠️ No se generaron CLIs:', response.data);
+        // No se generaron CLIs
       }
     } catch (error) {
-      console.error('❌ Error al generar CLI:', error);
+      // Error al generar CLI
       setError('Error al generar patrones CLI. Revisa la consola para más detalles.');
     } finally {
       setLoading(false);
@@ -308,10 +284,7 @@ const CliPatternGenerator = () => {
       setError('');
       setSuccess('');
       
-      console.log('🔄 Generando CLIs masivos...', {
-        destination_numbers: numbers,
-        custom_pattern: customPattern
-      });
+      // Generando CLIs masivos
 
       const payload = {
         destination_numbers: numbers
@@ -322,7 +295,6 @@ const CliPatternGenerator = () => {
       }
 
       const response = await api.post('/performance/cli-pattern/bulk-generate', payload);
-      console.log('📞 Respuesta generación masiva:', response.data);
       
       if (response.data.success) {
         // Tratar diferentes formatos de respuesta da API
@@ -339,7 +311,7 @@ const CliPatternGenerator = () => {
           results = response.data.data?.results || response.data.results || [];
         }
         
-        console.log('📞 Resultados extraídos:', results);
+        // Resultados extraídos
         
         if (results && results.length > 0) {
           setBulkResults({ results });
@@ -352,7 +324,7 @@ const CliPatternGenerator = () => {
         setError(response.data.error || 'Error en la generación masiva');
       }
     } catch (error) {
-      console.error('❌ Error en la generación masiva:', error);
+      // Error en la generación masiva
       setError('Error en la generación masiva. Revisa la consola para más detalles.');
     } finally {
       setLoading(false);
@@ -362,13 +334,12 @@ const CliPatternGenerator = () => {
   const loadStats = async () => {
     try {
       const response = await api.get('/performance/cli-pattern/stats');
-      console.log('📊 Estadísticas:', response.data);
       
       if (response.data.success) {
         setStats(response.data.data);
       }
     } catch (error) {
-      console.error('❌ Error al cargar estadísticas:', error);
+      // Error al cargar estadísticas
     }
   };
 
@@ -380,7 +351,7 @@ const CliPatternGenerator = () => {
       setSelectedCountry(country);
       setError('');
       setSuccess(`✅ Número de ejemplo para ${countryInfo[country].name}: ${selectedExample}`);
-      console.log(`📱 Ejemplo seleccionado para ${country}:`, selectedExample);
+      // Ejemplo seleccionado
     }
   };
 
@@ -865,4 +836,4 @@ const CliPatternGenerator = () => {
   );
 };
 
-export default CliPatternGenerator; 
+export default CliPatternGenerator;

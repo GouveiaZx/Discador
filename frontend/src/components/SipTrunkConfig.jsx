@@ -11,7 +11,7 @@ const SipTrunkConfig = () => {
   const [isEditMode, setIsEditMode] = useState(false);
 
   const [trunkConfig, setTrunkConfig] = useState({
-    nome: '',
+    nombre: '',
     tipo: 'friend', // friend, peer, user
     host: '',
     porta: 5060,
@@ -24,25 +24,25 @@ const SipTrunkConfig = () => {
     codec_preferido: 'ulaw',
     codecs_permitidos: ['ulaw', 'alaw', 'g729'],
     
-    // Configurações de Roteamento e Códigos de Proveedor
+    // Configuraciones de Enrutamiento y Códigos de Proveedor
     prefixo_discagem: '',
     sufixo_discagem: '',
     codigo_pais: '+1',
     codigo_area_default: '',
     
-    // Configurações SIP
+    // Configuraciones SIP
     nat: 'auto_force_rport',
     qualify: 'yes',
     canreinvite: 'no',
     dtmfmode: 'rfc2833',
     disallow: 'all',
     
-    // Limitações
+    // Limitaciones
     call_limit: 10,
     max_forwards: 20,
     max_canais_simultaneos: 10,
     
-    // Configurações avançadas
+    // Configuraciones avanzadas
     fromuser: '',
     fromdomain: '',
     outboundproxy: '',
@@ -56,7 +56,7 @@ const SipTrunkConfig = () => {
     rtptimeout: 60,
     rtpholdtimeout: 300,
     
-    // Segurança
+    // Seguridad
     encryption: 'no',
     auth_user: '',
     secret: '',
@@ -67,27 +67,27 @@ const SipTrunkConfig = () => {
   });
 
   const codecOptions = [
-    { value: 'ulaw', label: 'μ-law (G.711)', description: 'Boa qualidade, alta largura de banda' },
-    { value: 'alaw', label: 'a-law (G.711)', description: 'Boa qualidade, alta largura de banda' },
-    { value: 'g729', label: 'G.729', description: 'Baixa largura de banda, licença necessária' },
-    { value: 'g722', label: 'G.722', description: 'HD Audio, largura de banda média' },
-    { value: 'gsm', label: 'GSM', description: 'Baixa qualidade, baixa largura de banda' },
-    { value: 'ilbc', label: 'iLBC', description: 'Boa para conexões instáveis' },
+    { value: 'ulaw', label: 'μ-law (G.711)', description: 'Buena calidad, alto ancho de banda' },
+    { value: 'alaw', label: 'a-law (G.711)', description: 'Buena calidad, alto ancho de banda' },
+    { value: 'g729', label: 'G.729', description: 'Bajo ancho de banda, licencia necesaria' },
+    { value: 'g722', label: 'G.722', description: 'HD Audio, ancho de banda medio' },
+    { value: 'gsm', label: 'GSM', description: 'Baja calidad, bajo ancho de banda' },
+    { value: 'ilbc', label: 'iLBC', description: 'Bueno para conexiones inestables' },
     { value: 'opus', label: 'Opus', description: 'Codec moderno, adaptativo' }
   ];
 
   const tipoOptions = [
-    { value: 'friend', label: 'Friend', description: 'Pode fazer e receber chamadas' },
-    { value: 'peer', label: 'Peer', description: 'Apenas receber chamadas' },
-    { value: 'user', label: 'User', description: 'Apenas fazer chamadas' }
+    { value: 'friend', label: 'Friend', description: 'Puede hacer y recibir llamadas' },
+    { value: 'peer', label: 'Peer', description: 'Solo recibir llamadas' },
+    { value: 'user', label: 'User', description: 'Solo hacer llamadas' }
   ];
 
   const natOptions = [
-    { value: 'auto_force_rport', label: 'Auto Force RPort', description: 'Detectar NAT automaticamente' },
-    { value: 'force_rport', label: 'Force RPort', description: 'Forçar uso de RPort' },
-    { value: 'auto_comedia', label: 'Auto Comedia', description: 'Detectar mídia automaticamente' },
+    { value: 'auto_force_rport', label: 'Auto Force RPort', description: 'Detectar NAT automáticamente' },
+    { value: 'force_rport', label: 'Force RPort', description: 'Forzar uso de RPort' },
+    { value: 'auto_comedia', label: 'Auto Comedia', description: 'Detectar media automáticamente' },
     { value: 'yes', label: 'Yes', description: 'NAT habilitado' },
-    { value: 'no', label: 'No', description: 'NAT desabilitado' }
+    { value: 'no', label: 'No', description: 'NAT deshabilitado' }
   ];
 
   const loadTrunks = async () => {
@@ -96,7 +96,6 @@ const SipTrunkConfig = () => {
       const response = await makeApiRequest('/trunks');
       setTrunks(response.data || []);
     } catch (error) {
-      console.error('Erro ao carregar trunks:', error);
       // Sistema real - mostrar datos reales del backend
       setTrunks([]);
     } finally {
@@ -109,9 +108,7 @@ const SipTrunkConfig = () => {
       const response = await makeApiRequest(`/trunks/${trunkId}/sip-config`);
       setTrunkConfig(response || trunkConfig);
     } catch (error) {
-      console.error('Erro ao carregar configuração SIP:', error);
       // Mantener configuración por defecto en caso de error
-      console.warn('No se pudo cargar la configuración SIP del trunk');
     }
   };
 
@@ -125,7 +122,7 @@ const SipTrunkConfig = () => {
     setSelectedTrunk(null);
     setIsEditMode(true);
     setTrunkConfig({
-      nome: '',
+      nombre: '',
       tipo: 'friend',
       host: '',
       porta: 5060,
@@ -173,11 +170,11 @@ const SipTrunkConfig = () => {
       let method = 'PUT';
       
       if (isEditMode && !selectedTrunk) {
-        // Criando novo trunk
+        // Creando nuevo trunk
         endpoint = '/trunks';
         method = 'POST';
       } else if (selectedTrunk) {
-        // Atualizando trunk existente
+        // Actualizando trunk existente
         endpoint = `/trunks/${selectedTrunk.id}/sip-config`;
         method = 'PUT';
       }
@@ -188,16 +185,15 @@ const SipTrunkConfig = () => {
       });
       
       if (isEditMode && !selectedTrunk) {
-        // Reload da lista após criar
+        // Recargar la lista después de crear
         await loadTrunks();
         setIsEditMode(false);
-        alert('Trunk criado com sucesso!');
+        alert('Trunk creado con éxito!');
       } else {
-        alert('Configuração SIP salva com sucesso!');
+        alert('Configuración SIP guardada con éxito!');
       }
     } catch (error) {
-      console.error('Erro ao salvar configuração:', error);
-      alert('Erro ao salvar configuração. Tente novamente.');
+      alert('Error al guardar configuración. Inténtelo de nuevo.');
     } finally {
       setSaving(false);
     }
@@ -213,13 +209,12 @@ const SipTrunkConfig = () => {
       });
       
       if (response.resultado === 'sucesso') {
-        alert(`✅ Teste de conexão realizado com sucesso!\nTempo de resposta: ${response.tempo_resposta}ms`);
+        alert(`✅ Prueba de conexión realizada con éxito!\nTiempo de respuesta: ${response.tempo_resposta}ms`);
       } else {
-        alert(`❌ Falha no teste de conexão.\nMotivo: ${response.mensagem}`);
+        alert(`❌ Falla en la prueba de conexión.\nMotivo: ${response.mensagem}`);
       }
     } catch (error) {
-      console.error('Erro no teste de conexão:', error);
-      alert('❌ Erro ao testar conexão. Verifique as configurações.');
+      alert('❌ Error al probar conexión. Verifique las configuraciones.');
     } finally {
       setTesting(false);
     }
@@ -235,7 +230,7 @@ const SipTrunkConfig = () => {
   };
 
   const generateAsteriskConfig = () => {
-    const config = `[${trunkConfig.nome}]
+    const config = `[${trunkConfig.nombre}]
 type=${trunkConfig.tipo}
 host=${trunkConfig.host}
 port=${trunkConfig.porta}
@@ -261,18 +256,18 @@ rtptimeout=${trunkConfig.rtptimeout}
 rtpholdtimeout=${trunkConfig.rtpholdtimeout}
 encryption=${trunkConfig.encryption}
 
-; === Configurações de Roteamento ===
-${trunkConfig.prefixo_discagem ? `; Prefixo de discagem: ${trunkConfig.prefixo_discagem}` : ''}
-${trunkConfig.sufixo_discagem ? `; Sufixo de discagem: ${trunkConfig.sufixo_discagem}` : ''}
-${trunkConfig.codigo_pais ? `; Código do país: ${trunkConfig.codigo_pais}` : ''}
-${trunkConfig.codigo_area_default ? `; Código de área padrão: ${trunkConfig.codigo_area_default}` : ''}
+; === Configuraciones de Enrutamiento ===
+${trunkConfig.prefixo_discagem ? `; Prefijo de marcado: ${trunkConfig.prefixo_discagem}` : ''}
+${trunkConfig.sufixo_discagem ? `; Sufijo de marcado: ${trunkConfig.sufixo_discagem}` : ''}
+${trunkConfig.codigo_pais ? `; Código del país: ${trunkConfig.codigo_pais}` : ''}
+${trunkConfig.codigo_area_default ? `; Código de área por defecto: ${trunkConfig.codigo_area_default}` : ''}
 
-; === Configurações de Capacidade ===
+; === Configuraciones de Capacidad ===
 max_channels=${trunkConfig.max_canais_simultaneos}
 
-; === Configurações de Caller ID ===
+; === Configuraciones de Caller ID ===
 ${trunkConfig.callerid_padrao ? `callerid=${trunkConfig.callerid_padrao}` : ''}
-${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por campanha: habilitado' : '; Caller ID personalizado por campanha: desabilitado'}`;
+${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por campaña: habilitado' : '; Caller ID personalizado por campaña: deshabilitado'}`;
 
     return config;
   };
@@ -285,7 +280,7 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Carregando trunks SIP...</span>
+        <span className="ml-2 text-gray-600">Cargando trunks SIP...</span>
       </div>
     );
   }
@@ -327,7 +322,7 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                 }`}
               >
-                <div className="font-medium text-gray-800">{trunk.nome}</div>
+                <div className="font-medium text-gray-800">{trunk.nombre}</div>
                 <div className="text-sm text-gray-500">{trunk.host}:{trunk.porta}</div>
                 <div className="flex items-center justify-between mt-2">
                   <div className="flex items-center">
@@ -341,7 +336,7 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
                   <span className={`text-xs px-2 py-1 rounded ${
                     trunk.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
-                    {trunk.ativo ? 'Ativo' : 'Inativo'}
+                    {trunk.ativo ? 'Activo' : 'Inactivo'}
                   </span>
                 </div>
               </div>
@@ -355,7 +350,7 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
             <div>
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-semibold">
-                  🔧 {isEditMode && !selectedTrunk ? 'Novo Trunk SIP' : `Configuração - ${selectedTrunk?.nome}`}
+                  🔧 {isEditMode && !selectedTrunk ? 'Nuevo Trunk SIP' : `Configuración - ${selectedTrunk?.nombre}`}
                 </h3>
                 <div className="flex space-x-2">
                   {selectedTrunk && !isEditMode && (
@@ -367,14 +362,14 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
                       {testing ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Testando...
+                          Probando...
                         </>
                       ) : (
                         <>
                           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          Testar
+                          Probar
                         </>
                       )}
                     </button>
@@ -387,14 +382,14 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
                     {saving ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Salvando...
+                        Guardando...
                       </>
                     ) : (
                       <>
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        Salvar
+                        Guardar
                       </>
                     )}
                   </button>
@@ -404,19 +399,19 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
               {/* Configurações Básicas */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-800 mb-4">📋 Informações Básicas</h4>
+                  <h4 className="font-semibold text-gray-800 mb-4">📋 Información Básica</h4>
                   
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nome do Trunk
+                        Nombre del Trunk
                       </label>
                       <input
                         type="text"
-                        value={trunkConfig.nome}
+                        value={trunkConfig.nombre}
                         onChange={(e) => setTrunkConfig(prev => ({
                           ...prev,
-                          nome: e.target.value
+                          nombre: e.target.value
                         }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Ej: trunk_argentina"
@@ -462,7 +457,7 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
                       
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Porta
+                          Puerto
                         </label>
                         <input
                           type="number"
@@ -481,7 +476,7 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Usuário
+                          Usuario
                         </label>
                         <input
                           type="text"
@@ -496,7 +491,7 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
                       
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Senha
+                          Contraseña
                         </label>
                         <input
                           type="password"
@@ -513,7 +508,7 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-800 mb-4">🎵 Configuração de Codecs</h4>
+                  <h4 className="font-semibold text-gray-800 mb-4">🎵 Configuración de Codecs</h4>
                   
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -563,16 +558,16 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
 
               {/* Configurações de Roteamento e Códigos de Proveedor */}
               <div className="bg-yellow-50 rounded-lg p-4 mb-6">
-                <h4 className="font-semibold text-gray-800 mb-4">📞 Códigos de Proveedor e Roteamento</h4>
+                <h4 className="font-semibold text-gray-800 mb-4">📞 Códigos de Proveedor y Enrutamiento</h4>
                 <p className="text-sm text-gray-600 mb-4">
-                  Configure códigos que seu provedor VOIP exige antes do número de destino
+                  Configure códigos que su proveedor VOIP exige antes del número de destino
                 </p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Prefixo de Discagem
+                        Prefijo de Marcado
                       </label>
                       <input
                         type="text"
@@ -585,13 +580,13 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
                         placeholder="Ex: 9, 0, 00"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Código que o provedor exige antes do número (ex: 9 para linha externa)
+                        Código que el proveedor exige antes del número (ej: 9 para línea externa)
                       </p>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Código do País
+                        Código del País
                       </label>
                       <input
                         type="text"
@@ -604,7 +599,7 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
                         placeholder="Ex: +55, +1, +54"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Código do país para chamadas internacionais
+                        Código del país para llamadas internacionales
                       </p>
                     </div>
                   </div>
@@ -612,7 +607,7 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Sufixo de Discagem
+                        Sufijo de Marcado
                       </label>
                       <input
                         type="text"
@@ -625,13 +620,13 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
                         placeholder="Ex: #, *, vazio"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Código que o provedor exige depois do número (opcional)
+                        Código que el proveedor exige después del número (opcional)
                       </p>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Código de Área Padrão
+                        Código de Área por Defecto
                       </label>
                       <input
                         type="text"
@@ -644,31 +639,31 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
                         placeholder="Ex: 11, 21, 47"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        Código de área para números locais sem DDD
+                        Código de área para números locales sin código de área
                       </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <h5 className="font-medium text-blue-800 mb-2">💡 Exemplo de Configuração:</h5>
+                  <h5 className="font-medium text-blue-800 mb-2">💡 Ejemplo de Configuración:</h5>
                   <div className="text-sm text-blue-700">
                     <p><strong>Número original:</strong> 11987654321</p>
-                    <p><strong>Com prefixo "9":</strong> 911987654321</p>
-                    <p><strong>Com sufixo "#":</strong> 911987654321#</p>
+                    <p><strong>Con prefijo "9":</strong> 911987654321</p>
+                    <p><strong>Con sufijo "#":</strong> 911987654321#</p>
                     <p className="text-xs mt-2 text-blue-600">
-                      O sistema aplicará automaticamente estes códigos antes de discar
+                      El sistema aplicará automáticamente estos códigos antes de marcar
                     </p>
                   </div>
                   
                   <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <h5 className="text-sm font-semibold text-blue-800 mb-2">💡 Casos de Uso Comunes</h5>
                     <ul className="text-xs text-blue-700 space-y-1">
-                      <li><strong>Prefijo "0":</strong> Alguns provedores requerem "0" antes do número</li>
-                      <li><strong>Prefijo "9":</strong> Para acesso a linha externa em alguns sistemas</li>
-                      <li><strong>Sufijo "#":</strong> Para indicar fim de marcação</li>
-                      <li><strong>Código de país:</strong> Para normalizar números internacionais</li>
-                      <li><strong>Área por padrão:</strong> Para completar números locais</li>
+                      <li><strong>Prefijo "0":</strong> Algunos proveedores requieren "0" antes del número</li>
+                      <li><strong>Prefijo "9":</strong> Para acceso a línea externa en algunos sistemas</li>
+                      <li><strong>Sufijo "#":</strong> Para indicar fin de marcado</li>
+                      <li><strong>Código de país:</strong> Para normalizar números internacionales</li>
+                      <li><strong>Área por defecto:</strong> Para completar números locales</li>
                     </ul>
                   </div>
                 </div>
@@ -677,12 +672,12 @@ ${trunkConfig.permitir_callerid_personalizado ? '; Caller ID personalizado por c
               {/* Configurações SIP */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h4 className="font-semibold text-gray-800">⚙️ Configurações SIP</h4>
+                  <h4 className="font-semibold text-gray-800">⚙️ Configuraciones SIP</h4>
                   <button
                     onClick={() => setShowAdvanced(!showAdvanced)}
                     className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
                   >
-                    {showAdvanced ? 'Ocultar' : 'Mostrar'} Avançadas
+                    {showAdvanced ? 'Ocultar' : 'Mostrar'} Avanzadas
                     <svg className={`w-4 h-4 ml-1 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>

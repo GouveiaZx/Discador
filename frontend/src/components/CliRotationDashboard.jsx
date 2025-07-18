@@ -108,7 +108,7 @@ const CliRotationDashboard = () => {
       setPagination(prev => ({ ...prev, total: filteredData.length }));
 
     } catch (err) {
-      console.error('❌ Error al cargar CLIs:', err);
+      // Error al cargar CLIs
       setError('Error al cargar datos de CLI. Verificá la conexión.');
       // Fallback con datos simulados
       const fallbackData = generateMockCliData().slice(0, 10);
@@ -531,4 +531,4 @@ const CliRotationDashboard = () => {
   );
 };
 
-export default CliRotationDashboard; 
+export default CliRotationDashboard;

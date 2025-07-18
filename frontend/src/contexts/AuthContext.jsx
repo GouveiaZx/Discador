@@ -26,7 +26,6 @@ export const AuthProvider = ({ children }) => {
         setUser(JSON.parse(savedUser));
       }
     } catch (err) {
-      console.error('Error al recuperar usuario guardado:', err);
     } finally {
       setLoading(false);
     }
@@ -74,7 +73,6 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       // Fallback para usuarios estándar durante desarrollo
-      console.warn('⚠️ Error en la autenticación vía API, usando fallback local:', err.message);
       
       // Usuarios estándar para desarrollo
       const defaultUsers = [
@@ -185,4 +183,4 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-}; 
+};

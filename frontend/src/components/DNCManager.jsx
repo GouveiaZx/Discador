@@ -22,7 +22,6 @@ const DNCManager = () => {
       const response = await makeApiRequest('/dnc');
       setDncLists(response.data || []);
     } catch (error) {
-      console.error('Erro ao carregar listas DNC:', error);
       setDncLists([]);
     } finally {
       setLoading(false);
@@ -53,7 +52,7 @@ const DNCManager = () => {
       if (file.type === 'text/csv' || file.name.endsWith('.csv') || file.name.endsWith('.txt')) {
         setFormData({...formData, file});
       } else {
-        alert('Por favor, selecione apenas arquivos CSV ou TXT');
+        alert('Por favor, seleccioná solo archivos CSV o TXT');
       }
     }
   };
@@ -87,8 +86,7 @@ const DNCManager = () => {
       resetForm();
       loadDncLists();
     } catch (error) {
-      console.error('Erro ao salvar lista DNC:', error);
-      alert('Erro ao salvar lista DNC. Tente novamente.');
+      alert('Error al guardar lista DNC. Intentá de nuevo.');
     } finally {
       setUploading(false);
     }
@@ -112,7 +110,6 @@ const DNCManager = () => {
         await makeApiRequest(`/dnc/${id}`, { method: 'DELETE' });
         loadDncLists();
       } catch (error) {
-        console.error('Erro ao excluir lista DNC:', error);
       }
     }
   };
@@ -125,7 +122,6 @@ const DNCManager = () => {
       });
       loadDncLists();
     } catch (error) {
-      console.error('Erro ao alterar status da lista DNC:', error);
     }
   };
 
@@ -169,7 +165,7 @@ const DNCManager = () => {
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
           </svg>
-          Nova Lista DNC
+          Nueva Lista DNC
         </button>
       </div>
 
@@ -212,7 +208,7 @@ const DNCManager = () => {
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label htmlFor="active" className="ml-2 block text-sm text-gray-700">
-                    Lista ativa
+                    Lista activa
                   </label>
                 </div>
 
@@ -231,7 +227,7 @@ const DNCManager = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Ou importe um arquivo</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">O importá un archivo</label>
                   <div 
                     className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
                       dragActive 
@@ -254,7 +250,7 @@ const DNCManager = () => {
                           onClick={() => setFormData({...formData, file: null})}
                           className="text-red-600 hover:text-red-700 text-sm"
                         >
-                          Remover archivo
+                          Eliminar archivo
                         </button>
                       </div>
                     ) : (
@@ -263,9 +259,9 @@ const DNCManager = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
                         <p className="text-xs text-gray-600">
-                          Arraste CSV/TXT ou{' '}
+                          Arrastrá CSV/TXT o{' '}
                           <label className="text-blue-600 hover:text-blue-700 cursor-pointer">
-                            clique aqui
+                            hacé clic acá
                             <input
                               type="file"
                               accept=".csv,.txt"
@@ -365,7 +361,7 @@ const DNCManager = () => {
                     </svg>
                     {formatNumberCount(dnc.total_numbers || 0)} números
                   </span>
-                  <span>Criado: {new Date(dnc.created_at).toLocaleDateString()}</span>
+                  <span>Creado: {new Date(dnc.created_at).toLocaleDateString()}</span>
                 </div>
               </div>
             </div>
@@ -376,4 +372,4 @@ const DNCManager = () => {
   );
 };
 
-export default DNCManager; 
+export default DNCManager;

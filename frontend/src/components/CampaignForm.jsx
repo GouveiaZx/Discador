@@ -46,7 +46,6 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
       setAudios(audiosRes.data || []);
       setDncLists(dncRes.data || []);
     } catch (error) {
-      console.error('Erro ao carregar dados do formulário:', error);
       setError('Erro ao carregar dados necessários');
     } finally {
       setLoading(false);
@@ -57,7 +56,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
     const errors = {};
     
     if (!form.nombre.trim()) {
-      errors.nombre = 'Nome da campanha é obrigatório';
+      errors.nombre = 'Nombre de la campaña es obligatorio';
     }
     
     if (!form.trunk_id) {
@@ -65,11 +64,11 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
     }
     
     if (form.cps < 1 || form.cps > 100) {
-      errors.cps = 'CPS deve estar entre 1 e 100';
+      errors.cps = 'CPS debe estar entre 1 y 100';
     }
     
     if (form.max_channels < 1 || form.max_channels > 1000) {
-      errors.max_channels = 'Canais deve estar entre 1 e 1000';
+      errors.max_channels = 'Canales debe estar entre 1 y 1000';
     }
     
     setValidationErrors(errors);
@@ -82,7 +81,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
     
     setForm({ ...form, [name]: newValue });
     
-    // Limpar erro de validação quando usuário corrigir
+    // Limpiar error de validación cuando usuario corrija
     if (validationErrors[name]) {
       setValidationErrors({ ...validationErrors, [name]: '' });
     }
@@ -127,7 +126,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
       
       if (onSaved) onSaved();
     } catch (err) {
-      setError('Erro ao salvar campanha. Verifique os dados e tente novamente.');
+      setError('Error al guardar campaña. Verifique los datos e intente nuevamente.');
     } finally {
       setSaving(false);
     }
@@ -150,7 +149,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">Carregando formulário...</span>
+          <span className="ml-2 text-gray-600">Cargando formulario...</span>
         </div>
       </div>
     );
@@ -162,10 +161,10 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-800">
-              {campaign ? 'Editar Campanha' : 'Nova Campanha'}
+              {campaign ? 'Editar Campaña' : 'Nueva Campaña'}
             </h2>
             <p className="text-gray-600 text-sm mt-1">
-              Configure os parâmetros avançados da campanha
+              Configure los parámetros avanzados de la campaña
             </p>
           </div>
           <div className="flex space-x-2">
@@ -174,7 +173,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
               onClick={() => setShowPreview(!showPreview)}
               className="text-blue-600 hover:text-blue-700 text-sm font-medium"
             >
-              {showPreview ? 'Ocultar' : 'Preview'}
+              {showPreview ? 'Ocultar' : 'Vista Previa'}
             </button>
           </div>
         </div>
@@ -195,17 +194,17 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Informações Básicas */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-800 border-b pb-2">Informações Básicas</h3>
+            <h3 className="text-lg font-medium text-gray-800 border-b pb-2">Información Básica</h3>
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nome da Campanha *
+                Nombre de la Campaña *
               </label>
               <input
                 name="nombre"
                 value={form.nombre}
                 onChange={handleChange}
-                placeholder="Digite o nome da campanha"
+                placeholder="Ingrese el nombre de la campaña"
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   validationErrors.nombre ? 'border-red-300' : 'border-gray-300'
                 }`}
@@ -218,13 +217,13 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Descrição
+                Descripción
               </label>
               <textarea
                 name="descricao"
                 value={form.descricao}
                 onChange={handleChange}
-                placeholder="Descrição opcional da campanha"
+                placeholder="Descripción opcional de la campaña"
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -249,7 +248,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
 
           {/* Configurações Técnicas */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-800 border-b pb-2">Configurações Técnicas</h3>
+            <h3 className="text-lg font-medium text-gray-800 border-b pb-2">Configuraciones Técnicas</h3>
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -279,7 +278,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  CPS (Chamadas/s)
+                  CPS (Llamadas/s)
                 </label>
                 <input
                   name="cps"
@@ -299,7 +298,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Canais Simultâneos
+                  Canales Simultáneos
                 </label>
                 <input
                   name="max_channels"
@@ -352,7 +351,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
 
           {/* Configurações Avançadas */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-800 border-b pb-2">Configurações Avançadas</h3>
+            <h3 className="text-lg font-medium text-gray-800 border-b pb-2">Configuraciones Avanzadas</h3>
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -364,7 +363,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="">Nenhuma lista DNC</option>
+                <option value="">Ninguna lista DNC</option>
                 {dncLists.map(d => (
                   <option key={d.id} value={d.id}>
                     {d.name} ({d.total_numbers || 0} números)
@@ -375,7 +374,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Áudio Press 2 (Opcional)
+                Audio Press 2 (Opcional)
               </label>
               <select
                 name="press_2_audio_id"
@@ -383,7 +382,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="">Nenhum áudio</option>
+                <option value="">Ningún audio</option>
                 {audios.map(a => (
                   <option key={a.id} value={a.id}>
                     {a.name} ({a.type})
@@ -402,7 +401,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label className="ml-2 block text-sm text-gray-700">
-                  Embaralhar contatos ao iniciar campanha
+                  Mezclar contactos al iniciar campaña
                 </label>
               </div>
 
@@ -415,7 +414,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label className="ml-2 block text-sm text-gray-700">
-                  Permitir múltiplas ligações para o mesmo número
+                  Permitir múltiples llamadas al mismo número
                 </label>
               </div>
             </div>
@@ -424,18 +423,18 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
           {/* Preview */}
           {showPreview && (
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-800 border-b pb-2">Preview da Configuração</h3>
+              <h3 className="text-lg font-medium text-gray-800 border-b pb-2">Vista Previa de la Configuración</h3>
               
               <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
-                <div><strong>Nome:</strong> {form.nombre || 'Não definido'}</div>
-                <div><strong>Trunk:</strong> {getSelectedTrunk()?.name || 'Não selecionado'}</div>
-                <div><strong>CPS:</strong> {form.cps} chamadas/segundo</div>
-                <div><strong>Canais:</strong> {form.max_channels} simultâneos</div>
+                <div><strong>Nombre:</strong> {form.nombre || 'No definido'}</div>
+                <div><strong>Trunk:</strong> {getSelectedTrunk()?.name || 'No seleccionado'}</div>
+                <div><strong>CPS:</strong> {form.cps} llamadas/segundo</div>
+                <div><strong>Canales:</strong> {form.max_channels} simultáneos</div>
                 <div><strong>Idioma:</strong> {form.language}</div>
-                <div><strong>DNC:</strong> {getSelectedDnc()?.name || 'Nenhuma'}</div>
-                <div><strong>Áudio Press 2:</strong> {getSelectedAudio()?.name || 'Nenhum'}</div>
-                <div><strong>Embaralhar:</strong> {form.shuffle_contacts ? 'Sim' : 'Não'}</div>
-                <div><strong>Múltiplas ligações:</strong> {form.allow_multiple_calls_same_number ? 'Sim' : 'Não'}</div>
+                <div><strong>DNC:</strong> {getSelectedDnc()?.name || 'Ninguna'}</div>
+                <div><strong>Audio Press 2:</strong> {getSelectedAudio()?.name || 'Ninguno'}</div>
+                <div><strong>Mezclar:</strong> {form.shuffle_contacts ? 'Sí' : 'No'}</div>
+                <div><strong>Múltiples llamadas:</strong> {form.allow_multiple_calls_same_number ? 'Sí' : 'No'}</div>
               </div>
             </div>
           )}
@@ -459,7 +458,7 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
             {saving && (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
             )}
-            {saving ? 'Salvando...' : (campaign ? 'Salvar Alterações' : 'Criar Campanha')}
+            {saving ? 'Guardando...' : (campaign ? 'Guardar Cambios' : 'Crear Campaña')}
           </button>
         </div>
       </form>
@@ -467,4 +466,4 @@ function CampaignForm({ campaign, onSaved, onCancel }) {
   );
 }
 
-export default CampaignForm; 
+export default CampaignForm;

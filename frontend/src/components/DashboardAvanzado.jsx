@@ -94,7 +94,6 @@ const DashboardAvanzado = () => {
         setLastUpdate(new Date());
 
     } catch (error) {
-      console.error('Error cargando dashboard avanzado:', error);
         // Sistema en modo real - mostrar datos reales del backend
         // En caso de error, mantenemos los stats en 0
     } finally {
@@ -269,4 +268,4 @@ const DashboardAvanzado = () => {
   );
 };
 
-export default DashboardAvanzado; 
+export default DashboardAvanzado;

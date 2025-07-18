@@ -134,12 +134,12 @@ const CallTimingConfig = () => {
           setTimingConfigs(timingResponse.configs);
         }
       } catch (err) {
-        console.log('Configuraciones de timing no disponibles aún');
+        // Configuraciones de timing no disponibles aún
         setTimingConfigs([]);
       }
 
     } catch (err) {
-      console.error('Error al cargar datos:', err);
+      // Error al cargar datos
       setError('Error al cargar datos del servidor');
     } finally {
       setLoading(false);

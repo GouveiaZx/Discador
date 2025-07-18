@@ -1,12 +1,12 @@
 /**
- * Serviço para dados do dashboard
+ * Servicio para datos del dashboard
  */
 
 import { makeApiRequest } from '../config/api.js';
 
 /**
- * Obtém métricas em tempo real do dashboard
- * @returns {Promise} Promessa com os dados das métricas
+ * Obtiene métricas en tiempo real del dashboard
+ * @returns {Promise} Promesa con los datos de las métricas
  */
 export const obtenerMetricasDashboard = async () => {
   try {
@@ -17,9 +17,8 @@ export const obtenerMetricasDashboard = async () => {
       }
     });
   } catch (error) {
-      console.error('Error al obtener métricas del dashboard:', error.message);
     
-    // Retornar estrutura vazia em caso de erro
+    // Retornar estructura vacía en caso de error
     return {
       llamadasActivas: 0,
       llamadasHoy: 0,
@@ -39,8 +38,8 @@ export const obtenerMetricasDashboard = async () => {
 };
 
 /**
- * Obtém dados para gráficos do dashboard
- * @returns {Promise} Promessa com os dados dos gráficos
+ * Obtiene datos para gráficos del dashboard
+ * @returns {Promise} Promesa con los datos de los gráficos
  */
 export const obtenerDatosGraficos = async () => {
   try {
@@ -51,9 +50,8 @@ export const obtenerDatosGraficos = async () => {
       }
     });
   } catch (error) {
-      console.error('Error al obtener datos de gráficos:', error.message);
     
-    // Retornar estrutura vazia em caso de erro
+    // Retornar estructura vacía en caso de error
     return {
       llamadasPorHora: {
         labels: [],
@@ -81,8 +79,8 @@ export const obtenerDatosGraficos = async () => {
 };
 
 /**
- * Obtém estatísticas de campanhas ativas
- * @returns {Promise} Promessa com os dados das campanhas
+ * Obtiene estadísticas de campañas activas
+ * @returns {Promise} Promesa con los datos de las campañas
  */
 export const obtenerEstatisticasCampanhas = async () => {
   try {
@@ -93,9 +91,8 @@ export const obtenerEstatisticasCampanhas = async () => {
       }
     });
   } catch (error) {
-      console.error('Error al obtener estadísticas de campañas:', error.message);
     
-    // Retornar estrutura vazia em caso de erro
+    // Retornar estructura vacía en caso de error
     return {
       campanhas: [],
       resumen: {
@@ -112,8 +109,8 @@ export const obtenerEstatisticasCampanhas = async () => {
 };
 
 /**
- * Obtém estatísticas de operadores
- * @returns {Promise} Promessa com os dados dos operadores
+ * Obtiene estadísticas de operadores
+ * @returns {Promise} Promesa con los datos de los operadores
  */
 export const obtenerEstatisticasOperadores = async () => {
   try {
@@ -124,9 +121,8 @@ export const obtenerEstatisticasOperadores = async () => {
       }
     });
   } catch (error) {
-      console.error('Error al obtener estadísticas de operadores:', error.message);
     
-    // Retornar estrutura vazia em caso de erro
+    // Retornar estructura vacía en caso de error
     return {
       operadores: [],
       resumen: {
@@ -140,4 +136,4 @@ export const obtenerEstatisticasOperadores = async () => {
       message: 'Error al conectar con el backend: ' + error.message
     };
   }
-}; 
+};

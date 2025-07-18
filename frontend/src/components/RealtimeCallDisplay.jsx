@@ -40,7 +40,6 @@ const RealtimeCallDisplay = () => {
       }
       
     } catch (err) {
-      console.error('Erro ao buscar chamadas ativas:', err);
       setError('Erro ao conectar com o servidor');
       setActiveCalls([]);
       setTotalCalls(0);
@@ -302,4 +301,4 @@ const RealtimeCallDisplay = () => {
   );
 };
 
-export default RealtimeCallDisplay; 
+export default RealtimeCallDisplay;

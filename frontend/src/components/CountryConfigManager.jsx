@@ -127,7 +127,6 @@ const CountryConfigManager = () => {
         setDncStats(config.dnc);
       }
     } catch (error) {
-      console.error('Erro ao carregar configuração do país:', error);
       setMessage({
         type: 'error',
         text: `Erro ao carregar configuração: ${error.response?.data?.message || error.message}`
@@ -676,4 +675,4 @@ const CountryConfigManager = () => {
   );
 };
 
-export default CountryConfigManager; 
+export default CountryConfigManager;

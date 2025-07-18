@@ -72,7 +72,7 @@ class PresionE1Service:
             }
         }
     
-    async def parar_campana(self, campana_id: int, usuario_id: str, motivo: str = "Parada manual") -> Dict[str, Any]:
+    async def parar_campana(self, campana_id: int, usuario_id: str = "system", motivo: str = "Parada manual") -> Dict[str, Any]:
         """
         Para completamente uma campanha.
         
@@ -144,6 +144,112 @@ class PresionE1Service:
                 detail=f"Erro interno ao buscar campanha: {str(e)}"
             )
     
+    async def iniciar_campana(self, campana_id: int, usuario_id: str) -> Dict[str, Any]:
+        """
+        Inicia uma campanha de discado preditivo.
+        
+        Args:
+            campana_id: ID da campanha
+            usuario_id: ID do usuário que está iniciando
+            
+        Returns:
+            Resultado da operação
+        """
+        try:
+            logger.info(f"🚀 Iniciando campanha {campana_id} - Usuário: {usuario_id}")
+            
+            # Verificar se a campanha existe
+            campana = self.obter_campana(campana_id)
+            
+            if campana.get("activa"):
+                return {
+                    "success": True,
+                    "message": "Campanha já estava ativa",
+                    "campana_id": campana_id
+                }
+            
+            # Marcar campanha como ativa na memória
+            self.campanhas_ativas[campana_id] = {
+                "id": campana_id,
+                "activa": True,
+                "pausada": False,
+                "usuario_id": usuario_id,
+                "fecha_inicio": datetime.utcnow().isoformat(),
+                "llamadas_realizadas": 0,
+                "llamadas_contestadas": 0
+            }
+            
+            # Limpar cache
+            clear_campaign_cache(str(campana_id))
+            
+            logger.info(f"✅ Campanha {campana_id} iniciada com sucesso")
+            
+            return {
+                "success": True,
+                "message": "Campanha iniciada com sucesso",
+                "campana_id": campana_id,
+                "usuario_id": usuario_id
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao iniciar campanha {campana_id}: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Erro ao iniciar campanha: {str(e)}"
+            )
+    
+    async def pausar_campana(self, campana_id: int, pausar: bool, motivo: str = "Pausar/Retomar manual") -> Dict[str, Any]:
+        """
+        Pausa ou retoma uma campanha ativa.
+        
+        Args:
+            campana_id: ID da campanha
+            pausar: True para pausar, False para retomar
+            motivo: Motivo da operação
+            
+        Returns:
+            Resultado da operação
+        """
+        try:
+            acao = "Pausando" if pausar else "Retomando"
+            logger.info(f"⏸️ {acao} campanha {campana_id} - Motivo: {motivo}")
+            
+            # Verificar se a campanha existe e está ativa
+            campana = self.obter_campana(campana_id)
+            
+            if not campana.get("activa") and campana_id not in self.campanhas_ativas:
+                return {
+                    "success": False,
+                    "message": "Campanha não está ativa",
+                    "campana_id": campana_id
+                }
+            
+            # Atualizar status na memória
+            if campana_id in self.campanhas_ativas:
+                self.campanhas_ativas[campana_id]["pausada"] = pausar
+                self.campanhas_ativas[campana_id]["fecha_actualizacion"] = datetime.utcnow().isoformat()
+            
+            # Limpar cache
+            clear_campaign_cache(str(campana_id))
+            
+            status = "pausada" if pausar else "retomada"
+            logger.info(f"✅ Campanha {campana_id} {status} com sucesso")
+            
+            return {
+                "success": True,
+                "message": f"Campanha {status} com sucesso",
+                "campana_id": campana_id,
+                "pausada": pausar,
+                "motivo": motivo
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao pausar/retomar campanha {campana_id}: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Erro ao pausar/retomar campanha: {str(e)}"
+            )
+    
     async def excluir_campana_otimizada(self, campana_id: int) -> Dict[str, Any]:
         """
         Exclui completamente uma campanha e todos os dados relacionados.
@@ -168,7 +274,7 @@ class PresionE1Service:
                 logger.warning(f"Erro ao parar campanha antes da exclusão: {str(e)}")
             
             # Excluir do Supabase
-            supabase_url = f"{self._supabase_config['url']}/rest/v1/campanhas_presione1"
+            supabase_url = f"{self._supabase_config['url']}/rest/v1/campanas_presione1"
             params = {"id": f"eq.{campana_id}"}
             
             response = requests.delete(
@@ -223,4 +329,62 @@ class PresionE1Service:
             raise HTTPException(
                 status_code=500,
                 detail=f"Erro ao excluir campanha: {str(e)}"
+            )
+    
+    def listar_campanas(self, skip: int = 0, limit: int = 100, apenas_ativas: bool = False) -> List[Dict[str, Any]]:
+        """Lista todas as campanhas disponíveis."""
+        try:
+            import requests
+            
+            logger.info("📋 Listando campanhas")
+            
+            # Buscar campanhas do Supabase
+            supabase_url = f"{self._supabase_config['url']}/rest/v1/campanas_presione1"
+            params = {
+                "select": "*", 
+                "order": "id.desc",
+                "offset": skip,
+                "limit": limit
+            }
+            
+            # Filtrar apenas campanhas ativas se solicitado
+            if apenas_ativas:
+                params["activa"] = "eq.true"
+            
+            response = requests.get(
+                supabase_url,
+                headers=self._supabase_config["headers"],
+                params=params,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                campanhas = response.json()
+                
+                # Adicionar informações de status das campanhas ativas em memória
+                for campana in campanhas:
+                    campana_id = campana.get("id")
+                    if campana_id in self.campanhas_ativas:
+                        memoria_data = self.campanhas_ativas[campana_id]
+                        campana.update({
+                            "activa": memoria_data.get("activa", False),
+                            "pausada": memoria_data.get("pausada", False),
+                            "llamadas_realizadas": memoria_data.get("llamadas_realizadas", 0),
+                            "llamadas_contestadas": memoria_data.get("llamadas_contestadas", 0)
+                        })
+                
+                logger.info(f"✅ {len(campanhas)} campanhas encontradas (skip={skip}, limit={limit}, apenas_ativas={apenas_ativas})")
+                return campanhas
+            else:
+                logger.error(f"Erro ao buscar campanhas: {response.status_code} - {response.text}")
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"Erro ao buscar campanhas: {response.text}"
+                )
+                
+        except Exception as e:
+            logger.error(f"❌ Erro ao listar campanhas: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Erro interno ao listar campanhas: {str(e)}"
             )

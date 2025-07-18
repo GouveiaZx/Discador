@@ -41,12 +41,12 @@ const CallerIdManager = () => {
           setCallerConfigs(callerResponse.configs);
         }
       } catch (err) {
-        console.log('Configuraciones de Caller ID no disponibles aún');
+        // Configuraciones de Caller ID no disponibles aún
         setCallerConfigs([]);
       }
 
     } catch (err) {
-      console.error('Error al cargar datos:', err);
+      // Error al cargar datos
       setError('Error al cargar datos del servidor');
     } finally {
       setLoading(false);

@@ -54,31 +54,23 @@ const CampaignControl = ({ campaignId, onClose }) => {
       if (!campaignId) return;
       
       // Fazer requisições uma por vez para evitar problemas de CORS
-      console.log('🔄 Carregando dados da campanha...');
       
       // 1. Dados da campanha
       try {
         const campaignRes = await makeApiRequest(`/presione1/campanhas/${campaignId}`);
         setCampaign(campaignRes);
-        console.log('✅ Dados da campanha carregados:', campaignRes.nombre);
       } catch (err) {
-        console.warn('⚠️ Erro ao carregar dados da campanha:', err.message);
       }
       
       // 2. Estatísticas (com retry em caso de erro)
       try {
         const statsRes = await makeApiRequest(`/presione1/campanhas/${campaignId}/estadisticas`);
         setStatistics(statsRes);
-        console.log('✅ Estatísticas carregadas:', {
-          realizadas: statsRes.llamadas_realizadas,
-          contestadas: statsRes.llamadas_contestadas
-        });
       } catch (err) {
-        console.warn('⚠️ Erro ao carregar estatísticas:', err.message);
-        // Usar dados mock em caso de erro
+        // Usar datos mock en caso de error
         setStatistics({
           campana_id: campaignId,
-          nombre_campana: campaign?.nombre || 'Campanha',
+          nombre_campana: campaign?.nombre || 'Campaña',
           total_numeros: 0,
           llamadas_realizadas: 0,
           llamadas_contestadas: 0,
@@ -98,9 +90,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
         const monitorRes = await makeApiRequest(`/presione1/campanhas/${campaignId}/monitor`);
         setActiveCalls(monitorRes.llamadas_activas || []);
         setRecentCalls(monitorRes.ultimas_llamadas || []);
-        console.log('✅ Dados de monitoramento carregados');
       } catch (err) {
-        console.warn('⚠️ Erro ao carregar monitoramento:', err.message);
         setActiveCalls([]);
         setRecentCalls([]);
       }
@@ -108,7 +98,6 @@ const CampaignControl = ({ campaignId, onClose }) => {
       setLastUpdate(new Date());
       setError(null);
     } catch (err) {
-      console.error('❌ Erro geral ao carregar dados da campanha:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -119,9 +108,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
     try {
       const response = await makeApiRequest(`/audio-inteligente/campanhas/${campaignId}/sessoes`);
       setAudioSessions(response.data || []);
-      console.log('✅ Sessões de áudio carregadas:', response.data?.length || 0);
     } catch (err) {
-      console.warn('⚠️ Erro ao carregar sessões de áudio:', err.message);
       setAudioSessions([]);
     }
   }, [campaignId]);
@@ -132,9 +119,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
       // Extrair o array de agentes do objeto retornado
       const agentesArray = response.data?.agentes || response.agentes || [];
       setAgents(agentesArray);
-      console.log('✅ Agentes carregados:', agentesArray.length);
     } catch (err) {
-      console.warn('⚠️ Erro ao carregar agentes:', err.message);
       setAgents([]);
     }
   }, []);
@@ -153,11 +138,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
         motivo: 'Pausado pelo operador via interface'
       };
       
-      console.log('⏸️ Pausando campanha...', pauseData);
-      
       await makeApiRequest(`/presione1/campanhas/${campaignId}/pausar`, 'POST', pauseData);
-      
-      console.log('✅ Campanha pausada com sucesso');
       
       // Aguardar um pouco antes de atualizar
       setTimeout(() => {
@@ -165,8 +146,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
       }, 1000);
       
     } catch (err) {
-      console.error('❌ Erro ao pausar campanha:', err);
-              setError(`Error al pausar campaña: ${err.message}`);
+      setError(`Error al pausar campaña: ${err.message}`);
     } finally {
       setActionLoading(prev => ({ ...prev, pausing: false }));
     }
@@ -182,11 +162,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
         motivo: 'Retomado pelo operador via interface'
       };
       
-      console.log('▶️ Retomando campanha...', resumeData);
-      
       await makeApiRequest(`/presione1/campanhas/${campaignId}/pausar`, 'POST', resumeData);
-      
-      console.log('✅ Campanha retomada com sucesso');
       
       // Aguardar um pouco antes de atualizar
       setTimeout(() => {
@@ -194,8 +170,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
       }, 1000);
       
     } catch (err) {
-      console.error('❌ Erro ao retomar campanha:', err);
-              setError(`Error al reanudar campaña: ${err.message}`);
+      setError(`Error al reanudar campaña: ${err.message}`);
     } finally {
       setActionLoading(prev => ({ ...prev, resuming: false }));
     }
@@ -207,14 +182,10 @@ const CampaignControl = ({ campaignId, onClose }) => {
     try {
       setActionLoading(prev => ({ ...prev, stopping: true }));
       
-      console.log('🛑 Parando campanha...');
-      
       await makeApiRequest(`/presione1/campanhas/${campaignId}/parar`, 'POST', {
         campana_id: campaignId,
         motivo: 'Parado pelo operador via interface'
       });
-      
-      console.log('✅ Campanha parada com sucesso');
       
       // Aguardar um pouco antes de atualizar
       setTimeout(() => {
@@ -222,8 +193,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
       }, 1000);
       
     } catch (err) {
-      console.error('❌ Erro ao parar campanha:', err);
-              setError(`Error al detener campaña: ${err.message}`);
+      setError(`Error al detener campaña: ${err.message}`);
     } finally {
       setActionLoading(prev => ({ ...prev, stopping: false }));
     }
@@ -336,8 +306,8 @@ const CampaignControl = ({ campaignId, onClose }) => {
       <div className="card-glass rounded-lg shadow-lg border border-white/10 p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-lg font-semibold text-white">Controles da Campanha</h3>
-            <p className="text-sm text-secondary-300">Gerencie a execução da campanha</p>
+            <h3 className="text-lg font-semibold text-white">Controles de Campaña</h3>
+            <p className="text-sm text-secondary-300">Gestione la ejecución de la campaña</p>
           </div>
           <StatusBadge status={campaign?.estado || 'parada'}>
             {campaign?.estado?.toUpperCase() || 'PARADA'}
@@ -371,7 +341,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
               ) : (
                 <PlayIcon className="w-4 h-4 mr-2" />
               )}
-              Retomar
+              Reanudar
             </button>
           )}
           
@@ -385,7 +355,7 @@ const CampaignControl = ({ campaignId, onClose }) => {
             ) : (
               <StopIcon className="w-4 h-4 mr-2" />
             )}
-            Parar
+            Detener
           </button>
         </div>
       </div>
@@ -697,4 +667,4 @@ const CampaignControl = ({ campaignId, onClose }) => {
   );
 };
 
-export default CampaignControl; 
+export default CampaignControl;

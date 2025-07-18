@@ -195,8 +195,7 @@ const HistoricoLlamadas = () => {
       
       setError(null);
     } catch (err) {
-      console.error('Error al obtener historial de llamadas:', err);
-      setError('Error al cargar historial de llamadas. Por favor, intentá nuevamente.');
+      setError('Error al cargar historial de llamadas. Por favor, intentá de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -246,8 +245,7 @@ const HistoricoLlamadas = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
-      console.error('Error al exportar CSV:', err);
-      alert('Error al exportar datos a CSV. Por favor, intentá nuevamente.');
+      alert('Error al exportar datos a CSV. Por favor, intentá de nuevo.');
     } finally {
       setIsExporting(false);
     }
@@ -487,7 +485,7 @@ const HistoricoLlamadas = () => {
                   <div className="text-2xl font-bold text-primary-400 mb-1">
                     {metrics.totalLlamadas > 0 ? Math.round((metrics.completadas / metrics.totalLlamadas) * 100) : 0}%
                   </div>
-                  <p className="text-xs text-secondary-400">Taxa de éxito general</p>
+                  <p className="text-xs text-secondary-400">Tasa de éxito general</p>
                 </div>
                 
                 <div className="pt-3 border-t border-secondary-700">
@@ -518,4 +516,4 @@ const HistoricoLlamadas = () => {
   );
 };
 
-export default HistoricoLlamadas; 
+export default HistoricoLlamadas;

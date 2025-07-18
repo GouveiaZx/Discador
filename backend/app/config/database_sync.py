@@ -196,6 +196,17 @@ class DatabaseValidator:
     """Validador para operações de banco de dados"""
     
     @staticmethod
+    def validate_campaign_id(campaign_id: Any) -> int:
+        """Valida e converte ID de campanha"""
+        try:
+            validated_id = int(campaign_id)
+            if validated_id <= 0:
+                raise ValueError("ID da campanha deve ser um número positivo")
+            return validated_id
+        except (ValueError, TypeError) as e:
+            raise ValueError(f"ID de campanha inválido: {campaign_id}. Deve ser um número inteiro positivo.") from e
+    
+    @staticmethod
     def validate_campaign_data(data: Dict[str, Any]) -> Dict[str, Any]:
         """Valida dados de campanha"""
         required_fields = ['nombre', 'descripcion']

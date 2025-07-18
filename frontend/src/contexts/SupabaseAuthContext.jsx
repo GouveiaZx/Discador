@@ -6,7 +6,7 @@ const SupabaseAuthContext = createContext(null);
 export const useSupabaseAuth = () => {
   const context = useContext(SupabaseAuthContext);
   if (!context) {
-    throw new Error('useSupabaseAuth deve ser usado dentro de um SupabaseAuthProvider');
+    throw new Error('useSupabaseAuth debe ser usado dentro de un SupabaseAuthProvider');
   }
   return context;
 };
@@ -18,18 +18,16 @@ export const SupabaseAuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Obter sessão inicial
+    // Obtener sesión inicial
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await auth.getCurrentSession();
         if (error) {
-          console.error('Erro ao obter sessão inicial:', error);
         } else {
           setSession(session);
           setUser(session?.user || null);
         }
       } catch (err) {
-        console.error('Erro ao verificar sessão:', err);
       } finally {
         setLoading(false);
       }
@@ -37,10 +35,9 @@ export const SupabaseAuthProvider = ({ children }) => {
 
     getInitialSession();
 
-    // Escutar mudanças de autenticação
+    // Escuchar cambios de autenticación
     const { data: { subscription } } = auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user || null);
         setLoading(false);
@@ -53,7 +50,7 @@ export const SupabaseAuthProvider = ({ children }) => {
   }, []);
 
   /**
-   * Fazer login com email e senha
+   * Hacer login con email y contraseña
    */
   const signIn = async (email, password) => {
     setLoading(true);
@@ -71,13 +68,13 @@ export const SupabaseAuthProvider = ({ children }) => {
       }
 
       return {
-        success: true,
-        message: 'Login realizado com sucesso',
+          success: true,
+          message: 'Login realizado con éxito',
         user: data.user,
         session: data.session
       };
     } catch (err) {
-      const errorMessage = err.message || 'Erro ao fazer login';
+      const errorMessage = err.message || 'Error al hacer login';
       setError(errorMessage);
       return {
         success: false,
@@ -89,7 +86,7 @@ export const SupabaseAuthProvider = ({ children }) => {
   };
 
   /**
-   * Registrar novo usuário
+   * Registrar nuevo usuario
    */
   const signUp = async (email, password, metadata = {}) => {
     setLoading(true);
@@ -107,12 +104,12 @@ export const SupabaseAuthProvider = ({ children }) => {
       }
 
       return {
-        success: true,
-        message: 'Usuário registrado com sucesso. Verifique seu email.',
+          success: true,
+          message: 'Usuario registrado con éxito. Verifique su email.',
         user: data.user
       };
     } catch (err) {
-      const errorMessage = err.message || 'Erro ao registrar usuário';
+      const errorMessage = err.message || 'Error al registrar usuario';
       setError(errorMessage);
       return {
         success: false,
@@ -124,7 +121,7 @@ export const SupabaseAuthProvider = ({ children }) => {
   };
 
   /**
-   * Fazer logout
+   * Hacer logout
    */
   const signOut = async () => {
     setLoading(true);
@@ -142,11 +139,11 @@ export const SupabaseAuthProvider = ({ children }) => {
       }
 
       return {
-        success: true,
-        message: 'Logout realizado com sucesso'
-      };
+          success: true,
+          message: 'Logout realizado con éxito'
+        };
     } catch (err) {
-      const errorMessage = err.message || 'Erro ao fazer logout';
+      const errorMessage = err.message || 'Error al hacer logout';
       setError(errorMessage);
       return {
         success: false,
@@ -158,7 +155,7 @@ export const SupabaseAuthProvider = ({ children }) => {
   };
 
   /**
-   * Verificar se usuário tem permissão baseado em metadata
+   * Verificar si usuario tiene permiso basado en metadata
    */
   const hasPermission = (requiredRole) => {
     if (!user) return false;
@@ -179,7 +176,7 @@ export const SupabaseAuthProvider = ({ children }) => {
   };
 
   /**
-   * Obter perfil do usuário
+   * Obtener perfil del usuario
    */
   const getUserProfile = () => {
     if (!user) return null;
@@ -196,7 +193,7 @@ export const SupabaseAuthProvider = ({ children }) => {
   };
 
   /**
-   * Atualizar perfil do usuário
+   * Actualizar perfil del usuario
    */
   const updateProfile = async (updates) => {
     setLoading(true);
@@ -216,12 +213,12 @@ export const SupabaseAuthProvider = ({ children }) => {
       }
 
       return {
-        success: true,
-        message: 'Perfil atualizado com sucesso',
+          success: true,
+          message: 'Perfil actualizado con éxito',
         user: data.user
       };
     } catch (err) {
-      const errorMessage = err.message || 'Erro ao atualizar perfil';
+      const errorMessage = err.message || 'Error al actualizar perfil';
       setError(errorMessage);
       return {
         success: false,
@@ -233,7 +230,7 @@ export const SupabaseAuthProvider = ({ children }) => {
   };
 
   /**
-   * Resetar senha
+   * Resetear contraseña
    */
   const resetPassword = async (email) => {
     setLoading(true);
@@ -253,11 +250,11 @@ export const SupabaseAuthProvider = ({ children }) => {
       }
 
       return {
-        success: true,
-        message: 'Email de recuperação enviado com sucesso'
-      };
+          success: true,
+          message: 'Email de recuperación enviado con éxito'
+        };
     } catch (err) {
-      const errorMessage = err.message || 'Erro ao enviar email de recuperação';
+      const errorMessage = err.message || 'Error al enviar email de recuperación';
       setError(errorMessage);
       return {
         success: false,
@@ -280,7 +277,7 @@ export const SupabaseAuthProvider = ({ children }) => {
     getUserProfile,
     updateProfile,
     resetPassword,
-    // Aliases para compatibilidade
+    // Aliases para compatibilidad
     login: signIn,
     logout: signOut,
     getUser: getUserProfile

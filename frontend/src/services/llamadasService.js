@@ -1,12 +1,12 @@
 /**
- * Serviço para interagir com a API de chamadas
+ * Servicio para interactuar con la API de llamadas
  */
 
 import { makeApiRequest, buildApiUrl } from '../config/api.js';
 
 /**
- * Obtém todas as chamadas com estado 'en_progreso'
- * @returns {Promise} Promessa com os dados das chamadas
+ * Obtiene todas las llamadas con estado 'en_progreso'
+ * @returns {Promise} Promesa con los datos de las llamadas
  */
 export const obtenerLlamadasEnProgreso = async () => {
   try {
@@ -17,7 +17,7 @@ export const obtenerLlamadasEnProgreso = async () => {
       }
     });
 
-    // Unificar formato de resposta - mapear diferentes formatos de API
+    // Unificar formato de respuesta - mapear diferentes formatos de API
     if (data.calls && Array.isArray(data.calls)) {
       data.llamadas = data.calls.map(llamada => ({
         id: llamada.id || Math.random(),
@@ -50,7 +50,6 @@ export const obtenerLlamadasEnProgreso = async () => {
 
     return data;
   } catch (error) {
-      console.error('Error al obtener las llamadas en progreso:', error.message);
     
     // Retornar estructura vacía en caso de error
     return {
@@ -64,7 +63,7 @@ export const obtenerLlamadasEnProgreso = async () => {
 /**
  * Finaliza manualmente una llamada
  * @param {number} llamadaId - ID de la llamada a finalizar
- * @returns {Promise} Promessa com o resultado da finalização
+ * @returns {Promise} Promesa con el resultado de la finalización
  */
 export const finalizarLlamadaManualmente = async (llamadaId) => {
   try {
@@ -79,9 +78,8 @@ export const finalizarLlamadaManualmente = async (llamadaId) => {
       })
     });
   } catch (error) {
-      console.error(`Error al finalizar la llamada ID ${llamadaId}:`, error.message);
     
-    // Retornar erro real
+    // Retornar error real
     return { 
       success: false, 
       message: 'Error al finalizar llamada: ' + error.message 
@@ -90,15 +88,15 @@ export const finalizarLlamadaManualmente = async (llamadaId) => {
 };
 
 /**
- * Obtém o histórico de chamadas com filtros e paginação
- * @param {Object} filters - Objeto com os filtros a aplicar
- * @param {number} page - Número da página atual
- * @param {number} pageSize - Tamanho da página
- * @returns {Promise} Promessa com os dados das chamadas
+ * Obtiene el historial de llamadas con filtros y paginación
+ * @param {Object} filters - Objeto con los filtros a aplicar
+ * @param {number} page - Número de la página actual
+ * @param {number} pageSize - Tamaño de la página
+ * @returns {Promise} Promesa con los datos de las llamadas
  */
 export const obtenerHistoricoLlamadas = async (filters = {}, page = 1, pageSize = 10) => {
   try {
-    // Construir parâmetros de query
+    // Construir parámetros de query
     const queryParams = new URLSearchParams({
       page,
       page_size: pageSize,
@@ -112,7 +110,7 @@ export const obtenerHistoricoLlamadas = async (filters = {}, page = 1, pageSize 
       }
     });
 
-    // Mapear dados do backend real para formato esperado pelo frontend
+    // Mapear datos del backend real para formato esperado por el frontend
     if (data.llamadas && Array.isArray(data.llamadas)) {
       data.llamadas = data.llamadas.map(llamada => ({
         ...llamada,
@@ -127,9 +125,8 @@ export const obtenerHistoricoLlamadas = async (filters = {}, page = 1, pageSize 
 
     return data;
   } catch (error) {
-      console.error('Erro ao obter histórico de chamadas:', error.message);
     
-    // Retornar estrutura vazia em caso de erro
+    // Retornar estructura vacía en caso de error
     return {
       llamadas: [],
       total: 0,
@@ -142,9 +139,9 @@ export const obtenerHistoricoLlamadas = async (filters = {}, page = 1, pageSize 
 };
 
 /**
- * Obtém os detalhes de una chamada específica pelo ID
- * @param {number} llamadaId - ID da chamada
- * @returns {Promise} Promessa com os detalhes da chamada
+ * Obtiene los detalles de una llamada específica por ID
+ * @param {number} llamadaId - ID de la llamada
+ * @returns {Promise} Promesa con los detalles de la llamada
  */
 export const obtenerDetalleLlamada = async (llamadaId) => {
   try {
@@ -155,9 +152,8 @@ export const obtenerDetalleLlamada = async (llamadaId) => {
       }
     });
   } catch (error) {
-      console.error(`Erro ao obter detalhes da chamada ID ${llamadaId}:`, error.message);
     
-    // Retornar erro em caso de falha
+    // Retornar error en caso de falla
     return {
       error: true,
       message: 'Error al obtener detalles de la llamada: ' + error.message
@@ -166,13 +162,13 @@ export const obtenerDetalleLlamada = async (llamadaId) => {
 };
 
 /**
- * Exporta histórico de chamadas filtrado para CSV
- * @param {Object} filters - Objeto com os filtros a aplicar
- * @returns {Promise} Promessa com os dados em formato blob para download
+ * Exporta historial de llamadas filtrado para CSV
+ * @param {Object} filters - Objeto con los filtros a aplicar
+ * @returns {Promise} Promesa con los datos en formato blob para descarga
  */
 export const exportarHistoricoCSV = async (filters = {}) => {
   try {
-    // Construir parâmetros de query
+    // Construir parámetros de query
     const queryParams = new URLSearchParams({
       ...filters,
       export: 'csv'
@@ -186,14 +182,13 @@ export const exportarHistoricoCSV = async (filters = {}) => {
     });
 
     if (!response.ok) {
-      throw new Error('Erro ao exportar histórico de chamadas');
+      throw new Error('Error al exportar historial de llamadas');
     }
 
     return await response.blob();
   } catch (error) {
-    console.error('Error al exportar histórico CSV:', error.message);
     
-    // Retornar erro em caso de falha
+    // Retornar error en caso de falla
     throw new Error('Error al exportar histórico: ' + error.message);
   }
-}; 
+};

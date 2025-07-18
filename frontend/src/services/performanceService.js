@@ -42,7 +42,7 @@ class PerformanceService {
       return response;
     } catch (error) {
       if (error.message.includes('Endpoint not implemented') || error.message.includes('404')) {
-        console.warn(`🔄 Usando fallback para ${endpoint}`);
+  
         return fallbackData || { status: 'fallback', message: 'Endpoint não implementado, usando mock' };
       }
       throw error;
@@ -58,7 +58,6 @@ class PerformanceService {
       const response = await makeApiRequest('/performance/metrics/realtime', 'GET');
       return response;
     } catch (error) {
-      console.error('❌ Error al obtener métricas en tiempo real:', error);
       throw error;
     }
   }
@@ -71,7 +70,6 @@ class PerformanceService {
       const response = await makeApiRequest(`/performance/metrics/history?minutes=${minutes}`, 'GET');
       return response;
     } catch (error) {
-      console.error('❌ Error al obtener historial de métricas:', error);
       throw error;
     }
   }
@@ -83,7 +81,7 @@ class PerformanceService {
   createWebSocketConnection(onMessage, onError, onClose) {
     // Não conectar WebSocket no Vercel ou em produção
     if (window.location.hostname.includes('vercel.app') || this.isProduction) {
-      console.log('🚫 WebSocket desabilitado em produção');
+  
       return null;
     }
 
@@ -98,23 +96,19 @@ class PerformanceService {
           const data = JSON.parse(event.data);
           onMessage(data);
         } catch (err) {
-          console.error('❌ Error al parsear mensaje WebSocket:', err);
         }
       };
       
       ws.onerror = (error) => {
-        console.error('❌ Error WebSocket:', error);
         if (onError) onError(error);
       };
       
       ws.onclose = () => {
-        console.log('🔌 WebSocket desconectado');
         if (onClose) onClose();
       };
       
       return ws;
     } catch (error) {
-      console.error('❌ Error al crear WebSocket:', error);
       if (onError) onError(error);
       return null;
     }
@@ -129,7 +123,6 @@ class PerformanceService {
       const response = await makeApiRequest('/performance/dialer/start', 'POST', config);
       return response;
     } catch (error) {
-      console.error('❌ Error al iniciar dialer:', error);
       throw error;
     }
   }
@@ -142,7 +135,6 @@ class PerformanceService {
       const response = await makeApiRequest('/performance/dialer/stop', 'POST');
       return response;
     } catch (error) {
-      console.error('❌ Error al parar dialer:', error);
       throw error;
     }
   }
@@ -159,7 +151,7 @@ class PerformanceService {
       const response = await makeApiRequest(`/performance/dialer/cps/${cps}`, 'POST');
       return response;
     } catch (error) {
-      console.error('❌ Error al definir CPS:', error);
+      // Error al definir CPS
       throw error;
     }
   }
@@ -173,7 +165,7 @@ class PerformanceService {
       const response = await makeApiRequest('/performance/load-test/start', 'POST', config);
       return response;
     } catch (error) {
-      console.error('❌ Error al iniciar test de carga:', error);
+      // Error al iniciar test de carga
       throw error;
     }
   }
@@ -186,7 +178,7 @@ class PerformanceService {
       const response = await makeApiRequest('/performance/load-test/stop', 'POST');
       return response;
     } catch (error) {
-      console.error('❌ Error al parar test de carga:', error);
+      // Error al parar test de carga
       throw error;
     }
   }
@@ -204,7 +196,7 @@ class PerformanceService {
       });
       return response;
     } catch (error) {
-      console.error('❌ Error al obtener status del test:', error);
+      // Error al obtener status del test
       throw error;
     }
   }
@@ -221,7 +213,7 @@ class PerformanceService {
       });
       return response.data;
     } catch (error) {
-      console.error('❌ Error al obtener resultados del test:', error);
+      // Error al obtener resultados del test
       throw error;
     }
   }
@@ -239,7 +231,7 @@ class PerformanceService {
       });
       return response;
     } catch (error) {
-      console.error('❌ Error al obtener límites de CLI:', error);
+      // Error al obtener límites de CLI
       throw error;
     }
   }
@@ -262,7 +254,7 @@ class PerformanceService {
       });
       return response;
     } catch (error) {
-      console.error('❌ Error al actualizar límites de CLI:', error);
+      // Error al actualizar límites de CLI
       throw error;
     }
   }
@@ -279,7 +271,7 @@ class PerformanceService {
       });
       return response;
     } catch (error) {
-      console.error('❌ Error al obtener uso de CLIs:', error);
+      // Error al obtener uso de CLIs
       throw error;
     }
   }
@@ -296,7 +288,7 @@ class PerformanceService {
       });
       return response;
     } catch (error) {
-      console.error('❌ Error al resetear uso de CLI:', error);
+      // Error al resetear uso de CLI
       throw error;
     }
   }
@@ -310,7 +302,7 @@ class PerformanceService {
       const response = await makeApiRequest('/performance/cli/rotation', 'GET');
       return response;
     } catch (error) {
-      console.error('❌ Error al obtener datos de rotación:', error);
+      // Error al obtener datos de rotación
       throw error;
     }
   }
@@ -324,7 +316,7 @@ class PerformanceService {
       const response = await makeApiRequest(`/performance/cli/list?${queryParams}`, 'GET');
       return response;
     } catch (error) {
-      console.error('❌ Error al obtener lista de CLIs:', error);
+      // Error al obtener lista de CLIs
       throw error;
     }
   }
@@ -337,7 +329,7 @@ class PerformanceService {
       const response = await makeApiRequest('/performance/cli/rotation/config', 'POST', config);
       return response;
     } catch (error) {
-      console.error('❌ Error al actualizar configuración de rotación:', error);
+      // Error al actualizar configuración de rotación
       throw error;
     }
   }
@@ -355,7 +347,7 @@ class PerformanceService {
       });
       return response;
     } catch (error) {
-      console.error('❌ Error al obtener configuraciones DTMF:', error);
+      // Error al obtener configuraciones DTMF
       throw error;
     }
   }
@@ -373,7 +365,7 @@ class PerformanceService {
       });
       return response;
     } catch (error) {
-      console.error('❌ Error al guardar configuración DTMF:', error);
+      // Error al guardar configuración DTMF
       throw error;
     }
   }
@@ -390,7 +382,7 @@ class PerformanceService {
       });
       return response;
     } catch (error) {
-      console.error('❌ Error al resetear configuración DTMF:', error);
+      // Error al resetear configuración DTMF
       throw error;
     }
   }
@@ -408,7 +400,7 @@ class PerformanceService {
       const response = await makeApiRequest(`/performance/export/${type}?${queryParams}`, 'GET');
       return response.data;
     } catch (error) {
-      console.error('❌ Error al exportar datos:', error);
+      // Error al exportar datos
       throw error;
     }
   }
@@ -826,4 +818,4 @@ class PerformanceService {
 // Instancia del servicio
 const performanceService = new PerformanceService();
 
-export default performanceService; 
+export default performanceService;

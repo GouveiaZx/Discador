@@ -14,6 +14,32 @@ const RealtimeMonitor = () => {
     uso_memoria: 0
   });
   
+  const [currentCall, setCurrentCall] = useState({
+    chamada_ativa: false,
+    numero_discado: null,
+    cli_usado: null,
+    duracao: 0,
+    status_chamada: 'idle',
+    campanha: null,
+    trunk: null,
+    tipo_cli: null,
+    pais_destino: null,
+    inicio_chamada: null
+  });
+  
+  // Estados para CLIs em uso
+  const [cliUsage, setCliUsage] = useState({
+    clis_ativas: [],
+    estatisticas_por_tipo: {},
+    limite_warnings: [],
+    uso_por_hora: [],
+    rotacao_stats: {}
+  });
+  
+  // Estados para alertas
+  const [alerts, setAlerts] = useState([]);
+  const [criticalAlerts, setCriticalAlerts] = useState(0);
+  
   const [activeCalls, setActiveCalls] = useState([]);
   const [recentCalls, setRecentCalls] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,21 +61,72 @@ const RealtimeMonitor = () => {
 
   const intervalRef = useRef(null);
 
+  // Função para carregar dados da chamada atual
+  const loadCurrentCall = async () => {
+    try {
+      const response = await makeApiRequest('/monitoring/current-call');
+      
+      if (response.status === 'success') {
+        setCurrentCall(response);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar chamada atual:', error);
+    }
+  };
+
   const loadMonitoringData = async () => {
     try {
-      const [metricsRes, activeCallsRes, recentCallsRes] = await Promise.all([
+      // Carregar chamada atual
+      await loadCurrentCall();
+      
+      const [metricsRes, activeCallsRes, recentCallsRes, cliUsageRes, alertsRes] = await Promise.all([
         makeApiRequest('/monitoring/metrics'),
         makeApiRequest('/monitoring/active-calls'),
-        makeApiRequest('/monitoring/recent-calls')
+        makeApiRequest('/monitoring/recent-calls'),
+        makeApiRequest('/monitor/cli/usage'),
+        makeApiRequest('/monitor/alerts')
       ]);
       
       setMetrics(metricsRes.data || {});
       setActiveCalls(activeCallsRes.data || []);
       setRecentCalls(recentCallsRes.data || []);
+      setCliUsage(cliUsageRes || {});
+      setAlerts(alertsRes.alerts || []);
+      setCriticalAlerts(alertsRes.critical_count || 0);
       setLoading(false);
     } catch (error) {
-      console.error('Erro ao carregar dados de monitoramento:', error);
       setLoading(false);
+    }
+  };
+  
+  const hangupCall = async (callId) => {
+    if (!confirm('Desconectar esta chamada?')) return;
+    
+    try {
+      await makeApiRequest(`/monitor/calls/${callId}/hangup`, 'POST');
+      await loadMonitoringData();
+    } catch (err) {
+      console.error('Erro ao desconectar chamada:', err);
+    }
+  };
+
+  const disableCli = async (cliId) => {
+    if (!confirm('Desabilitar este CLI temporariamente?')) return;
+    
+    try {
+      await makeApiRequest(`/cli/${cliId}/disable`, 'POST');
+      await loadMonitoringData();
+    } catch (err) {
+      console.error('Erro ao desabilitar CLI:', err);
+    }
+  };
+
+  const dismissAlert = async (alertId) => {
+    try {
+      await makeApiRequest(`/monitor/alerts/${alertId}/dismiss`, 'POST');
+      await loadMonitoringData();
+    } catch (err) {
+      console.error('Erro ao dispensar alerta:', err);
     }
   };
 
@@ -177,9 +254,9 @@ const RealtimeMonitor = () => {
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Monitoramento em Tempo Real</h1>
+            <h1 className="text-2xl font-bold text-gray-800">Monitoreo en Tiempo Real</h1>
             <p className="text-gray-600 mt-1">
-              Acompanhe métricas e status do sistema em tempo real
+              Siga las métricas y estado del sistema en tiempo real
             </p>
           </div>
           
@@ -217,6 +294,54 @@ const RealtimeMonitor = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Chamada Atual */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+          <svg className="mr-2 text-blue-600 w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+          </svg>
+          Chamada Atual
+        </h2>
+        
+        {currentCall.chamada_ativa ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="text-sm text-green-600 font-medium">Número Discado</div>
+              <div className="text-lg font-bold text-green-800">{currentCall.numero_discado}</div>
+              <div className="text-xs text-green-600 mt-1">{currentCall.pais_destino}</div>
+            </div>
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="text-sm text-blue-600 font-medium">CLI Usado</div>
+              <div className="text-lg font-bold text-blue-800">{currentCall.cli_usado}</div>
+              <div className="text-xs text-blue-600 mt-1">Tipo: {currentCall.tipo_cli}</div>
+            </div>
+            
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="text-sm text-yellow-600 font-medium">Status</div>
+              <div className="text-lg font-bold text-yellow-800 capitalize">{currentCall.status_chamada}</div>
+              <div className="text-xs text-yellow-600 mt-1">Duração: {formatDuration(currentCall.duracao)}</div>
+            </div>
+            
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="text-sm text-purple-600 font-medium">Campanha</div>
+              <div className="text-lg font-bold text-purple-800">{currentCall.campanha}</div>
+              <div className="text-xs text-purple-600 mt-1">{currentCall.trunk}</div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-gray-400 mb-2">
+              <svg className="mx-auto w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+            </div>
+            <div className="text-gray-600 font-medium">Nenhuma chamada ativa</div>
+            <div className="text-sm text-gray-500">O sistema está em modo de espera</div>
+          </div>
+        )}
       </div>
 
       {/* Metrics Grid */}
@@ -289,8 +414,8 @@ const RealtimeMonitor = () => {
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma chamada ativa</h3>
-            <p className="mt-1 text-sm text-gray-500">As chamadas aparecerão aqui quando iniciadas.</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">Ninguna llamada activa</h3>
+            <p className="mt-1 text-sm text-gray-500">Las llamadas aparecerán aquí cuando se inicien.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -301,19 +426,19 @@ const RealtimeMonitor = () => {
                     Número
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Campanha
+                    Campaña
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Duração
+                    Duración
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Trunk
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ações
+                    Acciones
                   </th>
                 </tr>
               </thead>
@@ -355,7 +480,7 @@ const RealtimeMonitor = () => {
 
       {/* Recent Calls */}
       <CollapsibleSection
-        title="Chamadas Recentes"
+        title="Llamadas Recientes"
         expanded={expandedSections.recentCalls}
         onToggle={() => toggleSection('recentCalls')}
         count={recentCalls.length}
@@ -365,8 +490,8 @@ const RealtimeMonitor = () => {
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhuma chamada recente</h3>
-            <p className="mt-1 text-sm text-gray-500">O histórico de chamadas aparecerá aqui.</p>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">Ninguna llamada reciente</h3>
+            <p className="mt-1 text-sm text-gray-500">El historial de llamadas aparecerá aquí.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -392,9 +517,144 @@ const RealtimeMonitor = () => {
         )}
       </CollapsibleSection>
 
+      {/* CLI Usage Monitor */}
+      <CollapsibleSection
+        title="Monitoreo de CLIs"
+        expanded={expandedSections.cliUsage}
+        onToggle={() => toggleSection('cliUsage')}
+        count={cliUsage.clis_ativas?.length || 0}
+      >
+        {/* Alertas de Limite */}
+        {cliUsage.limite_warnings?.length > 0 && (
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <span className="text-yellow-800 font-medium">
+                {cliUsage.limite_warnings.length} CLI(s) próximo(s) do limite diário
+              </span>
+            </div>
+          </div>
+        )}
+        
+        {/* Estatísticas por Tipo */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {Object.entries(cliUsage.estatisticas_por_tipo || {}).map(([tipo, stats]) => (
+            <div key={tipo} className="bg-gray-50 rounded-lg p-4">
+              <div className="text-sm font-medium text-gray-700 mb-2">{tipo}</div>
+              <div className="text-lg font-bold text-blue-600">{stats.em_uso || 0}</div>
+              <div className="text-xs text-gray-500">de {stats.total || 0} total</div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                <div 
+                  className="h-2 bg-blue-500 rounded-full"
+                  style={{ width: `${stats.total > 0 ? (stats.em_uso / stats.total) * 100 : 0}%` }}
+                ></div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* CLIs Ativas */}
+        <div className="space-y-2">
+          {cliUsage.clis_ativas?.map((cli) => (
+            <div key={cli.id} className="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
+              <div className="flex-1">
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">{cli.numero}</span>
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(cli.status)}`}>
+                    {cli.tipo}
+                  </span>
+                  {cli.proximo_limite && (
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                      {cli.uso_hoje}/{cli.limite_diario}
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm text-gray-500 mt-1">
+                  Usado {cli.uso_hoje} vezes hoje • Última chamada: {cli.ultima_chamada}
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                {cli.proximo_limite && (
+                  <button
+                    onClick={() => disableCli(cli.id)}
+                    className="px-3 py-1 text-xs font-medium text-yellow-600 bg-yellow-100 rounded hover:bg-yellow-200"
+                  >
+                    Desabilitar
+                  </button>
+                )}
+              </div>
+            </div>
+          )) || (
+            <div className="text-center py-8 text-gray-500">
+              Nenhum CLI em uso no momento.
+            </div>
+          )}
+        </div>
+      </CollapsibleSection>
+
+      {/* Alertas do Sistema */}
+      <CollapsibleSection
+        title="Alertas do Sistema"
+        expanded={expandedSections.alerts}
+        onToggle={() => toggleSection('alerts')}
+        count={alerts.length}
+      >
+        {criticalAlerts > 0 && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <span className="text-red-800 font-medium">
+                {criticalAlerts} alerta(s) crítico(s) requer(em) atenção!
+              </span>
+            </div>
+          </div>
+        )}
+        
+        <div className="space-y-2">
+          {alerts.map((alert) => {
+            const getAlertColor = (severity) => {
+              const colors = {
+                'critical': 'border-red-500 bg-red-50',
+                'warning': 'border-yellow-500 bg-yellow-50',
+                'info': 'border-blue-500 bg-blue-50'
+              };
+              return colors[severity] || 'border-gray-500 bg-gray-50';
+            };
+            
+            return (
+              <div key={alert.id} className={`p-3 border rounded ${getAlertColor(alert.severity)}`}>
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="font-medium">{alert.titulo}</div>
+                    <div className="text-sm mt-1">{alert.descricao}</div>
+                    <div className="text-xs text-gray-500 mt-2">
+                      {new Date(alert.timestamp).toLocaleString('pt-BR')}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => dismissAlert(alert.id)}
+                    className="px-3 py-1 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50"
+                  >
+                    Dispensar
+                  </button>
+                </div>
+              </div>
+            );
+          }) || (
+            <div className="text-center py-8 text-gray-500">
+              Nenhum alerta ativo.
+            </div>
+          )}
+        </div>
+      </CollapsibleSection>
+
       {/* System Health */}
       <CollapsibleSection
-        title="Status do Sistema"
+        title="Estado del Sistema"
         expanded={expandedSections.systemHealth}
         onToggle={() => toggleSection('systemHealth')}
       >
@@ -417,7 +677,7 @@ const RealtimeMonitor = () => {
           
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium text-gray-700">Memória</h4>
+              <h4 className="text-sm font-medium text-gray-700">Memoria</h4>
               <span className="text-sm font-semibold text-gray-900">{metrics.uso_memoria || 0}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -433,7 +693,7 @@ const RealtimeMonitor = () => {
           
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium text-gray-700">Uptime</h4>
+              <h4 className="text-sm font-medium text-gray-700">Tiempo activo</h4>
               <span className="text-sm font-semibold text-gray-900">24h 15m</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -446,4 +706,4 @@ const RealtimeMonitor = () => {
   );
 };
 
-export default RealtimeMonitor; 
+export default RealtimeMonitor;

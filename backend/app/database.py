@@ -3,6 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
 from contextlib import contextmanager
+import sqlite3
 
 from app.config import configuracion
 
@@ -99,4 +100,18 @@ def cerrar_conexion() -> None:
     Cierra la conexion del motor de base de datos.
     """
     if engine:
-        engine.dispose() 
+        engine.dispose()
+
+# Função para obter conexão SQLite direta (para compatibilidade)
+def get_db_connection():
+    """
+    Obtém uma conexão SQLite direta para operações que não usam SQLAlchemy.
+    Usado principalmente para compatibilidade com código legado.
+    """
+    db_url = str(configuracion.DB_URL)
+    if db_url.startswith('sqlite:///'):
+        db_path = db_url.replace('sqlite:///', '')
+        return sqlite3.connect(db_path)
+    else:
+        # Para outros tipos de banco, usar SQLAlchemy
+        return engine.raw_connection()

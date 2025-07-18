@@ -57,7 +57,6 @@ const DNCMultiLanguageManager = () => {
       const response = await makeApiRequest('/dnc/messages');
       setMessages(response.data || []);
     } catch (error) {
-      console.error('Error al cargar mensajes DNC:', error);
       // Sistema real - usar solo datos del backend
       setMessages([]);
     } finally {
@@ -100,7 +99,6 @@ const DNCMultiLanguageManager = () => {
       setEditingMessage(null);
       resetForm();
     } catch (error) {
-      console.error('Error al guardar mensaje:', error);
       alert('Error al guardar mensaje. Intente nuevamente.');
     }
   };
@@ -437,4 +435,4 @@ const DNCMultiLanguageManager = () => {
   );
 };
 
-export default DNCMultiLanguageManager; 
+export default DNCMultiLanguageManager;

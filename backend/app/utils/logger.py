@@ -80,4 +80,4 @@ def obtener_logger(nombre: str) -> logging.Logger:
     Returns:
         logging.Logger: Logger configurado
     """
-    return configurar_logger(f"discador.{nombre}") 
+    return configurar_logger(f"discador.{nombre}")

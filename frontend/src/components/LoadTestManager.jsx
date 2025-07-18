@@ -80,7 +80,6 @@ const LoadTestManager = () => {
         startPolling();
       }
     } catch (err) {
-      console.error('❌ Error al verificar estado del test:', err);
     }
   };
 
@@ -114,7 +113,6 @@ const LoadTestManager = () => {
           loadTestResults();
         }
       } catch (err) {
-        console.error('❌ Error al obtener estado:', err);
       }
     }, 2000);
   };
@@ -124,7 +122,6 @@ const LoadTestManager = () => {
       const results = await performanceService.getLoadTestResults();
       setTestResults(results);
     } catch (err) {
-      console.error('❌ Error al cargar resultados:', err);
     }
   };
 
@@ -148,7 +145,6 @@ const LoadTestManager = () => {
       
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
-      console.error('❌ Error al iniciar test:', err);
       setError('Error al iniciar test de carga. Intentá nuevamente.');
     } finally {
       setLoading(false);
@@ -171,7 +167,6 @@ const LoadTestManager = () => {
         loadTestResults();
       }, 2000);
     } catch (err) {
-      console.error('❌ Error al detener test:', err);
       setError('Error al detener test de carga.');
     } finally {
       setLoading(false);
@@ -202,7 +197,6 @@ const LoadTestManager = () => {
         window.URL.revokeObjectURL(url);
       }
     } catch (err) {
-      console.error('❌ Error al exportar resultados:', err);
       setError('Error al exportar resultados.');
     }
   };
@@ -548,4 +542,4 @@ const LoadTestManager = () => {
   );
 };
 
-export default LoadTestManager; 
+export default LoadTestManager;

@@ -52,7 +52,6 @@ const RolesManager = () => {
       const response = await makeApiRequest('/roles');
       setRoles(response.data || []);
     } catch (error) {
-      console.error('Erro ao carregar roles:', error);
       setRoles([]);
     } finally {
       setLoading(false);
@@ -84,7 +83,6 @@ const RolesManager = () => {
       resetForm();
       loadRoles();
     } catch (error) {
-      console.error('Erro ao salvar role:', error);
       alert('Erro ao salvar role. Tente novamente.');
     }
   };
@@ -106,7 +104,6 @@ const RolesManager = () => {
         await makeApiRequest(`/roles/${id}`, { method: 'DELETE' });
         loadRoles();
       } catch (error) {
-        console.error('Erro ao excluir role:', error);
       }
     }
   };
@@ -119,7 +116,6 @@ const RolesManager = () => {
       });
       loadRoles();
     } catch (error) {
-      console.error('Erro ao alterar status do role:', error);
     }
   };
 
@@ -175,7 +171,7 @@ const RolesManager = () => {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-2 text-gray-600">Cargando roles...</span>
+                  <span className="ml-2 text-gray-600">Carregando roles...</span>
       </div>
     );
   }
@@ -394,4 +390,4 @@ const RolesManager = () => {
   );
 };
 
-export default RolesManager; 
+export default RolesManager;

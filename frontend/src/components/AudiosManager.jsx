@@ -29,7 +29,6 @@ const AudiosManager = () => {
       const response = await makeApiRequest('/audios');
       setAudios(response.data || []);
     } catch (error) {
-      console.error('Erro ao carregar áudios:', error);
       setAudios([]);
     } finally {
       setLoading(false);
@@ -60,7 +59,7 @@ const AudiosManager = () => {
       if (file.type.startsWith('audio/')) {
         setFormData({...formData, file});
       } else {
-        alert('Por favor, selecione apenas arquivos de áudio');
+        alert('Por favor, seleccioná solo archivos de audio');
       }
     }
   };
@@ -97,8 +96,7 @@ const AudiosManager = () => {
       resetForm();
       loadAudios();
     } catch (error) {
-      console.error('Erro ao salvar áudio:', error);
-      alert('Erro ao salvar áudio. Tente novamente.');
+      alert('Error al guardar audio. Intentá de nuevo.');
     } finally {
       setUploading(false);
     }
@@ -116,12 +114,11 @@ const AudiosManager = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Tem certeza que deseja excluir este áudio?')) {
+    if (window.confirm('¿Estás seguro de que querés eliminar este audio?')) {
       try {
         await makeApiRequest(`/audios/${id}`, { method: 'DELETE' });
         loadAudios();
       } catch (error) {
-        console.error('Erro ao excluir áudio:', error);
       }
     }
   };
@@ -148,7 +145,7 @@ const AudiosManager = () => {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Carregando áudios...</span>
+        <span className="ml-2 text-gray-600">Cargando audios...</span>
       </div>
     );
   }
@@ -157,8 +154,8 @@ const AudiosManager = () => {
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Gerenciamento de Áudios</h2>
-          <p className="text-gray-600 mt-1">Gerencie prompts, músicas de espera e mensagens do sistema</p>
+          <h2 className="text-2xl font-bold text-gray-800">Gestión de Audios</h2>
+          <p className="text-gray-600 mt-1">Gestioná prompts, música de espera y mensajes del sistema</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
@@ -167,7 +164,7 @@ const AudiosManager = () => {
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 110 2h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6H3a1 1 0 110-2h4zM6 6v12h12V6H6zm3-2V3h6v1H9z" />
           </svg>
-          Novo Áudio
+          Nuevo Audio
         </button>
       </div>
 
@@ -175,12 +172,12 @@ const AudiosManager = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-lg">
             <h3 className="text-lg font-semibold mb-4">
-              {editingAudio ? 'Editar Áudio' : 'Novo Áudio'}
+              {editingAudio ? 'Editar Audio' : 'Nuevo Audio'}
             </h3>
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
                   <input
                     type="text"
                     value={formData.name}
@@ -191,7 +188,7 @@ const AudiosManager = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
@@ -214,7 +211,7 @@ const AudiosManager = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Arquivo de Áudio</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Archivo de Audio</label>
                   <div 
                     className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                       dragActive 
@@ -238,7 +235,7 @@ const AudiosManager = () => {
                           onClick={() => setFormData({...formData, file: null})}
                           className="text-red-600 hover:text-red-700 text-sm"
                         >
-                          Remover arquivo
+                          Eliminar archivo
                         </button>
                       </div>
                     ) : (
@@ -247,9 +244,9 @@ const AudiosManager = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
                         <p className="text-sm text-gray-600">
-                          Arraste um arquivo de áudio aqui ou{' '}
+                          Arrastrá un archivo de audio acá o{' '}
                           <label className="text-blue-600 hover:text-blue-700 cursor-pointer">
-                            clique para selecionar
+                            hacé clic para seleccionar
                             <input
                               type="file"
                               accept="audio/*"
@@ -355,4 +352,4 @@ const AudiosManager = () => {
   );
 };
 
-export default AudiosManager; 
+export default AudiosManager;

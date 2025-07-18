@@ -1,8 +1,0 @@
-# Deploy trigger updated: 2024-01-21 23:15:00
-# Fixed main dashboard (DashboardProfessional) to use real campaign context data
-# - Integrated CampaignContext in DashboardProfessional.jsx
-# - Fixed "Campanhas Ativas" showing 0 when campaigns are running
-# - Updated campaign display panel to show real data
-# - Added real-time campaign status updates
-# - Dashboard now shows live campaign count and status
-# Main dashboard real data fix deployment 

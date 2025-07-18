@@ -56,7 +56,6 @@ const CliLocalRandomizer = () => {
         setCountryPatterns(response.data.data.countries);
       }
     } catch (error) {
-      console.error('Erro ao carregar padrões:', error);
     } finally {
       setLoading(false);
     }
@@ -70,7 +69,6 @@ const CliLocalRandomizer = () => {
         setGenerationStats(response.data.data);
       }
     } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
     }
   };
 
@@ -92,7 +90,6 @@ const CliLocalRandomizer = () => {
         alert(`Erro: ${response.data.message}`);
       }
     } catch (error) {
-      console.error('Erro ao gerar CLI:', error);
       alert('Erro ao gerar CLI de teste');
     } finally {
       setLoading(false);
@@ -119,7 +116,6 @@ const CliLocalRandomizer = () => {
         alert(`Erro: ${response.data.message}`);
       }
     } catch (error) {
-      console.error('Erro na geração em lote:', error);
       alert('Erro na geração em lote');
     } finally {
       setLoading(false);
@@ -504,4 +500,4 @@ const CliLocalRandomizer = () => {
   );
 };
 
-export default CliLocalRandomizer; 
+export default CliLocalRandomizer;

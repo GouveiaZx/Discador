@@ -76,6 +76,31 @@ except ImportError as e:
     timing = None
     dnc = None
 
+# Importar novas rotas de CLI dinâmico e trunks VoIP
+try:
+    from app.routes import dynamic_cli_routes, trunk_voip_routes
+    print("✅ Dynamic CLI and Trunk VoIP routes imported successfully")
+except ImportError as e:
+    print(f"⚠️ Warning: Could not import dynamic CLI and trunk VoIP routes: {e}")
+    dynamic_cli_routes = None
+    trunk_voip_routes = None
+
+# Importar novas rotas de upload otimizado e configuração de transferência
+try:
+    from app.routes import optimized_upload
+from app.routes import transfer_config_routes
+    print("✅ Optimized upload routes imported successfully")
+except ImportError as e:
+    print(f"⚠️ Warning: Could not import optimized upload routes: {e}")
+    optimized_upload = None
+
+try:
+    from app.services.transfer_config_service import TransferConfigService
+    print("✅ Transfer config service imported successfully")
+except ImportError as e:
+    print(f"⚠️ Warning: Could not import transfer config service: {e}")
+    TransferConfigService = None
+
 # Force redeploy - 2024-12-28 17:10
 # Importar novas rotas avançadas
 try:
@@ -463,6 +488,41 @@ if cli_auto_router:
 else:
     print("⚠️ CLI Auto Calculator router NOT available")
 
+# Incluir novas rotas de CLI dinâmico e trunks VoIP
+if dynamic_cli_routes:
+    app.include_router(dynamic_cli_routes.router, prefix=f"{api_prefix}", tags=["Dynamic CLI"])
+    print(f"✅ Dynamic CLI router included with prefix: {api_prefix}")
+else:
+    print("⚠️ Dynamic CLI router NOT available")
+
+if trunk_voip_routes:
+    app.include_router(trunk_voip_routes.router, prefix=f"{api_prefix}", tags=["Trunk VoIP"])
+    print(f"✅ Trunk VoIP router included with prefix: {api_prefix}")
+else:
+    print("⚠️ Trunk VoIP router NOT available")
+
+# Incluir rotas de upload otimizado
+if optimized_upload:
+    app.include_router(optimized_upload.router, prefix=f"{api_prefix}")
+    print(f"✅ Optimized upload router included with prefix: {api_prefix}")
+else:
+    print("⚠️ Optimized upload router NOT available")
+
+# Incluir rotas de configuração de transferência
+try:
+    app.include_router(transfer_config_routes.router, prefix=f"{api_prefix}")
+    print(f"✅ Transfer config router included with prefix: {api_prefix}")
+except Exception as e:
+    print(f"⚠️ Transfer config router NOT available: {e}")
+
+# Incluir rotas de extensões
+try:
+    from app.routes import extension_routes
+    app.include_router(extension_routes.router, prefix=f"{api_prefix}")
+    print(f"✅ Extension router included with prefix: {api_prefix}")
+except Exception as e:
+    print(f"⚠️ Extension router NOT available: {e}")
+
 # Router para rotas ausentes
 missing_routes = APIRouter()
 
@@ -812,6 +872,61 @@ async def obter_dashboard_monitoring():
             "chamadas_completadas_hoje": 0,
             "ultima_atualizacao": datetime.now().isoformat()
         }
+    }
+
+@missing_routes.get("/monitoring/current-call")
+async def obter_chamada_atual():
+    """Retorna informações da chamada atual sendo realizada"""
+    # Simulação de dados - em produção, isso viria do Asterisk AMI
+    import random
+    
+    # Simular se há chamada ativa
+    chamada_ativa = random.choice([True, False, False])  # 33% chance de ter chamada ativa
+    
+    if not chamada_ativa:
+        return {
+            "status": "success",
+            "chamada_ativa": False,
+            "numero_discado": None,
+            "cli_usado": None,
+            "duracao": 0,
+            "status_chamada": "idle",
+            "campanha": None,
+            "trunk": None
+        }
+    
+    # Simular dados de chamada ativa
+    numeros_exemplo = [
+        "+5521987654321",  # Brasil
+        "+525512345678",   # México
+        "+13051234567",    # USA Florida
+        "+14161234567",    # Canadá Ontario
+        "+5511987654321"   # Brasil SP
+    ]
+    
+    clis_exemplo = {
+        "+5521987654321": "+5521987651234",  # Brasil - mesmo código de área
+        "+525512345678": "+525512341234",   # México - mesmo padrão
+        "+13051234567": "+17271234567",     # USA - código de área diferente
+        "+14161234567": "+14371234567",     # Canadá - código de área diferente
+        "+5511987654321": "+5511987651234"  # Brasil SP - mesmo código
+    }
+    
+    numero_atual = random.choice(numeros_exemplo)
+    cli_atual = clis_exemplo.get(numero_atual, "+5511999999999")
+    
+    return {
+        "status": "success",
+        "chamada_ativa": True,
+        "numero_discado": numero_atual,
+        "cli_usado": cli_atual,
+        "duracao": random.randint(5, 120),  # 5 a 120 segundos
+        "status_chamada": random.choice(["ringing", "connected", "talking"]),
+        "campanha": "Campanha Teste",
+        "trunk": "SIP/provider1",
+        "tipo_cli": "MXN" if numero_atual.startswith("+525") else "ALEATORIO" if numero_atual.startswith("+1") else "DID",
+        "pais_destino": "México" if numero_atual.startswith("+525") else "USA" if numero_atual.startswith("+1305") else "Canadá" if numero_atual.startswith("+1416") else "Brasil",
+        "inicio_chamada": (datetime.now() - timedelta(seconds=random.randint(5, 120))).isoformat()
     }
 
 @missing_routes.get("/llamadas/en-progreso")

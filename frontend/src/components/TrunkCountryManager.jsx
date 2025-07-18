@@ -99,7 +99,6 @@ const TrunkCountryManager = () => {
       const response = await makeApiRequest('trunks', 'GET');
       setTrunks(response.trunks || []);
     } catch (error) {
-      console.error('Error al buscar trunks:', error);
       setError('Error al cargar trunks del servidor');
       setTrunks([]);
     } finally {
@@ -116,12 +115,8 @@ const TrunkCountryManager = () => {
     try {
       setError(null);
       
-      console.log('🔵 [FRONTEND] FormData antes de validação:', formData);
-      
       // Validaciones
       if (!formData.name || !formData.host || !formData.country_code) {
-        const errorMsg = `Campos faltando - name: ${formData.name}, host: ${formData.host}, country_code: ${formData.country_code}`;
-        console.log('❌ [FRONTEND] Validação falhou:', errorMsg);
         setError('Por favor, complete todos los campos obligatorios');
         return;
       }
@@ -137,22 +132,17 @@ const TrunkCountryManager = () => {
         }
       };
 
-      console.log('🔵 [FRONTEND] Dados a serem enviados:', submitData);
-
       if (editingTrunk) {
-        console.log('🔵 [FRONTEND] Editando trunk ID:', editingTrunk.id);
         await makeApiRequest(`trunks/${editingTrunk.id}`, 'PUT', submitData);
       } else {
-        console.log('🔵 [FRONTEND] Criando novo trunk');
         await makeApiRequest('trunks', 'POST', submitData);
       }
 
-      console.log('✅ [FRONTEND] Trunk salvo com sucesso');
+
       await fetchTrunks();
       setShowModal(false);
       resetForm();
     } catch (error) {
-      console.error('❌ [FRONTEND] Error al guardar trunk:', error);
       setError(`Error al guardar trunk: ${error.message || 'Erro desconhecido'}`);
     }
   };
@@ -185,7 +175,6 @@ const TrunkCountryManager = () => {
       await makeApiRequest(`trunks/${trunkId}`, 'DELETE');
       await fetchTrunks();
     } catch (error) {
-      console.error('Error al eliminar trunk:', error);
       setError('Error al eliminar trunk');
     }
   };
@@ -372,7 +361,7 @@ const TrunkCountryManager = () => {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* Informações Básicas */}
+              {/* Información Básica */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* País */}
                 <div>
@@ -539,4 +528,4 @@ const TrunkCountryManager = () => {
   );
 };
 
-export default TrunkCountryManager; 
+export default TrunkCountryManager;

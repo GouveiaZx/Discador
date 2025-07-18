@@ -4,27 +4,22 @@ import { CampaignProvider } from './contexts/CampaignContext.jsx';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './components/Login';
 import DashboardProfessional from './components/DashboardProfessional';
-import MonitorLlamadasEnProgreso from './components/MonitorLlamadasEnProgreso';
 import HistoricoLlamadas from './components/HistoricoLlamadas';
 import GestionCampanhas from './components/GestionCampanhas';
 import UploadListas from './components/UploadListas';
+import MassiveUploadManager from './components/MassiveUploadManager';
 import GestionBlacklist from './components/GestionBlacklist';
 import ConfiguracionAvanzada from './components/ConfiguracionAvanzada';
 import CampaignControl from './components/CampaignControl';
-import CallerIdManager from './components/CallerIdManager';
-import CallTimingConfig from './components/CallTimingConfig';
-import SipTrunkConfig from './components/SipTrunkConfig';
-import TrunkCountryManager from './components/TrunkCountryManager';
-import DNCMultiLanguageManager from './components/DNCMultiLanguageManager';
 import RealtimeCallDisplay from './components/RealtimeCallDisplay';
 import AudioManager from './components/AudioManager';
-import AdvancedPerformanceDashboard from './components/AdvancedPerformanceDashboard';
-import DialerControl from './components/DialerControl';
-import CliAutoCalculator from './components/CliAutoCalculator';
-import AdminControlPanel from './components/AdminControlPanel';
+import MassiveAudioManager from './components/MassiveAudioManager';
+import TransferConfigManager from './components/TransferConfigManager';
+import OptimizedUpload from './components/OptimizedUpload';
+import ExtensionManager from './components/ExtensionManager';
 
 /**
- * Sistema de Ícones Profissional
+ * Sistema de Íconos Profesional
  */
 const Icons = {
   Dashboard: () => (
@@ -118,11 +113,26 @@ const Icons = {
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
     </svg>
+  ),
+  Transfer: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+    </svg>
+  ),
+  Upload: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+    </svg>
+  ),
+  Extension: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+    </svg>
   )
   };
 
   /**
- * Componente de Loading Profissional
+ * Componente de Carga Profesional
  */
 const ProfessionalLoader = () => (
   <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
@@ -162,15 +172,14 @@ const ProfessionalLoader = () => (
 );
 
 /**
- * Sidebar de Navegación Profesional
+ * Barra Lateral de Navegación Profesional
  */
 const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermission, sidebarOpen, setSidebarOpen }) => {
-  // Funcionalidades organizadas por categorías para mejor usabilidad
+  // Funcionalidades esenciales simplificadas
   const navigationSections = [
     {
       title: "📊 PANEL PRINCIPAL",
       items: [
-        { id: 'admin-control', label: 'Control Administrativo', icon: Icons.Admin, permission: null, essential: true },
         { id: 'dashboard', label: 'Panel Principal', icon: Icons.Dashboard, permission: null, essential: true },
         { id: 'realtime', label: 'Llamadas en Vivo', icon: Icons.RealTime, permission: null, essential: true },
       ]
@@ -178,34 +187,27 @@ const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermiss
     {
       title: "📞 OPERACIONES",
       items: [
-        { id: 'control', label: 'Control de Discado', icon: Icons.Control, permission: 'supervisor', essential: true },
         { id: 'campanhas', label: 'Gestión de Campañas', icon: Icons.Campaigns, permission: 'supervisor', essential: true },
         { id: 'listas', label: 'Gestión de Listas', icon: Icons.Lists, permission: 'supervisor', essential: true },
+        { id: 'massive-upload', label: 'Carga Masiva (700M+)', icon: Icons.Lists, permission: 'supervisor', essential: true },
+        { id: 'optimized-upload', label: 'Upload Optimizado', icon: Icons.Upload, permission: 'supervisor', essential: true },
+        { id: 'audios', label: 'Gestión de Audios', icon: Icons.Audio, permission: 'supervisor', essential: true },
+        { id: 'massive-audio', label: 'Audio Masivo', icon: Icons.Audio, permission: 'supervisor', essential: true },
       ]
     },
     {
       title: "⚙️ CONFIGURACIÓN",
       items: [
-        { id: 'caller-id', label: 'Identificador de Llamada', icon: Icons.Phone, permission: 'supervisor', essential: true },
-        { id: 'cli-auto', label: 'Calculadora CLI Auto', icon: Icons.Calculator, permission: 'admin', essential: true },
-        { id: 'audios', label: 'Gestión de Audios', icon: Icons.Audio, permission: 'supervisor', essential: false },
+        { id: 'extensions', label: 'Gestión de Extensiones', icon: Icons.Extension, permission: 'admin', essential: true },
+        { id: 'transfer-config', label: 'Config. Transferencia', icon: Icons.Transfer, permission: 'admin', essential: true },
+        { id: 'blacklist', label: 'Lista Negra', icon: Icons.Blacklist, permission: 'admin', essential: true },
+        { id: 'configuracion', label: 'Configuración', icon: Icons.Settings, permission: 'admin', essential: true },
       ]
     },
     {
       title: "📈 MONITOREO",
       items: [
-        { id: 'monitor', label: 'Monitor Avanzado', icon: Icons.Monitor, permission: null, essential: false },
-        { id: 'performance', label: 'Rendimiento Avanzado', icon: Icons.Performance, permission: 'admin', essential: false },
         { id: 'historico', label: 'Histórico', icon: Icons.History, permission: null, essential: true },
-      ]
-    },
-    {
-      title: "🔧 AVANZADO",
-      items: [
-        { id: 'trunks', label: 'Gestión de Troncales', icon: Icons.Trunk, permission: 'admin', essential: false },
-        { id: 'timing', label: 'Tiempo de Espera', icon: Icons.Settings, permission: 'supervisor', essential: false },
-        { id: 'blacklist', label: 'Lista Negra', icon: Icons.Blacklist, permission: 'admin', essential: false },
-        { id: 'configuracion', label: 'Configuración', icon: Icons.Settings, permission: 'admin', essential: false },
       ]
     }
   ];
@@ -292,128 +294,71 @@ const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermiss
             </div>
           </div>
           
-          {/* Mode Toggle */}
+          {/* Sistema simplificado - sin toggle de modo */}
           <div className="p-4 border-b border-white/10">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-white">Modo de Vista</span>
-              <button
-                onClick={() => setSimpleMode(!simpleMode)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  simpleMode ? 'bg-green-600' : 'bg-gray-600'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    simpleMode ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
+              <span className="text-sm font-medium text-white">Sistema Simplificado</span>
             </div>
-            <p className="text-xs text-secondary-400">
-              {simpleMode ? '✅ Funciones Esenciales' : '⚙️ Todas las Funciones'}
+            <p className="text-xs text-secondary-400 text-center">
+              ✅ Funciones Esenciales Activas
             </p>
           </div>
 
-          {/* Navigation */}
+          {/* Navigation - solo funciones esenciales */}
           <nav className="flex-1 p-4 space-y-4 overflow-y-auto custom-scrollbar">
-            {simpleMode ? (
-              // Modo Simplificado - Solo items esenciales
-              <div className="space-y-1">
-                {getVisibleItems().map((item) => {
-                  const hasAccess = !item.permission || hasPermission(item.permission);
-                  if (!hasAccess) return null;
-                  
-                  const isActive = activeTab === item.id;
-                  const IconComponent = item.icon;
-                  
-                  return (
-                    <button 
-                      key={item.id}
-                      onClick={() => {
-                        setActiveTab(item.id);
-                        setSidebarOpen(false);
-                      }}
-                      className={`
-                        w-full flex items-center space-x-3 px-4 py-3 rounded-lg
-                        transition-all duration-150 text-left
-                        ${isActive 
-                          ? 'bg-blue-600 text-white shadow-md' 
-                          : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
-                        }
-                      `}
-                    >
-                      <div className={`text-lg ${isActive ? 'text-white' : 'text-gray-400'}`}>
-                        <IconComponent />
-                      </div>
-                      <span className="font-medium text-sm">{item.label}</span>
-                      
-                      {isActive && (
-                        <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              // Modo Avanzado - Organizado por secciones
-              <div className="space-y-4">
-                {navigationSections.map((section, sectionIndex) => {
-                  const visibleItems = section.items.filter(item => 
-                    !item.permission || hasPermission(item.permission)
-                  );
-                  
-                  if (visibleItems.length === 0) return null;
-                  
-                  return (
-                    <div key={sectionIndex} className="space-y-1">
-                      <div className="px-3 py-2 bg-gray-800/50 rounded-lg">
-                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wide">
-                          {section.title}
-                        </h4>
-                      </div>
-                      
-                      <div className="space-y-1">
-                        {visibleItems.map((item) => {
-                          const isActive = activeTab === item.id;
-                          const IconComponent = item.icon;
-                          
-                          return (
-                            <button 
-                              key={item.id}
-                              onClick={() => {
-                                setActiveTab(item.id);
-                                setSidebarOpen(false);
-                              }}
-                              className={`
-                                w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg
-                                transition-all duration-150 text-left
-                                ${isActive 
-                                  ? 'bg-blue-600 text-white shadow-md' 
-                                  : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
-                                }
-                              `}
-                            >
-                              <div className={`text-base ${isActive ? 'text-white' : 'text-gray-400'}`}>
-                                <IconComponent />
-                              </div>
-                              <span className="font-medium text-sm flex-1">{item.label}</span>
-                              
-                              {!item.essential && !isActive && (
-                                <span className="text-xs text-gray-500 bg-gray-700 px-1.5 py-0.5 rounded text-[10px]">PRO</span>
-                              )}
-                              
-                              {isActive && (
-                                <div className="w-2 h-2 bg-white rounded-full"></div>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
+            <div className="space-y-4">
+              {navigationSections.map((section, sectionIndex) => {
+                const visibleItems = section.items.filter(item => 
+                  !item.permission || hasPermission(item.permission)
+                );
+                
+                if (visibleItems.length === 0) return null;
+                
+                return (
+                  <div key={sectionIndex} className="space-y-1">
+                    <div className="px-3 py-2 bg-gray-800/50 rounded-lg">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wide">
+                        {section.title}
+                      </h4>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                    
+                    <div className="space-y-1">
+                      {visibleItems.map((item) => {
+                        const isActive = activeTab === item.id;
+                        const IconComponent = item.icon;
+                        
+                        return (
+                          <button 
+                            key={item.id}
+                            onClick={() => {
+                              setActiveTab(item.id);
+                              setSidebarOpen(false);
+                            }}
+                            className={`
+                              w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg
+                              transition-all duration-150 text-left
+                              ${isActive 
+                                ? 'bg-blue-600 text-white shadow-md' 
+                                : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                              }
+                            `}
+                          >
+                            <div className={`text-base ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                              <IconComponent />
+                            </div>
+                            <span className="font-medium text-sm flex-1">{item.label}</span>
+                            
+                            {isActive && (
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </nav>
           
           {/* Logout Button */}
@@ -442,21 +387,18 @@ const ProfessionalSidebar = ({ activeTab, setActiveTab, user, logout, hasPermiss
 const ProfessionalHeader = ({ setSidebarOpen, activeTab }) => {
   const getPageTitle = () => {
     const titles = {
-      'admin-control': 'Control Administrativo',
       dashboard: 'Panel Principal',
       realtime: 'Llamadas en Tiempo Real',
-      monitor: 'Monitor Avanzado',
-      control: 'Control de Discado',
-      performance: 'Rendimiento Avanzado',
       campanhas: 'Gestión de Campañas',
       listas: 'Gestión de Listas',
+      'massive-upload': 'Carga Masiva de Listas',
+      'optimized-upload': 'Upload Optimizado',
       audios: 'Gestión de Audios',
-      trunks: 'Gestión de Troncales SIP',
-      'caller-id': 'Configuración Identificador de Llamada',
-      'cli-auto': 'Calculadora Automática de CLIs',
-      timing: 'Configuración Tiempo de Espera',
+      'massive-audio': 'Gestión Masiva de Audios',
+      extensions: 'Gestión de Extensiones',
+      'transfer-config': 'Configuración de Transferencia',
       blacklist: 'Lista Negra',
-      configuracion: 'Configuración Avanzada',
+      configuracion: 'Configuración',
       historico: 'Histórico de Llamadas'
     };
     return titles[activeTab] || 'Panel de Control';
@@ -504,7 +446,7 @@ const ProfessionalHeader = ({ setSidebarOpen, activeTab }) => {
 };
 
 /**
- * Componente de Accesso Denegado
+ * Componente de Acceso Denegado
  */
 const AccessDenied = ({ requiredLevel }) => (
   <div className="max-w-md mx-auto mt-12">
@@ -524,15 +466,15 @@ const AccessDenied = ({ requiredLevel }) => (
 );
 
 /**
- * Componente principal da aplicação autenticada
+ * Componente principal de la aplicación autenticada
  */
 function AuthenticatedApp() {
-  const [activeTab, setActiveTab] = useState('admin-control');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [campaignControlId, setCampaignControlId] = useState(null);
   const { user, logout, hasPermission } = useAuth();
 
-  // Fechar sidebar ao redimensionar para desktop
+  // Cerrar sidebar al redimensionar para desktop
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
@@ -568,7 +510,7 @@ function AuthenticatedApp() {
         {/* Page Content */}
         <main className="flex-1 animate-fade-in">
           <div className="container-max-width p-6">
-            {/* Tela de Controle de Campanha */}
+            {/* Pantalla de Control de Campaña */}
             {campaignControlId && (
               <CampaignControl 
                 campaignId={campaignControlId} 
@@ -576,24 +518,21 @@ function AuthenticatedApp() {
               />
             )}
             
-            {/* Telas Principais */}
+            {/* Pantallas Principales - solo funciones esenciales */}
             {!campaignControlId && (
               <>
-                {activeTab === 'admin-control' && <AdminControlPanel />}
                 {activeTab === 'dashboard' && <DashboardProfessional />}
                 {activeTab === 'realtime' && <RealtimeCallDisplay />}
-                {activeTab === 'monitor' && <MonitorLlamadasEnProgreso />}
-                {activeTab === 'control' && hasPermission('supervisor') && <DialerControl />}
-                {activeTab === 'performance' && hasPermission('admin') && <AdvancedPerformanceDashboard />}
                 {activeTab === 'campanhas' && hasPermission('supervisor') && (
                   <GestionCampanhas onOpenCampaignControl={setCampaignControlId} />
                 )}
                 {activeTab === 'listas' && hasPermission('supervisor') && <UploadListas />}
+                {activeTab === 'massive-upload' && hasPermission('supervisor') && <MassiveUploadManager />}
+                {activeTab === 'optimized-upload' && hasPermission('supervisor') && <OptimizedUpload />}
                 {activeTab === 'audios' && hasPermission('supervisor') && <AudioManager />}
-                {activeTab === 'trunks' && hasPermission('admin') && <TrunkCountryManager />}
-                {activeTab === 'caller-id' && hasPermission('supervisor') && <CallerIdManager />}
-                {activeTab === 'cli-auto' && hasPermission('admin') && <CliAutoCalculator />}
-                {activeTab === 'timing' && hasPermission('supervisor') && <CallTimingConfig />}
+                {activeTab === 'massive-audio' && hasPermission('supervisor') && <MassiveAudioManager />}
+                {activeTab === 'extensions' && hasPermission('admin') && <ExtensionManager />}
+                {activeTab === 'transfer-config' && hasPermission('admin') && <TransferConfigManager />}
                 {activeTab === 'blacklist' && hasPermission('admin') && <GestionBlacklist />}
                 {activeTab === 'configuracion' && hasPermission('admin') && <ConfiguracionAvanzada />}
                 {activeTab === 'historico' && <HistoricoLlamadas />}
@@ -601,10 +540,10 @@ function AuthenticatedApp() {
             )}
         
             {/* Access Denied Messages */}
-            {((activeTab === 'campanhas' || activeTab === 'listas' || activeTab === 'audios' || activeTab === 'caller-id' || activeTab === 'timing' || activeTab === 'control') && !hasPermission('supervisor')) && (
+            {((activeTab === 'campanhas' || activeTab === 'listas' || activeTab === 'massive-upload' || activeTab === 'optimized-upload' || activeTab === 'audios' || activeTab === 'massive-audio') && !hasPermission('supervisor')) && (
               <AccessDenied requiredLevel="Supervisor" />
             )}
-            {((activeTab === 'blacklist' || activeTab === 'configuracion' || activeTab === 'trunks' || activeTab === 'performance' || activeTab === 'cli-auto') && !hasPermission('admin')) && (
+            {((activeTab === 'extensions' || activeTab === 'transfer-config' || activeTab === 'blacklist' || activeTab === 'configuracion') && !hasPermission('admin')) && (
               <AccessDenied requiredLevel="Administrador" />
             )}
           </div>
@@ -615,7 +554,7 @@ function AuthenticatedApp() {
 }
 
 /**
- * Componente principal da aplicação
+ * Componente principal de la aplicación
  */
 function App() {
   return (
@@ -628,7 +567,7 @@ function App() {
 }
 
 /**
- * Conteúdo condicional baseado na autenticação
+ * Contenido condicional basado en la autenticación
  */
 function AppContent() {
   const { user, loading } = useAuth();

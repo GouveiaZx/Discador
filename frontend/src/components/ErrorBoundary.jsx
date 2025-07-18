@@ -21,7 +21,7 @@ class ErrorBoundary extends React.Component {
     });
     
     // Log do erro para monitoramento
-    console.error('ErrorBoundary capturou um erro:', error, errorInfo);
+    // Error logged to boundary
     
     // Aqui você pode integrar com serviços de monitoramento como Sentry
     // Sentry.captureException(error);
@@ -77,4 +77,4 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-export default ErrorBoundary; 
+export default ErrorBoundary;

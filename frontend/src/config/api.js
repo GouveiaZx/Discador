@@ -39,7 +39,7 @@ export const buildApiUrl = (endpoint) => {
   }
   
   const finalUrl = `${API_BASE_URL}${cleanEndpoint}`;
-  console.log('🔗 Building API URL:', { endpoint, cleanEndpoint, finalUrl });
+  // Building API URL
   return finalUrl;
 };
 
@@ -89,28 +89,23 @@ export const makeApiRequest = async (endpoint, methodOrOptions = {}, data = null
     }
   }
 
-  console.log('🚀 Making API request:', { url, method: config.method || 'GET', hasBody: !!config.body });
+  // Making API request
 
   try {
     const response = await fetch(url, config);
     
-    console.log('📡 API Response:', { 
-      url, 
-      status: response.status, 
-      ok: response.ok,
-      contentType: response.headers.get('content-type')
-    });
+    // API Response
 
     // Verificar se é erro 404 (endpoint não implementado)
     if (response.status === 404) {
-      console.warn('⚠️ Server returned 404 - endpoint not implemented');
+      // Server returned 404 - endpoint not implemented
       throw new Error(`Endpoint not implemented: ${endpoint}`);
     }
 
     // Verificar se a resposta é HTML (endpoint não existe)
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('text/html')) {
-      console.warn('⚠️ Server returned HTML page - endpoint probably does not exist');
+      // Server returned HTML page - endpoint probably does not exist
       throw new Error(`Endpoint not implemented: ${endpoint}`);
     }
 
@@ -120,12 +115,12 @@ export const makeApiRequest = async (endpoint, methodOrOptions = {}, data = null
 
     // Verificar se a resposta é JSON válido
     if (!contentType || !contentType.includes('application/json')) {
-      console.warn('⚠️ API returned non-JSON response:', { url, contentType });
+      // API returned non-JSON response
       throw new Error(`Endpoint not implemented: ${endpoint}`);
     }
 
     const data = await response.json();
-    console.log('✅ API Success:', { url, dataKeys: Object.keys(data) });
+    // API Success
     return data;
   } catch (error) {
     // Melhor logging de erros
@@ -138,7 +133,7 @@ export const makeApiRequest = async (endpoint, methodOrOptions = {}, data = null
       throw error;
     }
     
-    console.error('❌ API Error:', { url, error: error.message, type: error.name });
+    // API Error
     throw error;
   }
 };
@@ -181,10 +176,5 @@ export default api;
 
 // Debug: Log da configuração atual (apenas em desenvolvimento)
 if (import.meta.env.DEV) {
-  console.log('🔧 API Configuration:', {
-    'Raw VITE_API_URL': import.meta.env.VITE_API_URL,
-    'Cleaned BASE_URL': BASE_URL,
-    'Final API_BASE_URL': API_BASE_URL,
-    'NODE_ENV': import.meta.env.NODE_ENV
-  });
+  // API Configuration
 }

@@ -53,7 +53,7 @@ const AdminControlPanel = () => {
         setSelectedCampaign(campaignsList[0].id.toString());
       }
     } catch (error) {
-      console.error('Erro ao carregar campanhas:', error);
+
     }
   };
 
@@ -62,7 +62,7 @@ const AdminControlPanel = () => {
       const response = await makeApiRequest('/audios');
       setAudioFiles(response.audios || response || []);
     } catch (error) {
-      console.error('Erro ao carregar áudios:', error);
+
     }
   };
 
@@ -123,7 +123,7 @@ const AdminControlPanel = () => {
       if (fileInput) fileInput.value = '';
       
     } catch (error) {
-      console.error('Erro ao importar números:', error);
+
       showMessage('error', 'Erro ao importar números. Verifique o formato do arquivo.');
     } finally {
       setLoading(false);
@@ -168,7 +168,7 @@ const AdminControlPanel = () => {
       if (fileInput) fileInput.value = '';
       
     } catch (error) {
-      console.error('Erro ao importar áudio:', error);
+
       showMessage('error', 'Erro ao importar áudio. Verifique o formato do arquivo.');
     } finally {
       setLoading(false);
@@ -208,7 +208,7 @@ const AdminControlPanel = () => {
       setTestNumber('');
       
     } catch (error) {
-      console.error('Erro no teste:', error);
+
       const errorResult = {
         id: testId,
         numero: testNumber,
@@ -256,7 +256,7 @@ const AdminControlPanel = () => {
       refreshCampaigns();
       
     } catch (error) {
-      console.error('Erro ao criar campanha:', error);
+
       showMessage('error', 'Erro ao criar campanha');
     } finally {
       setLoading(false);
@@ -288,7 +288,7 @@ const AdminControlPanel = () => {
       refreshCampaigns();
       
     } catch (error) {
-      console.error('Erro ao atualizar campanha:', error);
+
       showMessage('error', 'Erro ao atualizar campanha');
     } finally {
       setLoading(false);
@@ -333,7 +333,7 @@ const AdminControlPanel = () => {
       await loadCampaigns(); // Reload local state
       
     } catch (error) {
-      console.error('Erro ao deletar campanha:', error);
+
       showMessage('error', 'Erro ao deletar campanha');
     } finally {
       setLoading(false);

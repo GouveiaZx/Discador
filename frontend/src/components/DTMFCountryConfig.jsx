@@ -108,7 +108,6 @@ const DTMFCountryConfig = () => {
       setConfigs(response.configs || {});
       
     } catch (err) {
-      console.error('❌ Error al cargar configuraciones DTMF:', err);
       setError('Error al cargar configuraciones DTMF. Verificá la conexión con el servidor.');
     } finally {
       setLoading(false);
@@ -167,7 +166,6 @@ const DTMFCountryConfig = () => {
       }, 2000);
 
     } catch (err) {
-      console.error('❌ Error al guardar configuración:', err);
       setError('Error al guardar configuración. Intentá nuevamente.');
     } finally {
       setSaving(false);
@@ -199,7 +197,6 @@ const DTMFCountryConfig = () => {
       }, 2000);
 
     } catch (err) {
-      console.error('❌ Error al resetear configuración:', err);
       setError('Error al resetear configuración. Intentá nuevamente.');
     } finally {
       setSaving(false);
@@ -456,4 +453,4 @@ const DTMFCountryConfig = () => {
   );
 };
 
-export default DTMFCountryConfig; 
+export default DTMFCountryConfig;

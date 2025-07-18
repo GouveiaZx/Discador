@@ -536,23 +536,27 @@ class DynamicCallerIdService:
         return clis
     
     def _generate_brasil_clis(self) -> List[str]:
-        """Gera CLIs específicos para Brasil (formato sem +55 para compatibilidade com provedores)."""
+        """Gera CLIs específicos para Brasil com formatação correta."""
         clis = []
-        area_codes = ["11", "21", "13", "47", "800", "85", "31", "51"]
+        # Códigos de área mais utilizados no Brasil
+        area_codes = ["11", "21", "31", "41", "47", "48", "51", "61", "62", "71", "81", "85"]
         
         for area_code in area_codes:
-            # Gerar números de 7, 8 e 10 dígitos conforme solicitado
-            for i in range(100):  # 100 CLIs de 7 dígitos por área
-                number = f"55{area_code}{i:07d}"[:9]  # 55 + área + 7 dígitos = 9 total
-                clis.append(number)
+            # Gerar números móveis (9 dígitos) - formato: 55 + área + 9 + 8 dígitos
+            for i in range(150):  # 150 CLIs móveis por área
+                mobile_number = f"55{area_code}9{random.randint(10000000, 99999999)}"
+                clis.append(mobile_number)
             
-            for i in range(100):  # 100 CLIs de 8 dígitos por área
-                number = f"55{area_code}{i:08d}"[:10]  # 55 + área + 8 dígitos = 10 total
-                clis.append(number)
+            # Gerar números fixos (8 dígitos) - formato: 55 + área + 8 dígitos
+            for i in range(100):  # 100 CLIs fixos por área
+                fixed_number = f"55{area_code}{random.randint(20000000, 99999999)}"
+                clis.append(fixed_number)
             
-            for i in range(100):  # 100 CLIs de 10 dígitos por área
-                number = f"55{area_code}{i:010d}"[:12]  # 55 + área + 10 dígitos = 12 total
-                clis.append(number)
+            # Gerar números 0800 para algumas áreas
+            if area_code in ["11", "21", "31"]:
+                for i in range(50):  # 50 CLIs 0800 por área principal
+                    toll_free = f"55{area_code}0800{random.randint(1000, 9999)}"
+                    clis.append(toll_free)
         
         return clis
     

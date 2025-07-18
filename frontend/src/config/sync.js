@@ -72,7 +72,7 @@ export const withRetry = async (operation, maxRetries = SYNC_CONFIG.MAX_RETRIES)
       return await operation();
     } catch (error) {
       lastError = error;
-      console.warn(`Tentativa ${attempt}/${maxRetries} falhou:`, error.message);
+
       
       if (attempt < maxRetries) {
         await new Promise(resolve => 
@@ -101,14 +101,14 @@ export class CampaignSyncService {
     if (!forceRefresh) {
       const cached = syncCache.get(cacheKey);
       if (cached) {
-        console.log('📋 Usando campanhas do cache');
+    
         return cached;
       }
     }
     
     // Evitar múltiplas requisições simultâneas
     if (this.isRefreshing && this.refreshPromise) {
-      console.log('⏳ Aguardando refresh em andamento...');
+
       return await this.refreshPromise;
     }
     
@@ -127,7 +127,7 @@ export class CampaignSyncService {
   
   async _fetchCampaigns() {
     return await withRetry(async () => {
-      console.log('🔄 Buscando campanhas do servidor...');
+  
       const response = await makeApiRequest('/presione1/campanhas');
       
       // Normalizar dados das campanhas
@@ -152,7 +152,7 @@ export class CampaignSyncService {
    */
   async createCampaign(campaignData) {
     return await withRetry(async () => {
-      console.log('🚀 Criando nova campanha:', campaignData);
+    
       
       const response = await makeApiRequest('/campaigns', 'POST', campaignData);
       
@@ -173,7 +173,7 @@ export class CampaignSyncService {
    */
   async updateCampaign(campaignId, updateData) {
     return await withRetry(async () => {
-      console.log(`🔄 Atualizando campanha ${campaignId}:`, updateData);
+    
       
       const response = await makeApiRequest(`/campaigns/${campaignId}`, 'PUT', updateData);
       
@@ -195,7 +195,7 @@ export class CampaignSyncService {
    */
   async deleteCampaign(campaignId) {
     return await withRetry(async () => {
-      console.log(`🗑️ Excluindo campanha ${campaignId}`);
+    
       
       try {
         // Tentar endpoint otimizado primeiro
@@ -205,7 +205,7 @@ export class CampaignSyncService {
         );
         
         if (response && response.success) {
-          console.log('✅ Campanha excluída com endpoint otimizado');
+      
           
           // Limpar cache
           syncCache.clear('campaigns');
@@ -214,7 +214,7 @@ export class CampaignSyncService {
           return response;
         }
       } catch (error) {
-        console.warn('⚠️ Endpoint otimizado falhou, tentando fallback:', error.message);
+    
         
         // Fallback para endpoint tradicional
         const fallbackResponse = await makeApiRequest(
@@ -222,7 +222,7 @@ export class CampaignSyncService {
           'DELETE'
         );
         
-        console.log('✅ Campanha excluída com endpoint fallback');
+    
         
         // Limpar cache
         syncCache.clear('campaigns');
@@ -242,7 +242,7 @@ export class CampaignSyncService {
    */
   async controlCampaign(campaignId, action, data = {}) {
     return await withRetry(async () => {
-      console.log(`🎮 Controlando campanha ${campaignId}: ${action}`);
+    
       
       const endpoint = `/presione1/campanhas/${campaignId}/${action}`;
       const response = await makeApiRequest(endpoint, 'POST', data);
@@ -282,7 +282,7 @@ export class CampaignSyncService {
    */
   clearCache() {
     syncCache.clear();
-    console.log('🧹 Cache de sincronização limpo');
+  
   }
 }
 
@@ -305,7 +305,7 @@ export const debugSync = {
   
   clearCache: () => {
     syncCache.clear();
-    console.log('🧹 Cache limpo via debug');
+  
   },
   
   testConnection: async () => {

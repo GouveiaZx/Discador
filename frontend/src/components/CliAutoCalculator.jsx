@@ -78,7 +78,6 @@ const CliAutoCalculator = () => {
         setAreaCodes(data.data.area_codes);
       }
     } catch (error) {
-      console.error('Erro ao carregar códigos de área:', error);
     }
   };
 
@@ -87,7 +86,6 @@ const CliAutoCalculator = () => {
       // Implementar endpoint para listar configurações
       setConfigs([]);
     } catch (error) {
-      console.error('Erro ao carregar configurações:', error);
     }
   };
 
@@ -110,7 +108,6 @@ const CliAutoCalculator = () => {
         toast.error('Erro no cálculo');
       }
     } catch (error) {
-      console.error('Erro ao calcular CLIs:', error);
       toast.error('Erro ao calcular CLIs');
     } finally {
       setLoading(false);
@@ -137,7 +134,6 @@ const CliAutoCalculator = () => {
         toast.error('Erro ao criar configuração');
       }
     } catch (error) {
-      console.error('Erro ao criar configuração:', error);
       toast.error('Erro ao criar configuração');
     } finally {
       setLoading(false);
@@ -152,7 +148,6 @@ const CliAutoCalculator = () => {
         setConfigStats(data.data.stats);
       }
     } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
     }
   };
 
@@ -172,7 +167,6 @@ const CliAutoCalculator = () => {
         }
       }
     } catch (error) {
-      console.error('Erro ao resetar uso:', error);
       toast.error('Erro ao resetar uso diário');
     }
   };

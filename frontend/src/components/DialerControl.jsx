@@ -42,7 +42,7 @@ const DialerControl = () => {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('❌ API Error:', { url, error: error.message });
+      // API Error
       throw error;
     }
   };
@@ -59,7 +59,7 @@ const DialerControl = () => {
       const response = await makeApiRequest('/dialer/status');
       setDialerStatus(response);
     } catch (error) {
-      console.error('Erro ao carregar status:', error);
+      // Erro ao carregar status
     }
   };
 

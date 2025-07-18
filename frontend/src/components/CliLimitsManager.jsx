@@ -294,7 +294,6 @@ const CliLimitsManager = () => {
       setUsage(usageResponse.usage || {});
 
     } catch (err) {
-      console.error('❌ Error al cargar datos:', err);
       setError('Error al cargar datos de CLI. Verificá la conexión con el servidor.');
     } finally {
       setLoading(false);
@@ -335,7 +334,6 @@ const CliLimitsManager = () => {
       }, 2000);
 
     } catch (err) {
-      console.error('❌ Error al guardar límite:', err);
       setError('Error al guardar límite. Intentá nuevamente.');
     } finally {
       setSaving(false);
@@ -361,7 +359,6 @@ const CliLimitsManager = () => {
       }, 2000);
 
     } catch (err) {
-      console.error('❌ Error al resetear uso:', err);
       setError('Error al resetear contadores. Intentá nuevamente.');
     } finally {
       setSaving(false);
@@ -630,4 +627,4 @@ const CliLimitsManager = () => {
   );
 };
 
-export default CliLimitsManager; 
+export default CliLimitsManager;

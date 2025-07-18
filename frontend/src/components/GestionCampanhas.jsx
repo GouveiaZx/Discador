@@ -38,7 +38,7 @@ const CampaignMetricCard = ({ title, value, subtitle, icon, color = 'primary', l
 // Função de debug para testar no console do navegador
 window.testCreateCampaign = async () => {
   try {
-    console.log('🧪 Testando criação de campanha...');
+    // Testando criação de campanha
     const testData = {
       name: 'Test Campaign Debug',
       description: 'Teste de debug',
@@ -48,21 +48,17 @@ window.testCreateCampaign = async () => {
       retry_interval: 300
     };
     
-    console.log('📤 Enviando dados:', testData);
+    // Enviando dados
     
     // Importar a função makeApiRequest do config
     const { makeApiRequest } = await import('../config/api.js');
     const response = await makeApiRequest('/campaigns', 'POST', testData);
     
-    console.log('📥 Resposta recebida:', response);
-    console.log('🔍 Tipo da resposta:', typeof response);
-    console.log('🔍 Chaves da resposta:', Object.keys(response || {}));
-    console.log('🔍 Tem ID?', !!(response && response.id));
-    console.log('🔍 Valor do ID:', response?.id);
+    // Resposta recebida e verificações
     
     return response;
   } catch (error) {
-    console.error('❌ Erro no teste:', error);
+    // Erro no teste
     return null;
   }
 };
@@ -127,44 +123,33 @@ function GestionCampanhas({ onOpenCampaignControl }) {
         return;
       }
       
-      console.log('🚀 Dados para criar campanha:', formData);
+      // Dados para criar campanha
       // Usar o novo serviço de sincronização
       const createResponse = await campaignSync.createCampaign(formData);
-      console.log('✅ Resposta da API de criação:', createResponse);
+      // Resposta da API de criação
       
       // A API retorna um objeto com id, name, message etc. quando cria com sucesso
-      console.log('🔍 Verificando resposta:', {
-        hasResponse: !!createResponse,
-        hasId: !!(createResponse && createResponse.id),
-        id: createResponse?.id,
-        responseType: typeof createResponse,
-        responseKeys: createResponse ? Object.keys(createResponse) : 'N/A'
-      });
+      // Verificando resposta
       
       // TESTE: Verificar especificamente se o ID existe e é válido
       if (createResponse && typeof createResponse === 'object' && createResponse.id) {
-        console.log('✅ Condição atendida! ID encontrado:', createResponse.id);
-        setSuccess('Campaña creada con éxito');
+        // Condição atendida! ID encontrado
+        setSuccess('Campaña creada exitosamente');
         
-        // Recarregar a lista após a criação com refresh forçado
-        console.log('🔄 Recarregando lista de campanhas...');
+        // Recargar la lista después de la creación con refresh forzado
+        // Recargando lista de campañas
         refreshCampaigns(true);
         handleCloseModal();
         
         // Limpar mensagem de sucesso após 5 segundos
         setTimeout(() => setSuccess(''), 5000);
       } else {
-        console.error('❌ Condição NÃO atendida!');
-        console.error('- createResponse:', createResponse);
-        console.error('- typeof createResponse:', typeof createResponse);
-        console.error('- createResponse.id:', createResponse?.id);
-        console.error('- !!createResponse:', !!createResponse);
-        console.error('- !!createResponse.id:', !!(createResponse && createResponse.id));
-        setError('Error al crear campaña: respuesta inválida del servidor');
+        // Condição NÃO atendida
+        setError('Error al crear la campaña: respuesta inválida del servidor');
       }
     } catch (err) {
-      console.error('Erro ao criar campanha:', err);
-      setError(`Error al crear campaña: ${err.message || 'Error desconocido'}`);
+      // Erro ao criar campanha
+      setError(`Error al crear la campaña: ${err.message || 'Error desconocido'}`);
     } finally {
       setActionLoading(prev => ({ ...prev, creating: false }));
     }
@@ -207,32 +192,32 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       setError('');
       setSuccess('');
       
-      console.log('🔄 Dados para atualizar campanha:', formData);
+      // Datos para actualizar campaña
       // Usar o novo serviço de sincronização
       const updateResponse = await campaignSync.updateCampaign(editingCampanha.id, formData);
-      console.log('🔄 Resposta da atualização:', updateResponse);
+      // Respuesta de la actualización
       
       // A API retorna um objeto com id, name, message etc. quando atualiza com sucesso
       if (updateResponse && updateResponse.id) {
-        setSuccess('Campaña actualizada con éxito');
+        setSuccess('Campaña actualizada exitosamente');
         refreshCampaigns(true); // Refresh forçado
         handleCloseModal();
         
         // Limpar mensagem de sucesso após 5 segundos
         setTimeout(() => setSuccess(''), 5000);
       } else {
-        setError('Error al actualizar campaña');
+        setError('Error al actualizar la campaña');
       }
     } catch (err) {
-      console.error('Erro ao atualizar campanha:', err);
-      setError(`Error al actualizar campaña: ${err.message || 'Error desconocido'}`);
+      // Error al actualizar campaña
+      setError(`Error al actualizar la campaña: ${err.message || 'Error desconocido'}`);
     } finally {
       setActionLoading(prev => ({ ...prev, updating: false }));
     }
   };
 
   const handleDeleteCampaign = async (campaignId) => {
-    if (!confirm('¿Estás seguro de que deseas eliminar esta campaña? Esta operación es irreversible y eliminará todos los datos relacionados.')) {
+    if (!confirm('¿Estás seguro de que querés eliminar esta campaña? Esta operación es irreversible y eliminará todos los datos relacionados.')) {
       return;
     }
 
@@ -241,11 +226,11 @@ function GestionCampanhas({ onOpenCampaignControl }) {
       setError('');
       setSuccess('');
       
-      console.log('🗑️ Iniciando exclusão otimizada da campanha:', campaignId);
+      // Iniciando eliminación optimizada de la campaña
       
       // Usar o novo serviço de sincronização com retry automático
       const deleteResponse = await campaignSync.deleteCampaign(campaignId);
-      console.log('✅ Resposta da exclusão otimizada:', deleteResponse);
+      // Respuesta de la eliminación optimizada
       
       // O novo endpoint retorna informações detalhadas sobre as operações realizadas
       if (deleteResponse && deleteResponse.success) {
@@ -260,52 +245,52 @@ function GestionCampanhas({ onOpenCampaignControl }) {
         setTimeout(() => setSuccess(''), 7000);
       } else {
         // Fallback para o endpoint antigo se o novo falhar
-        console.log('⚠️ Tentando endpoint de fallback...');
+        // Tentando endpoint de fallback
         const fallbackResponse = await makeApiRequest(`/campaigns/${campaignId}`, 'DELETE');
         
         if (fallbackResponse && (fallbackResponse.mensaje || fallbackResponse.message)) {
-          setSuccess(fallbackResponse.mensaje || 'Campaña eliminada con éxito (método alternativo)');
+          setSuccess(fallbackResponse.mensaje || 'Campaña eliminada exitosamente (método alternativo)');
           refreshCampaigns();
           setTimeout(() => setSuccess(''), 5000);
         } else {
-          setError('Error al eliminar campaña');
+          setError('Error al eliminar la campaña');
         }
       }
     } catch (err) {
-      console.error('Erro ao deletar campanha:', err);
+      // Error al eliminar campaña
       
       // Se o novo endpoint falhar, tentar o antigo como fallback
       if (err.message && err.message.includes('404')) {
         try {
-          console.log('🔄 Tentando método de exclusão alternativo...');
+          // Tentando método de exclusão alternativo
           const fallbackResponse = await makeApiRequest(`/campaigns/${campaignId}`, 'DELETE');
           
           if (fallbackResponse && (fallbackResponse.mensaje || fallbackResponse.message)) {
-            setSuccess(fallbackResponse.mensaje || 'Campaña eliminada con éxito (método alternativo)');
+            setSuccess(fallbackResponse.mensaje || 'Campaña eliminada exitosamente (método alternativo)');
             refreshCampaigns();
             setTimeout(() => setSuccess(''), 5000);
             return;
           }
         } catch (fallbackErr) {
-          console.error('Erro no método alternativo:', fallbackErr);
+          // Error en el método alternativo
         }
       }
       
-      setError(`Error al eliminar campaña: ${err.message || 'Error desconocido'}`);
+      setError(`Error al eliminar la campaña: ${err.message || 'Error desconocido'}`);
     } finally {
       setActionLoading(prev => ({ ...prev, [`deleting_${campaignId}`]: false }));
     }
   };
 
   const handleStartCampaign = async (campaignId) => {
-    console.log('🔥 [DEBUG] handleStartCampaign chamado com ID:', campaignId);
+    // handleStartCampaign chamado com ID
     
     try {
       setError('');
       setSuccess('');
       setActionLoading(prev => ({ ...prev, [`starting_${campaignId}`]: true }));
       
-      console.log('🚀 Iniciando campanha:', campaignId);
+      // Iniciando campanha
       
       // Usar o novo serviço de sincronização
       const startResponse = await campaignSync.controlCampaign(
@@ -314,12 +299,12 @@ function GestionCampanhas({ onOpenCampaignControl }) {
         { usuario_id: "1" }
       );
       
-      console.log('✅ Resposta de iniciar:', startResponse);
+      // Resposta de iniciar
       
       if (startResponse && (startResponse.mensaje || startResponse.message || startResponse.success)) {
-        setSuccess(startResponse.mensaje || 'Campaña iniciada con éxito');
+        setSuccess(startResponse.mensaje || 'Campaña iniciada exitosamente');
         
-        // Atualizar apenas o contexto
+        // Actualizar solo el contexto
         updateCampaignStatus(campaignId, 'active');
         refreshCampaigns(true);
         refreshCampaigns(true);
@@ -327,18 +312,18 @@ function GestionCampanhas({ onOpenCampaignControl }) {
         // Limpar mensagem de sucesso após 5 segundos
         setTimeout(() => setSuccess(''), 5000);
       } else {
-        setError('Error al iniciar campaña');
+        setError('Error al iniciar la campaña');
       }
     } catch (err) {
-      console.error('Erro ao iniciar campanha:', err);
-      setError(`Error al iniciar campaña: ${err.message || 'Error desconocido'}`);
+      // Error al iniciar campaña
+      setError(`Error al iniciar la campaña: ${err.message || 'Error desconocido'}`);
     } finally {
       setActionLoading(prev => ({ ...prev, [`starting_${campaignId}`]: false }));
     }
   };
 
   const handlePauseCampaign = async (campaignId) => {
-    console.log('🔥 [DEBUG] handlePauseCampaign chamado com ID:', campaignId);
+    // handlePauseCampaign chamado com ID
     
     try {
       setActionLoading(prev => ({ ...prev, [`pausing_${campaignId}`]: true }));
@@ -350,27 +335,27 @@ function GestionCampanhas({ onOpenCampaignControl }) {
         { usuario_id: "1" }
       );
       
-      console.log('✅ Resposta de pausar:', pauseResponse);
+      // Resposta de pausar
       
       if (pauseResponse && (pauseResponse.mensaje || pauseResponse.message)) {
-        setSuccess(pauseResponse.mensaje || pauseResponse.message || 'Campaña pausada con éxito');
+        setSuccess(pauseResponse.mensaje || pauseResponse.message || 'Campaña pausada exitosamente');
         
         // Atualizar apenas o contexto
         updateCampaignStatus(campaignId, 'paused');
         refreshCampaigns(true);
       } else {
-        setError('Error al pausar campaña');
+        setError('Error al pausar la campaña');
       }
     } catch (err) {
-      console.error('Erro ao pausar campanha:', err);
-      setError(`Error al pausar campaña: ${err.message || 'Error desconocido'}`);
+      // Error al pausar campaña
+      setError(`Error al pausar la campaña: ${err.message || 'Error desconocido'}`);
     } finally {
       setActionLoading(prev => ({ ...prev, [`pausing_${campaignId}`]: false }));
     }
   };
 
   const handleResumeCampaign = async (campaignId) => {
-    console.log('🔥 [DEBUG] handleResumeCampaign chamado com ID:', campaignId);
+    // handleResumeCampaign chamado com ID
     
     try {
       setActionLoading(prev => ({ ...prev, [`resuming_${campaignId}`]: true }));
@@ -382,26 +367,26 @@ function GestionCampanhas({ onOpenCampaignControl }) {
         { usuario_id: "1" }
       );
       
-      console.log('✅ Resposta de retomar:', resumeResponse);
+      // Resposta de retomar
       
       if (resumeResponse && (resumeResponse.mensaje || resumeResponse.message)) {
-        setSuccess(resumeResponse.mensaje || resumeResponse.message || 'Campaña retomada con éxito');
+        setSuccess(resumeResponse.mensaje || resumeResponse.message || 'Campaña retomada exitosamente');
         
         // Atualizar apenas o contexto
         updateCampaignStatus(campaignId, 'active');
       } else {
-        setError('Error al retomar campaña');
+        setError('Error al retomar la campaña');
       }
     } catch (err) {
-      console.error('Erro ao retomar campanha:', err);
-      setError(`Error al retomar campaña: ${err.message || 'Error desconocido'}`);
+      // Error al retomar campaña
+      setError(`Error al retomar la campaña: ${err.message || 'Error desconocido'}`);
     } finally {
       setActionLoading(prev => ({ ...prev, [`resuming_${campaignId}`]: false }));
     }
   };
 
   const handleStopCampaign = async (campaignId) => {
-    console.log('🔥 [DEBUG] handleStopCampaign chamado com ID:', campaignId);
+    // handleStopCampaign chamado com ID
     
     try {
       setActionLoading(prev => ({ ...prev, [`stopping_${campaignId}`]: true }));
@@ -413,20 +398,20 @@ function GestionCampanhas({ onOpenCampaignControl }) {
         { usuario_id: "1" }
       );
       
-      console.log('✅ Resposta de parar:', stopResponse);
+      // Resposta de parar
       
       if (stopResponse && (stopResponse.mensaje || stopResponse.message)) {
-        setSuccess(stopResponse.mensaje || stopResponse.message || 'Campaña parada con éxito');
+        setSuccess(stopResponse.mensaje || stopResponse.message || 'Campaña detenida exitosamente');
         
         // Atualizar apenas o contexto
         updateCampaignStatus(campaignId, 'draft');
         refreshCampaigns(true);
       } else {
-        setError('Error al parar campaña');
+        setError('Error al detener la campaña');
       }
     } catch (err) {
-      console.error('Erro ao parar campanha:', err);
-      setError(`Error al parar campaña: ${err.message || 'Error desconocido'}`);
+      // Error al detener campaña
+      setError(`Error al detener la campaña: ${err.message || 'Error desconocido'}`);
     } finally {
       setActionLoading(prev => ({ ...prev, [`stopping_${campaignId}`]: false }));
     }
@@ -564,7 +549,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
             <div className="text-center py-16">
               <div className="text-6xl mb-4 opacity-50">📋</div>
               <h3 className="text-lg font-medium text-white mb-2">No hay campañas creadas</h3>
-              <p className="text-secondary-400 mb-6">Crea tu primera campaña para comenzar a gestionar llamadas</p>
+              <p className="text-secondary-400 mb-6">Creá tu primera campaña para comenzar a gestionar llamadas</p>
               <button
                 onClick={() => setShowModal(true)}
                 className="btn-primary"
@@ -626,7 +611,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
                               onClick={() => handleStartCampaign(campanha.id)}
                               className="relative inline-flex items-center justify-center px-4 py-2 text-xs font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-emerald-500/25 overflow-hidden"
                               disabled={actionLoading[`starting_${campanha.id}`]}
-                              title="Iniciar campanha"
+                              title="Iniciar campaña"
                             >
                               <div className="flex items-center space-x-2">
                                 {actionLoading[`starting_${campanha.id}`] ? (
@@ -661,7 +646,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
                                 onClick={() => handlePauseCampaign(campanha.id)}
                                 className="relative inline-flex items-center justify-center px-4 py-2 text-xs font-medium text-white bg-amber-500 hover:bg-amber-600 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-amber-500/25"
                                 disabled={actionLoading[`pausing_${campanha.id}`]}
-                                title="Pausar campanha"
+                                title="Pausar campaña"
                               >
                                 <div className="flex items-center space-x-2">
                                   {actionLoading[`pausing_${campanha.id}`] ? (
@@ -688,7 +673,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
                               <button 
                                 onClick={() => onOpenCampaignControl && onOpenCampaignControl(campanha.id)}
                                 className="relative inline-flex items-center justify-center px-4 py-2 text-xs font-medium text-white bg-purple-500 hover:bg-purple-600 rounded-lg transition-all duration-200 shadow-lg hover:shadow-purple-500/25"
-                                title="Controlar campanha"
+                                title="Controlar campaña"
                               >
                                 <div className="flex items-center space-x-2">
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -702,20 +687,20 @@ function GestionCampanhas({ onOpenCampaignControl }) {
                                 onClick={() => handleStopCampaign(campanha.id)}
                                 className="relative inline-flex items-center justify-center px-4 py-2 text-xs font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-red-500/25"
                                 disabled={actionLoading[`stopping_${campanha.id}`]}
-                                title="Parar campanha"
+                                title="Detener campaña"
                               >
                                 <div className="flex items-center space-x-2">
                                   {actionLoading[`stopping_${campanha.id}`] ? (
                                     <>
                                       <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
-                                      <span className="text-xs font-semibold">Parando...</span>
+                                      <span className="text-xs font-semibold">Deteniendo...</span>
                                     </>
                                   ) : (
                                     <>
                                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M6 6h12v12H6z"/>
                                       </svg>
-                                      <span className="text-xs font-semibold">Parar</span>
+                                      <span className="text-xs font-semibold">Detener</span>
                                     </>
                                   )}
                                 </div>
@@ -734,7 +719,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
                               onClick={() => handleResumeCampaign(campanha.id)}
                               className="relative inline-flex items-center justify-center px-4 py-2 text-xs font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-emerald-500/25"
                               disabled={actionLoading[`resuming_${campanha.id}`]}
-                              title="Retomar campanha"
+                              title="Retomar campaña"
                             >
                               <div className="flex items-center space-x-2">
                                 {actionLoading[`resuming_${campanha.id}`] ? (
@@ -763,7 +748,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
                             onClick={() => handleEditCampaign(campanha)}
                             className="relative inline-flex items-center justify-center px-3 py-2 text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-blue-500/25"
                             disabled={actionLoading.updating}
-                            title="Editar campanha"
+                            title="Editar campaña"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -774,7 +759,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
                             onClick={() => handleDeleteCampaign(campanha.id)}
                             className="relative inline-flex items-center justify-center px-3 py-2 text-xs font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-red-500/25"
                             disabled={actionLoading[`deleting_${campanha.id}`]}
-                            title="Eliminar campanha"
+                            title="Eliminar campaña"
                           >
                             {actionLoading[`deleting_${campanha.id}`] ? (
                               <div className="animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent"></div>
@@ -822,7 +807,7 @@ function GestionCampanhas({ onOpenCampaignControl }) {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="input-modern"
-                    placeholder="Ingresa el nombre de la campaña"
+                    placeholder="Ingresá el nombre de la campaña"
                     required
                   />
                 </div>

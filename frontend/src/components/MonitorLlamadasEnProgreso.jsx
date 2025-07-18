@@ -31,7 +31,6 @@ const MonitorLlamadasEnProgreso = () => {
       setLastUpdated(new Date());
       setError(null);
     } catch (err) {
-      console.error('Error al cargar las llamadas:', err);
       setError('Error al cargar las llamadas. Intentá nuevamente.');
     } finally {
       setLoading(false);
@@ -50,7 +49,6 @@ const MonitorLlamadasEnProgreso = () => {
       // Actualiza la lista removiendo la llamada finalizada
       setLlamadas(llamadas.filter(llamada => llamada.id !== llamadaId));
     } catch (err) {
-      console.error(`Error al finalizar la llamada ID ${llamadaId}:`, err);
       alert(`Error al finalizar la llamada: ${err.message}`);
     }
   };
@@ -165,4 +163,4 @@ const MonitorLlamadasEnProgreso = () => {
   );
 };
 
-export default MonitorLlamadasEnProgreso; 
+export default MonitorLlamadasEnProgreso;

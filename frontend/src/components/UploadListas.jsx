@@ -75,28 +75,14 @@ function UploadListas() {
     }
   }, [campaigns, selectedCampaign]);
 
-  // Debug: Log dos estados principais
-  useEffect(() => {
-    console.log('🔍 Estado atual:', {
-      fileState,
-      uploading,
-      selectedCampaign,
-      file: file?.name,
-      campaigns: campaigns.length,
-      previewData: !!previewData
-    });
-  }, [fileState, uploading, selectedCampaign, file, campaigns, previewData]);
+
 
 
 
   const handleFileSelect = (selectedFile) => {
     if (!selectedFile) return;
 
-            console.log('📁 Archivo seleccionado:', {
-      name: selectedFile.name,
-      size: selectedFile.size,
-      type: selectedFile.type
-    });
+
 
     setFile(selectedFile);
     setFileState(FileStates.READING);
@@ -116,7 +102,7 @@ function UploadListas() {
           return;
         }
 
-        console.log('📋 Primeras líneas del archivo:', lines.slice(0, 3));
+
 
         // Detectar separador automaticamente
         const firstLine = lines[0];
@@ -133,7 +119,7 @@ function UploadListas() {
           separator = null;
         }
 
-        console.log('🔍 Separador detectado:', separator || 'linha única');
+
 
         let headers = [];
         let preview = [];
@@ -157,7 +143,7 @@ function UploadListas() {
           }));
         }
 
-        console.log('📊 Preview processado:', { headers, preview });
+
 
         setPreviewData({
           headers,
@@ -167,7 +153,7 @@ function UploadListas() {
         });
         setFileState(FileStates.PREVIEW);
       } catch (err) {
-        console.error('❌ Error al procesar archivo:', err);
+
         setError('Error al leer el archivo: ' + err.message);
         setFileState(FileStates.ERROR);
       }
@@ -193,15 +179,13 @@ function UploadListas() {
       const isLargeFile = file.size > 5 * 1024 * 1024; // 5MB
       
       if (isLargeFile) {
-        console.log(`📦 Archivo grande detectado (${(file.size / 1024 / 1024).toFixed(1)}MB) - Carga en chunks`);
         await handleLargeFileUpload();
       } else {
-        console.log('📄 Archivo normal - Carga directa');
         await handleNormalUpload();
       }
 
     } catch (error) {
-              console.error('❌ Error en carga:', error);
+
       setError('Error al cargar el archivo: ' + error.message);
       setFileState(FileStates.ERROR);
     } finally {
@@ -223,16 +207,11 @@ function UploadListas() {
       formData.append('campaign_id', campaignId);
     }
 
-    console.log('📤 Enviando upload:', {
-      file: file.name,
-      campaign: campaignId,
-      size: file.size,
-      campaign_id_included: !!(campaignId && campaignId !== 'default')
-    });
+
 
     const response = await makeApiRequest('/contacts/upload', 'POST', formData);
     
-    console.log('📥 Resposta do upload:', response);
+
     
     setUploadResult({
       total_lines: response.total_linhas_arquivo_original || response.total_lineas_archivo || 0,
@@ -254,7 +233,7 @@ function UploadListas() {
     const text = await file.text();
     const lines = text.split('\n').filter(line => line.trim());
     
-    console.log(`📊 Processando ${lines.length} linhas em chunks`);
+
     
     const CHUNK_SIZE = 500; // 500 números por chunk para evitar timeout
     const chunks = [];
@@ -264,7 +243,7 @@ function UploadListas() {
       chunks.push(lines.slice(i, i + CHUNK_SIZE));
     }
     
-    console.log(`📦 Arquivo dividido em ${chunks.length} chunks de até ${CHUNK_SIZE} linhas`);
+
     
     let totalProcessed = 0;
     let totalErrors = 0;
@@ -275,9 +254,9 @@ function UploadListas() {
       const chunk = chunks[i];
       const chunkNumber = i + 1;
       
-      console.log(`📤 Enviando chunk ${chunkNumber}/${chunks.length} (${chunk.length} linhas)`);
+
       
-      // Criar arquivo temporário para o chunk
+      // Crear archivo temporal para el chunk
       const chunkContent = chunk.join('\n');
       const chunkBlob = new Blob([chunkContent], { type: 'text/plain' });
       const chunkFile = new File([chunkBlob], `chunk_${chunkNumber}_${file.name}`, { type: 'text/plain' });
@@ -298,21 +277,20 @@ function UploadListas() {
         totalErrors += response.contatos_invalidos || 0;
         totalDuplicates += response.contatos_duplicados || 0;
         
-        console.log(`✅ Chunk ${chunkNumber} processado: +${response.contatos_validos} contatos`);
+
         
-        // Pequena pausa entre chunks para não sobrecarregar o servidor
+        // Pequeña pausa entre chunks para no sobrecargar el servidor
         if (i < chunks.length - 1) {
           await new Promise(resolve => setTimeout(resolve, 1000)); // 1 segundo de pausa
         }
         
       } catch (error) {
-        console.error(`❌ Erro no chunk ${chunkNumber}:`, error);
         totalErrors += chunk.length; // Considerar todas as linhas do chunk como erro
       }
     }
     
     // Resultado final
-    console.log(`🎉 Upload em chunks concluído: ${totalProcessed} processados, ${totalErrors} erros, ${totalDuplicates} duplicados`);
+
     
     setUploadResult({
       total_lines: lines.length,
@@ -513,7 +491,7 @@ function UploadListas() {
             {/* File Upload Area */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Archivo CSV ou TXT
+                Archivo CSV o TXT
               </label>
               <div
                 className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
@@ -545,7 +523,7 @@ function UploadListas() {
                     <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 48 48">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" />
                     </svg>
-                    <p className="text-gray-300 text-lg font-medium mb-2">Arrastrá tu archivo CSV ou TXT acá</p>
+                    <p className="text-gray-300 text-lg font-medium mb-2">Arrastrá tu archivo CSV o TXT acá</p>
                     <p className="text-gray-500 mb-4">o</p>
                     <input
                       type="file"

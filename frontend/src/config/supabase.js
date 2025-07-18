@@ -5,7 +5,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('⚠️ Supabase configuration missing. Please check your environment variables.');
+
 }
 
 // Criar cliente Supabase
@@ -184,13 +184,6 @@ export const realtime = {
   }
 };
 
-// Log da configuração (apenas em desenvolvimento)
-if (import.meta.env.DEV) {
-  console.log('🔧 Supabase Configuration:', {
-    'URL': supabaseUrl,
-    'Has Anon Key': !!supabaseAnonKey,
-    'Environment': import.meta.env.NODE_ENV
-  });
-}
+
 
 export default supabase;

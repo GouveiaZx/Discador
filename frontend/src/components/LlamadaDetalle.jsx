@@ -30,7 +30,6 @@ const LlamadaDetalle = ({ llamadaId, isOpen, onClose }) => {
       const response = await obtenerDetalleLlamada(llamadaId);
       setLlamada(response);
     } catch (err) {
-      console.error(`Error al obtener detalles de la llamada ID ${llamadaId}:`, err);
       setError('Error al obtener detalles de la llamada. Inténtelo nuevamente.');
     } finally {
       setLoading(false);
@@ -149,7 +148,7 @@ const LlamadaDetalle = ({ llamadaId, isOpen, onClose }) => {
                 <h3 className="text-lg font-medium text-gray-300 mb-4">Atendimento</h3>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm text-gray-400">Usuário</p>
+                    <p className="text-sm text-gray-400">Usuario</p>
                     <p className="font-medium">{llamada.usuario_email || '-'}</p>
                   </div>
                   <div>
@@ -195,4 +194,4 @@ LlamadaDetalle.propTypes = {
   onClose: PropTypes.func.isRequired
 };
 
-export default LlamadaDetalle; 
+export default LlamadaDetalle;
